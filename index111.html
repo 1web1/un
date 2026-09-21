@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>منصة الدفعة التعليمية | قسم المساحة ونظم المعلومات</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+<!-- مكتبة SweetAlert2 للتنبيهات -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<style>
+  :root {
+    --fg: #ffffff;
+    --fg-soft: rgba(255,255,255,.9);
+    --fg-faint: rgba(255,255,255,.6);
+    --shade: #0a0908;
+    --ease: cubic-bezier(.22,.61,.36,1);
+    --primary: #3b82f6;
+    --primary-hover: #2563eb;
+    --gold: #ffd700;
+    --online-green: #22c55e;
+    --cream: #E1E0CC;
+    --danger: #ef4444;
+    --warning: #f59e0b;
+    --purple: #8b5cf6;
+  }
+  
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+  body { margin: 0; background: var(--shade); color: var(--fg); font-family: 'Cairo', sans-serif; overflow-x: hidden; }
+
+  /* القسم الترحيبي */
+  .cinematic-hero { position: relative; height: 100vh; width: 100%; display: flex; flex-direction: column; justify-content: flex-end; padding: 6vh 5vw; overflow: hidden; background: #000; }
+  .cinematic-video { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; }
+  .noise-overlay { position: absolute; inset: 0; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E"); opacity: 0.6; mix-blend-mode: overlay; pointer-events: none; z-index: 2; }
+  .gradient-overlay { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(10,9,8,0.3) 0%, transparent 40%, rgba(10,9,8,0.8) 80%, rgba(10,9,8,1) 100%); pointer-events: none; z-index: 3; }
+  .hero-content { position: relative; z-index: 4; max-width: 1200px; width: 100%; margin: 0 auto; }
+  @keyframes fadeUp { 0% { opacity: 0; transform: translateY(40px); } 100% { opacity: 1; transform: translateY(0); } }
+  .hero-label { color: var(--primary); font-size: clamp(12px, 2vw, 16px); font-weight: 700; letter-spacing: 1px; margin-bottom: 12px; opacity: 0; animation: fadeUp 0.8s forwards 0.2s; }
+  .hero-title { font-size: clamp(42px, 8vw, 90px); margin: 0 0 16px; line-height: 1.1; font-weight: 900; color: var(--cream); letter-spacing: -1px; opacity: 0; animation: fadeUp 0.8s forwards 0.4s; }
+  .hero-desc { font-size: clamp(14px, 2vw, 18px); color: rgba(225, 224, 204, 0.8); max-width: 600px; line-height: 1.6; margin: 0 0 30px; opacity: 0; animation: fadeUp 0.8s forwards 0.6s; }
+  .scroll-down-btn { display: inline-flex; align-items: center; gap: 12px; color: var(--primary); font-size: 15px; font-weight: 700; cursor: pointer; opacity: 0; animation: fadeUp 0.8s forwards 0.8s; transition: 0.3s; }
+  .scroll-down-btn:hover { color: #fff; gap: 18px; }
+  .arrow-down { background: rgba(255,255,255,0.1); width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.2); animation: bounce 2s infinite 1.5s; }
+  @keyframes bounce { 0%, 20%, 50%, 80%, 100% { transform: translateY(0); } 40% { transform: translateY(-8px); } 60% { transform: translateY(-4px); } }
+
+  /* تأثيرات عامة */
+  .liquid-glass { background: rgba(255, 255, 255, 0.02); background-blend-mode: luminosity; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.05); box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.05), 0 8px 32px rgba(0, 0, 0, 0.3); position: relative; overflow: hidden; border-radius: 14px; }
+  .liquid-glass::before { content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1.4px; background: linear-gradient(180deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 40%, rgba(255,255,255,0.1) 100%); -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite: xor; mask-composite: exclude; pointer-events: none; }
+
+  /* الهيدر والعناصر */
+  .chrome { position: sticky; top: 0; z-index: 40; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; padding: 12px 16px; border-radius: 0; border-bottom: 1px solid rgba(255,255,255,0.1); }
+  .mark { display: flex; align-items: center; gap: 6px; font-size: 17px; font-weight: 700; color: var(--fg); cursor: pointer; }
+  .mark-star { color: var(--primary); font-size: 20px; }
+  .nav { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .user-greeting-btn { color: var(--gold); font-weight: bold; font-size: 13px; background: rgba(255, 215, 0, 0.15); padding: 6px 12px; border-radius: 20px; border: 1px solid rgba(255, 215, 0, 0.4); cursor: pointer; transition: 0.2s var(--ease); display: flex; align-items: center; gap: 6px; }
+  .user-greeting-btn:hover { background: rgba(255, 215, 0, 0.25); transform: scale(1.03); }
+  .pulse-dot { width: 8px; height: 8px; background: var(--online-green); border-radius: 50%; display: inline-block; animation: livePulse 1.5s infinite; }
+  @keyframes livePulse { 0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); } 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); } }
+
+  .pill { display: inline-flex; align-items: center; justify-content: center; height: 36px; padding: 0 16px; border-radius: 8px; background: var(--primary); color: #fff; font-size: 13px; font-weight: 700; text-decoration: none; border: none; cursor: pointer; transition: 0.2s; white-space: nowrap; gap: 6px; }
+  .pill:hover { filter: brightness(1.1); transform: translateY(-1px); }
+  .pill:active { transform: scale(0.97); }
+  .admin-btn { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); }
+  .logout-btn { background: var(--danger); }
+
+  #alert-banner { display: none; background: linear-gradient(135deg, var(--warning), #d97706); color: #111; padding: 10px 16px; text-align: center; font-weight: 700; font-size: 14px; animation: pulseAlert 2s infinite; position: sticky; top: 60px; z-index: 39; }
+  @keyframes pulseAlert { 0% { opacity: 0.9; } 50% { opacity: 1; } 100% { opacity: 0.9; } }
+
+  .container { max-width: 1200px; margin: 0 auto; padding: 40px 14px; display: flex; flex-direction: column; gap: 24px; position: relative; z-index: 10; }
+  .search-box { width: 100%; background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.2); border-radius: 12px; padding: 14px 16px; color: var(--fg); font-family: inherit; font-size: 15px; outline: none; margin-bottom: 20px; transition: 0.3s; }
+  .search-box:focus { border-color: var(--primary); box-shadow: 0 0 15px rgba(59, 130, 246, 0.2); }
+  
+  .level-tabs { display: flex; gap: 10px; padding: 6px; border-radius: 12px; margin-bottom: 20px; }
+  .level-tab-btn { flex: 1; padding: 12px 16px; border-radius: 8px; border: none; background: transparent; color: var(--fg-soft); font-family: inherit; font-size: 15px; font-weight: 700; cursor: pointer; transition: all 0.2s var(--ease); }
+  .level-tab-btn.active { background: var(--primary); color: #fff; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4); }
+
+  .section-title { font-size: 20px; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+  .section-title::before { content: ""; width: 6px; height: 22px; background: var(--primary); border-radius: 3px; }
+  .grid { display: grid; gap: 16px; }
+  .home-layout { display: grid; grid-template-columns: 1fr; gap: 24px; }
+  @media (min-width: 850px) { .container { padding: 60px 20px; gap: 36px; } .home-layout { grid-template-columns: 2fr 1fr; } .chrome { padding: 14px clamp(16px, 4vw, 44px); } .section-title { font-size: 24px; } }
+
+  .card { padding: 22px; display: flex; flex-direction: column; }
+  .leaderboard-card { border: 1.5px solid var(--gold) !important; background: rgba(255, 215, 0, 0.05) !important; }
+  .rank-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 8px; border-bottom: 1px solid rgba(255,255,255,0.05); position: relative; z-index: 2; transition: 0.2s; border-radius: 8px; }
+  .rank-row:hover { background: rgba(255,255,255,0.05); }
+  .rank-row:last-child { border-bottom: none; }
+  .rank-num { font-weight: 900; font-size: 16px; color: var(--gold); width: 28px; }
+  .rank-name { flex-grow: 1; font-weight: 600; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0 8px; }
+  .rank-score { background: var(--primary); padding: 4px 12px; border-radius: 16px; font-size: 12px; font-weight: bold; white-space: nowrap; }
+
+  .quiz-options { display: grid; grid-template-columns: 1fr; gap: 10px; margin-top: 16px; }
+  @media (min-width: 600px) { .quiz-options { grid-template-columns: 1fr 1fr; } }
+  .quiz-btn { background: rgba(255, 255, 255, 0.05); width: 100%; min-height: 48px; padding: 10px 16px; text-align: right; font-size: 14px; font-weight: 600; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); color: var(--fg); cursor: pointer; font-family: inherit; transition: all 0.2s; }
+  .quiz-btn:hover:not(:disabled) { background: rgba(255, 255, 255, 0.1); border-color: rgba(255,255,255,0.3); transform: translateY(-1px); }
+  .quiz-btn:disabled { cursor: not-allowed; color: #fff; }
+  .quiz-solved-badge { padding: 6px 12px; border-radius: 12px; font-size: 12px; margin-right: auto; font-weight: bold; }
+
+  .upload-form { display: flex; flex-direction: column; gap: 14px; position: relative; z-index: 2; }
+  .input-group { display: flex; flex-direction: column; gap: 6px; }
+  .input-group label { font-size: 13px; color: var(--fg-soft); font-weight: bold; }
+  .input-group input, .input-group textarea, .input-group select { background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; padding: 12px; color: var(--fg); font-family: inherit; font-size: 14px; width: 100%; transition: 0.3s; }
+  .input-group input:focus, .input-group textarea:focus { border-color: var(--primary); outline: none; background: rgba(0,0,0,0.6); }
+
+  .overlay-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 16px; overflow-y: auto; }
+  .modal-box { width: 100%; max-width: 450px; border-radius: 18px; padding: 26px 20px; }
+  .modal-box.large { max-width: 600px; }
+
+  /* تنسيق الجداول الاحترافي */
+  .table-responsive { overflow-x: auto; margin-top: 12px; position: relative; z-index: 2; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); }
+  .styled-table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: right; min-width: 950px; }
+  .styled-table th, .styled-table td { padding: 12px 14px; border-bottom: 1px solid rgba(255,255,255,0.05); vertical-align: middle; }
+  .styled-table th { background: rgba(59, 130, 246, 0.1); color: var(--primary); font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; }
+  .styled-table tbody tr { transition: 0.2s; }
+  .styled-table tbody tr:hover { background: rgba(255,255,255,0.02); }
+
+  .status-badge { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: bold; }
+  .status-online { background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.3); }
+  .status-offline { background: rgba(255, 255, 255, 0.05); color: var(--fg-faint); border: 1px solid rgba(255, 255, 255, 0.1); }
+  .status-banned { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+
+  /* أزرار الإجراءات */
+  .action-group { display: flex; gap: 6px; flex-wrap: wrap; }
+  .btn-sm { padding: 6px 10px; border-radius: 6px; font-size: 11px; cursor: pointer; font-weight: bold; transition: 0.2s; border: none; display: inline-flex; align-items: center; gap: 4px; }
+  .btn-track { background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59,130,246,0.3); }
+  .btn-edit { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245,158,11,0.3); }
+  .btn-msg { background: rgba(168, 85, 247, 0.15); color: #c084fc; border: 1px solid rgba(168,85,247,0.3); }
+  .btn-ban { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239,68,68,0.3); }
+  .btn-unban { background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34,197,94,0.3); }
+  .btn-sm:hover { filter: brightness(1.3); transform: translateY(-1px); }
+
+  .empty-state { text-align: center; padding: 30px 15px; color: var(--fg-faint); font-size: 14px; position: relative; z-index: 2; background: rgba(0,0,0,0.2); border-radius: 10px; }
+  .foot { text-align: center; padding: 24px 14px; margin-top: 40px; background: rgba(10, 9, 8, 0.9); border-top: 1px solid rgba(255,255,255,0.05); font-size: 13px; color: var(--fg-faint); line-height: 1.6; }
+  
+  .profile-row { background: rgba(0,0,0,0.4); padding: 14px 16px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.05); margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+  .profile-row-label { color: var(--fg-soft); font-size: 13px; }
+  .profile-row-value { font-size: 15px; font-weight: 700; color: var(--fg); }
+  .file-category-header { background: rgba(0,0,0,0.3); padding: 10px 14px; border-radius: 8px; font-size: 14px; color: var(--gold); margin: 20px 0 10px; font-weight: bold; display: flex; align-items: center; gap: 8px; border-right: 3px solid var(--gold); }
+  .z-content { position: relative; z-index: 2; }
+
+  /* -------------------------------------------
+     لوحة الإدارة المتطورة
+  ------------------------------------------- */
+  #admin-panel { display: none; margin-top: 30px; padding: 0; background: transparent; box-shadow: none; border: none; }
+  .admin-dashboard-container { background: rgba(20, 20, 20, 0.6); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-radius: 16px; border: 1px solid rgba(255,255,255,0.1); overflow: hidden; position: relative; z-index: 2; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
+  .admin-header { background: rgba(0,0,0,0.5); padding: 24px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+  .admin-stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; margin-top: 20px; }
+  .admin-stat-box { background: rgba(255,255,255,0.03); padding: 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); text-align: center; transition: 0.3s; }
+  .admin-stat-box:hover { background: rgba(255,255,255,0.05); transform: translateY(-2px); }
+  .admin-stat-num { font-size: 32px; font-weight: 900; color: var(--primary); margin-bottom: 6px; line-height: 1; }
+  .admin-stat-label { font-size: 13px; color: var(--fg-soft); font-weight: 600; }
+  
+  .admin-tabs { display: flex; border-bottom: 1px solid rgba(255,255,255,0.05); background: rgba(0,0,0,0.3); overflow-x: auto; scrollbar-width: none; }
+  .admin-tab { padding: 16px 24px; font-size: 15px; font-weight: bold; color: var(--fg-faint); cursor: pointer; border-bottom: 3px solid transparent; transition: 0.2s; white-space: nowrap; display: flex; align-items: center; gap: 8px; }
+  .admin-tab:hover { color: var(--fg); background: rgba(255,255,255,0.02); }
+  .admin-tab.active { color: var(--primary); border-bottom-color: var(--primary); background: rgba(59, 130, 246, 0.05); }
+  .admin-tab-content { padding: 24px; display: none; }
+  .admin-tab-content.active { display: block; }
+  
+  .log-item { background: rgba(0,0,0,0.3); padding: 16px; border-radius: 10px; margin-bottom: 12px; border-right: 4px solid var(--primary); display: flex; flex-direction: column; gap: 6px; transition: 0.2s; }
+  .log-item:hover { background: rgba(0,0,0,0.5); }
+  .log-header { display: flex; justify-content: space-between; align-items: center; }
+  .log-admin { font-weight: bold; color: var(--gold); font-size: 14px; display: flex; align-items: center; gap: 6px; }
+  .log-time { font-size: 12px; color: var(--fg-faint); }
+  .log-body { font-size: 14px; line-height: 1.6; color: var(--fg-soft); }
+  .log-badge { display: inline-block; padding: 3px 8px; border-radius: 6px; background: rgba(255,255,255,0.05); font-size: 11px; margin-right: 8px; font-weight: bold; letter-spacing: 0.5px; }
+
+  /* واجهة تتبع الطالب */
+  .track-avatar { width: 64px; height: 64px; border-radius: 50%; border: 2px solid var(--primary); display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 900; color: #fff; background: rgba(59, 130, 246, 0.15); margin: 0 auto; box-shadow: 0 0 15px rgba(59,130,246,0.3); }
+  .track-stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
+  .track-stat-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; padding: 16px 8px; text-align: center; }
+  .track-stat-title { font-size: 12px; color: var(--fg-soft); margin-bottom: 10px; font-weight: 700; }
+  .track-stat-value { font-size: 18px; font-weight: 900; }
+  .track-subj-card { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; padding: 16px; margin-bottom: 12px; transition: 0.2s; }
+  .track-subj-card:hover { background: rgba(255,255,255,0.04); }
+  .track-progress-bar { height: 8px; background: rgba(0,0,0,0.5); border-radius: 4px; overflow: hidden; width: 100%; margin: 10px 0; border: 1px solid rgba(255,255,255,0.05); }
+  .track-progress-fill { height: 100%; border-radius: 4px; transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1); }
+
+  /* تخصيص SweetAlert2 */
+  div:where(.swal2-container) div:where(.swal2-popup) { background: #18181b !important; color: #fff !important; border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; font-family: 'Cairo', sans-serif; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
+  div:where(.swal2-container) button:where(.swal2-styled.swal2-confirm) { background-color: var(--primary) !important; border-radius: 8px; font-weight: bold; }
+  div:where(.swal2-container) button:where(.swal2-styled.swal2-cancel) { background-color: rgba(255,255,255,0.1) !important; color: #fff !important; border-radius: 8px; }
+  div:where(.swal2-container) input:where(.swal2-input), div:where(.swal2-container) textarea:where(.swal2-textarea) { color: #fff; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; }
+  div:where(.swal2-container) input:where(.swal2-input):focus, div:where(.swal2-container) textarea:where(.swal2-textarea):focus { border-color: var(--primary); box-shadow: none; }
+  
+  #maintenance-overlay { display: none; position: fixed; inset: 0; background: rgba(5, 5, 5, 0.98); backdrop-filter: blur(20px); z-index: 9999999; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; }
+  
+  /* Utilities */
+  .flex-between { display: flex; justify-content: space-between; align-items: center; }
+  .mb-4 { margin-bottom: 16px; }
+</style>
+</head>
+<body>
+
+  <!-- شاشة الصيانة -->
+  <div id="maintenance-overlay">
+    <div style="font-size: 60px; margin-bottom: 20px; animation: bounce 2s infinite;">🛠️</div>
+    <h1 style="color: var(--primary); font-size: clamp(32px, 5vw, 48px); margin: 0 0 16px;">الموقع تحت الصيانة والتحديث</h1>
+    <p style="color: var(--fg-soft); font-size: clamp(16px, 2vw, 20px); max-width: 600px; line-height: 1.6;">
+      نعمل حالياً على تطوير المنصة وإضافة ملخصات وأسئلة جديدة لتوفير تجربة أفضل. يرجى العودة لاحقاً!
+    </p>
+  </div>
+
+  <section class="cinematic-hero">
+    <video class="cinematic-video" src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260405_170732_8a9ccda6-5cff-4628-b164-059c500a2b41.mp4" autoplay loop muted playsinline></video>
+    <div class="noise-overlay"></div>
+    <div class="gradient-overlay"></div>
+    <div class="hero-content">
+      <div class="hero-label">قسم المساحة ونظم المعلومات</div>
+      <h1 class="hero-title">منصة الدفعة<br>التعليمية</h1>
+      <p class="hero-desc">منصتكم الموحدة للملخصات، بنك الأسئلة، ولوحة شرف المتفوقين لكل المستويات.</p>
+      <div class="scroll-down-btn" onclick="document.getElementById('main-site').scrollIntoView({behavior: 'smooth'})">
+        <span>استكشف المنصة</span>
+        <div class="arrow-down">↓</div>
+      </div>
+    </div>
+  </section>
+
+  <div id="main-site">
+    <header class="chrome liquid-glass" style="border-radius: 0; border-top: none; border-left: none; border-right: none;">
+      <div class="mark z-content" onclick="showHome()"><span class="mark-star">✦</span> أبحاث الجامعة</div>
+      <nav class="nav z-content">
+        <div class="user-greeting-btn" onclick="showProfile()" id="user-greeting" title="عرض الملف الشخصي"></div>
+        <button class="pill admin-btn" id="admin-toggle-btn" onclick="toggleAdminPanel()" style="display:none;">⚙️ الإدارة</button>
+        <button class="pill logout-btn" onclick="logoutStudent()">خروج</button>
+      </nav>
+    </header>
+
+    <div id="alert-banner">⚠️ <span id="alert-text-content"></span></div>
+
+    <main class="container">
+      
+      <!-- الرئيسية -->
+      <div id="view-home">
+        <div class="home-layout">
+          <div>
+            <input type="text" id="search-box" class="search-box z-content" placeholder="🔍 ابحث عن مادة..." oninput="filterSubjects()">
+            <div class="level-tabs liquid-glass">
+              <button class="level-tab-btn z-content active" id="tab-lvl-1" onclick="switchLevel(1)">المستوى الأول 🎓</button>
+              <button class="level-tab-btn z-content" id="tab-lvl-2" onclick="switchLevel(2)">المستوى الثاني 🚀</button>
+            </div>
+            <h2 class="section-title z-content" id="current-level-heading">مواد المستوى الأول</h2>
+            <div class="grid" id="subjects-grid" style="grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));"></div>
+            
+            <div class="card liquid-glass" style="margin-top: 24px;">
+              <h3 class="z-content" style="color: #25D366; margin: 0 0 12px; font-size: 18px; display: flex; align-items: center; gap: 8px;">
+                <span>💬</span> صندوق الملاحظات
+              </h3>
+              <form onsubmit="sendFeedbackToWhatsApp(event)" class="upload-form z-content">
+                <div class="input-group">
+                  <textarea id="feedback-message" rows="3" placeholder="عندك استفسار؟ اكتبه هنا وسنرد عليك عبر الواتساب..." required style="resize: vertical;"></textarea>
+                </div>
+                <button class="pill" type="submit" style="background: #25D366; color: #111; width: fit-content;">إرسال ↗</button>
+              </form>
+            </div>
+          </div>
+          <div>
+            <h2 class="section-title z-content" style="color: var(--gold);">🏆 لوحة الشرف</h2>
+            <div class="card liquid-glass leaderboard-card" id="leaderboard-container">
+              <div class="empty-state">جاري تحميل البيانات...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- صفحة المادة -->
+      <div id="view-subject" style="display: none;">
+        <button class="pill z-content mb-4" style="background:rgba(255,255,255,0.1);" onclick="showHome()">⭠ رجوع للرئيسية</button>
+        <h2 class="section-title z-content" id="subject-title">اسم المادة</h2>
+        <p id="subject-desc" class="z-content" style="color: var(--fg-soft); margin-bottom: 24px; font-size: 14px; line-height: 1.6;"></p>
+        <h3 class="z-content" style="color: var(--primary); border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px; font-size: 17px;">الملفات والمصادر</h3>
+        <div id="subject-files" style="margin-bottom: 32px;"></div>
+        <h3 class="z-content" style="color: var(--primary); border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px; font-size: 17px;">بنك الأسئلة (MCQ)</h3>
+        <div class="grid" id="subject-quizzes"></div>
+      </div>
+
+      <!-- لوحة الإدارة المتطورة -->
+      <section id="admin-panel" class="z-content">
+        <div class="admin-dashboard-container">
+          <div class="admin-header">
+            <h2 style="color: var(--primary); margin: 0; font-size: 24px; display:flex; align-items:center; gap:8px;">
+              <span>👑</span> لوحة تحكم الإدارة
+            </h2>
+            <div class="admin-stats-grid">
+              <div class="admin-stat-box"><div class="admin-stat-num" id="stat-students">0</div><div class="admin-stat-label">إجمالي الطلاب</div></div>
+              <div class="admin-stat-box"><div class="admin-stat-num" style="color:#4ade80;" id="stat-online">0</div><div class="admin-stat-label">متصل الآن</div></div>
+              <div class="admin-stat-box"><div class="admin-stat-num" style="color:#fbbf24;" id="stat-subjects">0</div><div class="admin-stat-label">المواد الدراسية</div></div>
+              <div class="admin-stat-box"><div class="admin-stat-num" style="color:#c084fc;" id="stat-questions">0</div><div class="admin-stat-label">بنك الأسئلة</div></div>
+            </div>
+          </div>
+
+          <div class="admin-tabs">
+            <div class="admin-tab active" onclick="switchAdminTab('students', this)">👥 إدارة الطلاب</div>
+            <div class="admin-tab" onclick="switchAdminTab('content', this)">📚 إدارة المحتوى</div>
+            <div class="admin-tab" onclick="switchAdminTab('tools', this)">⚙️ أدوات النظام</div>
+            <div class="admin-tab" onclick="switchAdminTab('logs', this)">⏱️ سجل النشاط</div>
+          </div>
+
+          <!-- Tab: الطلاب -->
+          <div id="tab-students" class="admin-tab-content active">
+             <div class="flex-between mb-4">
+                <h3 style="color: var(--gold); margin: 0; font-size: 16px;">قاعدة بيانات الطلاب</h3>
+                <div style="display:flex; gap:8px;">
+                   <button class="pill" style="background: #10b981; font-size: 12px;" onclick="exportStudentsCSV()">📥 تصدير Excel</button>
+                </div>
+             </div>
+             <div class="table-responsive">
+                <table class="styled-table">
+                   <thead>
+                      <tr><th>#</th><th>اسم الطالب</th><th>الهاتف</th><th>النقاط</th><th>الإجراءات</th></tr>
+                   </thead>
+                   <tbody id="students-table-body"><tr><td colspan="5" style="text-align:center;">جاري جلب البيانات...</td></tr></tbody>
+                </table>
+             </div>
+          </div>
+
+          <!-- Tab: المحتوى -->
+          <div id="tab-content" class="admin-tab-content">
+             <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));">
+                <div class="card liquid-glass" style="background:rgba(0,0,0,0.4);">
+                   <h3 style="color: #fbbf24; font-size: 16px; margin-top:0;">إضافة مادة جديدة</h3>
+                   <form class="upload-form" onsubmit="addSubject(event)">
+                      <select class="input-group" id="new-subj-level" required><option value="1">المستوى الأول</option><option value="2">المستوى الثاني</option></select>
+                      <input class="input-group" id="new-subj-name" placeholder="اسم المادة" required>
+                      <input class="input-group" id="new-subj-desc" placeholder="وصف قصير للمادة" required>
+                      <button class="pill" type="submit" style="background: #f59e0b;">إضافة المادة</button>
+                   </form>
+                </div>
+
+                <div class="card liquid-glass" style="background:rgba(0,0,0,0.4);">
+                   <h3 style="font-size: 16px; margin-top:0;">رفع ملف (ملخص/محاضرة)</h3>
+                   <form class="upload-form" onsubmit="addFile(event)">
+                      <select class="input-group" id="file-subj-select" required></select>
+                      <select class="input-group" id="file-category" required><option value="محاضرات">محاضرات نظري</option><option value="سكاشن">سكاشن وتطبيقات</option><option value="امتحانات">امتحانات سابقة</option></select>
+                      <input class="input-group" id="file-title" placeholder="عنوان الملف" required>
+                      <input class="input-group" id="file-link" type="url" placeholder="رابط الملف (درايف/ميديافاير)" required>
+                      <button class="pill" type="submit">نشر الملف</button>
+                   </form>
+                </div>
+
+                <div class="card liquid-glass" style="background:rgba(0,0,0,0.4); grid-column: 1 / -1;">
+                   <h3 style="color: #4ade80; font-size: 16px; margin-top:0;">إضافة سؤال إلى بنك الأسئلة</h3>
+                   <form class="upload-form" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:12px;" onsubmit="addQuiz(event)">
+                      <select class="input-group" style="grid-column:1/-1;" id="quiz-subj-select" required></select>
+                      <input class="input-group" style="grid-column:1/-1;" id="quiz-q" placeholder="اكتب نص السؤال هنا..." required>
+                      <input class="input-group" id="quiz-opt1" placeholder="الاختيار الأول" required>
+                      <input class="input-group" id="quiz-opt2" placeholder="الاختيار الثاني" required>
+                      <input class="input-group" id="quiz-opt3" placeholder="الاختيار الثالث" required>
+                      <input class="input-group" id="quiz-opt4" placeholder="الاختيار الرابع" required>
+                      <select class="input-group" id="quiz-ans" required><option value="1">الإجابة الصحيحة: الأول</option><option value="2">الإجابة الصحيحة: الثاني</option><option value="3">الإجابة الصحيحة: الثالث</option><option value="4">الإجابة الصحيحة: الرابع</option></select>
+                      <button class="pill" type="submit" style="background: #22c55e; height: 100%;">حفظ ونشر السؤال</button>
+                   </form>
+                </div>
+             </div>
+          </div>
+
+          <!-- Tab: أدوات النظام -->
+          <div id="tab-tools" class="admin-tab-content">
+             <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));">
+                
+                <div class="card liquid-glass" style="background:rgba(0,0,0,0.4);">
+                   <h3 style="color: #c084fc; font-size: 16px; margin-top:0;">وضع الصيانة (الصيانة الشاملة)</h3>
+                   <p style="font-size:13px; color:var(--fg-faint); margin-bottom:12px;">عند تفعيل هذا الوضع، سيتم إغلاق الموقع بالكامل أمام الطلاب، ولن يتمكن من الدخول سوى الإدارة.</p>
+                   
+                   <!-- مؤشر الحالة -->
+                   <div id="maintenance-status-badge" style="text-align:center; padding:10px; margin-bottom:12px; border-radius:8px; font-weight:bold; font-size:14px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1);">
+                      جاري التحقق من الحالة...
+                   </div>
+
+                   <!-- أزرار التحكم في وضع الصيانة -->
+                   <div style="display:flex; gap:10px;">
+                      <button class="pill" id="btn-enable-maint" onclick="setMaintenance(true)" style="background: var(--danger); flex:1;">تفعيل 🔴</button>
+                      <button class="pill" id="btn-disable-maint" onclick="setMaintenance(false)" style="background: var(--online-green); flex:1;">إيقاف 🟢</button>
+                   </div>
+                </div>
+
+                <div class="card liquid-glass" style="background:rgba(0,0,0,0.4);">
+                   <h3 style="color: #f87171; font-size: 16px; margin-top:0;">إرسال تنبيه عاجل للدفعة 🚨</h3>
+                   <form class="upload-form" onsubmit="updateAlert(event)">
+                      <input class="input-group" id="alert-input" placeholder="اكتب نص التنبيه ليظهر أعلى الموقع..." required>
+                      <button class="pill" type="submit" style="background: var(--danger);">نشر التنبيه للكل</button>
+                   </form>
+                </div>
+
+                <div class="card liquid-glass" style="background:rgba(0,0,0,0.4); grid-column: 1/-1;">
+                   <h3 style="color: var(--danger); font-size: 16px; margin-top:0;">منطقة الخطر (إجراءات حساسة)</h3>
+                   <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                       <button class="pill" style="background: transparent; border: 1px solid var(--danger); color:var(--danger);" onclick="resetAllScores()">🔄 تصفير نقاط كل الطلاب</button>
+                       <button class="pill" style="background: transparent; border: 1px solid var(--warning); color:var(--warning);" onclick="clearAdminLogs()">🗑️ مسح سجل النشاط بالكامل</button>
+                   </div>
+                </div>
+
+             </div>
+          </div>
+
+          <!-- Tab: السجل -->
+          <div id="tab-logs" class="admin-tab-content">
+             <div class="flex-between mb-4">
+                <h3 style="margin:0; color:var(--primary); font-size: 16px;">سجل نشاط الإدارة</h3>
+                <span style="font-size:12px; color:var(--fg-faint);">يعرض آخر 50 عملية</span>
+             </div>
+             <div id="admin-logs-list" style="max-height: 500px; overflow-y: auto; padding-right: 5px;">
+                <div class="empty-state">جاري تحميل السجل...</div>
+             </div>
+          </div>
+
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- النوافذ المنبثقة الأساسية -->
+  <div id="auth-overlay" class="overlay-bg" style="display: none;">
+    <div class="modal-box liquid-glass">
+      <h2 id="auth-title" class="z-content" style="text-align: center; margin-top:0; color: var(--primary); font-size: 20px;">تسجيل دخول الطالب</h2>
+      <form class="upload-form z-content" onsubmit="handleAuth(event)">
+        <div class="input-group" id="name-group"><label>الاسم الكامل</label><input type="text" id="auth-name" placeholder="الاسم رباعي"></div>
+        <div class="input-group" id="phone-group"><label>رقم الهاتف</label><input type="tel" id="auth-phone" placeholder="01xxxxxxxxx"></div>
+        <div class="input-group"><label>البريد الإلكتروني</label><input type="email" id="auth-email" placeholder="student@example.com" required></div>
+        <div class="input-group" id="pass-group"><label>كلمة المرور</label><input type="password" id="auth-pass" placeholder="••••••••" minlength="6"></div>
+        <div id="forgot-pass-wrap" style="text-align: left; margin-top: 4px;"><a href="javascript:void(0)" onclick="handleForgotPassword()" style="color: var(--fg-soft); font-size: 12px; text-decoration: underline;">نسيت كلمة المرور؟</a></div>
+        <button class="pill" type="submit" id="auth-submit-btn" style="width:100%; height:44px; margin-top:10px; font-size: 15px;">دخول</button>
+      </form>
+      <p class="z-content" style="text-align:center; font-size:13px; margin-top:16px; color:var(--fg-soft);">
+        <span id="auth-switch-text">ليس لديك حساب؟</span>
+        <a href="javascript:void(0)" onclick="toggleAuthMode()" id="auth-switch-link" style="color:var(--primary); font-weight:bold; margin-right:4px;">إنشاء حساب جديد</a>
+      </p>
+    </div>
+  </div>
+
+  <!-- نافذة الملف الشخصي -->
+  <div id="profile-overlay" class="overlay-bg" style="display: none;" onclick="closeModal(event, 'profile-overlay')">
+    <div class="modal-box liquid-glass" onclick="event.stopPropagation()">
+      <h2 class="z-content" style="text-align: center; color: var(--primary); margin-top: 0; margin-bottom: 20px;">الملف الشخصي 👤</h2>
+      <div id="profile-content" class="z-content"></div>
+      <button class="pill z-content" style="width: 100%; background: rgba(255,255,255,0.1); margin-top: 10px;" onclick="closeModal(null, 'profile-overlay')">إغلاق</button>
+    </div>
+  </div>
+
+  <!-- واجهة التتبع (النتائج) -->
+  <div id="tracking-overlay" class="overlay-bg" style="display: none;" onclick="closeModal(event, 'tracking-overlay')">
+    <div class="modal-box large liquid-glass" onclick="event.stopPropagation()" style="background: #0a0908; padding: 0;">
+      <div style="padding: 24px; max-height: 90vh; overflow-y: auto;">
+         <div id="tracking-content" class="z-content"></div>
+         <button class="pill z-content" style="width: 100%; background: rgba(255,255,255,0.08); margin-top: 16px; border: 1px solid rgba(255,255,255,0.1);" onclick="closeModal(null, 'tracking-overlay')">إغلاق</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- سكربت قواعد البيانات -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+  <script>
+    const ADMIN_WHATSAPP_NUMBER = "201006109851"; 
+    const firebaseConfig = { apiKey: "AIzaSyB6FXWiprXlv6eoLhRIDrwyzKmR9cf3F8Y", authDomain: "university-platform-f51a1.firebaseapp.com", databaseURL: "https://university-platform-f51a1-default-rtdb.firebaseio.com", projectId: "university-platform-f51a1", storageBucket: "university-platform-f51a1.firebasestorage.app", messagingSenderId: "160054277275", appId: "1:160054277275:web:79482938bc46e33c52c23e" };
+
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth(); const database = firebase.database();
+    let currentUser = null; let currentStudentData = null; let isRegisterMode = false; let activeLevel = 1; let allUsersList = []; let onlineUsersMap = {};
+    let adminLogsListening = false; let isMaintenanceActive = false; let privateAlertListening = false;
+
+    // دالة لحساب وتنسيق آخر ظهور باحترافية
+    function formatLastSeen(timestamp) {
+      if (!timestamp) return 'غير متوفر';
+      const diff = Math.max(0, Date.now() - timestamp);
+      const minutes = Math.floor(diff / 60000);
+      const hours = Math.floor(minutes / 60);
+      const days = Math.floor(hours / 24);
+
+      if (minutes < 1) return 'الآن';
+      if (hours < 1) return `منذ ${minutes} دقيقة`;
+      if (days < 1) return `منذ ${hours} ساعة`;
+      if (days === 1) return `منذ يوم`;
+      if (days === 2) return `منذ يومين`;
+      if (days <= 10) return `منذ ${days} أيام`;
+      return `منذ ${days} يوم`;
+    }
+
+    // للاستخدام داخل onclick="...('${...}')" -- يمنع كسر السلسلة النصية بالـ JS وكسر الخاصية بالـ HTML
+    function escapeHtml(str) {
+      if (str === null || str === undefined) return '';
+      return String(str)
+        .replace(/\\/g, '\\\\')
+        .replace(/'/g, "\\'")
+        .replace(/\n/g, '\\n')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+    // للاستخدام عند عرض نص داخل الصفحة (innerHTML) -- يمنع حقن HTML/سكربت من اسم طالب أو محتوى
+    function escText(str) {
+      if (str === null || str === undefined) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    // 1. نظام الصيانة 
+    function listenToMaintenance() {
+      database.ref('settings/maintenanceMode').on('value', snap => {
+        isMaintenanceActive = snap.val() || false; 
+        checkMaintenanceUI(); 
+        
+        // تحديث واجهة الإدارة (المؤشر والأزرار)
+        const statusBadge = document.getElementById('maintenance-status-badge');
+        const btnEnable = document.getElementById('btn-enable-maint');
+        const btnDisable = document.getElementById('btn-disable-maint');
+        
+        if(statusBadge && btnEnable && btnDisable) {
+          if(isMaintenanceActive) {
+            statusBadge.innerHTML = 'الحالة الحالية: <span style="color:#ef4444;">مفعل 🔴 (الموقع مغلق)</span>';
+            statusBadge.style.borderColor = '#ef4444';
+            statusBadge.style.background = 'rgba(239, 68, 68, 0.1)';
+            
+            btnEnable.style.opacity = '1';
+            btnEnable.style.boxShadow = '0 0 10px rgba(239, 68, 68, 0.5)';
+            btnDisable.style.opacity = '0.4';
+            btnDisable.style.boxShadow = 'none';
+          } else {
+            statusBadge.innerHTML = 'الحالة الحالية: <span style="color:#22c55e;">معطل 🟢 (الموقع مفتوح)</span>';
+            statusBadge.style.borderColor = '#22c55e';
+            statusBadge.style.background = 'rgba(34, 197, 94, 0.1)';
+            
+            btnDisable.style.opacity = '1';
+            btnDisable.style.boxShadow = '0 0 10px rgba(34, 197, 94, 0.5)';
+            btnEnable.style.opacity = '0.4';
+            btnEnable.style.boxShadow = 'none';
+          }
+        }
+      });
+    }
+    listenToMaintenance();
+
+    function checkMaintenanceUI() {
+      const overlay = document.getElementById('maintenance-overlay');
+      const mainSite = document.getElementById('main-site');
+      const cinematicHero = document.querySelector('.cinematic-hero');
+      
+      const isUserAdmin = currentStudentData && currentStudentData.isAdmin === true;
+
+      // إذا كان وضع الصيانة مفعل والمستخدم ليس أدمن، أغلق الموقع واعرض الشاشة
+      if (isMaintenanceActive && !isUserAdmin) {
+        overlay.style.display = 'flex';
+        if(mainSite) mainSite.style.display = 'none';
+        if(cinematicHero) cinematicHero.style.display = 'none';
+      } else {
+        overlay.style.display = 'none';
+        if(mainSite) mainSite.style.display = 'block';
+        if(cinematicHero) cinematicHero.style.display = 'flex';
+      }
+    }
+
+    function setMaintenance(enable) {
+      database.ref('settings/maintenanceMode').set(enable);
+      logAdminAction('تغيير وضع الصيانة', enable ? 'تفعيل وضع الصيانة (تم إغلاق الموقع عن الطلاب)' : 'إيقاف وضع الصيانة (تم فتح الموقع)');
+      Swal.fire('تم التحديث', enable ? 'تم إغلاق الموقع عن الطلاب وتفعيل الصيانة.' : 'تم فتح الموقع للجميع بنجاح.', 'success');
+    }
+
+    // 2. المصادقة والبيانات الأساسية
+    auth.onAuthStateChanged((user) => {
+      if (user) {
+        database.ref('users/' + user.uid).once('value', (snap) => {
+          const val = snap.val();
+          if (val && val.isBanned) { Swal.fire('محظور!', `⚠️ تم حظرك!\nالسبب: ${val.banReason}`, 'error'); logoutStudent(); return; }
+          currentUser = user; document.getElementById('auth-overlay').style.display = 'none'; loadStudentData(user.uid);
+          listenToPrivateAlerts(user.uid); 
+        });
+      } else {
+        currentUser = null; currentStudentData = null; privateAlertListening = false; checkMaintenanceUI();
+        document.getElementById('auth-overlay').style.display = 'flex'; document.getElementById('user-greeting').innerHTML = '';
+      }
+    });
+
+    // 3. مستمع الرسائل الخاصة
+    function listenToPrivateAlerts(uid) {
+        if(privateAlertListening) return;
+        database.ref('users/' + uid + '/privateAlert').on('value', snap => {
+            const msg = snap.val();
+            if(msg) {
+                Swal.fire({
+                    title: '📩 رسالة إدارية هامة',
+                    text: msg,
+                    icon: 'info',
+                    confirmButtonText: 'حسناً، فهمت',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false
+                }).then(() => {
+                    database.ref('users/' + uid + '/privateAlert').remove();
+                });
+            }
+        });
+        privateAlertListening = true;
+    }
+
+    // تحديث التواجد وحفظ آخر ظهور عند الخروج
+    let presenceInitialized = false; // يمنع تسجيل نفس المستمع أكثر من مرة (كان يتكرر مع كل تحديث لبيانات الطالب)
+    let heartbeatInterval = null;
+
+    function setupPresence(uid, userData) {
+      const myStatusRef = database.ref('online_users/' + uid); 
+      const userLastSeenRef = database.ref('users/' + uid + '/lastSeen');
+
+      if (presenceInitialized) return;
+      presenceInitialized = true;
+
+      const connectedRef = database.ref('.info/connected');
+      connectedRef.on('value', (snap) => { 
+        if (snap.val() === true) { 
+          myStatusRef.onDisconnect().remove(); 
+          userLastSeenRef.onDisconnect().set(firebase.database.ServerValue.TIMESTAMP); 
+          myStatusRef.set({ name: userData.name, email: userData.email || '', loginTime: firebase.database.ServerValue.TIMESTAMP }); 
+          userLastSeenRef.set(firebase.database.ServerValue.TIMESTAMP);
+        } 
+      });
+
+      // نبضة دورية كل دقيقة: onDisconnect وحده قد يتأخر أو لا يُطلق أبداً (خصوصاً على الموبايل عند إغلاق التطبيق من الخلفية)
+      if (heartbeatInterval) clearInterval(heartbeatInterval);
+      heartbeatInterval = setInterval(() => { if (currentUser) userLastSeenRef.set(firebase.database.ServerValue.TIMESTAMP); }, 60000);
+
+      // تسجيل آخر ظهور فوراً عند مغادرة الصفحة أو تصغيرها (أكثر موثوقية من onDisconnect وحده)
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'hidden' && currentUser) userLastSeenRef.set(firebase.database.ServerValue.TIMESTAMP);
+      });
+      window.addEventListener('pagehide', () => { if (currentUser) userLastSeenRef.set(firebase.database.ServerValue.TIMESTAMP); });
+    }
+
+    function updateDashboardStats() {
+       document.getElementById('stat-students').innerText = allUsersList.length; document.getElementById('stat-online').innerText = Object.keys(onlineUsersMap).length;
+       document.getElementById('stat-subjects').innerText = db.length; let qCount = 0; db.forEach(s => qCount += s.quizzes.length); document.getElementById('stat-questions').innerText = qCount;
+    }
+
+    function listenToOnlinePresence() { database.ref('online_users').on('value', (snap) => { onlineUsersMap = snap.val() || {}; updateDashboardStats(); renderStudentsTable(); }); }
+
+    function listenToUsersData() {
+      database.ref('users').on('value', (snapshot) => {
+        let users = snapshot.val() || {}; allUsersList = []; for (let id in users) allUsersList.push({ uid: id, ...users[id] });
+        allUsersList.sort((a, b) => (b.score || 0) - (a.score || 0)); updateDashboardStats(); renderLeaderboard(allUsersList.filter(u => !u.isBanned)); renderStudentsTable();
+      });
+    }
+
+    // 4. سجل نشاط الإدارة
+    function logAdminAction(actionTitle, detailsText) {
+      if(!currentStudentData || !currentUser || currentStudentData.isAdmin !== true) return;
+      database.ref('admin_logs').push({ adminName: currentStudentData.name, uid: currentUser.uid, action: actionTitle, details: detailsText, timestamp: firebase.database.ServerValue.TIMESTAMP });
+    }
+
+    // استدعاء سجل النشاط بتخطي الأخطاء وكشف الرفض من قواعد الفايربيز
+    function listenToAdminLogs() {
+      if(adminLogsListening) return;
+      const container = document.getElementById('admin-logs-list');
+      if(!container) return;
+
+      database.ref('admin_logs').limitToLast(50).on('value', snap => {
+        if (!snap.exists()) {
+          container.innerHTML = '<div class="empty-state">لا يوجد نشاط مسجل حتى الآن. السجل فارغ.</div>';
+          return;
+        }
+
+        const logs = [];
+        snap.forEach(c => { logs.push(c.val()); });
+
+        logs.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+
+        container.innerHTML = logs.map(l => {
+          const timeNum = l.timestamp || Date.now();
+          const date = new Date(timeNum).toLocaleString('ar-EG', { timeZone: 'Africa/Cairo' });
+          const actionText = l.action || 'إجراء';
+          let badgeColor = actionText.includes('حذف') || actionText.includes('تصفير') || actionText.includes('حظر') ? 'var(--danger)' : 'var(--primary)';
+          return `<div class="log-item"><div class="log-header"><div class="log-admin">👤 ${escText(l.adminName || 'أدمن')} <span class="log-badge" style="color:${badgeColor}; border:1px solid ${badgeColor};">${escText(actionText)}</span></div><div class="log-time">🕒 ${date}</div></div><div class="log-body">التفاصيل: <strong>${escText(l.details || 'لا توجد تفاصيل')}</strong></div></div>`;
+        }).join('');
+      }, (error) => {
+        console.error("Firebase Error:", error);
+        container.innerHTML = `<div class="empty-state" style="color:#ef4444; border: 1px solid #ef4444; background: rgba(239,68,68,0.1); padding: 15px;">
+        ❌ عذراً، تم رفض الوصول للسجل.<br><strong>تأكد من تعديل صلاحيات (Rules) من منصة Firebase.</strong><br><br><span style="font-size:12px; font-family:monospace;">الخطأ: ${error.message}</span></div>`;
+      });
+      adminLogsListening = true;
+    }
+
+    function clearAdminLogs() {
+      Swal.fire({title: 'هل أنت متأكد؟', text: "سيتم مسح جميع السجلات بشكل نهائي ولن تتمكن من استعادتها!", icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'نعم، امسح السجل'}).then((result) => {
+        if (result.isConfirmed) {
+          database.ref('admin_logs').remove().then(() => { Swal.fire('تم!', 'تم مسح السجل بنجاح.', 'success'); });
+        }
+      });
+    }
+
+    // 5. دوال الإدارة الإضافية 
+    function exportStudentsCSV() {
+        let csv = "الاسم,رقم الهاتف,البريد الإلكتروني,النقاط,الحالة\n";
+        allUsersList.forEach(u => {
+            let status = u.isBanned ? "محظور" : "نشط";
+            csv += `${u.name},${u.phone || ''},${u.email},${u.score || 0},${status}\n`;
+        });
+        const blob = new Blob(["\uFEFF"+csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob); link.download = "students_database.csv"; link.click();
+        logAdminAction("تصدير بيانات", "تم تحميل قائمة الطلاب بملف Excel/CSV");
+    }
+
+    async function editStudentProfile(uid, currentName, currentPhone) {
+      const { value: formValues } = await Swal.fire({
+        title: 'تعديل بيانات الطالب',
+        html:
+          `<input id="swal-input1" class="swal2-input" value="${currentName}" placeholder="الاسم الكامل">` +
+          `<input id="swal-input2" class="swal2-input" value="${currentPhone}" placeholder="رقم الهاتف">`,
+        focusConfirm: false, showCancelButton: true, confirmButtonText: 'حفظ التعديل',
+        preConfirm: () => { return [ document.getElementById('swal-input1').value, document.getElementById('swal-input2').value ] }
+      });
+      if (formValues && formValues[0]) {
+        database.ref('users/'+uid).update({name: formValues[0], phone: formValues[1]});
+        logAdminAction('تعديل طالب', `تم تعديل بيانات: ${formValues[0]}`);
+        Swal.fire('تم', 'تم تحديث بيانات الطالب بنجاح', 'success');
+      }
+    }
+
+    // باقي دوال التسجيل والموقع
+    function toggleAuthMode() {
+      isRegisterMode = !isRegisterMode;
+      document.getElementById('name-group').style.display = isRegisterMode ? 'flex' : 'none'; document.getElementById('phone-group').style.display = isRegisterMode ? 'flex' : 'none'; document.getElementById('forgot-pass-wrap').style.display = isRegisterMode ? 'none' : 'block';
+      document.getElementById('auth-title').innerText = isRegisterMode ? 'إنشاء حساب طالب جديد' : 'تسجيل دخول الطالب'; document.getElementById('auth-submit-btn').innerText = isRegisterMode ? 'تسجيل حساب' : 'دخول';
+      document.getElementById('auth-switch-text').innerText = isRegisterMode ? 'لديك حساب بالفعل؟' : 'ليس لديك حساب؟'; document.getElementById('auth-switch-link').innerText = isRegisterMode ? 'تسجيل الدخول' : 'إنشاء حساب جديد';
+    }
+
+    async function handleAuth(e) {
+      e.preventDefault(); const email = document.getElementById('auth-email').value.trim(); const pass = document.getElementById('auth-pass').value; const name = document.getElementById('auth-name').value.trim(); const phone = document.getElementById('auth-phone').value.trim();
+      if (isRegisterMode) {
+        if (!name) return Swal.fire('تنبيه', "يرجى كتابة الاسم.", 'warning'); if (!phone || phone.length < 10) return Swal.fire('تنبيه', "رقم هاتف غير صحيح.", 'warning');
+        try { const snapshot = await database.ref('users').orderByChild('phone').equalTo(phone).once('value'); if (snapshot.exists()) return Swal.fire('خطأ', "هذا الرقم مسجل به حساب بالفعل!", 'error');
+          const res = await auth.createUserWithEmailAndPassword(email, pass); await database.ref('users/' + res.user.uid).set({ name, phone, email, score: 0, isBanned: false, createdAt: Date.now() });
+        } catch (err) { Swal.fire('خطأ', err.message, 'error'); }
+      } else { auth.signInWithEmailAndPassword(email, pass).catch((err) => Swal.fire('خطأ', 'بيانات الدخول غير صحيحة', 'error')); }
+    }
+
+    async function handleForgotPassword() {
+      const email = document.getElementById('auth-email').value.trim(); if(!email) return Swal.fire('تنبيه', 'يرجى كتابة البريد الإلكتروني في الخانة أولاً.', 'warning');
+      try { await auth.sendPasswordResetEmail(email); Swal.fire('تم!', 'تم إرسال رابط إعادة التعيين لبريدك.', 'success'); } catch (error) { Swal.fire('خطأ', error.message, 'error'); }
+    }
+
+    function loadStudentData(uid) {
+      database.ref('users/' + uid).on('value', (snap) => {
+        currentStudentData = snap.val(); checkMaintenanceUI();
+        if (currentStudentData) {
+          if (currentStudentData.isBanned) { Swal.fire('محظور!', `⚠️ تم حظرك!\nالسبب: ${currentStudentData.banReason}`, 'error'); logoutStudent(); return; }
+          document.getElementById('user-greeting').innerHTML = `👤 ${escText(currentStudentData.name)}`; setupPresence(uid, currentStudentData);
+          const adminBtn = document.getElementById('admin-toggle-btn');
+          if (currentStudentData.isAdmin === true) { adminBtn.style.display = 'inline-flex'; listenToAdminLogs(); } else { adminBtn.style.display = 'none'; document.getElementById('admin-panel').style.display = 'none'; }
+        }
+      });
+      listenToUsersData(); listenToAlerts(); listenToOnlinePresence(); listenToSubjects();
+    }
+
+    function logoutStudent() { 
+      if (heartbeatInterval) { clearInterval(heartbeatInterval); heartbeatInterval = null; }
+      presenceInitialized = false;
+      if (currentUser) {
+        // تسجيل وقت الخروج فوراً قبل إلغاء المصادقة
+        Promise.all([
+          database.ref('users/' + currentUser.uid + '/lastSeen').set(firebase.database.ServerValue.TIMESTAMP),
+          database.ref('online_users/' + currentUser.uid).remove()
+        ]).then(() => {
+          auth.signOut();
+        }).catch(() => {
+          auth.signOut();
+        });
+      } else {
+        auth.signOut(); 
+      }
+    }
+
+    function showProfile() {
+      if (!currentStudentData) return;
+      const isOnline = onlineUsersMap.hasOwnProperty(currentUser.uid);
+      
+      // استخدام وقت الإنشاء كبديل لآخر ظهور إذا كان الطالب قديماً جداً
+      const fallbackTime = currentStudentData.lastSeen || currentStudentData.createdAt;
+      const lastSeenText = isOnline ? 'متصل الآن 🟢' : formatLastSeen(fallbackTime);
+
+      document.getElementById('profile-content').innerHTML = `
+        <div class="profile-row z-content"><div class="profile-row-label">الاسم الكامل</div><div class="profile-row-value">${escText(currentStudentData.name)}</div></div>
+        <div class="profile-row z-content"><div class="profile-row-label">رقم الهاتف</div><div class="profile-row-value" style="direction:ltr;">${escText(currentStudentData.phone || '-')}</div></div>
+        <div class="profile-row z-content"><div class="profile-row-label">البريد الإلكتروني</div><div class="profile-row-value" style="color:var(--primary); font-size:13px;">${escText(currentStudentData.email)}</div></div>
+        <div class="profile-row z-content"><div class="profile-row-label">حالة الاتصال</div><div class="profile-row-value" style="font-size:13px;">${lastSeenText}</div></div>
+        <div class="profile-row z-content" style="border-color:var(--gold); background:rgba(255,215,0,0.05);"><div class="profile-row-label">مجموع النقاط</div><div class="profile-row-value" style="color:var(--gold);">🏆 ${currentStudentData.score || 0} نقطة</div></div>`;
+      document.getElementById('profile-overlay').style.display = 'flex';
+    }
+
+    function closeModal(e, id) { if (e && e.target.id !== id && e.target.tagName !== 'BUTTON') return; document.getElementById(id).style.display = 'none'; }
+    function sendFeedbackToWhatsApp(e) { e.preventDefault(); const msg = document.getElementById('feedback-message').value.trim(); if (!msg) return; const text = `📌 *ملاحظة جديدة:*\n👤 *الطالب:* ${currentStudentData?.name}\n📞 *الهاتف:* ${currentStudentData?.phone}\n📝 *الملاحظة:* ${msg}`; window.open(`https://wa.me/${ADMIN_WHATSAPP_NUMBER}?text=${encodeURIComponent(text)}`, '_blank'); document.getElementById('feedback-message').value = ''; }
+
+    function renderLeaderboard(board) {
+      const container = document.getElementById('leaderboard-container'); container.innerHTML = ''; let top = board.slice(0, 5);
+      if (top.length === 0) { container.innerHTML = '<div class="empty-state">لا توجد نتائج حتى الآن.</div>'; return; }
+      top.forEach((s, idx) => { let medal = idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : `${idx + 1}.`; container.innerHTML += `<div class="rank-row z-content"><div class="rank-num">${medal}</div><div class="rank-name">${escText(s.name)}</div><div class="rank-score">${s.score || 0} ن</div></div>`; });
+    }
+
+    function renderStudentsTable() {
+      const tbody = document.getElementById('students-table-body'); if (!tbody) return; tbody.innerHTML = '';
+      if (allUsersList.length === 0) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">لم يسجل أحد بعد.</td></tr>'; return; }
+      
+      allUsersList.forEach((u, i) => {
+        const isOnline = onlineUsersMap.hasOwnProperty(u.uid); 
+        
+        let statusHtml = '';
+        if (u.isBanned) {
+          statusHtml = `<span class="status-badge status-banned">⛔ محظور</span>`;
+        } else if (isOnline) {
+          statusHtml = `<span class="status-badge status-online">🟢 متصل</span>`;
+        } else {
+          // استخدام وقت إنشاء الحساب للطلاب القدامى الذين لا يملكون آخر ظهور
+          const fallbackTime = u.lastSeen || u.createdAt;
+          const lastSeenText = formatLastSeen(fallbackTime);
+          statusHtml = `<span class="status-badge status-offline">⚪ آخر ظهور: ${lastSeenText}</span>`;
+        }
+
+        let banBtn = u.isBanned ? `<button class="btn-sm btn-unban" onclick="unbanStudent('${u.uid}', '${escapeHtml(u.name)}')">فك حظر</button>` : `<button class="btn-sm btn-ban" onclick="banStudent('${u.uid}', '${escapeHtml(u.name)}')">حظر</button>`;
+        
+        tbody.innerHTML += `<tr><td>${i+1}</td>
+        <td><div style="font-weight:bold; color:var(--fg); margin-bottom:4px;">${escText(u.name)}</div>${statusHtml}</td>
+        <td style="direction:ltr; font-size:12px; color:var(--fg-faint);">${escText(u.phone||'-')}</td>
+        <td><strong style="color:var(--gold); font-size:14px;">${u.score||0}</strong></td>
+        <td>
+          <div class="action-group">
+             <button class="btn-sm btn-track" onclick="trackStudent('${u.uid}')">📊 النتائج</button>
+             <button class="btn-sm btn-msg" onclick="sendPrivateAlert('${u.uid}','${escapeHtml(u.name)}')">📩 رسالة</button>
+             <button class="btn-sm btn-edit" onclick="editStudentProfile('${u.uid}','${escapeHtml(u.name)}','${escapeHtml(u.phone||'')}')">✏️ تعديل</button>
+             ${banBtn}
+          </div>
+        </td></tr>`;
+      });
+    }
+
+    async function sendPrivateAlert(uid, name) {
+      const { value: text } = await Swal.fire({ title: `إرسال تنبيه لـ ${name}`, input: 'textarea', inputPlaceholder: 'اكتب رسالتك الخاصة هنا...', showCancelButton: true, confirmButtonText: 'إرسال' });
+      if (text) { database.ref('users/' + uid + '/privateAlert').set(text); logAdminAction('إرسال رسالة خاصة', `للطالب: ${name} | النص: ${text}`); Swal.fire('تم', 'تم إرسال الرسالة وسوف تظهر للطالب فوراً', 'success'); }
+    }
+
+    function trackStudent(uid) {
+      const content = document.getElementById('tracking-content'); const student = allUsersList.find(u => u.uid === uid); if(!student) return;
+      const solvedQuizzes = student.solvedQuizzes || {}; let totalCorrect = 0; let totalAnswered = 0; let subjectsHtml = '';
+
+      db.forEach(subj => {
+        if(subj.quizzes && subj.quizzes.length > 0) {
+          let subjCorrect = 0; let subjAnswered = 0;
+          subj.quizzes.forEach(q => { let sq = solvedQuizzes[q.key]; if(sq) { subjAnswered++; totalAnswered++; let isCorrect = sq === true || sq.status === 'correct'; if(isCorrect) { subjCorrect++; totalCorrect++; } } });
+          let subjAccuracy = subjAnswered === 0 ? 0 : Math.round((subjCorrect / subjAnswered) * 100); let barColor = subjAccuracy >= 80 ? '#22c55e' : (subjAccuracy >= 50 ? '#f59e0b' : '#ef4444');
+          subjectsHtml += `<div class="track-subj-card"><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;"><div style="font-weight:bold; font-size:14px; display:flex; align-items:center; gap:6px;">📖 ${escText(subj.name)}</div><div style="color:${barColor}; font-weight:900; font-size:14px;">${subjAccuracy}%</div></div><div class="track-progress-bar"><div class="track-progress-fill" style="width:${subjAccuracy}%; background:${barColor};"></div></div><div style="font-size:11px; color:var(--fg-faint); margin-top:8px; text-align:right;">${subjCorrect} إجابة صحيحة من ${subjAnswered} (من إجمالي ${subj.quizzes.length} سؤال بالمادة)</div></div>`;
+        }
+      });
+
+      if(subjectsHtml === '') { subjectsHtml = '<div class="empty-state">لا توجد اختبارات متاحة في المواد حالياً.</div>'; }
+      let globalAccuracy = totalAnswered === 0 ? 0 : Math.round((totalCorrect / totalAnswered) * 100); let globalAccColor = globalAccuracy >= 80 ? '#22c55e' : (globalAccuracy >= 50 ? '#f59e0b' : '#ef4444'); let avatarChar = student.name ? student.name.charAt(0) : 'ش';
+      let mainHtml = `<div style="display:flex; flex-direction:column; align-items:center; margin-bottom:24px; margin-top:10px;"><div class="track-avatar">${avatarChar}</div><h3 style="margin:12px 0 4px; color:var(--fg); font-size:20px;">${escText(student.name)}</h3><p style="margin:0; color:var(--fg-faint); font-size:13px; direction:ltr;">${escText(student.email)}</p></div><div class="track-stats-grid"><div class="track-stat-card"><div class="track-stat-title">إجمالي الإجابات</div><div class="track-stat-value" style="color:var(--fg);">${totalCorrect}/${totalAnswered}</div></div><div class="track-stat-card"><div class="track-stat-title">نسبة الدقة</div><div class="track-stat-value" style="color:${globalAccColor};">${globalAccuracy}%</div></div><div class="track-stat-card"><div class="track-stat-title">النقاط</div><div class="track-stat-value" style="color:var(--gold);">${student.score || 0} 🏆</div></div></div><div style="text-align:right; margin-bottom:12px; color:var(--primary); font-weight:bold; font-size:14px; display:flex; align-items:center; gap:6px;">📋 سجل النتائج حسب المادة</div><div style="display:flex; flex-direction:column;">${subjectsHtml}</div>`;
+      content.innerHTML = mainHtml; document.getElementById('tracking-overlay').style.display = 'flex';
+    }
+
+    async function banStudent(uid, n) { 
+      const { value: r } = await Swal.fire({title: `سبب الحظر لـ ${n}`, input: 'text', showCancelButton: true, confirmButtonText: 'حظر', confirmButtonColor: '#ef4444'});
+      if (r) { database.ref('users/'+uid).update({isBanned:true, banReason:r, score:0}); logAdminAction('حظر طالب', `اسم الطالب: ${n} | السبب: ${r}`); }
+    }
+    function unbanStudent(uid, n) { Swal.fire({title: `فك الحظر عن ${n}؟`, showCancelButton: true}).then((r)=>{ if(r.isConfirmed){ database.ref('users/'+uid).update({isBanned:false, banReason:null}); logAdminAction('فك حظر طالب', `اسم الطالب: ${n}`); }}); }
+    function resetAllScores() { Swal.fire({title: "تصفير نقاط جميع الطلاب؟", icon:'warning', showCancelButton: true, confirmButtonColor: '#ef4444'}).then((r)=>{ if(r.isConfirmed) { let up={}; allUsersList.forEach(u => { up[u.uid+'/score']=0; up[u.uid+'/solvedQuizzes']=null; }); database.ref('users').update(up); logAdminAction('تصفير الدفعة', 'تم تصفير النقاط لجميع الطلاب'); Swal.fire('تم','تم تصفير الدفعة بنجاح','success'); } }); }
+    function listenToAlerts() { database.ref('alert').on('value', (snap) => { let msg = snap.val(); let banner = document.getElementById("alert-banner"); if (msg) { document.getElementById("alert-text-content").innerText = msg; banner.style.display = "block"; } else banner.style.display = "none"; }); }
+
+    let db = []; let currentSubjectId = null;
+    function listenToSubjects() {
+      database.ref('subjects').on('value', (snap) => {
+        const val = snap.val() || {}; db = Object.keys(val).map(id => { const s = val[id]; return { id, level: s.level, name: s.name, desc: s.desc, files: s.files ? Object.keys(s.files).map(k=>({key:k,...s.files[k]})) : [], quizzes: s.quizzes ? Object.keys(s.quizzes).map(k=>({key:k,...s.quizzes[k]})) : [] }; });
+        if (!currentSubjectId) renderHome(); else { const exist = db.find(s=>s.id===currentSubjectId); if(exist) openSubject(currentSubjectId); else showHome(); } updateAdminSelects(); updateDashboardStats();
+      });
+    }
+
+    function switchAdminTab(tabId, btnElement) { 
+      document.querySelectorAll('.admin-tab-content').forEach(el => el.classList.remove('active')); 
+      document.querySelectorAll('.admin-tab').forEach(el => el.classList.remove('active')); 
+      document.getElementById('tab-' + tabId).classList.add('active'); 
+      btnElement.classList.add('active'); 
+      
+      // استدعاء السجل فوراً عند الضغط على تبويبه
+      if (tabId === 'logs') {
+        listenToAdminLogs();
+      }
+    }
+    
+    function toggleAdminPanel() { if (!currentStudentData || currentStudentData.isAdmin !== true) { Swal.fire('تنبيه','غير مصرح لك.','warning'); return; } const p = document.getElementById("admin-panel"); const vis = p.style.display === "block"; p.style.display = vis ? "none" : "block"; if (!vis) { updateAdminSelects(); p.scrollIntoView({behavior:'smooth'}); } }
+    function updateAlert(e) { e.preventDefault(); let text = document.getElementById("alert-input").value; database.ref('alert').set(text); e.target.reset(); logAdminAction('نشر تنبيه للدفعة', text); Swal.fire('تم', 'تم نشر التنبيه بنجاح', 'success');}
+    function updateAdminSelects() { let opts = db.map(s => `<option value="${s.id}">[مستوى ${s.level}] ${s.name}</option>`).join(''); document.getElementById('file-subj-select').innerHTML = opts; document.getElementById('quiz-subj-select').innerHTML = opts; }
+    
+    function addSubject(e) { e.preventDefault(); const id = "subj-" + Date.now(); const n = document.getElementById("new-subj-name").value; database.ref('subjects/'+id).set({ level: parseInt(document.getElementById("new-subj-level").value, 10), name: n, desc: document.getElementById("new-subj-desc").value }).then(() => { e.target.reset(); logAdminAction('إضافة مادة جديدة', `المادة: ${n}`); Swal.fire('تم', "تمت إضافة المادة!", 'success'); }); }
+    function addFile(e) { e.preventDefault(); const title = document.getElementById("file-title").value; const sId = document.getElementById("file-subj-select").value; const subj = db.find(x=>x.id===sId); database.ref('subjects/'+sId+'/files').push({ title: title, link: document.getElementById("file-link").value, category: document.getElementById("file-category").value }).then(() => { e.target.reset(); logAdminAction('رفع ملف', `عنوان الملف: ${title} | المادة: ${subj?subj.name:''}`); Swal.fire('تم', "تم الرفع بنجاح!", 'success'); }); }
+    function addQuiz(e) { e.preventDefault(); const qText = document.getElementById("quiz-q").value; const sId = document.getElementById("quiz-subj-select").value; const subj = db.find(x=>x.id===sId); database.ref('subjects/'+sId+'/quizzes').push({ q: qText, opt1: document.getElementById("quiz-opt1").value, opt2: document.getElementById("quiz-opt2").value, opt3: document.getElementById("quiz-opt3").value, opt4: document.getElementById("quiz-opt4").value, ans: document.getElementById("quiz-ans").value }).then(() => { e.target.reset(); logAdminAction('إضافة سؤال MCQ', `للمادة: ${subj?subj.name:''}`); Swal.fire('تم', "تمت إضافة السؤال بنجاح!", 'success'); }); }
+    function deleteFile(s, f, fName) { Swal.fire({title: "حذف الملف؟", showCancelButton: true, confirmButtonColor: '#ef4444'}).then((r)=>{ if(r.isConfirmed) { database.ref('subjects/'+s+'/files/'+f).remove(); logAdminAction('حذف ملف', `الملف: ${fName}`); }}); }
+    function deleteQuiz(s, q, qName) { Swal.fire({title: "حذف السؤال؟", showCancelButton: true, confirmButtonColor: '#ef4444'}).then((r)=>{ if(r.isConfirmed) { database.ref('subjects/'+s+'/quizzes/'+q).remove(); logAdminAction('حذف سؤال', `السؤال: ${qName}`); }}); }
+    function deleteSubject(s, n) { Swal.fire({title: `حذف المادة ${n} نهائياً؟`, icon:'warning', showCancelButton: true, confirmButtonColor: '#ef4444'}).then((r)=>{ if(r.isConfirmed) { database.ref('subjects/'+s).remove().then(()=>{ logAdminAction('حذف مادة', `المادة: ${n}`); if(currentSubjectId===s) showHome(); }); }}); }
+
+    function showHome() { document.getElementById('view-home').style.display = 'block'; document.getElementById('view-subject').style.display = 'none'; document.getElementById('search-box').value = ''; currentSubjectId = null; renderHome(); updateAdminSelects(); window.scrollTo({ top: document.getElementById('main-site').offsetTop, behavior: 'smooth' }); }
+    function switchLevel(lvl) { activeLevel = lvl; document.getElementById('tab-lvl-1').classList.toggle('active', lvl===1); document.getElementById('tab-lvl-2').classList.toggle('active', lvl===2); document.getElementById('current-level-heading').innerText = lvl===1 ? "مواد المستوى الأول" : "مواد المستوى الثاني"; document.getElementById('search-box').value = ''; renderHome(); }
+    function filterSubjects() { renderHome(document.getElementById('search-box').value.toLowerCase()); }
+
+    function renderHome(searchQuery = '') {
+      const grid = document.getElementById('subjects-grid'); grid.innerHTML = ''; let filtered = db.filter(s => s.level === activeLevel); if(searchQuery) filtered = filtered.filter(s => s.name.toLowerCase().includes(searchQuery));
+      if (filtered.length === 0) { grid.innerHTML = `<div class="empty-state z-content" style="grid-column:1/-1;">لا توجد مواد مطابقة.</div>`; return; }
+      const isAdmin = currentStudentData && currentStudentData.isAdmin === true;
+      filtered.forEach(subj => { grid.innerHTML += `<div class="card liquid-glass"><div class="z-content" style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px;"><h3 style="margin:0 0 8px; font-size:17px; cursor:pointer;" onclick="openSubject('${subj.id}')">📚 ${escText(subj.name)}</h3>${isAdmin ? `<button class="btn-sm btn-ban" onclick="event.stopPropagation(); deleteSubject('${subj.id}','${escapeHtml(subj.name)}')">🗑️ حذف</button>` : ''}</div><p class="z-content" style="font-size:13px; color:var(--fg-soft); margin:0 0 16px; line-height:1.5; cursor:pointer;" onclick="openSubject('${subj.id}')">${escText(subj.desc)}</p><button class="pill z-content" style="width:100%; height:38px;" onclick="openSubject('${subj.id}')">تصفح المادة</button></div>`; });
+    }
+
+    function renderFilesCategory(filesList, categoryName, icon, isAdmin, subjId) {
+      const filtered = filesList.filter(f => (f.category || 'محاضرات') === categoryName); if (filtered.length === 0) return '';
+      let html = `<div class="file-category-header z-content">${icon} ${escText(categoryName)}</div>`; html += filtered.map(f => `<div class="card liquid-glass" style="flex-direction:row; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px; padding: 12px 16px;"><h4 class="z-content" style="margin:0; font-size:14px;">${escText(f.title)}</h4><div class="z-content" style="display:flex; gap:8px;"><a href="${f.link}" target="_blank" class="pill" style="height:32px; font-size:12px;">فتح الملف ↗</a>${isAdmin ? `<button class="btn-sm btn-ban" onclick="deleteFile('${subjId}','${f.key}','${escapeHtml(f.title)}')">🗑️</button>` : ''}</div></div>`).join(''); return html;
+    }
+
+    function openSubject(id) {
+      currentSubjectId = id; const subj = db.find(s => s.id === id); document.getElementById('view-home').style.display = 'none'; document.getElementById('view-subject').style.display = 'block'; document.getElementById('subject-title').innerText = "📚 " + subj.name; document.getElementById('subject-desc').innerText = subj.desc;
+      const isAdmin = currentStudentData && currentStudentData.isAdmin === true; const solvedQuizzes = (currentStudentData && currentStudentData.solvedQuizzes) ? currentStudentData.solvedQuizzes : {};
+      
+      if(subj.files.length === 0) document.getElementById('subject-files').innerHTML = '<div class="empty-state z-content">لا توجد ملفات.</div>';
+      else { let filesHtml = renderFilesCategory(subj.files, 'محاضرات', '📖', isAdmin, subj.id) + renderFilesCategory(subj.files, 'سكاشن', '🔬', isAdmin, subj.id) + renderFilesCategory(subj.files, 'امتحانات', '📝', isAdmin, subj.id); document.getElementById('subject-files').innerHTML = filesHtml || '<div class="empty-state z-content">لا توجد ملفات مصنفة.</div>'; }
+
+      document.getElementById('subject-quizzes').innerHTML = subj.quizzes.length === 0 ? '<div class="empty-state z-content">بنك الأسئلة فارغ حالياً.</div>' : subj.quizzes.map((q, idx) => {
+        const sq = solvedQuizzes[q.key]; const isSolved = !!sq; const status = sq ? (sq.status || (sq === true ? 'correct' : null)) : null; const selectedOpt = sq ? sq.selected : null;
+        const getBtnStyle = (optNum) => { if(!isSolved) return ''; if(status === 'correct' && q.ans == optNum) return 'background: #15803d; border-color: #22c55e; opacity: 1;'; if(status === 'wrong' && q.ans == optNum) return 'background: #15803d; border-color: #22c55e; opacity: 1;'; if(status === 'wrong' && selectedOpt == optNum) return 'background: #b91c1c; border-color: #ef4444; opacity: 1;'; return 'opacity: 0.5; cursor: not-allowed;'; };
+        const badgeHtml = isSolved ? (status === 'correct' ? `<div class="z-content quiz-solved-badge" style="background:rgba(34,197,94,0.2); color:#4ade80; border:1px solid #22c55e;">✔️ إجابة صحيحة</div>` : `<div class="z-content quiz-solved-badge" style="background:rgba(239,68,68,0.2); color:#f87171; border:1px solid #ef4444;">❌ إجابة خاطئة</div>`) : '';
+        return `<div class="card liquid-glass" style="padding:20px; border: ${isSolved ? (status==='correct' ? '1px solid #15803d' : '1px solid #b91c1c') : 'none'};"><div class="z-content" style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px;"><p style="font-weight:700; font-size:16px; margin:0 0 12px; display:flex; align-items:center; gap:6px;">س${idx+1}: ${escText(q.q)}</p>${isAdmin ? `<button class="btn-sm btn-ban" onclick="deleteQuiz('${subj.id}','${q.key}','${escapeHtml(q.q)}')">🗑️</button>` : ''}</div>${badgeHtml}<div class="quiz-options z-content" style="margin-top:16px;"><button class="quiz-btn" ${isSolved ? 'disabled' : ''} style="${getBtnStyle('1')}" onclick="checkAnswer(this,'1','${q.ans}','${q.key}')">${escText(q.opt1)}</button><button class="quiz-btn" ${isSolved ? 'disabled' : ''} style="${getBtnStyle('2')}" onclick="checkAnswer(this,'2','${q.ans}','${q.key}')">${escText(q.opt2)}</button><button class="quiz-btn" ${isSolved ? 'disabled' : ''} style="${getBtnStyle('3')}" onclick="checkAnswer(this,'3','${q.ans}','${q.key}')">${escText(q.opt3)}</button><button class="quiz-btn" ${isSolved ? 'disabled' : ''} style="${getBtnStyle('4')}" onclick="checkAnswer(this,'4','${q.ans}','${q.key}')">${escText(q.opt4)}</button></div></div>`
+      }).join(''); window.scrollTo({ top: document.getElementById('main-site').offsetTop, behavior: 'smooth' });
+    }
+
+    function checkAnswer(btn, selected, correct, quizKey) {
+      let buttons = btn.parentElement.querySelectorAll('button'); buttons.forEach(b => { b.disabled = true; b.style.cursor = "not-allowed"; }); 
+      const isAlreadySolved = currentStudentData && currentStudentData.solvedQuizzes && currentStudentData.solvedQuizzes[quizKey]; if (isAlreadySolved) return;
+      const isCorrect = (selected === correct); const solveData = { status: isCorrect ? 'correct' : 'wrong', selected: selected, timestamp: Date.now() };
+
+      if (isCorrect) {
+        btn.style.background = "#15803d"; btn.style.borderColor = "#22c55e"; btn.style.opacity = "1"; btn.innerHTML += " ✔️"; buttons.forEach((b, i) => { if(i+1 != selected) b.style.opacity = "0.5"; });
+        if (currentUser) { database.ref('users/'+currentUser.uid+'/score').transaction(s => (s||0)+1); database.ref('users/'+currentUser.uid+'/solvedQuizzes/'+quizKey).set(solveData); Swal.fire({title: 'إجابة صحيحة!', text: 'تمت إضافة نقطة لرصيدك 🏆', icon: 'success', timer: 1500, showConfirmButton: false}); }
+      } else {
+        btn.style.background = "#b91c1c"; btn.style.borderColor = "#ef4444"; btn.style.opacity = "1"; btn.innerHTML += " ❌"; buttons[parseInt(correct)-1].style.background = "#15803d"; buttons[parseInt(correct)-1].style.borderColor = "#22c55e"; buttons[parseInt(correct)-1].style.opacity = "1"; buttons.forEach((b, i) => { if(i+1 != selected && i+1 != correct) b.style.opacity = "0.5"; });
+        if(currentUser) database.ref('users/'+currentUser.uid+'/solvedQuizzes/'+quizKey).set(solveData);
+      }
+    }
+
+    window.onload = () => { document.getElementById('name-group').style.display = 'none'; document.getElementById('phone-group').style.display = 'none'; showHome(); };
+  </script>
+</body>
+</html>
