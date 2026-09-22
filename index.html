@@ -766,13 +766,43 @@
     }
 
     async function handleAuth(e) {
-      e.preventDefault(); const email = document.getElementById('auth-email').value.trim(); const pass = document.getElementById('auth-pass').value; const name = document.getElementById('auth-name').value.trim(); const phone = document.getElementById('auth-phone').value.trim();
+      e.preventDefault();
+      const email = document.getElementById('auth-email').value.trim();
+      const pass = document.getElementById('auth-pass').value;
+      const name = document.getElementById('auth-name').value.trim();
+      const phone = document.getElementById('auth-phone').value.trim();
+
       if (isRegisterMode) {
-        if (!name) return Swal.fire('تنبيه', "يرجى كتابة الاسم.", 'warning'); if (!phone || phone.length < 10) return Swal.fire('تنبيه', "رقم هاتف غير صحيح.", 'warning');
-        try { const snapshot = await database.ref('users').orderByChild('phone').equalTo(phone).once('value'); if (snapshot.exists()) return Swal.fire('خطأ', "هذا الرقم مسجل به حساب بالفعل!", 'error');
-          const res = await auth.createUserWithEmailAndPassword(email, pass); await database.ref('users/' + res.user.uid).set({ name, phone, email, score: 0, isBanned: false, createdAt: Date.now() });
-        } catch (err) { Swal.fire('خطأ', err.message, 'error'); }
-      } else { auth.signInWithEmailAndPassword(email, pass).catch((err) => Swal.fire('خطأ', 'بيانات الدخول غير صحيحة', 'error')); }
+        if (!name) return Swal.fire('تنبيه', "يرجى كتابة الاسم.", 'warning');
+        if (!phone || phone.length < 10) return Swal.fire('تنبيه', "رقم هاتف غير صحيح.", 'warning');
+
+        let createdUser = null;
+        try {
+          // 1) ننشئ الحساب في Auth أولاً عشان نبقى authenticated (auth != null)
+          const res = await auth.createUserWithEmailAndPassword(email, pass);
+          createdUser = res.user;
+
+          // 1.5) نستنى التوكن يوصل فعلياً لقاعدة البيانات قبل أي قراءة (يمنع مشكلة التأخير)
+          await createdUser.getIdToken(true);
+          await new Promise(resolve => setTimeout(resolve, 400));
+
+          // 2) دلوقتي القراءة مسموحة لأن auth.uid موجود
+          const snapshot = await database.ref('users').orderByChild('phone').equalTo(phone).once('value');
+          if (snapshot.exists()) {
+            await createdUser.delete().catch(()=>{});
+            await auth.signOut().catch(()=>{});
+            return Swal.fire('خطأ', "هذا الرقم مسجل به حساب بالفعل!", 'error');
+          }
+
+          // 3) نحفظ بيانات الطالب
+          await database.ref('users/' + createdUser.uid).set({ name, phone, email, score: 0, isBanned: false, createdAt: Date.now() });
+        } catch (err) {
+          if (createdUser) await createdUser.delete().catch(()=>{});
+          Swal.fire('خطأ', err.message, 'error');
+        }
+      } else {
+        auth.signInWithEmailAndPassword(email, pass).catch(() => Swal.fire('خطأ', 'بيانات الدخول غير صحيحة', 'error'));
+      }
     }
 
     async function handleForgotPassword() {
