@@ -286,11 +286,10 @@
               </h3>
               <div class="z-content" style="display: flex; flex-direction: column; gap: 10px;">
                 
-                <!-- 
-                  لتعديل الروابط:
-                  1. ضع رابط الجروب بين علامتي التنصيص الخاصين بـ href (مكان كلمة #)
-                  2. غير اسم المادة الموجود بين <span> و </span>
-                -->
+                <a href="https://chat.whatsapp.com/DyNRIR2xCTUIX1E29iuhIT?s=cl&p=i&mlu=4&ilr=4" target="_blank" class="quiz-btn" style="text-align: right; display: flex; justify-content: space-between; align-items: center; text-decoration: none;">
+                  <span>جروب مادة افريقيا وحوض النيل</span>
+                  <span style="color: var(--online-green);">🟢 انضمام</span>
+                </a>
                 
                 <a href="#" target="_blank" class="quiz-btn" style="text-align: right; display: flex; justify-content: space-between; align-items: center; text-decoration: none;">
                   <span>جروب مادة الاستشعار عن بعد</span>
@@ -536,6 +535,16 @@
       <form class="upload-form z-content" onsubmit="handleAuth(event)">
         <div class="input-group" id="name-group"><label>الاسم الكامل</label><input type="text" id="auth-name" placeholder="الاسم رباعي"></div>
         <div class="input-group" id="phone-group"><label>رقم الهاتف</label><input type="tel" id="auth-phone" placeholder="01xxxxxxxxx"></div>
+        
+        <!-- حقل المستوى الدراسي الذي يظهر فقط عند إنشاء الحساب -->
+        <div class="input-group" id="level-group" style="display: none;">
+          <label>المستوى الدراسي</label>
+          <select id="auth-level">
+            <option value="1">المستوى الأول</option>
+            <option value="2">المستوى الثاني</option>
+          </select>
+        </div>
+
         <div class="input-group"><label>البريد الإلكتروني</label><input type="email" id="auth-email" placeholder="student@example.com" required></div>
         <div class="input-group" id="pass-group"><label>كلمة المرور</label><input type="password" id="auth-pass" placeholder="••••••••" minlength="6"></div>
         <div id="forgot-pass-wrap" style="text-align: left; margin-top: 4px;"><a href="javascript:void(0)" onclick="handleForgotPassword()" style="color: var(--fg-soft); font-size: 12px; text-decoration: underline;">نسيت كلمة المرور؟</a></div>
@@ -763,10 +772,10 @@
     }
 
     function exportStudentsCSV() {
-        let csv = "ID,الاسم,رقم الهاتف,البريد الإلكتروني,النقاط,الحالة\n";
+        let csv = "ID,الاسم,رقم الهاتف,البريد الإلكتروني,النقاط,المستوى,الحالة\n";
         allUsersList.forEach(u => {
             let status = u.isBanned ? "محظور" : "نشط";
-            csv += `${getStudentShortId(u.uid, u.studentId)},${u.name},${u.phone || ''},${u.email},${u.score || 0},${status}\n`;
+            csv += `${getStudentShortId(u.uid, u.studentId)},${u.name},${u.phone || ''},${u.email},${u.score || 0},${u.level || 1},${status}\n`;
         });
         const blob = new Blob(["\uFEFF"+csv], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = "students_database.csv"; link.click();
@@ -812,9 +821,15 @@
 
     function toggleAuthMode() {
       isRegisterMode = !isRegisterMode;
-      document.getElementById('name-group').style.display = isRegisterMode ? 'flex' : 'none'; document.getElementById('phone-group').style.display = isRegisterMode ? 'flex' : 'none'; document.getElementById('forgot-pass-wrap').style.display = isRegisterMode ? 'none' : 'block';
-      document.getElementById('auth-title').innerText = isRegisterMode ? 'إنشاء حساب طالب جديد' : 'تسجيل دخول الطالب'; document.getElementById('auth-submit-btn').innerText = isRegisterMode ? 'تسجيل حساب' : 'دخول';
-      document.getElementById('auth-switch-text').innerText = isRegisterMode ? 'لديك حساب بالفعل؟' : 'ليس لديك حساب؟'; document.getElementById('auth-switch-link').innerText = isRegisterMode ? 'تسجيل الدخول' : 'إنشاء حساب جديد';
+      document.getElementById('name-group').style.display = isRegisterMode ? 'flex' : 'none'; 
+      document.getElementById('phone-group').style.display = isRegisterMode ? 'flex' : 'none'; 
+      document.getElementById('level-group').style.display = isRegisterMode ? 'flex' : 'none'; /* إظهار اختيار المستوى فقط في وضع الإنشاء */
+      document.getElementById('forgot-pass-wrap').style.display = isRegisterMode ? 'none' : 'block';
+      
+      document.getElementById('auth-title').innerText = isRegisterMode ? 'إنشاء حساب طالب جديد' : 'تسجيل دخول الطالب'; 
+      document.getElementById('auth-submit-btn').innerText = isRegisterMode ? 'تسجيل حساب' : 'دخول';
+      document.getElementById('auth-switch-text').innerText = isRegisterMode ? 'لديك حساب بالفعل؟' : 'ليس لديك حساب؟'; 
+      document.getElementById('auth-switch-link').innerText = isRegisterMode ? 'تسجيل الدخول' : 'إنشاء حساب جديد';
     }
 
     async function handleAuth(e) {
@@ -823,6 +838,7 @@
       const pass = document.getElementById('auth-pass').value;
       const name = document.getElementById('auth-name').value.trim();
       const phone = document.getElementById('auth-phone').value.trim();
+      const level = document.getElementById('auth-level').value; // جلب المستوى
 
       if (isRegisterMode) {
         if (!name) return Swal.fire('تنبيه', "يرجى كتابة الاسم.", 'warning');
@@ -843,7 +859,8 @@
             return Swal.fire('خطأ', "هذا الرقم مسجل به حساب بالفعل!", 'error');
           }
 
-          await database.ref('users/' + createdUser.uid).set({ name, phone, email, score: 0, isBanned: false, createdAt: Date.now() });
+          // حفظ مستوى الطالب أيضاً في قاعدة البيانات
+          await database.ref('users/' + createdUser.uid).set({ name, phone, email, level: parseInt(level) || 1, score: 0, isBanned: false, createdAt: Date.now() });
         } catch (err) {
           if (createdUser) await createdUser.delete().catch(()=>{});
           Swal.fire('خطأ', err.message, 'error');
@@ -885,10 +902,12 @@
       const fallbackTime = currentStudentData.lastSeen || currentStudentData.createdAt;
       const lastSeenText = isOnline ? 'متصل الآن 🟢' : formatLastSeen(fallbackTime);
       const studentId = getStudentShortId(currentUser.uid, currentStudentData.studentId);
+      const levelText = currentStudentData.level == 2 ? 'المستوى الثاني' : 'المستوى الأول';
 
       document.getElementById('profile-content').innerHTML = `
         <div class="profile-row z-content" style="border-color:var(--primary); background:rgba(59, 130, 246, 0.05);"><div class="profile-row-label">كود الطالب (ID)</div><div class="profile-row-value" style="color:var(--primary); font-family:monospace; font-size:18px;">${studentId}</div></div>
         <div class="profile-row z-content"><div class="profile-row-label">الاسم الكامل</div><div class="profile-row-value">${escText(currentStudentData.name)}</div></div>
+        <div class="profile-row z-content"><div class="profile-row-label">المستوى الدراسي</div><div class="profile-row-value">${levelText}</div></div>
         <div class="profile-row z-content"><div class="profile-row-label">رقم الهاتف</div><div class="profile-row-value" style="direction:ltr;">${escText(currentStudentData.phone || '-')}</div></div>
         <div class="profile-row z-content"><div class="profile-row-label">البريد الإلكتروني</div><div class="profile-row-value" style="color:var(--primary); font-size:13px;">${escText(currentStudentData.email)}</div></div>
         <div class="profile-row z-content"><div class="profile-row-label">حالة الاتصال</div><div class="profile-row-value" style="font-size:13px;">${lastSeenText}</div></div>
@@ -919,8 +938,13 @@
         let banBtn = u.isBanned ? `<button class="btn-sm btn-unban" onclick="unbanStudent('${u.uid}', '${escapeHtml(u.name)}')">فك حظر</button>` : `<button class="btn-sm btn-ban" onclick="banStudent('${u.uid}', '${escapeHtml(u.name)}')">حظر</button>`;
         const studentId = getStudentShortId(u.uid, u.studentId);
         
+        // شارة صغيرة لتمييز المستوى في لوحة الإدارة
+        const levelBadge = u.level == 2 
+            ? `<span style="background: rgba(168, 85, 247, 0.15); color: #c084fc; padding: 2px 6px; border-radius: 4px; font-size: 10px; margin-right: 6px;">Lvl 2</span>` 
+            : `<span style="background: rgba(59, 130, 246, 0.15); color: #60a5fa; padding: 2px 6px; border-radius: 4px; font-size: 10px; margin-right: 6px;">Lvl 1</span>`;
+
         tbody.innerHTML += `<tr><td>${i+1}</td>
-        <td><div style="font-weight:bold; color:var(--fg); margin-bottom:4px;">${escText(u.name)}</div>${statusHtml}</td>
+        <td><div style="font-weight:bold; color:var(--fg); margin-bottom:4px; display:flex; align-items:center;">${escText(u.name)} ${levelBadge}</div>${statusHtml}</td>
         <td>
             <div style="direction:ltr; font-size:13px; color:var(--fg-soft);">${escText(u.phone||'لا يوجد هاتف')}</div>
             <div style="direction:ltr; font-size:11px; color:var(--primary); margin-top:4px; font-weight:bold;">${escText(u.email||'')}</div>
@@ -1257,7 +1281,12 @@
       }
     }
 
-    window.onload = () => { document.getElementById('name-group').style.display = 'none'; document.getElementById('phone-group').style.display = 'none'; showHome(); };
+    window.onload = () => { 
+      document.getElementById('name-group').style.display = 'none'; 
+      document.getElementById('phone-group').style.display = 'none'; 
+      document.getElementById('level-group').style.display = 'none'; /* يتم الإخفاء افتراضياً في صفحة الدخول */
+      showHome(); 
+    };
   </script>
 </body>
 </html>
