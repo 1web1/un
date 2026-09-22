@@ -32,7 +32,7 @@
     --fg: #111827;
     --fg-soft: #374151;
     --fg-faint: #6b7280;
-    --shade: #f3f4f6;
+    --shade: #f3f4f6; /* خلفية الموقع فاتحة */
     --cream: #111827;
   }
   
@@ -70,6 +70,7 @@
   body.light-mode .admin-btn, body.light-mode .theme-btn { background: rgba(0,0,0,0.05); border: 1px solid rgba(0,0,0,0.1); color: var(--fg); }
   body.light-mode .theme-btn:hover, body.light-mode .admin-btn:hover { background: rgba(0,0,0,0.1); }
   
+  /* تعديل نوافذ SweetAlert لوضع الصباح */
   body.light-mode div:where(.swal2-container) div:where(.swal2-popup) { background: #ffffff !important; color: #111827 !important; border: 1px solid rgba(0,0,0,0.1); box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
   body.light-mode div:where(.swal2-container) input:where(.swal2-input), 
   body.light-mode div:where(.swal2-container) textarea:where(.swal2-textarea) { color: #111827; background: #f9fafb; border: 1px solid rgba(0,0,0,0.2); }
@@ -217,7 +218,7 @@
   .track-progress-bar { height: 8px; background: rgba(0,0,0,0.5); border-radius: 4px; overflow: hidden; width: 100%; margin: 10px 0; border: 1px solid rgba(255,255,255,0.05); }
   .track-progress-fill { height: 100%; border-radius: 4px; transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1); }
 
-  /* تخصيص SweetAlert2 الافتراضي */
+  /* تخصيص SweetAlert2 للوضع المظلم الافتراضي */
   div:where(.swal2-container) div:where(.swal2-popup) { background: #18181b !important; color: #fff !important; border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; font-family: 'Cairo', sans-serif; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
   div:where(.swal2-container) button:where(.swal2-styled.swal2-confirm) { background-color: var(--primary) !important; border-radius: 8px; font-weight: bold; }
   div:where(.swal2-container) button:where(.swal2-styled.swal2-cancel) { background-color: rgba(255,255,255,0.1) !important; color: #fff !important; border-radius: 8px; }
@@ -273,7 +274,7 @@
       </nav>
     </header>
 
-    <!-- شريط التنبيه العاجل (ثابت) -->
+    <!-- شريط التنبيه العاجل -->
     <div id="alert-banner">⚠️ <span id="alert-text-content"></span></div>
 
     <main class="container">
@@ -451,7 +452,7 @@
              <div class="admin-section-header"><span>3️⃣</span> إدارة بنك الأسئلة (MCQ)</div>
              <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); margin-bottom: 24px;">
                 
-                <!-- الرفع الذكي -->
+                <!-- الرفع الذكي (يأخذ عرض الشاشة كاملاً) -->
                 <div class="card liquid-glass" style="background:rgba(0,0,0,0.4); grid-column: 1 / -1; border-color: #14b8a6;">
                    <h3 style="color: #14b8a6; font-size: 16px; margin-top:0; display:flex; align-items:center; gap:8px;">
                       <span>🤖</span> الرفع الذكي السريع للأسئلة (نسخ ولصق كود JSON)
@@ -502,6 +503,7 @@
                    <h3 style="color: #c084fc; font-size: 16px; margin-top:0;">وضع الصيانة (الصيانة الشاملة)</h3>
                    <p style="font-size:13px; color:var(--fg-faint); margin-bottom:12px;">عند تفعيل هذا الوضع، سيتم إغلاق الموقع بالكامل أمام الطلاب، ولن يتمكن من الدخول سوى الإدارة.</p>
                    
+                   <!-- مؤشر الحالة -->
                    <div id="maintenance-status-badge" style="text-align:center; padding:10px; margin-bottom:12px; border-radius:8px; font-weight:bold; font-size:14px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1);">
                       جاري التحقق من الحالة...
                    </div>
@@ -558,6 +560,7 @@
         <div class="input-group" id="name-group"><label>الاسم الكامل</label><input type="text" id="auth-name" placeholder="الاسم رباعي"></div>
         <div class="input-group" id="phone-group"><label>رقم الهاتف</label><input type="tel" id="auth-phone" placeholder="01xxxxxxxxx"></div>
         
+        <!-- حقل المستوى الدراسي الذي يظهر فقط عند إنشاء الحساب -->
         <div class="input-group" id="level-group" style="display: none;">
           <label>المستوى الدراسي</label>
           <select id="auth-level">
@@ -718,16 +721,13 @@
     }
 
     auth.onAuthStateChanged((user) => {
-      if (user && user.emailVerified) {
+      if (user) {
         database.ref('users/' + user.uid).once('value', (snap) => {
           const val = snap.val();
           if (val && val.isBanned) { Swal.fire('محظور!', `⚠️ تم حظرك!\nالسبب: ${val.banReason}`, 'error'); logoutStudent(); return; }
           currentUser = user; document.getElementById('auth-overlay').style.display = 'none'; loadStudentData(user.uid);
           listenToPrivateAlerts(user.uid); 
         });
-      } else if (user && !user.emailVerified) {
-        currentUser = null; currentStudentData = null; privateAlertListening = false;
-        document.getElementById('auth-overlay').style.display = 'flex'; document.getElementById('user-greeting').innerHTML = '';
       } else {
         currentUser = null; currentStudentData = null; privateAlertListening = false; checkMaintenanceUI();
         document.getElementById('auth-overlay').style.display = 'flex'; document.getElementById('user-greeting').innerHTML = '';
@@ -906,35 +906,12 @@
           }
 
           await database.ref('users/' + createdUser.uid).set({ name, phone, email, level: parseInt(level) || 1, score: 0, isBanned: false, createdAt: Date.now() });
-          
-          await createdUser.sendEmailVerification();
-          await auth.signOut(); 
-          
-          Swal.fire({
-             title: 'تم إنشاء الحساب!',
-             text: 'قمنا بإرسال رابط تحقق إلى بريدك الإلكتروني. يرجى فتح البريد والضغط على الرابط لتفعيل حسابك قبل تسجيل الدخول.',
-             icon: 'success',
-             confirmButtonText: 'حسناً'
-          });
-          
-          toggleAuthMode(); 
-          
         } catch (err) {
           if (createdUser) await createdUser.delete().catch(()=>{});
           Swal.fire('خطأ', err.message, 'error');
         }
       } else {
-        try {
-            const userCredential = await auth.signInWithEmailAndPassword(email, pass);
-            if (!userCredential.user.emailVerified) {
-                await userCredential.user.sendEmailVerification(); 
-                await auth.signOut();
-                Swal.fire('تنبيه', 'حسابك غير مفعل بعد! يرجى مراجعة بريدك الإلكتروني لتفعيل الحساب.\n\n(قمنا بإرسال رابط التفعيل مرة أخرى تحسباً لعدم وصوله)', 'warning');
-            }
-        } catch(error) {
-            // هذا التعديل سيعرض الخطأ الحقيقي للمستخدم لمعرفة سبب المشكلة مثل API Key Blocks
-            Swal.fire('خطأ/تنبيه:', error.message, 'error');
-        }
+        auth.signInWithEmailAndPassword(email, pass).catch(() => Swal.fire('خطأ', 'بيانات الدخول غير صحيحة', 'error'));
       }
     }
 
@@ -1350,7 +1327,7 @@
       document.getElementById('name-group').style.display = 'none'; 
       document.getElementById('phone-group').style.display = 'none'; 
       document.getElementById('level-group').style.display = 'none';
-      initTheme(); 
+      initTheme(); /* تفعيل الثيم المحفوظ عند الدخول */
       showHome(); 
     };
   </script>
