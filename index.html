@@ -208,6 +208,10 @@
   /* Utilities */
   .flex-between { display: flex; justify-content: space-between; align-items: center; }
   .mb-4 { margin-bottom: 16px; }
+
+  /* التنبيه العاجل الثابت */
+  #alert-banner { display: none; background: linear-gradient(135deg, var(--warning), #d97706); color: #111; padding: 10px 16px; text-align: center; font-weight: 700; font-size: 14px; animation: pulseAlert 2s infinite; position: sticky; top: 60px; z-index: 39; }
+  @keyframes pulseAlert { 0% { opacity: 0.9; } 50% { opacity: 1; } 100% { opacity: 0.9; } }
 </style>
 </head>
 <body>
@@ -246,13 +250,8 @@
       </nav>
     </header>
 
-    <!-- تم تعديل التنبيه ليحتوي على زر إغلاق (X) -->
-    <div id="alert-banner" style="display: none; background: linear-gradient(135deg, var(--warning), #d97706); color: #111; padding: 10px 16px; font-weight: 700; font-size: 14px; position: sticky; top: 60px; z-index: 39;">
-      <div style="display: flex; justify-content: space-between; align-items: center; max-width: 1200px; margin: 0 auto; width: 100%;">
-        <span>⚠️ <span id="alert-text-content"></span></span>
-        <button onclick="document.getElementById('alert-banner').style.display='none'" style="background: rgba(0,0,0,0.1); border: none; color: #111; font-weight: bold; cursor: pointer; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; transition: 0.2s;">✖</button>
-      </div>
-    </div>
+    <!-- شريط التنبيه العاجل (ثابت بدون زر إغلاق للمستخدم العادي) -->
+    <div id="alert-banner">⚠️ <span id="alert-text-content"></span></div>
 
     <main class="container">
       
@@ -280,25 +279,34 @@
               </form>
             </div>
 
-            <!-- تمت إضافة قسم الجروبات هنا -->
+            <!-- قسم روابط جروبات الدفعة والمواد -->
             <div class="card liquid-glass" style="margin-top: 24px; border-color: var(--primary);">
               <h3 class="z-content" style="color: var(--primary); margin: 0 0 16px; font-size: 18px; display: flex; align-items: center; gap: 8px;">
                 <span>🔗</span> روابط جروبات الدفعة والمواد
               </h3>
               <div class="z-content" style="display: flex; flex-direction: column; gap: 10px;">
-                <!-- ضع روابط الجروبات الحقيقية في href -->
+                
+                <!-- 
+                  لتعديل الروابط:
+                  1. ضع رابط الجروب بين علامتي التنصيص الخاصين بـ href (مكان كلمة #)
+                  2. غير اسم المادة الموجود بين <span> و </span>
+                -->
+                
                 <a href="#" target="_blank" class="quiz-btn" style="text-align: right; display: flex; justify-content: space-between; align-items: center; text-decoration: none;">
                   <span>جروب مادة الاستشعار عن بعد</span>
                   <span style="color: var(--online-green);">🟢 انضمام</span>
                 </a>
+                
                 <a href="#" target="_blank" class="quiz-btn" style="text-align: right; display: flex; justify-content: space-between; align-items: center; text-decoration: none;">
                   <span>جروب مادة نظم المعلومات الجغرافية (GIS)</span>
                   <span style="color: var(--online-green);">🟢 انضمام</span>
                 </a>
+                
                 <a href="#" target="_blank" class="quiz-btn" style="text-align: right; display: flex; justify-content: space-between; align-items: center; text-decoration: none; border-color: #5865F2;">
                   <span>سيرفر الديسكورد للمذاكرة الجماعية</span>
                   <span style="color: #5865F2;">🟣 انضمام</span>
                 </a>
+
               </div>
             </div>
 
@@ -487,7 +495,10 @@
                    <h3 style="color: #f87171; font-size: 16px; margin-top:0;">إرسال تنبيه عاجل للدفعة 🚨</h3>
                    <form class="upload-form" onsubmit="updateAlert(event)">
                       <input class="input-group" id="alert-input" placeholder="اكتب نص التنبيه ليظهر أعلى الموقع..." required>
-                      <button class="pill" type="submit" style="background: var(--danger);">نشر التنبيه للكل</button>
+                      <div style="display:flex; gap:10px;">
+                         <button class="pill" type="submit" style="background: var(--danger); flex: 1;">نشر للكل</button>
+                         <button class="pill" type="button" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); flex: 1;" onclick="clearGlobalAlert()">إلغاء من الكل 🗑️</button>
+                      </div>
                    </form>
                 </div>
 
@@ -958,7 +969,30 @@
     }
     function unbanStudent(uid, n) { Swal.fire({title: `فك الحظر عن ${n}؟`, showCancelButton: true}).then((r)=>{ if(r.isConfirmed){ database.ref('users/'+uid).update({isBanned:false, banReason:null}); logAdminAction('فك حظر طالب', `اسم الطالب: ${n}`); }}); }
     function resetAllScores() { Swal.fire({title: "تصفير نقاط جميع الطلاب؟", icon:'warning', showCancelButton: true, confirmButtonColor: '#ef4444'}).then((r)=>{ if(r.isConfirmed) { let up={}; allUsersList.forEach(u => { up[u.uid+'/score']=0; up[u.uid+'/solvedQuizzes']=null; }); database.ref('users').update(up); logAdminAction('تصفير الدفعة', 'تم تصفير النقاط لجميع الطلاب'); Swal.fire('تم','تم تصفير الدفعة بنجاح','success'); } }); }
+    
+    // دالة التنبيهات مع إضافة دالة مسح التنبيه للكل
     function listenToAlerts() { database.ref('alert').on('value', (snap) => { let msg = snap.val(); let banner = document.getElementById("alert-banner"); if (msg) { document.getElementById("alert-text-content").innerText = msg; banner.style.display = "block"; } else banner.style.display = "none"; }); }
+    
+    // دالة جديدة مخصصة للليدر لمسح التنبيه
+    function clearGlobalAlert() {
+        Swal.fire({
+            title: 'إلغاء التنبيه؟',
+            text: 'سيتم مسح التنبيه العاجل من شاشات جميع الطلاب فوراً.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: 'rgba(255,255,255,0.1)',
+            confirmButtonText: 'نعم، امسح التنبيه',
+            cancelButtonText: 'تراجع'
+        }).then((result) => {
+            if(result.isConfirmed) {
+                database.ref('alert').remove().then(() => {
+                    logAdminAction('إلغاء التنبيه', 'تم مسح التنبيه العاجل من الموقع');
+                    Swal.fire('تم', 'تم إخفاء التنبيه من عند جميع الطلاب بنجاح.', 'success');
+                });
+            }
+        });
+    }
 
     let db = []; let currentSubjectId = null;
     function listenToSubjects() {
@@ -1085,7 +1119,6 @@
     function showHome() { document.getElementById('view-home').style.display = 'block'; document.getElementById('view-subject').style.display = 'none'; document.getElementById('search-box').value = ''; currentSubjectId = null; renderHome(); updateAdminSelects(); window.scrollTo({ top: document.getElementById('main-site').offsetTop, behavior: 'smooth' }); }
     function switchLevel(lvl) { activeLevel = lvl; document.getElementById('tab-lvl-1').classList.toggle('active', lvl===1); document.getElementById('tab-lvl-2').classList.toggle('active', lvl===2); document.getElementById('current-level-heading').innerText = lvl===1 ? "مواد المستوى الأول" : "مواد المستوى الثاني"; document.getElementById('search-box').value = ''; renderHome(); }
     
-    // إضافة Timer لعمل Debounce أثناء البحث لتحسين الأداء
     let searchTimeout = null;
     function filterSubjects() { 
         clearTimeout(searchTimeout);
