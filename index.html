@@ -140,6 +140,10 @@
   .profile-row-value { font-size: 15px; font-weight: 700; color: var(--fg); }
   .file-category-header { background: rgba(0,0,0,0.3); padding: 10px 14px; border-radius: 8px; font-size: 14px; color: var(--gold); margin: 20px 0 10px; font-weight: bold; display: flex; align-items: center; gap: 8px; border-right: 3px solid var(--gold); }
   .z-content { position: relative; z-index: 2; }
+  
+  .subject-image-container { margin-bottom: 20px; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); }
+  .subject-image-container img { width: 100%; height: auto; display: block; }
+  .subject-image-title { background: rgba(0,0,0,0.8); padding: 8px 12px; font-size: 14px; color: var(--gold); text-align: center; font-weight: bold; }
 
   /* -------------------------------------------
      لوحة الإدارة المتطورة
@@ -159,6 +163,22 @@
   .admin-tab.active { color: var(--primary); border-bottom-color: var(--primary); background: rgba(59, 130, 246, 0.05); }
   .admin-tab-content { padding: 24px; display: none; }
   .admin-tab-content.active { display: block; }
+
+  /* تنسيق أقسام الإدارة */
+  .admin-section-header {
+      background: rgba(255,255,255,0.03);
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 16px;
+      color: var(--gold);
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 30px 0 16px;
+      border-right: 4px solid var(--gold);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  }
   
   .log-item { background: rgba(0,0,0,0.3); padding: 16px; border-radius: 10px; margin-bottom: 12px; border-right: 4px solid var(--primary); display: flex; flex-direction: column; gap: 6px; transition: 0.2s; }
   .log-item:hover { background: rgba(0,0,0,0.5); }
@@ -271,9 +291,17 @@
         <button class="pill z-content mb-4" style="background:rgba(255,255,255,0.1);" onclick="showHome()">⭠ رجوع للرئيسية</button>
         <h2 class="section-title z-content" id="subject-title">اسم المادة</h2>
         <p id="subject-desc" class="z-content" style="color: var(--fg-soft); margin-bottom: 24px; font-size: 14px; line-height: 1.6;"></p>
+        
+        <div id="subject-images" class="z-content" style="margin-bottom: 24px;"></div>
+
         <h3 class="z-content" style="color: var(--primary); border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px; font-size: 17px;">الملفات والمصادر</h3>
         <div id="subject-files" style="margin-bottom: 32px;"></div>
-        <h3 class="z-content" style="color: var(--primary); border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px; font-size: 17px;">بنك الأسئلة (MCQ)</h3>
+        
+        <div class="z-content flex-between" style="border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px; margin-bottom: 16px;">
+           <h3 style="color: var(--primary); font-size: 17px; margin: 0;">بنك الأسئلة (MCQ)</h3>
+           <button id="btn-reset-subject-quizzes" class="pill" style="background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); font-size: 12px; height: 30px;" onclick="resetSubjectQuizzes()">🔄 إعادة امتحان المادة بالكامل</button>
+        </div>
+        
         <div class="grid" id="subject-quizzes"></div>
       </div>
 
@@ -307,29 +335,40 @@
                    <button class="pill" style="background: #10b981; font-size: 12px;" onclick="exportStudentsCSV()">📥 تصدير Excel</button>
                 </div>
              </div>
+             <div style="margin-bottom: 12px;">
+                 <input type="text" id="admin-search-student" class="search-box" style="margin-bottom:0; background: rgba(0,0,0,0.4);" placeholder="🔍 ابحث عن طالب بالاسم، الهاتف، أو الـ ID..." oninput="filterAdminStudents()">
+             </div>
              <div class="table-responsive">
                 <table class="styled-table">
                    <thead>
-                      <tr><th>#</th><th>اسم الطالب</th><th>الهاتف</th><th>النقاط</th><th>الإجراءات</th></tr>
+                      <tr><th>#</th><th>اسم الطالب</th><th>بيانات الاتصال / ID</th><th>النقاط</th><th>الإجراءات</th></tr>
                    </thead>
                    <tbody id="students-table-body"><tr><td colspan="5" style="text-align:center;">جاري جلب البيانات...</td></tr></tbody>
                 </table>
              </div>
           </div>
 
-          <!-- Tab: المحتوى -->
+          <!-- Tab: المحتوى (تمت إعادة الهيكلة والتصميم) -->
           <div id="tab-content" class="admin-tab-content">
-             <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));">
-                <div class="card liquid-glass" style="background:rgba(0,0,0,0.4);">
-                   <h3 style="color: #fbbf24; font-size: 16px; margin-top:0;">إضافة مادة جديدة</h3>
-                   <form class="upload-form" onsubmit="addSubject(event)">
+             
+             <!-- قسم 1: إدارة المواد -->
+             <div class="admin-section-header"><span>1️⃣</span> إدارة المواد الدراسية</div>
+             <div class="card liquid-glass" style="background:rgba(0,0,0,0.4); margin-bottom: 24px;">
+                <h3 style="color: #fbbf24; font-size: 16px; margin-top:0;">إضافة مادة جديدة</h3>
+                <form class="upload-form" onsubmit="addSubject(event)">
+                   <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
                       <select class="input-group" id="new-subj-level" required><option value="1">المستوى الأول</option><option value="2">المستوى الثاني</option></select>
                       <input class="input-group" id="new-subj-name" placeholder="اسم المادة" required>
-                      <input class="input-group" id="new-subj-desc" placeholder="وصف قصير للمادة" required>
-                      <button class="pill" type="submit" style="background: #f59e0b;">إضافة المادة</button>
-                   </form>
-                </div>
+                      <input class="input-group" id="new-subj-desc" placeholder="وصف قصير للمادة" required style="grid-column: 1/-1;">
+                   </div>
+                   <button class="pill" type="submit" style="background: #f59e0b; width: fit-content;">إضافة المادة</button>
+                </form>
+             </div>
 
+             <!-- قسم 2: الملفات والوسائط -->
+             <div class="admin-section-header"><span>2️⃣</span> إدارة الملفات والوسائط</div>
+             <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); margin-bottom: 24px;">
+                
                 <div class="card liquid-glass" style="background:rgba(0,0,0,0.4);">
                    <h3 style="font-size: 16px; margin-top:0;">رفع ملف (ملخص/محاضرة)</h3>
                    <form class="upload-form" onsubmit="addFile(event)">
@@ -341,19 +380,61 @@
                    </form>
                 </div>
 
-                <div class="card liquid-glass" style="background:rgba(0,0,0,0.4); grid-column: 1 / -1;">
-                   <h3 style="color: #4ade80; font-size: 16px; margin-top:0;">إضافة سؤال إلى بنك الأسئلة</h3>
-                   <form class="upload-form" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:12px;" onsubmit="addQuiz(event)">
-                      <select class="input-group" style="grid-column:1/-1;" id="quiz-subj-select" required></select>
-                      <input class="input-group" style="grid-column:1/-1;" id="quiz-q" placeholder="اكتب نص السؤال هنا..." required>
-                      <input class="input-group" id="quiz-opt1" placeholder="الاختيار الأول" required>
-                      <input class="input-group" id="quiz-opt2" placeholder="الاختيار الثاني" required>
-                      <input class="input-group" id="quiz-opt3" placeholder="الاختيار الثالث" required>
-                      <input class="input-group" id="quiz-opt4" placeholder="الاختيار الرابع" required>
-                      <select class="input-group" id="quiz-ans" required><option value="1">الإجابة الصحيحة: الأول</option><option value="2">الإجابة الصحيحة: الثاني</option><option value="3">الإجابة الصحيحة: الثالث</option><option value="4">الإجابة الصحيحة: الرابع</option></select>
-                      <button class="pill" type="submit" style="background: #22c55e; height: 100%;">حفظ ونشر السؤال</button>
+                <div class="card liquid-glass" style="background:rgba(0,0,0,0.4);">
+                   <h3 style="color: #ec4899; font-size: 16px; margin-top:0;">إضافة صورة للمادة (جدول/إعلان)</h3>
+                   <form class="upload-form" onsubmit="addSubjectImage(event)">
+                      <select class="input-group" id="img-subj-select" required></select>
+                      <input class="input-group" id="img-title" placeholder="وصف الصورة (مثال: جدول المحاضرات)" required>
+                      <input class="input-group" id="img-link" type="url" placeholder="رابط الصورة المباشر (مثل رابط Imgur)" required>
+                      <button class="pill" type="submit" style="background: #ec4899; margin-top: auto;">رفع الصورة للموقع</button>
                    </form>
                 </div>
+             </div>
+
+             <!-- قسم 3: بنك الأسئلة -->
+             <div class="admin-section-header"><span>3️⃣</span> إدارة بنك الأسئلة (MCQ)</div>
+             <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); margin-bottom: 24px;">
+                
+                <!-- الرفع الذكي (يأخذ عرض الشاشة كاملاً) -->
+                <div class="card liquid-glass" style="background:rgba(0,0,0,0.4); grid-column: 1 / -1; border-color: #14b8a6;">
+                   <h3 style="color: #14b8a6; font-size: 16px; margin-top:0; display:flex; align-items:center; gap:8px;">
+                      <span>🤖</span> الرفع الذكي السريع للأسئلة (نسخ ولصق كود JSON)
+                   </h3>
+                   <p style="font-size:12px; color:var(--fg-faint); margin-bottom:10px;">انسخ كود الأسئلة الذي سيولده لك الذكاء الاصطناعي والصقه هنا مباشرة لإضافة مئات الأسئلة في ثانية واحدة.</p>
+                   <form class="upload-form" onsubmit="addAIQuizzes(event)">
+                      <select class="input-group" id="ai-quiz-subj-select" required></select>
+                      <textarea class="input-group" id="ai-quiz-data" rows="4" placeholder='مثال: [{ "q": "سؤال؟", "opt1": "أ", "opt2": "ب", "opt3": "ج", "opt4": "د", "ans": "1" }]' required style="resize:vertical; font-family:monospace; direction:ltr; text-align:left;"></textarea>
+                      <button class="pill" type="submit" style="background: #14b8a6; font-size: 14px; width: fit-content;">رفع الأسئلة بضغطة واحدة 🚀</button>
+                   </form>
+                </div>
+
+                <!-- إضافة سؤال مفرد -->
+                <div class="card liquid-glass" style="background:rgba(0,0,0,0.4);">
+                   <h3 style="color: #4ade80; font-size: 16px; margin-top:0;">إضافة سؤال يدوياً</h3>
+                   <form class="upload-form" onsubmit="addQuiz(event)">
+                      <select class="input-group" id="quiz-subj-select" required></select>
+                      <input class="input-group" id="quiz-q" placeholder="اكتب نص السؤال هنا..." required>
+                      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                         <input class="input-group" id="quiz-opt1" placeholder="الاختيار الأول" required>
+                         <input class="input-group" id="quiz-opt2" placeholder="الاختيار الثاني" required>
+                         <input class="input-group" id="quiz-opt3" placeholder="الاختيار الثالث" required>
+                         <input class="input-group" id="quiz-opt4" placeholder="الاختيار الرابع" required>
+                      </div>
+                      <select class="input-group" id="quiz-ans" required><option value="1">الإجابة: الأول</option><option value="2">الإجابة: الثاني</option><option value="3">الإجابة: الثالث</option><option value="4">الإجابة: الرابع</option></select>
+                      <button class="pill" type="submit" style="background: #22c55e;">حفظ ونشر السؤال</button>
+                   </form>
+                </div>
+
+                <!-- مسح كل الأسئلة (الزر الجديد) -->
+                <div class="card liquid-glass" style="background:rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.3);">
+                   <h3 style="color: #f87171; font-size: 16px; margin-top:0;">🗑️ مسح كل أسئلة المادة</h3>
+                   <p style="font-size:12px; color:var(--fg-faint); margin-bottom:10px;">احذر: سيتم مسح جميع الأسئلة الموجودة في بنك أسئلة المادة المحددة نهائياً، ولا يمكن التراجع عن هذا الإجراء!</p>
+                   <div class="upload-form" style="margin-top: auto;">
+                      <select class="input-group" id="delete-all-quiz-subj-select" required></select>
+                      <button class="pill" type="button" style="background: var(--danger); font-size: 14px;" onclick="deleteAllQuizzesFromSubject()">مسح بنك أسئلة المادة بالكامل ⚠️</button>
+                   </div>
+                </div>
+
              </div>
           </div>
 
@@ -370,7 +451,6 @@
                       جاري التحقق من الحالة...
                    </div>
 
-                   <!-- أزرار التحكم في وضع الصيانة -->
                    <div style="display:flex; gap:10px;">
                       <button class="pill" id="btn-enable-maint" onclick="setMaintenance(true)" style="background: var(--danger); flex:1;">تفعيل 🔴</button>
                       <button class="pill" id="btn-disable-maint" onclick="setMaintenance(false)" style="background: var(--online-green); flex:1;">إيقاف 🟢</button>
@@ -464,7 +544,15 @@
     let currentUser = null; let currentStudentData = null; let isRegisterMode = false; let activeLevel = 1; let allUsersList = []; let onlineUsersMap = {};
     let adminLogsListening = false; let isMaintenanceActive = false; let privateAlertListening = false;
 
-    // دالة لحساب وتنسيق آخر ظهور باحترافية
+    // دالة لترتيب المصفوفات عشوائياً
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+    }
+
     function formatLastSeen(timestamp) {
       if (!timestamp) return 'غير متوفر';
       const diff = Math.max(0, Date.now() - timestamp);
@@ -481,35 +569,24 @@
       return `منذ ${days} يوم`;
     }
 
-    // للاستخدام داخل onclick="...('${...}')" -- يمنع كسر السلسلة النصية بالـ JS وكسر الخاصية بالـ HTML
     function escapeHtml(str) {
       if (str === null || str === undefined) return '';
-      return String(str)
-        .replace(/\\/g, '\\\\')
-        .replace(/'/g, "\\'")
-        .replace(/\n/g, '\\n')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;');
+      return String(str).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\n/g, '\\n').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
-    // للاستخدام عند عرض نص داخل الصفحة (innerHTML) -- يمنع حقن HTML/سكربت من اسم طالب أو محتوى
     function escText(str) {
       if (str === null || str === undefined) return '';
-      return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
+      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     }
 
-    // 1. نظام الصيانة 
+    function getStudentShortId(uid) {
+        return uid ? uid.substring(0,6).toUpperCase() : 'غير متوفر';
+    }
+
     function listenToMaintenance() {
       database.ref('settings/maintenanceMode').on('value', snap => {
         isMaintenanceActive = snap.val() || false; 
         checkMaintenanceUI(); 
         
-        // تحديث واجهة الإدارة (المؤشر والأزرار)
         const statusBadge = document.getElementById('maintenance-status-badge');
         const btnEnable = document.getElementById('btn-enable-maint');
         const btnDisable = document.getElementById('btn-disable-maint');
@@ -517,22 +594,14 @@
         if(statusBadge && btnEnable && btnDisable) {
           if(isMaintenanceActive) {
             statusBadge.innerHTML = 'الحالة الحالية: <span style="color:#ef4444;">مفعل 🔴 (الموقع مغلق)</span>';
-            statusBadge.style.borderColor = '#ef4444';
-            statusBadge.style.background = 'rgba(239, 68, 68, 0.1)';
-            
-            btnEnable.style.opacity = '1';
-            btnEnable.style.boxShadow = '0 0 10px rgba(239, 68, 68, 0.5)';
-            btnDisable.style.opacity = '0.4';
-            btnDisable.style.boxShadow = 'none';
+            statusBadge.style.borderColor = '#ef4444'; statusBadge.style.background = 'rgba(239, 68, 68, 0.1)';
+            btnEnable.style.opacity = '1'; btnEnable.style.boxShadow = '0 0 10px rgba(239, 68, 68, 0.5)';
+            btnDisable.style.opacity = '0.4'; btnDisable.style.boxShadow = 'none';
           } else {
             statusBadge.innerHTML = 'الحالة الحالية: <span style="color:#22c55e;">معطل 🟢 (الموقع مفتوح)</span>';
-            statusBadge.style.borderColor = '#22c55e';
-            statusBadge.style.background = 'rgba(34, 197, 94, 0.1)';
-            
-            btnDisable.style.opacity = '1';
-            btnDisable.style.boxShadow = '0 0 10px rgba(34, 197, 94, 0.5)';
-            btnEnable.style.opacity = '0.4';
-            btnEnable.style.boxShadow = 'none';
+            statusBadge.style.borderColor = '#22c55e'; statusBadge.style.background = 'rgba(34, 197, 94, 0.1)';
+            btnDisable.style.opacity = '1'; btnDisable.style.boxShadow = '0 0 10px rgba(34, 197, 94, 0.5)';
+            btnEnable.style.opacity = '0.4'; btnEnable.style.boxShadow = 'none';
           }
         }
       });
@@ -543,18 +612,11 @@
       const overlay = document.getElementById('maintenance-overlay');
       const mainSite = document.getElementById('main-site');
       const cinematicHero = document.querySelector('.cinematic-hero');
-      
       const isUserAdmin = currentStudentData && currentStudentData.isAdmin === true;
-
-      // إذا كان وضع الصيانة مفعل والمستخدم ليس أدمن، أغلق الموقع واعرض الشاشة
       if (isMaintenanceActive && !isUserAdmin) {
-        overlay.style.display = 'flex';
-        if(mainSite) mainSite.style.display = 'none';
-        if(cinematicHero) cinematicHero.style.display = 'none';
+        overlay.style.display = 'flex'; if(mainSite) mainSite.style.display = 'none'; if(cinematicHero) cinematicHero.style.display = 'none';
       } else {
-        overlay.style.display = 'none';
-        if(mainSite) mainSite.style.display = 'block';
-        if(cinematicHero) cinematicHero.style.display = 'flex';
+        overlay.style.display = 'none'; if(mainSite) mainSite.style.display = 'block'; if(cinematicHero) cinematicHero.style.display = 'flex';
       }
     }
 
@@ -564,7 +626,6 @@
       Swal.fire('تم التحديث', enable ? 'تم إغلاق الموقع عن الطلاب وتفعيل الصيانة.' : 'تم فتح الموقع للجميع بنجاح.', 'success');
     }
 
-    // 2. المصادقة والبيانات الأساسية
     auth.onAuthStateChanged((user) => {
       if (user) {
         database.ref('users/' + user.uid).once('value', (snap) => {
@@ -579,29 +640,18 @@
       }
     });
 
-    // 3. مستمع الرسائل الخاصة
     function listenToPrivateAlerts(uid) {
         if(privateAlertListening) return;
         database.ref('users/' + uid + '/privateAlert').on('value', snap => {
             const msg = snap.val();
             if(msg) {
-                Swal.fire({
-                    title: '📩 رسالة إدارية هامة',
-                    text: msg,
-                    icon: 'info',
-                    confirmButtonText: 'حسناً، فهمت',
-                    allowOutsideClick: false,
-                    allowEscapeKey: false
-                }).then(() => {
-                    database.ref('users/' + uid + '/privateAlert').remove();
-                });
+                Swal.fire({ title: '📩 رسالة إدارية هامة', text: msg, icon: 'info', confirmButtonText: 'حسناً، فهمت', allowOutsideClick: false, allowEscapeKey: false }).then(() => { database.ref('users/' + uid + '/privateAlert').remove(); });
             }
         });
         privateAlertListening = true;
     }
 
-    // تحديث التواجد وحفظ آخر ظهور عند الخروج
-    let presenceInitialized = false; // يمنع تسجيل نفس المستمع أكثر من مرة (كان يتكرر مع كل تحديث لبيانات الطالب)
+    let presenceInitialized = false; 
     let heartbeatInterval = null;
 
     function setupPresence(uid, userData) {
@@ -621,14 +671,10 @@
         } 
       });
 
-      // نبضة دورية كل دقيقة: onDisconnect وحده قد يتأخر أو لا يُطلق أبداً (خصوصاً على الموبايل عند إغلاق التطبيق من الخلفية)
       if (heartbeatInterval) clearInterval(heartbeatInterval);
       heartbeatInterval = setInterval(() => { if (currentUser) userLastSeenRef.set(firebase.database.ServerValue.TIMESTAMP); }, 60000);
 
-      // تسجيل آخر ظهور فوراً عند مغادرة الصفحة أو تصغيرها (أكثر موثوقية من onDisconnect وحده)
-      document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'hidden' && currentUser) userLastSeenRef.set(firebase.database.ServerValue.TIMESTAMP);
-      });
+      document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden' && currentUser) userLastSeenRef.set(firebase.database.ServerValue.TIMESTAMP); });
       window.addEventListener('pagehide', () => { if (currentUser) userLastSeenRef.set(firebase.database.ServerValue.TIMESTAMP); });
     }
 
@@ -646,82 +692,72 @@
       });
     }
 
-    // 4. سجل نشاط الإدارة
     function logAdminAction(actionTitle, detailsText) {
       if(!currentStudentData || !currentUser || currentStudentData.isAdmin !== true) return;
       database.ref('admin_logs').push({ adminName: currentStudentData.name, uid: currentUser.uid, action: actionTitle, details: detailsText, timestamp: firebase.database.ServerValue.TIMESTAMP });
     }
 
-    // استدعاء سجل النشاط بتخطي الأخطاء وكشف الرفض من قواعد الفايربيز
     function listenToAdminLogs() {
       if(adminLogsListening) return;
       const container = document.getElementById('admin-logs-list');
       if(!container) return;
 
       database.ref('admin_logs').limitToLast(50).on('value', snap => {
-        if (!snap.exists()) {
-          container.innerHTML = '<div class="empty-state">لا يوجد نشاط مسجل حتى الآن. السجل فارغ.</div>';
-          return;
-        }
-
-        const logs = [];
-        snap.forEach(c => { logs.push(c.val()); });
-
+        if (!snap.exists()) { container.innerHTML = '<div class="empty-state">لا يوجد نشاط مسجل حتى الآن. السجل فارغ.</div>'; return; }
+        const logs = []; snap.forEach(c => { logs.push(c.val()); });
         logs.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
 
         container.innerHTML = logs.map(l => {
-          const timeNum = l.timestamp || Date.now();
-          const date = new Date(timeNum).toLocaleString('ar-EG', { timeZone: 'Africa/Cairo' });
-          const actionText = l.action || 'إجراء';
-          let badgeColor = actionText.includes('حذف') || actionText.includes('تصفير') || actionText.includes('حظر') ? 'var(--danger)' : 'var(--primary)';
+          const timeNum = l.timestamp || Date.now(); const date = new Date(timeNum).toLocaleString('ar-EG', { timeZone: 'Africa/Cairo' });
+          const actionText = l.action || 'إجراء'; let badgeColor = actionText.includes('حذف') || actionText.includes('مسح') || actionText.includes('تصفير') || actionText.includes('حظر') ? 'var(--danger)' : 'var(--primary)';
           return `<div class="log-item"><div class="log-header"><div class="log-admin">👤 ${escText(l.adminName || 'أدمن')} <span class="log-badge" style="color:${badgeColor}; border:1px solid ${badgeColor};">${escText(actionText)}</span></div><div class="log-time">🕒 ${date}</div></div><div class="log-body">التفاصيل: <strong>${escText(l.details || 'لا توجد تفاصيل')}</strong></div></div>`;
         }).join('');
       }, (error) => {
-        console.error("Firebase Error:", error);
-        container.innerHTML = `<div class="empty-state" style="color:#ef4444; border: 1px solid #ef4444; background: rgba(239,68,68,0.1); padding: 15px;">
-        ❌ عذراً، تم رفض الوصول للسجل.<br><strong>تأكد من تعديل صلاحيات (Rules) من منصة Firebase.</strong><br><br><span style="font-size:12px; font-family:monospace;">الخطأ: ${error.message}</span></div>`;
+        container.innerHTML = `<div class="empty-state" style="color:#ef4444; border: 1px solid #ef4444; background: rgba(239,68,68,0.1); padding: 15px;">❌ عذراً، تم رفض الوصول للسجل.<br>الخطأ: ${error.message}</div>`;
       });
       adminLogsListening = true;
     }
 
     function clearAdminLogs() {
       Swal.fire({title: 'هل أنت متأكد؟', text: "سيتم مسح جميع السجلات بشكل نهائي ولن تتمكن من استعادتها!", icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'نعم، امسح السجل'}).then((result) => {
-        if (result.isConfirmed) {
-          database.ref('admin_logs').remove().then(() => { Swal.fire('تم!', 'تم مسح السجل بنجاح.', 'success'); });
-        }
+        if (result.isConfirmed) { database.ref('admin_logs').remove().then(() => { Swal.fire('تم!', 'تم مسح السجل بنجاح.', 'success'); }); }
       });
     }
 
-    // 5. دوال الإدارة الإضافية 
     function exportStudentsCSV() {
-        let csv = "الاسم,رقم الهاتف,البريد الإلكتروني,النقاط,الحالة\n";
+        let csv = "ID,الاسم,رقم الهاتف,البريد الإلكتروني,النقاط,الحالة\n";
         allUsersList.forEach(u => {
             let status = u.isBanned ? "محظور" : "نشط";
-            csv += `${u.name},${u.phone || ''},${u.email},${u.score || 0},${status}\n`;
+            csv += `${getStudentShortId(u.uid)},${u.name},${u.phone || ''},${u.email},${u.score || 0},${status}\n`;
         });
         const blob = new Blob(["\uFEFF"+csv], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(blob); link.download = "students_database.csv"; link.click();
+        const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = "students_database.csv"; link.click();
         logAdminAction("تصدير بيانات", "تم تحميل قائمة الطلاب بملف Excel/CSV");
+    }
+
+    function filterAdminStudents() {
+        const query = document.getElementById('admin-search-student').value.toLowerCase();
+        const rows = document.querySelectorAll('#students-table-body tr');
+        rows.forEach(row => {
+            if(row.cells.length > 1) { 
+                const text = row.innerText.toLowerCase();
+                row.style.display = text.includes(query) ? '' : 'none';
+            }
+        });
     }
 
     async function editStudentProfile(uid, currentName, currentPhone) {
       const { value: formValues } = await Swal.fire({
         title: 'تعديل بيانات الطالب',
-        html:
-          `<input id="swal-input1" class="swal2-input" value="${currentName}" placeholder="الاسم الكامل">` +
-          `<input id="swal-input2" class="swal2-input" value="${currentPhone}" placeholder="رقم الهاتف">`,
-        focusConfirm: false, showCancelButton: true, confirmButtonText: 'حفظ التعديل',
-        preConfirm: () => { return [ document.getElementById('swal-input1').value, document.getElementById('swal-input2').value ] }
+        html: `<input id="swal-input1" class="swal2-input" value="${currentName}" placeholder="الاسم الكامل">` + `<input id="swal-input2" class="swal2-input" value="${currentPhone}" placeholder="رقم الهاتف">`,
+        focusConfirm: false, showCancelButton: true, confirmButtonText: 'حفظ التعديل', preConfirm: () => { return [ document.getElementById('swal-input1').value, document.getElementById('swal-input2').value ] }
       });
       if (formValues && formValues[0]) {
         database.ref('users/'+uid).update({name: formValues[0], phone: formValues[1]});
-        logAdminAction('تعديل طالب', `تم تعديل بيانات: ${formValues[0]}`);
-        Swal.fire('تم', 'تم تحديث بيانات الطالب بنجاح', 'success');
+        logAdminAction('تعديل طالب', `تم تعديل بيانات: ${formValues[0]}`); Swal.fire('تم', 'تم تحديث بيانات الطالب بنجاح', 'success');
       }
     }
 
-    // باقي دوال التسجيل والموقع
     function toggleAuthMode() {
       isRegisterMode = !isRegisterMode;
       document.getElementById('name-group').style.display = isRegisterMode ? 'flex' : 'none'; document.getElementById('phone-group').style.display = isRegisterMode ? 'flex' : 'none'; document.getElementById('forgot-pass-wrap').style.display = isRegisterMode ? 'none' : 'block';
@@ -761,29 +797,19 @@
       if (heartbeatInterval) { clearInterval(heartbeatInterval); heartbeatInterval = null; }
       presenceInitialized = false;
       if (currentUser) {
-        // تسجيل وقت الخروج فوراً قبل إلغاء المصادقة
-        Promise.all([
-          database.ref('users/' + currentUser.uid + '/lastSeen').set(firebase.database.ServerValue.TIMESTAMP),
-          database.ref('online_users/' + currentUser.uid).remove()
-        ]).then(() => {
-          auth.signOut();
-        }).catch(() => {
-          auth.signOut();
-        });
-      } else {
-        auth.signOut(); 
-      }
+        Promise.all([ database.ref('users/' + currentUser.uid + '/lastSeen').set(firebase.database.ServerValue.TIMESTAMP), database.ref('online_users/' + currentUser.uid).remove() ]).then(() => { auth.signOut(); }).catch(() => { auth.signOut(); });
+      } else { auth.signOut(); }
     }
 
     function showProfile() {
       if (!currentStudentData) return;
       const isOnline = onlineUsersMap.hasOwnProperty(currentUser.uid);
-      
-      // استخدام وقت الإنشاء كبديل لآخر ظهور إذا كان الطالب قديماً جداً
       const fallbackTime = currentStudentData.lastSeen || currentStudentData.createdAt;
       const lastSeenText = isOnline ? 'متصل الآن 🟢' : formatLastSeen(fallbackTime);
+      const studentId = getStudentShortId(currentUser.uid);
 
       document.getElementById('profile-content').innerHTML = `
+        <div class="profile-row z-content" style="border-color:var(--primary); background:rgba(59, 130, 246, 0.05);"><div class="profile-row-label">كود الطالب (ID)</div><div class="profile-row-value" style="color:var(--primary); font-family:monospace; font-size:18px;">${studentId}</div></div>
         <div class="profile-row z-content"><div class="profile-row-label">الاسم الكامل</div><div class="profile-row-value">${escText(currentStudentData.name)}</div></div>
         <div class="profile-row z-content"><div class="profile-row-label">رقم الهاتف</div><div class="profile-row-value" style="direction:ltr;">${escText(currentStudentData.phone || '-')}</div></div>
         <div class="profile-row z-content"><div class="profile-row-label">البريد الإلكتروني</div><div class="profile-row-value" style="color:var(--primary); font-size:13px;">${escText(currentStudentData.email)}</div></div>
@@ -807,24 +833,21 @@
       
       allUsersList.forEach((u, i) => {
         const isOnline = onlineUsersMap.hasOwnProperty(u.uid); 
-        
         let statusHtml = '';
-        if (u.isBanned) {
-          statusHtml = `<span class="status-badge status-banned">⛔ محظور</span>`;
-        } else if (isOnline) {
-          statusHtml = `<span class="status-badge status-online">🟢 متصل</span>`;
-        } else {
-          // استخدام وقت إنشاء الحساب للطلاب القدامى الذين لا يملكون آخر ظهور
-          const fallbackTime = u.lastSeen || u.createdAt;
-          const lastSeenText = formatLastSeen(fallbackTime);
-          statusHtml = `<span class="status-badge status-offline">⚪ آخر ظهور: ${lastSeenText}</span>`;
-        }
+        if (u.isBanned) statusHtml = `<span class="status-badge status-banned">⛔ محظور</span>`;
+        else if (isOnline) statusHtml = `<span class="status-badge status-online">🟢 متصل</span>`;
+        else { const fallbackTime = u.lastSeen || u.createdAt; statusHtml = `<span class="status-badge status-offline">⚪ آخر ظهور: ${formatLastSeen(fallbackTime)}</span>`; }
 
         let banBtn = u.isBanned ? `<button class="btn-sm btn-unban" onclick="unbanStudent('${u.uid}', '${escapeHtml(u.name)}')">فك حظر</button>` : `<button class="btn-sm btn-ban" onclick="banStudent('${u.uid}', '${escapeHtml(u.name)}')">حظر</button>`;
+        const studentId = getStudentShortId(u.uid);
         
         tbody.innerHTML += `<tr><td>${i+1}</td>
         <td><div style="font-weight:bold; color:var(--fg); margin-bottom:4px;">${escText(u.name)}</div>${statusHtml}</td>
-        <td style="direction:ltr; font-size:12px; color:var(--fg-faint);">${escText(u.phone||'-')}</td>
+        <td>
+            <div style="direction:ltr; font-size:13px; color:var(--fg-soft);">${escText(u.phone||'لا يوجد هاتف')}</div>
+            <div style="direction:ltr; font-size:11px; color:var(--primary); margin-top:4px; font-weight:bold;">${escText(u.email||'')}</div>
+            <div style="font-size:11px; color:var(--gold); font-family:monospace; margin-top:4px;">ID: ${studentId}</div>
+        </td>
         <td><strong style="color:var(--gold); font-size:14px;">${u.score||0}</strong></td>
         <td>
           <div class="action-group">
@@ -835,6 +858,7 @@
           </div>
         </td></tr>`;
       });
+      filterAdminStudents();
     }
 
     async function sendPrivateAlert(uid, name) {
@@ -872,7 +896,7 @@
     let db = []; let currentSubjectId = null;
     function listenToSubjects() {
       database.ref('subjects').on('value', (snap) => {
-        const val = snap.val() || {}; db = Object.keys(val).map(id => { const s = val[id]; return { id, level: s.level, name: s.name, desc: s.desc, files: s.files ? Object.keys(s.files).map(k=>({key:k,...s.files[k]})) : [], quizzes: s.quizzes ? Object.keys(s.quizzes).map(k=>({key:k,...s.quizzes[k]})) : [] }; });
+        const val = snap.val() || {}; db = Object.keys(val).map(id => { const s = val[id]; return { id, level: s.level, name: s.name, desc: s.desc, images: s.images ? Object.keys(s.images).map(k=>({key:k,...s.images[k]})) : [], files: s.files ? Object.keys(s.files).map(k=>({key:k,...s.files[k]})) : [], quizzes: s.quizzes ? Object.keys(s.quizzes).map(k=>({key:k,...s.quizzes[k]})) : [] }; });
         if (!currentSubjectId) renderHome(); else { const exist = db.find(s=>s.id===currentSubjectId); if(exist) openSubject(currentSubjectId); else showHome(); } updateAdminSelects(); updateDashboardStats();
       });
     }
@@ -882,20 +906,111 @@
       document.querySelectorAll('.admin-tab').forEach(el => el.classList.remove('active')); 
       document.getElementById('tab-' + tabId).classList.add('active'); 
       btnElement.classList.add('active'); 
-      
-      // استدعاء السجل فوراً عند الضغط على تبويبه
-      if (tabId === 'logs') {
-        listenToAdminLogs();
-      }
+      if (tabId === 'logs') listenToAdminLogs();
     }
     
     function toggleAdminPanel() { if (!currentStudentData || currentStudentData.isAdmin !== true) { Swal.fire('تنبيه','غير مصرح لك.','warning'); return; } const p = document.getElementById("admin-panel"); const vis = p.style.display === "block"; p.style.display = vis ? "none" : "block"; if (!vis) { updateAdminSelects(); p.scrollIntoView({behavior:'smooth'}); } }
     function updateAlert(e) { e.preventDefault(); let text = document.getElementById("alert-input").value; database.ref('alert').set(text); e.target.reset(); logAdminAction('نشر تنبيه للدفعة', text); Swal.fire('تم', 'تم نشر التنبيه بنجاح', 'success');}
-    function updateAdminSelects() { let opts = db.map(s => `<option value="${s.id}">[مستوى ${s.level}] ${s.name}</option>`).join(''); document.getElementById('file-subj-select').innerHTML = opts; document.getElementById('quiz-subj-select').innerHTML = opts; }
+    
+    function updateAdminSelects() { 
+        let opts = db.map(s => `<option value="${s.id}">[مستوى ${s.level}] ${s.name}</option>`).join(''); 
+        document.getElementById('file-subj-select').innerHTML = opts; 
+        document.getElementById('quiz-subj-select').innerHTML = opts; 
+        document.getElementById('ai-quiz-subj-select').innerHTML = opts; 
+        document.getElementById('img-subj-select').innerHTML = opts;
+        document.getElementById('delete-all-quiz-subj-select').innerHTML = opts;
+    }
     
     function addSubject(e) { e.preventDefault(); const id = "subj-" + Date.now(); const n = document.getElementById("new-subj-name").value; database.ref('subjects/'+id).set({ level: parseInt(document.getElementById("new-subj-level").value, 10), name: n, desc: document.getElementById("new-subj-desc").value }).then(() => { e.target.reset(); logAdminAction('إضافة مادة جديدة', `المادة: ${n}`); Swal.fire('تم', "تمت إضافة المادة!", 'success'); }); }
     function addFile(e) { e.preventDefault(); const title = document.getElementById("file-title").value; const sId = document.getElementById("file-subj-select").value; const subj = db.find(x=>x.id===sId); database.ref('subjects/'+sId+'/files').push({ title: title, link: document.getElementById("file-link").value, category: document.getElementById("file-category").value }).then(() => { e.target.reset(); logAdminAction('رفع ملف', `عنوان الملف: ${title} | المادة: ${subj?subj.name:''}`); Swal.fire('تم', "تم الرفع بنجاح!", 'success'); }); }
+    
+    function addSubjectImage(e) {
+        e.preventDefault();
+        const sId = document.getElementById("img-subj-select").value;
+        const title = document.getElementById("img-title").value;
+        const link = document.getElementById("img-link").value;
+        const subj = db.find(x=>x.id===sId);
+        
+        database.ref('subjects/'+sId+'/images').push({ title: title, url: link }).then(() => {
+            e.target.reset(); logAdminAction('رفع صورة للمادة', `الوصف: ${title} | المادة: ${subj?subj.name:''}`); Swal.fire('تم', "تمت إضافة الصورة بنجاح وستظهر للطلاب!", 'success');
+        });
+    }
+
+    function deleteSubjectImage(sId, imgKey, imgTitle) {
+         Swal.fire({title: "حذف الصورة؟", showCancelButton: true, confirmButtonColor: '#ef4444'}).then((r)=>{ if(r.isConfirmed) { database.ref('subjects/'+sId+'/images/'+imgKey).remove(); logAdminAction('حذف صورة', `الصورة: ${imgTitle}`); }});
+    }
+
     function addQuiz(e) { e.preventDefault(); const qText = document.getElementById("quiz-q").value; const sId = document.getElementById("quiz-subj-select").value; const subj = db.find(x=>x.id===sId); database.ref('subjects/'+sId+'/quizzes').push({ q: qText, opt1: document.getElementById("quiz-opt1").value, opt2: document.getElementById("quiz-opt2").value, opt3: document.getElementById("quiz-opt3").value, opt4: document.getElementById("quiz-opt4").value, ans: document.getElementById("quiz-ans").value }).then(() => { e.target.reset(); logAdminAction('إضافة سؤال MCQ', `للمادة: ${subj?subj.name:''}`); Swal.fire('تم', "تمت إضافة السؤال بنجاح!", 'success'); }); }
+    
+    function addAIQuizzes(e) {
+        e.preventDefault();
+        const sId = document.getElementById("ai-quiz-subj-select").value;
+        const jsonText = document.getElementById("ai-quiz-data").value.trim();
+        const subj = db.find(x=>x.id===sId);
+
+        if(!jsonText) return Swal.fire('تنبيه', 'برجاء لصق الكود أولاً', 'warning');
+
+        try {
+            const questions = JSON.parse(jsonText);
+            
+            if (!Array.isArray(questions)) {
+                throw new Error("الكود يجب أن يبدأ بـ [ وينتهي بـ ] (مصفوفة)");
+            }
+
+            let added = 0;
+            questions.forEach(q => {
+                if(q.q && q.opt1 && q.opt2 && q.opt3 && q.opt4 && q.ans) {
+                    database.ref('subjects/'+sId+'/quizzes').push({
+                        q: q.q, 
+                        opt1: q.opt1, 
+                        opt2: q.opt2, 
+                        opt3: q.opt3, 
+                        opt4: q.opt4, 
+                        ans: q.ans.toString() 
+                    });
+                    added++;
+                }
+            });
+
+            logAdminAction('الرفع الذكي للأسئلة', `تم رفع ${added} سؤال | للمادة: ${subj?subj.name:''}`);
+            Swal.fire('تم يا بطل!', `تم إضافة ${added} سؤال للموقع بنجاح في أقل من ثانية.`, 'success');
+            document.getElementById("ai-quiz-data").value = '';
+            
+        } catch (error) {
+            Swal.fire({
+                title: 'خطأ في الكود', 
+                html: 'تأكد إنك نسخت الكود زي ما الذكاء الاصطناعي عمله بالظبط بدون أي نقص.<br><br><span style="font-size:12px; color:#ef4444;">تفاصيل الخطأ: ' + error.message + '</span>', 
+                icon: 'error'
+            });
+        }
+    }
+
+    function deleteAllQuizzesFromSubject() {
+        const sId = document.getElementById("delete-all-quiz-subj-select").value;
+        if(!sId) return Swal.fire('تنبيه', 'يرجى اختيار المادة أولاً', 'warning');
+        const subj = db.find(x => x.id === sId);
+        
+        Swal.fire({
+            title: 'هل أنت متأكد؟',
+            text: `سيتم مسح جميع الأسئلة الخاصة بمادة "${subj ? subj.name : ''}" نهائياً ولن يمكنك استعادتها!`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: 'rgba(255,255,255,0.1)',
+            confirmButtonText: 'نعم، امسح كل الأسئلة!',
+            cancelButtonText: 'إلغاء'
+        }).then((result) => {
+            if(result.isConfirmed) {
+                database.ref('subjects/'+sId+'/quizzes').remove().then(() => {
+                    logAdminAction('مسح كل أسئلة المادة', `المادة: ${subj ? subj.name : ''}`);
+                    Swal.fire('تم المسح', 'تم مسح بنك الأسئلة بالكامل لهذه المادة بنجاح.', 'success');
+                }).catch((err) => {
+                    Swal.fire('خطأ', err.message, 'error');
+                });
+            }
+        });
+    }
+
     function deleteFile(s, f, fName) { Swal.fire({title: "حذف الملف؟", showCancelButton: true, confirmButtonColor: '#ef4444'}).then((r)=>{ if(r.isConfirmed) { database.ref('subjects/'+s+'/files/'+f).remove(); logAdminAction('حذف ملف', `الملف: ${fName}`); }}); }
     function deleteQuiz(s, q, qName) { Swal.fire({title: "حذف السؤال؟", showCancelButton: true, confirmButtonColor: '#ef4444'}).then((r)=>{ if(r.isConfirmed) { database.ref('subjects/'+s+'/quizzes/'+q).remove(); logAdminAction('حذف سؤال', `السؤال: ${qName}`); }}); }
     function deleteSubject(s, n) { Swal.fire({title: `حذف المادة ${n} نهائياً؟`, icon:'warning', showCancelButton: true, confirmButtonColor: '#ef4444'}).then((r)=>{ if(r.isConfirmed) { database.ref('subjects/'+s).remove().then(()=>{ logAdminAction('حذف مادة', `المادة: ${n}`); if(currentSubjectId===s) showHome(); }); }}); }
@@ -916,32 +1031,121 @@
       let html = `<div class="file-category-header z-content">${icon} ${escText(categoryName)}</div>`; html += filtered.map(f => `<div class="card liquid-glass" style="flex-direction:row; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px; padding: 12px 16px;"><h4 class="z-content" style="margin:0; font-size:14px;">${escText(f.title)}</h4><div class="z-content" style="display:flex; gap:8px;"><a href="${f.link}" target="_blank" class="pill" style="height:32px; font-size:12px;">فتح الملف ↗</a>${isAdmin ? `<button class="btn-sm btn-ban" onclick="deleteFile('${subjId}','${f.key}','${escapeHtml(f.title)}')">🗑️</button>` : ''}</div></div>`).join(''); return html;
     }
 
+    function resetSubjectQuizzes() {
+        if (!currentUser || !currentSubjectId) return;
+
+        Swal.fire({
+            title: 'هل تريد إعادة امتحان المادة؟',
+            text: "سيتم مسح إجاباتك السابقة في هذه المادة فقط (ولن يتم خصم أي نقاط من لوحة الشرف)، وسيتم لخبطة الأسئلة لتبدأ من جديد للتدريب.",
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#3b82f6',
+            cancelButtonColor: '#ef4444',
+            confirmButtonText: 'نعم، ابدأ من جديد',
+            cancelButtonText: 'إلغاء'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const subj = db.find(s => s.id === currentSubjectId);
+                if (!subj || !subj.quizzes) return;
+
+                const quizKeys = subj.quizzes.map(q => q.key);
+                
+                database.ref('users/' + currentUser.uid + '/solvedQuizzes').once('value').then(snap => {
+                    let currentSolved = snap.val() || {};
+                    let updates = {};
+                    
+                    quizKeys.forEach(k => {
+                        if (currentSolved[k]) {
+                            updates[k] = null;
+                        }
+                    });
+
+                    database.ref('users/' + currentUser.uid + '/solvedQuizzes').update(updates).then(() => {
+                        Swal.fire('تم!', 'تم تجهيز الامتحان من جديد وبترتيب مختلف.', 'success').then(() => {
+                            openSubject(currentSubjectId);
+                        });
+                    });
+                });
+            }
+        });
+    }
+
     function openSubject(id) {
       currentSubjectId = id; const subj = db.find(s => s.id === id); document.getElementById('view-home').style.display = 'none'; document.getElementById('view-subject').style.display = 'block'; document.getElementById('subject-title').innerText = "📚 " + subj.name; document.getElementById('subject-desc').innerText = subj.desc;
       const isAdmin = currentStudentData && currentStudentData.isAdmin === true; const solvedQuizzes = (currentStudentData && currentStudentData.solvedQuizzes) ? currentStudentData.solvedQuizzes : {};
       
+      if(subj.images && subj.images.length > 0) {
+          document.getElementById('subject-images').innerHTML = subj.images.map(img => `
+              <div class="subject-image-container z-content">
+                 <img src="${escapeHtml(img.url)}" alt="صورة المادة">
+                 <div class="subject-image-title">${escText(img.title)} ${isAdmin ? `<button class="btn-sm btn-ban" style="float:left;" onclick="deleteSubjectImage('${subj.id}','${img.key}','${escapeHtml(img.title)}')">حذف</button>` : ''}</div>
+              </div>
+          `).join('');
+      } else { document.getElementById('subject-images').innerHTML = ''; }
+
       if(subj.files.length === 0) document.getElementById('subject-files').innerHTML = '<div class="empty-state z-content">لا توجد ملفات.</div>';
       else { let filesHtml = renderFilesCategory(subj.files, 'محاضرات', '📖', isAdmin, subj.id) + renderFilesCategory(subj.files, 'سكاشن', '🔬', isAdmin, subj.id) + renderFilesCategory(subj.files, 'امتحانات', '📝', isAdmin, subj.id); document.getElementById('subject-files').innerHTML = filesHtml || '<div class="empty-state z-content">لا توجد ملفات مصنفة.</div>'; }
 
-      document.getElementById('subject-quizzes').innerHTML = subj.quizzes.length === 0 ? '<div class="empty-state z-content">بنك الأسئلة فارغ حالياً.</div>' : subj.quizzes.map((q, idx) => {
+      let shuffledQuizzes = [...subj.quizzes];
+      shuffledQuizzes = shuffleArray(shuffledQuizzes);
+
+      document.getElementById('subject-quizzes').innerHTML = shuffledQuizzes.length === 0 ? '<div class="empty-state z-content">بنك الأسئلة فارغ حالياً.</div>' : shuffledQuizzes.map((q, idx) => {
         const sq = solvedQuizzes[q.key]; const isSolved = !!sq; const status = sq ? (sq.status || (sq === true ? 'correct' : null)) : null; const selectedOpt = sq ? sq.selected : null;
         const getBtnStyle = (optNum) => { if(!isSolved) return ''; if(status === 'correct' && q.ans == optNum) return 'background: #15803d; border-color: #22c55e; opacity: 1;'; if(status === 'wrong' && q.ans == optNum) return 'background: #15803d; border-color: #22c55e; opacity: 1;'; if(status === 'wrong' && selectedOpt == optNum) return 'background: #b91c1c; border-color: #ef4444; opacity: 1;'; return 'opacity: 0.5; cursor: not-allowed;'; };
         const badgeHtml = isSolved ? (status === 'correct' ? `<div class="z-content quiz-solved-badge" style="background:rgba(34,197,94,0.2); color:#4ade80; border:1px solid #22c55e;">✔️ إجابة صحيحة</div>` : `<div class="z-content quiz-solved-badge" style="background:rgba(239,68,68,0.2); color:#f87171; border:1px solid #ef4444;">❌ إجابة خاطئة</div>`) : '';
-        return `<div class="card liquid-glass" style="padding:20px; border: ${isSolved ? (status==='correct' ? '1px solid #15803d' : '1px solid #b91c1c') : 'none'};"><div class="z-content" style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px;"><p style="font-weight:700; font-size:16px; margin:0 0 12px; display:flex; align-items:center; gap:6px;">س${idx+1}: ${escText(q.q)}</p>${isAdmin ? `<button class="btn-sm btn-ban" onclick="deleteQuiz('${subj.id}','${q.key}','${escapeHtml(q.q)}')">🗑️</button>` : ''}</div>${badgeHtml}<div class="quiz-options z-content" style="margin-top:16px;"><button class="quiz-btn" ${isSolved ? 'disabled' : ''} style="${getBtnStyle('1')}" onclick="checkAnswer(this,'1','${q.ans}','${q.key}')">${escText(q.opt1)}</button><button class="quiz-btn" ${isSolved ? 'disabled' : ''} style="${getBtnStyle('2')}" onclick="checkAnswer(this,'2','${q.ans}','${q.key}')">${escText(q.opt2)}</button><button class="quiz-btn" ${isSolved ? 'disabled' : ''} style="${getBtnStyle('3')}" onclick="checkAnswer(this,'3','${q.ans}','${q.key}')">${escText(q.opt3)}</button><button class="quiz-btn" ${isSolved ? 'disabled' : ''} style="${getBtnStyle('4')}" onclick="checkAnswer(this,'4','${q.ans}','${q.key}')">${escText(q.opt4)}</button></div></div>`
+        
+        let options = [
+            { text: q.opt1, num: '1' },
+            { text: q.opt2, num: '2' },
+            { text: q.opt3, num: '3' },
+            { text: q.opt4, num: '4' }
+        ];
+        
+        if (!isSolved) { options = shuffleArray(options); }
+
+        let optionsHtml = options.map(opt => 
+            `<button class="quiz-btn" ${isSolved ? 'disabled' : ''} style="${getBtnStyle(opt.num)}" onclick="checkAnswer(this,'${opt.num}','${q.ans}','${q.key}')">${escText(opt.text)}</button>`
+        ).join('');
+
+        return `<div class="card liquid-glass" style="padding:20px; border: ${isSolved ? (status==='correct' ? '1px solid #15803d' : '1px solid #b91c1c') : 'none'};"><div class="z-content" style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px;"><p style="font-weight:700; font-size:16px; margin:0 0 12px; display:flex; align-items:center; gap:6px;">س${idx+1}: ${escText(q.q)}</p>${isAdmin ? `<button class="btn-sm btn-ban" onclick="deleteQuiz('${subj.id}','${q.key}','${escapeHtml(q.q)}')">🗑️</button>` : ''}</div>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          ${badgeHtml}
+        </div>
+        <div class="quiz-options z-content" style="margin-top:16px;">
+          ${optionsHtml}
+        </div></div>`
       }).join(''); window.scrollTo({ top: document.getElementById('main-site').offsetTop, behavior: 'smooth' });
     }
 
     function checkAnswer(btn, selected, correct, quizKey) {
       let buttons = btn.parentElement.querySelectorAll('button'); buttons.forEach(b => { b.disabled = true; b.style.cursor = "not-allowed"; }); 
-      const isAlreadySolved = currentStudentData && currentStudentData.solvedQuizzes && currentStudentData.solvedQuizzes[quizKey]; if (isAlreadySolved) return;
+      
+      const isAlreadySolved = currentStudentData && currentStudentData.solvedQuizzes && currentStudentData.solvedQuizzes[quizKey];
       const isCorrect = (selected === correct); const solveData = { status: isCorrect ? 'correct' : 'wrong', selected: selected, timestamp: Date.now() };
 
       if (isCorrect) {
-        btn.style.background = "#15803d"; btn.style.borderColor = "#22c55e"; btn.style.opacity = "1"; btn.innerHTML += " ✔️"; buttons.forEach((b, i) => { if(i+1 != selected) b.style.opacity = "0.5"; });
-        if (currentUser) { database.ref('users/'+currentUser.uid+'/score').transaction(s => (s||0)+1); database.ref('users/'+currentUser.uid+'/solvedQuizzes/'+quizKey).set(solveData); Swal.fire({title: 'إجابة صحيحة!', text: 'تمت إضافة نقطة لرصيدك 🏆', icon: 'success', timer: 1500, showConfirmButton: false}); }
+        btn.style.background = "#15803d"; btn.style.borderColor = "#22c55e"; btn.style.opacity = "1"; btn.innerHTML += " ✔️"; 
+        buttons.forEach(b => { if(b !== btn) b.style.opacity = "0.5"; });
+        
+        if (currentUser && !isAlreadySolved) { 
+            database.ref('users/'+currentUser.uid+'/score').transaction(s => (s||0)+1); 
+            database.ref('users/'+currentUser.uid+'/solvedQuizzes/'+quizKey).set(solveData); 
+            Swal.fire({title: 'إجابة صحيحة!', text: 'تمت إضافة نقطة لرصيدك 🏆', icon: 'success', timer: 1500, showConfirmButton: false}); 
+        }
       } else {
-        btn.style.background = "#b91c1c"; btn.style.borderColor = "#ef4444"; btn.style.opacity = "1"; btn.innerHTML += " ❌"; buttons[parseInt(correct)-1].style.background = "#15803d"; buttons[parseInt(correct)-1].style.borderColor = "#22c55e"; buttons[parseInt(correct)-1].style.opacity = "1"; buttons.forEach((b, i) => { if(i+1 != selected && i+1 != correct) b.style.opacity = "0.5"; });
-        if(currentUser) database.ref('users/'+currentUser.uid+'/solvedQuizzes/'+quizKey).set(solveData);
+        btn.style.background = "#b91c1c"; btn.style.borderColor = "#ef4444"; btn.style.opacity = "1"; btn.innerHTML += " ❌"; 
+        
+        buttons.forEach(b => { 
+            if(b.getAttribute('onclick').includes(`,'${correct}',`)) {
+                b.style.background = "#15803d"; 
+                b.style.borderColor = "#22c55e"; 
+                b.style.opacity = "1";
+            } else if (b !== btn) {
+                b.style.opacity = "0.5";
+            }
+        });
+        
+        if(currentUser && !isAlreadySolved) database.ref('users/'+currentUser.uid+'/solvedQuizzes/'+quizKey).set(solveData);
       }
     }
 
