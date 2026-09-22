@@ -66,9 +66,6 @@
   .admin-btn { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); }
   .logout-btn { background: var(--danger); }
 
-  #alert-banner { display: none; background: linear-gradient(135deg, var(--warning), #d97706); color: #111; padding: 10px 16px; text-align: center; font-weight: 700; font-size: 14px; animation: pulseAlert 2s infinite; position: sticky; top: 60px; z-index: 39; }
-  @keyframes pulseAlert { 0% { opacity: 0.9; } 50% { opacity: 1; } 100% { opacity: 0.9; } }
-
   .container { max-width: 1200px; margin: 0 auto; padding: 40px 14px; display: flex; flex-direction: column; gap: 24px; position: relative; z-index: 10; }
   .search-box { width: 100%; background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.2); border-radius: 12px; padding: 14px 16px; color: var(--fg); font-family: inherit; font-size: 15px; outline: none; margin-bottom: 20px; transition: 0.3s; }
   .search-box:focus { border-color: var(--primary); box-shadow: 0 0 15px rgba(59, 130, 246, 0.2); }
@@ -249,7 +246,13 @@
       </nav>
     </header>
 
-    <div id="alert-banner">⚠️ <span id="alert-text-content"></span></div>
+    <!-- تم تعديل التنبيه ليحتوي على زر إغلاق (X) -->
+    <div id="alert-banner" style="display: none; background: linear-gradient(135deg, var(--warning), #d97706); color: #111; padding: 10px 16px; font-weight: 700; font-size: 14px; position: sticky; top: 60px; z-index: 39;">
+      <div style="display: flex; justify-content: space-between; align-items: center; max-width: 1200px; margin: 0 auto; width: 100%;">
+        <span>⚠️ <span id="alert-text-content"></span></span>
+        <button onclick="document.getElementById('alert-banner').style.display='none'" style="background: rgba(0,0,0,0.1); border: none; color: #111; font-weight: bold; cursor: pointer; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; transition: 0.2s;">✖</button>
+      </div>
+    </div>
 
     <main class="container">
       
@@ -276,6 +279,29 @@
                 <button class="pill" type="submit" style="background: #25D366; color: #111; width: fit-content;">إرسال ↗</button>
               </form>
             </div>
+
+            <!-- تمت إضافة قسم الجروبات هنا -->
+            <div class="card liquid-glass" style="margin-top: 24px; border-color: var(--primary);">
+              <h3 class="z-content" style="color: var(--primary); margin: 0 0 16px; font-size: 18px; display: flex; align-items: center; gap: 8px;">
+                <span>🔗</span> روابط جروبات الدفعة والمواد
+              </h3>
+              <div class="z-content" style="display: flex; flex-direction: column; gap: 10px;">
+                <!-- ضع روابط الجروبات الحقيقية في href -->
+                <a href="#" target="_blank" class="quiz-btn" style="text-align: right; display: flex; justify-content: space-between; align-items: center; text-decoration: none;">
+                  <span>جروب مادة الاستشعار عن بعد</span>
+                  <span style="color: var(--online-green);">🟢 انضمام</span>
+                </a>
+                <a href="#" target="_blank" class="quiz-btn" style="text-align: right; display: flex; justify-content: space-between; align-items: center; text-decoration: none;">
+                  <span>جروب مادة نظم المعلومات الجغرافية (GIS)</span>
+                  <span style="color: var(--online-green);">🟢 انضمام</span>
+                </a>
+                <a href="#" target="_blank" class="quiz-btn" style="text-align: right; display: flex; justify-content: space-between; align-items: center; text-decoration: none; border-color: #5865F2;">
+                  <span>سيرفر الديسكورد للمذاكرة الجماعية</span>
+                  <span style="color: #5865F2;">🟣 انضمام</span>
+                </a>
+              </div>
+            </div>
+
           </div>
           <div>
             <h2 class="section-title z-content" style="color: var(--gold);">🏆 لوحة الشرف</h2>
@@ -348,7 +374,7 @@
              </div>
           </div>
 
-          <!-- Tab: المحتوى (تمت إعادة الهيكلة والتصميم) -->
+          <!-- Tab: المحتوى -->
           <div id="tab-content" class="admin-tab-content">
              
              <!-- قسم 1: إدارة المواد -->
@@ -544,7 +570,6 @@
     let currentUser = null; let currentStudentData = null; let isRegisterMode = false; let activeLevel = 1; let allUsersList = []; let onlineUsersMap = {};
     let adminLogsListening = false; let isMaintenanceActive = false; let privateAlertListening = false;
 
-    // دالة لترتيب المصفوفات عشوائياً
     function shuffleArray(array) {
         for (let i = array.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
@@ -578,7 +603,9 @@
       return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     }
 
-    function getStudentShortId(uid) {
+    // دالة الحصول على الـ ID مع دعم الـ ID المخصص
+    function getStudentShortId(uid, customId) {
+        if (customId && customId.trim() !== '') return customId;
         return uid ? uid.substring(0,6).toUpperCase() : 'غير متوفر';
     }
 
@@ -728,7 +755,7 @@
         let csv = "ID,الاسم,رقم الهاتف,البريد الإلكتروني,النقاط,الحالة\n";
         allUsersList.forEach(u => {
             let status = u.isBanned ? "محظور" : "نشط";
-            csv += `${getStudentShortId(u.uid)},${u.name},${u.phone || ''},${u.email},${u.score || 0},${status}\n`;
+            csv += `${getStudentShortId(u.uid, u.studentId)},${u.name},${u.phone || ''},${u.email},${u.score || 0},${status}\n`;
         });
         const blob = new Blob(["\uFEFF"+csv], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = "students_database.csv"; link.click();
@@ -746,15 +773,29 @@
         });
     }
 
-    async function editStudentProfile(uid, currentName, currentPhone) {
+    // دالة تعديل الطالب المحدثة
+    async function editStudentProfile(uid, currentName, currentPhone, currentStudentId) {
       const { value: formValues } = await Swal.fire({
         title: 'تعديل بيانات الطالب',
-        html: `<input id="swal-input1" class="swal2-input" value="${currentName}" placeholder="الاسم الكامل">` + `<input id="swal-input2" class="swal2-input" value="${currentPhone}" placeholder="رقم الهاتف">`,
-        focusConfirm: false, showCancelButton: true, confirmButtonText: 'حفظ التعديل', preConfirm: () => { return [ document.getElementById('swal-input1').value, document.getElementById('swal-input2').value ] }
+        html: `<input id="swal-input1" class="swal2-input" value="${currentName}" placeholder="الاسم الكامل">` + 
+              `<input id="swal-input2" class="swal2-input" value="${currentPhone}" placeholder="رقم الهاتف">` +
+              `<input id="swal-input3" class="swal2-input" value="${currentStudentId && currentStudentId !== 'undefined' ? currentStudentId : ''}" placeholder="كود الطالب (ID)">`,
+        focusConfirm: false, showCancelButton: true, confirmButtonText: 'حفظ التعديل', preConfirm: () => { 
+          return [ 
+            document.getElementById('swal-input1').value, 
+            document.getElementById('swal-input2').value,
+            document.getElementById('swal-input3').value
+          ] 
+        }
       });
       if (formValues && formValues[0]) {
-        database.ref('users/'+uid).update({name: formValues[0], phone: formValues[1]});
-        logAdminAction('تعديل طالب', `تم تعديل بيانات: ${formValues[0]}`); Swal.fire('تم', 'تم تحديث بيانات الطالب بنجاح', 'success');
+        database.ref('users/'+uid).update({
+          name: formValues[0], 
+          phone: formValues[1],
+          studentId: formValues[2]
+        });
+        logAdminAction('تعديل طالب', `تم تعديل بيانات: ${formValues[0]}`); 
+        Swal.fire('تم', 'تم تحديث بيانات الطالب بنجاح', 'success');
       }
     }
 
@@ -778,15 +819,12 @@
 
         let createdUser = null;
         try {
-          // 1) ننشئ الحساب في Auth أولاً عشان نبقى authenticated (auth != null)
           const res = await auth.createUserWithEmailAndPassword(email, pass);
           createdUser = res.user;
 
-          // 1.5) نستنى التوكن يوصل فعلياً لقاعدة البيانات قبل أي قراءة (يمنع مشكلة التأخير)
           await createdUser.getIdToken(true);
           await new Promise(resolve => setTimeout(resolve, 400));
 
-          // 2) دلوقتي القراءة مسموحة لأن auth.uid موجود
           const snapshot = await database.ref('users').orderByChild('phone').equalTo(phone).once('value');
           if (snapshot.exists()) {
             await createdUser.delete().catch(()=>{});
@@ -794,7 +832,6 @@
             return Swal.fire('خطأ', "هذا الرقم مسجل به حساب بالفعل!", 'error');
           }
 
-          // 3) نحفظ بيانات الطالب
           await database.ref('users/' + createdUser.uid).set({ name, phone, email, score: 0, isBanned: false, createdAt: Date.now() });
         } catch (err) {
           if (createdUser) await createdUser.delete().catch(()=>{});
@@ -836,7 +873,7 @@
       const isOnline = onlineUsersMap.hasOwnProperty(currentUser.uid);
       const fallbackTime = currentStudentData.lastSeen || currentStudentData.createdAt;
       const lastSeenText = isOnline ? 'متصل الآن 🟢' : formatLastSeen(fallbackTime);
-      const studentId = getStudentShortId(currentUser.uid);
+      const studentId = getStudentShortId(currentUser.uid, currentStudentData.studentId);
 
       document.getElementById('profile-content').innerHTML = `
         <div class="profile-row z-content" style="border-color:var(--primary); background:rgba(59, 130, 246, 0.05);"><div class="profile-row-label">كود الطالب (ID)</div><div class="profile-row-value" style="color:var(--primary); font-family:monospace; font-size:18px;">${studentId}</div></div>
@@ -869,7 +906,7 @@
         else { const fallbackTime = u.lastSeen || u.createdAt; statusHtml = `<span class="status-badge status-offline">⚪ آخر ظهور: ${formatLastSeen(fallbackTime)}</span>`; }
 
         let banBtn = u.isBanned ? `<button class="btn-sm btn-unban" onclick="unbanStudent('${u.uid}', '${escapeHtml(u.name)}')">فك حظر</button>` : `<button class="btn-sm btn-ban" onclick="banStudent('${u.uid}', '${escapeHtml(u.name)}')">حظر</button>`;
-        const studentId = getStudentShortId(u.uid);
+        const studentId = getStudentShortId(u.uid, u.studentId);
         
         tbody.innerHTML += `<tr><td>${i+1}</td>
         <td><div style="font-weight:bold; color:var(--fg); margin-bottom:4px;">${escText(u.name)}</div>${statusHtml}</td>
@@ -883,7 +920,7 @@
           <div class="action-group">
              <button class="btn-sm btn-track" onclick="trackStudent('${u.uid}')">📊 النتائج</button>
              <button class="btn-sm btn-msg" onclick="sendPrivateAlert('${u.uid}','${escapeHtml(u.name)}')">📩 رسالة</button>
-             <button class="btn-sm btn-edit" onclick="editStudentProfile('${u.uid}','${escapeHtml(u.name)}','${escapeHtml(u.phone||'')}')">✏️ تعديل</button>
+             <button class="btn-sm btn-edit" onclick="editStudentProfile('${u.uid}','${escapeHtml(u.name)}','${escapeHtml(u.phone||'')}','${escapeHtml(u.studentId||'')}')">✏️ تعديل</button>
              ${banBtn}
           </div>
         </td></tr>`;
@@ -1047,7 +1084,15 @@
 
     function showHome() { document.getElementById('view-home').style.display = 'block'; document.getElementById('view-subject').style.display = 'none'; document.getElementById('search-box').value = ''; currentSubjectId = null; renderHome(); updateAdminSelects(); window.scrollTo({ top: document.getElementById('main-site').offsetTop, behavior: 'smooth' }); }
     function switchLevel(lvl) { activeLevel = lvl; document.getElementById('tab-lvl-1').classList.toggle('active', lvl===1); document.getElementById('tab-lvl-2').classList.toggle('active', lvl===2); document.getElementById('current-level-heading').innerText = lvl===1 ? "مواد المستوى الأول" : "مواد المستوى الثاني"; document.getElementById('search-box').value = ''; renderHome(); }
-    function filterSubjects() { renderHome(document.getElementById('search-box').value.toLowerCase()); }
+    
+    // إضافة Timer لعمل Debounce أثناء البحث لتحسين الأداء
+    let searchTimeout = null;
+    function filterSubjects() { 
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            renderHome(document.getElementById('search-box').value.toLowerCase()); 
+        }, 300);
+    }
 
     function renderHome(searchQuery = '') {
       const grid = document.getElementById('subjects-grid'); grid.innerHTML = ''; let filtered = db.filter(s => s.level === activeLevel); if(searchQuery) filtered = filtered.filter(s => s.name.toLowerCase().includes(searchQuery));
