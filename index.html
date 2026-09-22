@@ -717,10 +717,8 @@
       Swal.fire('تم التحديث', enable ? 'تم إغلاق الموقع عن الطلاب وتفعيل الصيانة.' : 'تم فتح الموقع للجميع بنجاح.', 'success');
     }
 
-    // تعديل كود الـ Auth ليتحقق من التفعيل
     auth.onAuthStateChanged((user) => {
       if (user && user.emailVerified) {
-        // الحساب مفعل ومسجل دخول
         database.ref('users/' + user.uid).once('value', (snap) => {
           const val = snap.val();
           if (val && val.isBanned) { Swal.fire('محظور!', `⚠️ تم حظرك!\nالسبب: ${val.banReason}`, 'error'); logoutStudent(); return; }
@@ -728,8 +726,6 @@
           listenToPrivateAlerts(user.uid); 
         });
       } else if (user && !user.emailVerified) {
-        // مسجل دخول لكن غير مفعل (هذا يحدث عند الإنشاء أو الدخول بدون تفعيل)
-        // لن يتم إظهار الواجهة وسيظل في شاشة التسجيل
         currentUser = null; currentStudentData = null; privateAlertListening = false;
         document.getElementById('auth-overlay').style.display = 'flex'; document.getElementById('user-greeting').innerHTML = '';
       } else {
@@ -882,7 +878,6 @@
       document.getElementById('auth-switch-link').innerText = isRegisterMode ? 'تسجيل الدخول' : 'إنشاء حساب جديد';
     }
 
-    // دالة إنشاء الحساب والدخول معدلة لدعم التحقق من البريد
     async function handleAuth(e) {
       e.preventDefault();
       const email = document.getElementById('auth-email').value.trim();
@@ -912,9 +907,8 @@
 
           await database.ref('users/' + createdUser.uid).set({ name, phone, email, level: parseInt(level) || 1, score: 0, isBanned: false, createdAt: Date.now() });
           
-          // إرسال رسالة التفعيل للطالب بعد الإنشاء
           await createdUser.sendEmailVerification();
-          await auth.signOut(); // إخراجه فوراً حتى يفعّل بريده
+          await auth.signOut(); 
           
           Swal.fire({
              title: 'تم إنشاء الحساب!',
@@ -923,25 +917,23 @@
              confirmButtonText: 'حسناً'
           });
           
-          toggleAuthMode(); // العودة لشاشة تسجيل الدخول
+          toggleAuthMode(); 
           
         } catch (err) {
           if (createdUser) await createdUser.delete().catch(()=>{});
           Swal.fire('خطأ', err.message, 'error');
         }
       } else {
-        // حالة تسجيل الدخول
         try {
             const userCredential = await auth.signInWithEmailAndPassword(email, pass);
-            
-            // التحقق إذا كان البريد غير مفعل
             if (!userCredential.user.emailVerified) {
-                await userCredential.user.sendEmailVerification(); // إعادة إرسال الرابط تلقائياً كنوع من المساعدة
+                await userCredential.user.sendEmailVerification(); 
                 await auth.signOut();
                 Swal.fire('تنبيه', 'حسابك غير مفعل بعد! يرجى مراجعة بريدك الإلكتروني لتفعيل الحساب.\n\n(قمنا بإرسال رابط التفعيل مرة أخرى تحسباً لعدم وصوله)', 'warning');
             }
         } catch(error) {
-            Swal.fire('خطأ', 'بيانات الدخول غير صحيحة', 'error');
+            // هذا التعديل سيعرض الخطأ الحقيقي للمستخدم لمعرفة سبب المشكلة مثل API Key Blocks
+            Swal.fire('خطأ/تنبيه:', error.message, 'error');
         }
       }
     }
