@@ -2,246 +2,258 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>منصة الدفعة التعليمية | قسم المساحة ونظم المعلومات</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com">
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
-<!-- مكتبة SweetAlert2 للتنبيهات -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <style>
   :root {
-    --fg: #ffffff;
-    --fg-soft: rgba(255,255,255,.9);
-    --fg-faint: rgba(255,255,255,.6);
-    --shade: #0a0908;
-    --ease: cubic-bezier(.22,.61,.36,1);
-    --primary: #3b82f6;
-    --primary-hover: #2563eb;
-    --gold: #ffd700;
-    --online-green: #22c55e;
-    --cream: #E1E0CC;
-    --danger: #ef4444;
-    --warning: #f59e0b;
-    --purple: #8b5cf6;
+    --fg: #ffffff; --fg-soft: rgba(255,255,255,.9); --fg-faint: rgba(255,255,255,.6);
+    --shade: #0a0908; --ease: cubic-bezier(.22,.61,.36,1);
+    --primary: #3b82f6; --primary-hover: #2563eb; --gold: #ffd700; --online-green: #22c55e;
+    --cream: #E1E0CC; --danger: #ef4444; --warning: #f59e0b; --purple: #8b5cf6;
+    --header-h: 60px;
   }
-  
-  /* ---------------- وضع الصباح (Light Mode) ---------------- */
-  body.light-mode {
-    --fg: #111827;
-    --fg-soft: #374151;
-    --fg-faint: #6b7280;
-    --shade: #f3f4f6; /* خلفية الموقع فاتحة */
-    --cream: #111827;
-  }
-  
-  body.light-mode .liquid-glass { background: rgba(255, 255, 255, 0.7); border: 1px solid rgba(0, 0, 0, 0.1); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05); color: var(--fg); }
-  body.light-mode .liquid-glass::before { background: linear-gradient(180deg, rgba(0,0,0,0.05) 0%, transparent 100%); }
-  
-  body.light-mode .chrome { background: rgba(255, 255, 255, 0.85); border-bottom: 1px solid rgba(0,0,0,0.1); }
-  body.light-mode .search-box, 
-  body.light-mode .input-group input, 
-  body.light-mode .input-group textarea, 
-  body.light-mode .input-group select { background: rgba(255, 255, 255, 0.9); border: 1px solid rgba(0, 0, 0, 0.15); color: #111; }
-  body.light-mode .search-box:focus, 
-  body.light-mode .input-group input:focus, 
-  body.light-mode .input-group textarea:focus { background: #fff; border-color: var(--primary); box-shadow: 0 0 10px rgba(59, 130, 246, 0.1); }
-  
-  body.light-mode .rank-row:hover { background: rgba(0,0,0,0.05); }
-  body.light-mode .rank-row { border-bottom: 1px solid rgba(0,0,0,0.05); }
-  body.light-mode .quiz-btn { background: #ffffff; border: 1px solid rgba(0,0,0,0.1); color: var(--fg); }
-  body.light-mode .quiz-btn:hover:not(:disabled) { background: #f9fafb; border-color: rgba(0,0,0,0.2); }
-  
-  body.light-mode .admin-header { background: rgba(255,255,255,0.7); border-bottom: 1px solid rgba(0,0,0,0.05); }
-  body.light-mode .admin-stat-box { background: #ffffff; border: 1px solid rgba(0,0,0,0.05); }
-  body.light-mode .log-item { background: #ffffff; }
-  body.light-mode .profile-row { background: rgba(255,255,255,0.8); border: 1px solid rgba(0,0,0,0.05); }
-  body.light-mode .modal-box { background: #ffffff; }
-  body.light-mode .file-category-header { background: #ffffff; border: 1px solid rgba(0,0,0,0.05); }
-  body.light-mode .admin-tabs { background: rgba(255,255,255,0.8); border-bottom: 1px solid rgba(0,0,0,0.05); }
-  body.light-mode .admin-tab:hover { background: rgba(0,0,0,0.03); }
-  body.light-mode .admin-section-header { background: #ffffff; box-shadow: 0 2px 8px rgba(0,0,0,0.03); border: 1px solid rgba(0,0,0,0.05); }
-  
+
+  /* ---------------- وضع الصباح ---------------- */
+  body.light-mode { --fg: #111827; --fg-soft: #374151; --fg-faint: #6b7280; --shade: #f3f4f6; --cream: #111827; }
+  body.light-mode .liquid-glass { background: rgba(255,255,255,.7); border: 1px solid rgba(0,0,0,.1); box-shadow: 0 8px 32px rgba(0,0,0,.05); color: var(--fg); }
+  body.light-mode .liquid-glass::before { background: linear-gradient(180deg, rgba(0,0,0,.05) 0%, transparent 100%); }
+  body.light-mode .chrome { background: rgba(255,255,255,.85); border-bottom: 1px solid rgba(0,0,0,.1); }
+  body.light-mode .search-box, body.light-mode .input-group input, body.light-mode .input-group textarea, body.light-mode .input-group select { background: rgba(255,255,255,.9); border: 1px solid rgba(0,0,0,.15); color: #111; }
+  body.light-mode .search-box:focus, body.light-mode .input-group input:focus, body.light-mode .input-group textarea:focus { background: #fff; border-color: var(--primary); box-shadow: 0 0 10px rgba(59,130,246,.1); }
+  body.light-mode .rank-row:hover { background: rgba(0,0,0,.05); }
+  body.light-mode .rank-row { border-bottom: 1px solid rgba(0,0,0,.05); }
+  body.light-mode .quiz-btn { background: #fff; border: 1px solid rgba(0,0,0,.1); color: var(--fg); }
+  body.light-mode .quiz-btn:hover:not(:disabled) { background: #f9fafb; border-color: rgba(0,0,0,.2); }
+  body.light-mode .admin-header { background: rgba(255,255,255,.7); border-bottom: 1px solid rgba(0,0,0,.05); }
+  body.light-mode .admin-stat-box { background: #fff; border: 1px solid rgba(0,0,0,.05); }
+  body.light-mode .log-item { background: #fff; }
+  body.light-mode .profile-row { background: rgba(255,255,255,.8); border: 1px solid rgba(0,0,0,.05); }
+  body.light-mode .modal-box { background: #fff; }
+  body.light-mode .file-category-header { background: #fff; border: 1px solid rgba(0,0,0,.05); }
+  body.light-mode .admin-tabs { background: rgba(255,255,255,.8); border-bottom: 1px solid rgba(0,0,0,.05); }
+  body.light-mode .admin-tab:hover { background: rgba(0,0,0,.03); }
+  body.light-mode .admin-section-header { background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,.03); border: 1px solid rgba(0,0,0,.05); }
   body.light-mode .hero-desc { color: #374151; }
   body.light-mode .hero-title { color: #111827; }
-  body.light-mode .gradient-overlay { background: linear-gradient(to bottom, rgba(243,244,246,0.3) 0%, transparent 40%, rgba(243,244,246,0.8) 80%, rgba(243,244,246,1) 100%); }
-  
-  body.light-mode .admin-btn, body.light-mode .theme-btn { background: rgba(0,0,0,0.05); border: 1px solid rgba(0,0,0,0.1); color: var(--fg); }
-  body.light-mode .theme-btn:hover, body.light-mode .admin-btn:hover { background: rgba(0,0,0,0.1); }
-  
-  /* تعديل نوافذ SweetAlert لوضع الصباح */
-  body.light-mode div:where(.swal2-container) div:where(.swal2-popup) { background: #ffffff !important; color: #111827 !important; border: 1px solid rgba(0,0,0,0.1); box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
-  body.light-mode div:where(.swal2-container) input:where(.swal2-input), 
-  body.light-mode div:where(.swal2-container) textarea:where(.swal2-textarea) { color: #111827; background: #f9fafb; border: 1px solid rgba(0,0,0,0.2); }
+  body.light-mode .gradient-overlay { background: linear-gradient(to bottom, rgba(243,244,246,.3) 0%, transparent 40%, rgba(243,244,246,.8) 80%, rgba(243,244,246,1) 100%); }
+  body.light-mode .admin-btn, body.light-mode .theme-btn { background: rgba(0,0,0,.05); border: 1px solid rgba(0,0,0,.1); color: var(--fg); }
+  body.light-mode .theme-btn:hover, body.light-mode .admin-btn:hover { background: rgba(0,0,0,.1); }
+  body.light-mode .user-greeting-btn { background: rgba(0,0,0,.05); border-color: rgba(0,0,0,.12); }
+  body.light-mode div:where(.swal2-container) div:where(.swal2-popup) { background: #fff !important; color: #111827 !important; border: 1px solid rgba(0,0,0,.1); box-shadow: 0 20px 40px rgba(0,0,0,.1); }
+  body.light-mode div:where(.swal2-container) input:where(.swal2-input), body.light-mode div:where(.swal2-container) textarea:where(.swal2-textarea) { color: #111827; background: #f9fafb; border: 1px solid rgba(0,0,0,.2); }
   body.light-mode div:where(.swal2-container) button:where(.swal2-styled.swal2-cancel) { background-color: #e5e7eb !important; color: #111 !important; }
-  /* -------------------------------------------------------- */
 
   * { box-sizing: border-box; }
-  html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
-  body { margin: 0; background: var(--shade); color: var(--fg); font-family: 'Cairo', sans-serif; overflow-x: hidden; transition: background 0.3s var(--ease), color 0.3s var(--ease); }
+  html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; scroll-padding-top: calc(var(--header-h) + 10px); }
+  body { margin: 0; background: var(--shade); color: var(--fg); font-family: 'Cairo', sans-serif; overflow-x: hidden; transition: background .3s var(--ease), color .3s var(--ease); }
+  img { max-width: 100%; }
+
+  /* ===== الأساس (الزجاج) ===== */
+  .liquid-glass { position: relative; background: rgba(255,255,255,.06); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,.12); border-radius: 16px; box-shadow: 0 8px 32px rgba(0,0,0,.35); overflow: hidden; }
+  .liquid-glass::before { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(180deg, rgba(255,255,255,.08), transparent 40%); z-index: 1; }
+
+  /* ===== الهيدر (منظم في صف واحد) ===== */
+  .chrome { position: sticky; top: 0; z-index: 50; height: var(--header-h); display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 0 clamp(12px, 4vw, 44px); border-radius: 0 !important; border-top: none; border-left: none; border-right: none; background: rgba(10,9,8,.8); overflow: visible; }
+  .mark { display: flex; align-items: center; gap: 6px; font-weight: 900; font-size: 17px; cursor: pointer; white-space: nowrap; min-width: 0; }
+  .mark-star { color: var(--gold); }
+  .nav { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+  .nav .pill { height: 36px; padding: 0 12px; }
+  .theme-btn { background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); font-size: 18px; width: 36px; padding: 0 !important; display: flex; align-items: center; justify-content: center; }
+  .user-greeting-btn { display: flex; align-items: center; height: 36px; max-width: 140px; padding: 0 12px; border-radius: 8px; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.15); font-size: 13px; font-weight: 700; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .user-greeting-btn:empty { display: none; }
 
   /* القسم الترحيبي */
-  .cinematic-hero { position: relative; height: 100vh; width: 100%; display: flex; flex-direction: column; justify-content: flex-end; padding: 6vh 5vw; overflow: hidden; background: #000; }
+  .cinematic-hero { position: relative; height: 100vh; height: 100svh; width: 100%; display: flex; flex-direction: column; justify-content: flex-end; padding: 6vh 5vw; overflow: hidden; background: #000; }
   .cinematic-video { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; }
-  .noise-overlay { position: absolute; inset: 0; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E"); opacity: 0.6; mix-blend-mode: overlay; pointer-events: none; z-index: 2; }
-  .gradient-overlay { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(10,9,8,0.3) 0%, transparent 40%, rgba(10,9,8,0.8) 80%, rgba(10,9,8,1) 100%); pointer-events: none; z-index: 3; transition: background 0.3s; }
+  .noise-overlay { position: absolute; inset: 0; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E"); opacity: .6; mix-blend-mode: overlay; pointer-events: none; z-index: 2; }
+  .gradient-overlay { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(10,9,8,.3) 0%, transparent 40%, rgba(10,9,8,.8) 80%, rgba(10,9,8,1) 100%); pointer-events: none; z-index: 3; transition: background .3s; }
   .hero-content { position: relative; z-index: 4; max-width: 1200px; width: 100%; margin: 0 auto; }
   @keyframes fadeUp { 0% { opacity: 0; transform: translateY(40px); } 100% { opacity: 1; transform: translateY(0); } }
-  .hero-label { color: var(--primary); font-size: clamp(12px, 2vw, 16px); font-weight: 700; letter-spacing: 1px; margin-bottom: 12px; opacity: 0; animation: fadeUp 0.8s forwards 0.2s; }
-  .hero-title { font-size: clamp(42px, 8vw, 90px); margin: 0 0 16px; line-height: 1.1; font-weight: 900; color: var(--cream); letter-spacing: -1px; opacity: 0; animation: fadeUp 0.8s forwards 0.4s; transition: color 0.3s; }
-  .hero-desc { font-size: clamp(14px, 2vw, 18px); color: rgba(225, 224, 204, 0.8); max-width: 600px; line-height: 1.6; margin: 0 0 30px; opacity: 0; animation: fadeUp 0.8s forwards 0.6s; transition: color 0.3s; }
-  .scroll-down-btn { display: inline-flex; align-items: center; gap: 12px; color: var(--primary); font-size: 15px; font-weight: 700; cursor: pointer; opacity: 0; animation: fadeUp 0.8s forwards 0.8s; transition: 0.3s; }
+  .hero-label { color: var(--primary); font-size: clamp(12px, 2vw, 16px); font-weight: 700; letter-spacing: 1px; margin-bottom: 12px; opacity: 0; animation: fadeUp .8s forwards .2s; }
+  .hero-title { font-size: clamp(38px, 8vw, 90px); margin: 0 0 16px; line-height: 1.1; font-weight: 900; color: var(--cream); letter-spacing: -1px; opacity: 0; animation: fadeUp .8s forwards .4s; transition: color .3s; }
+  .hero-desc { font-size: clamp(14px, 2vw, 18px); color: rgba(225,224,204,.8); max-width: 600px; line-height: 1.6; margin: 0 0 30px; opacity: 0; animation: fadeUp .8s forwards .6s; transition: color .3s; }
+  .scroll-down-btn { display: inline-flex; align-items: center; gap: 12px; color: var(--primary); font-size: 15px; font-weight: 700; cursor: pointer; opacity: 0; animation: fadeUp .8s forwards .8s; transition: .3s; }
   .scroll-down-btn:hover { color: var(--primary-hover); gap: 18px; }
-  .arrow-down { background: rgba(255,255,255,0.1); width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.2); animation: bounce 2s infinite 1.5s; }
-  @keyframes bounce { 0%, 20%, 50%, 80%, 100% { transform: translateY(0); } 40% { transform: translateY(-8px); } 60% { transform: translateY(-4px); } }
+  .arrow-down { background: rgba(255,255,255,.1); width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,.2); animation: bounce 2s infinite 1.5s; }
+  @keyframes bounce { 0%,20%,50%,80%,100% { transform: translateY(0); } 40% { transform: translateY(-8px); } 60% { transform: translateY(-4px); } }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; } .hero-label, .hero-title, .hero-desc, .scroll-down-btn { opacity: 1; } }
 
-  .theme-btn { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); font-size: 18px; padding: 0 12px; display: flex; align-items: center; justify-content: center; }
-
-  .pill { display: inline-flex; align-items: center; justify-content: center; height: 36px; padding: 0 16px; border-radius: 8px; background: var(--primary); color: #fff; font-size: 13px; font-weight: 700; text-decoration: none; border: none; cursor: pointer; transition: 0.2s; white-space: nowrap; gap: 6px; }
+  .pill { display: inline-flex; align-items: center; justify-content: center; height: 36px; min-height: 36px; padding: 0 16px; border-radius: 8px; background: var(--primary); color: #fff; font-size: 13px; font-weight: 700; text-decoration: none; border: none; cursor: pointer; transition: .2s; white-space: nowrap; gap: 6px; font-family: inherit; }
   .pill:hover { filter: brightness(1.1); transform: translateY(-1px); }
-  .pill:active { transform: scale(0.97); }
-  .admin-btn { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); }
+  .pill:active { transform: scale(.97); }
+  .admin-btn { background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); }
   .logout-btn { background: var(--danger); }
 
   .container { max-width: 1200px; margin: 0 auto; padding: 40px 14px; display: flex; flex-direction: column; gap: 24px; position: relative; z-index: 10; }
-  .search-box { width: 100%; background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.2); border-radius: 12px; padding: 14px 16px; color: var(--fg); font-family: inherit; font-size: 15px; outline: none; margin-bottom: 20px; transition: 0.3s; }
-  
-  .level-tabs { display: flex; gap: 10px; padding: 6px; border-radius: 12px; margin-bottom: 20px; }
-  .level-tab-btn { flex: 1; padding: 12px 16px; border-radius: 8px; border: none; background: transparent; color: var(--fg-soft); font-family: inherit; font-size: 15px; font-weight: 700; cursor: pointer; transition: all 0.2s var(--ease); }
-  .level-tab-btn.active { background: var(--primary); color: #fff; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4); }
+  .search-box { width: 100%; background: rgba(0,0,0,.6); border: 1px solid rgba(255,255,255,.2); border-radius: 12px; padding: 14px 16px; color: var(--fg); font-family: inherit; font-size: 16px; outline: none; margin-bottom: 20px; transition: .3s; }
 
-  .section-title { font-size: 20px; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; text-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-  .section-title::before { content: ""; width: 6px; height: 22px; background: var(--primary); border-radius: 3px; }
+  .level-tabs { display: flex; gap: 10px; padding: 6px; border-radius: 12px; margin-bottom: 20px; }
+  .level-tab-btn { flex: 1; min-height: 36px; padding: 12px 16px; border-radius: 8px; border: none; background: transparent; color: var(--fg-soft); font-family: inherit; font-size: 15px; font-weight: 700; cursor: pointer; transition: all .2s var(--ease); }
+  .level-tab-btn.active { background: var(--primary); color: #fff; box-shadow: 0 4px 15px rgba(59,130,246,.4); }
+
+  .section-title { font-size: 20px; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; text-shadow: 0 2px 4px rgba(0,0,0,.05); }
+  .section-title::before { content: ""; width: 6px; height: 22px; background: var(--primary); border-radius: 3px; flex-shrink: 0; }
   .grid { display: grid; gap: 16px; }
   .home-layout { display: grid; grid-template-columns: 1fr; gap: 24px; }
-  @media (min-width: 850px) { .container { padding: 60px 20px; gap: 36px; } .home-layout { grid-template-columns: 2fr 1fr; } .chrome { padding: 14px clamp(16px, 4vw, 44px); } .section-title { font-size: 24px; } }
+  @media (min-width: 850px) { .container { padding: 60px 20px; gap: 36px; } .home-layout { grid-template-columns: 2fr 1fr; } .section-title { font-size: 24px; } }
 
   .card { padding: 22px; display: flex; flex-direction: column; }
-  .leaderboard-card { border: 1.5px solid var(--gold) !important; background: rgba(255, 215, 0, 0.05) !important; }
-  .rank-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 8px; border-bottom: 1px solid rgba(255,255,255,0.05); position: relative; z-index: 2; transition: 0.2s; border-radius: 8px; }
-  .rank-row:hover { background: rgba(255,255,255,0.05); }
+  .leaderboard-card { border: 1.5px solid var(--gold) !important; background: rgba(255,215,0,.05) !important; }
+  .rank-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 8px; border-bottom: 1px solid rgba(255,255,255,.05); position: relative; z-index: 2; transition: .2s; border-radius: 8px; }
+  .rank-row:hover { background: rgba(255,255,255,.05); }
   .rank-row:last-child { border-bottom: none; }
   .rank-num { font-weight: 900; font-size: 16px; color: var(--gold); width: 28px; }
   .rank-name { flex-grow: 1; font-weight: 600; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0 8px; }
-  .rank-score { background: var(--primary); padding: 4px 12px; border-radius: 16px; font-size: 12px; font-weight: bold; white-space: nowrap; }
+  .rank-score { background: var(--primary); padding: 4px 12px; border-radius: 16px; font-size: 12px; font-weight: bold; white-space: nowrap; color: #fff; }
 
   .quiz-options { display: grid; grid-template-columns: 1fr; gap: 10px; margin-top: 16px; }
   @media (min-width: 600px) { .quiz-options { grid-template-columns: 1fr 1fr; } }
-  .quiz-btn { background: rgba(255, 255, 255, 0.05); width: 100%; min-height: 48px; padding: 10px 16px; text-align: right; font-size: 14px; font-weight: 600; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); color: var(--fg); cursor: pointer; font-family: inherit; transition: all 0.2s; }
-  .quiz-btn:hover:not(:disabled) { background: rgba(255, 255, 255, 0.1); border-color: rgba(255,255,255,0.3); transform: translateY(-1px); }
+  .quiz-btn { background: rgba(255,255,255,.05); width: 100%; min-height: 48px; padding: 10px 16px; text-align: right; font-size: 14px; font-weight: 600; border-radius: 8px; border: 1px solid rgba(255,255,255,.1); color: var(--fg); cursor: pointer; font-family: inherit; transition: all .2s; }
+  .quiz-btn:hover:not(:disabled) { background: rgba(255,255,255,.1); border-color: rgba(255,255,255,.3); transform: translateY(-1px); }
   .quiz-btn:disabled { cursor: not-allowed; color: #fff; }
   .quiz-solved-badge { padding: 6px 12px; border-radius: 12px; font-size: 12px; margin-right: auto; font-weight: bold; }
 
   .upload-form { display: flex; flex-direction: column; gap: 14px; position: relative; z-index: 2; }
   .input-group { display: flex; flex-direction: column; gap: 6px; }
   .input-group label { font-size: 13px; color: var(--fg-soft); font-weight: bold; }
-  .input-group input, .input-group textarea, .input-group select { background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; padding: 12px; color: var(--fg); font-family: inherit; font-size: 14px; width: 100%; transition: 0.3s; }
+  .input-group input, .input-group textarea, .input-group select { background: rgba(0,0,0,.4); border: 1px solid rgba(255,255,255,.15); border-radius: 8px; padding: 12px; color: var(--fg); font-family: inherit; font-size: 16px; width: 100%; transition: .3s; }
+  select.input-group, input.input-group, textarea.input-group { background: rgba(0,0,0,.4); border: 1px solid rgba(255,255,255,.15); border-radius: 8px; padding: 12px; color: var(--fg); font-family: inherit; font-size: 16px; width: 100%; }
+  body.light-mode select.input-group, body.light-mode input.input-group, body.light-mode textarea.input-group { background: rgba(255,255,255,.9); border-color: rgba(0,0,0,.15); color: #111; }
 
-  .overlay-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 16px; overflow-y: auto; }
-  .modal-box { width: 100%; max-width: 450px; border-radius: 18px; padding: 26px 20px; }
+  .overlay-bg { position: fixed; inset: 0; background: rgba(0,0,0,.85); backdrop-filter: blur(10px); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 16px; overflow-y: auto; }
+  .modal-box { width: 100%; max-width: 450px; border-radius: 18px; padding: 26px 20px; max-height: 92vh; overflow-y: auto; }
   .modal-box.large { max-width: 600px; }
 
-  /* تنسيق الجداول الاحترافي */
-  .table-responsive { overflow-x: auto; margin-top: 12px; position: relative; z-index: 2; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); }
-  .styled-table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: right; min-width: 950px; }
-  .styled-table th, .styled-table td { padding: 12px 14px; border-bottom: 1px solid rgba(255,255,255,0.05); vertical-align: middle; }
-  .styled-table th { background: rgba(59, 130, 246, 0.1); color: var(--primary); font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; }
-  .styled-table tbody tr { transition: 0.2s; }
-  .styled-table tbody tr:hover { background: rgba(255,255,255,0.02); }
+  .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; margin-top: 12px; position: relative; z-index: 2; border-radius: 12px; border: 1px solid rgba(255,255,255,.05); }
+  .styled-table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: right; min-width: 800px; }
+  .styled-table th, .styled-table td { padding: 12px 14px; border-bottom: 1px solid rgba(255,255,255,.05); vertical-align: middle; }
+  .styled-table th { background: rgba(59,130,246,.1); color: var(--primary); font-weight: bold; letter-spacing: .5px; }
+  .styled-table tbody tr { transition: .2s; }
+  .styled-table tbody tr:hover { background: rgba(255,255,255,.02); }
 
   .status-badge { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: bold; }
-  .status-online { background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.3); }
-  .status-offline { background: rgba(255, 255, 255, 0.05); color: var(--fg-faint); border: 1px solid rgba(255, 255, 255, 0.1); }
-  .status-banned { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+  .status-online { background: rgba(34,197,94,.15); color: #4ade80; border: 1px solid rgba(34,197,94,.3); }
+  .status-offline { background: rgba(255,255,255,.05); color: var(--fg-faint); border: 1px solid rgba(255,255,255,.1); }
+  .status-banned { background: rgba(239,68,68,.15); color: #f87171; border: 1px solid rgba(239,68,68,.3); }
 
-  /* أزرار الإجراءات */
   .action-group { display: flex; gap: 6px; flex-wrap: wrap; }
-  .btn-sm { padding: 6px 10px; border-radius: 6px; font-size: 11px; cursor: pointer; font-weight: bold; transition: 0.2s; border: none; display: inline-flex; align-items: center; gap: 4px; }
-  .btn-track { background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59,130,246,0.3); }
-  .btn-edit { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245,158,11,0.3); }
-  .btn-msg { background: rgba(168, 85, 247, 0.15); color: #c084fc; border: 1px solid rgba(168,85,247,0.3); }
-  .btn-ban { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239,68,68,0.3); }
-  .btn-unban { background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34,197,94,0.3); }
+  .btn-sm { padding: 6px 10px; border-radius: 6px; font-size: 11px; cursor: pointer; font-weight: bold; transition: .2s; border: none; display: inline-flex; align-items: center; gap: 4px; font-family: inherit; }
+  .btn-track { background: rgba(59,130,246,.15); color: #60a5fa; border: 1px solid rgba(59,130,246,.3); }
+  .btn-edit { background: rgba(245,158,11,.15); color: #fbbf24; border: 1px solid rgba(245,158,11,.3); }
+  .btn-msg { background: rgba(168,85,247,.15); color: #c084fc; border: 1px solid rgba(168,85,247,.3); }
+  .btn-ban { background: rgba(239,68,68,.15); color: #f87171; border: 1px solid rgba(239,68,68,.3); }
+  .btn-unban { background: rgba(34,197,94,.15); color: #4ade80; border: 1px solid rgba(34,197,94,.3); }
   .btn-sm:hover { filter: brightness(1.3); transform: translateY(-1px); }
 
-  .empty-state { text-align: center; padding: 30px 15px; color: var(--fg-faint); font-size: 14px; position: relative; z-index: 2; background: rgba(0,0,0,0.2); border-radius: 10px; }
-  
-  .profile-row { background: rgba(0,0,0,0.4); padding: 14px 16px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.05); margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+  .empty-state { text-align: center; padding: 30px 15px; color: var(--fg-faint); font-size: 14px; position: relative; z-index: 2; background: rgba(0,0,0,.2); border-radius: 10px; }
+  .profile-row { background: rgba(0,0,0,.4); padding: 14px 16px; border-radius: 10px; border: 1px solid rgba(255,255,255,.05); margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
   .profile-row-label { color: var(--fg-soft); font-size: 13px; }
-  .profile-row-value { font-size: 15px; font-weight: 700; color: var(--fg); }
-  .file-category-header { background: rgba(0,0,0,0.3); padding: 10px 14px; border-radius: 8px; font-size: 14px; color: var(--gold); margin: 20px 0 10px; font-weight: bold; display: flex; align-items: center; gap: 8px; border-right: 3px solid var(--gold); }
+  .profile-row-value { font-size: 15px; font-weight: 700; color: var(--fg); word-break: break-all; }
+  .file-category-header { background: rgba(0,0,0,.3); padding: 10px 14px; border-radius: 8px; font-size: 14px; color: var(--gold); margin: 20px 0 10px; font-weight: bold; display: flex; align-items: center; gap: 8px; border-right: 3px solid var(--gold); }
   .z-content { position: relative; z-index: 2; }
-  
-  .subject-image-container { margin-bottom: 20px; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); }
-  .subject-image-container img { width: 100%; height: auto; display: block; }
-  .subject-image-title { background: rgba(0,0,0,0.8); padding: 8px 12px; font-size: 14px; color: var(--gold); text-align: center; font-weight: bold; }
 
-  /* -------------------------------------------
-     لوحة الإدارة المتطورة
-  ------------------------------------------- */
+  .subject-image-container { margin-bottom: 20px; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,.1); }
+  .subject-image-container img { width: 100%; height: auto; display: block; }
+  .subject-image-title { background: rgba(0,0,0,.8); padding: 8px 12px; font-size: 14px; color: var(--gold); text-align: center; font-weight: bold; }
+
+  /* لوحة الإدارة */
   #admin-panel { display: none; margin-top: 30px; padding: 0; background: transparent; box-shadow: none; border: none; }
-  .admin-dashboard-container { background: rgba(20, 20, 20, 0.6); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-radius: 16px; border: 1px solid rgba(255,255,255,0.1); overflow: hidden; position: relative; z-index: 2; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
-  .admin-header { background: rgba(0,0,0,0.5); padding: 24px; border-bottom: 1px solid rgba(255,255,255,0.05); }
-  .admin-stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; margin-top: 20px; }
-  .admin-stat-box { background: rgba(255,255,255,0.03); padding: 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); text-align: center; transition: 0.3s; }
-  .admin-stat-box:hover { background: rgba(255,255,255,0.05); transform: translateY(-2px); }
+  .admin-dashboard-container { background: rgba(20,20,20,.6); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-radius: 16px; border: 1px solid rgba(255,255,255,.1); overflow: hidden; position: relative; z-index: 2; box-shadow: 0 10px 40px rgba(0,0,0,.5); }
+  .admin-header { background: rgba(0,0,0,.5); padding: 24px; border-bottom: 1px solid rgba(255,255,255,.05); }
+  .admin-stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 16px; margin-top: 20px; }
+  .admin-stat-box { background: rgba(255,255,255,.03); padding: 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,.05); text-align: center; transition: .3s; }
+  .admin-stat-box:hover { background: rgba(255,255,255,.05); transform: translateY(-2px); }
   .admin-stat-num { font-size: 32px; font-weight: 900; color: var(--primary); margin-bottom: 6px; line-height: 1; }
   .admin-stat-label { font-size: 13px; color: var(--fg-soft); font-weight: 600; }
-  
-  .admin-tabs { display: flex; border-bottom: 1px solid rgba(255,255,255,0.05); background: rgba(0,0,0,0.3); overflow-x: auto; scrollbar-width: none; }
-  .admin-tab { padding: 16px 24px; font-size: 15px; font-weight: bold; color: var(--fg-faint); cursor: pointer; border-bottom: 3px solid transparent; transition: 0.2s; white-space: nowrap; display: flex; align-items: center; gap: 8px; }
-  .admin-tab:hover { color: var(--fg); background: rgba(255,255,255,0.02); }
-  .admin-tab.active { color: var(--primary); border-bottom-color: var(--primary); background: rgba(59, 130, 246, 0.05); }
+  .admin-tabs { display: flex; border-bottom: 1px solid rgba(255,255,255,.05); background: rgba(0,0,0,.3); overflow-x: auto; scrollbar-width: none; }
+  .admin-tabs::-webkit-scrollbar { display: none; }
+  .admin-tab { padding: 16px 24px; font-size: 15px; font-weight: bold; color: var(--fg-faint); cursor: pointer; border-bottom: 3px solid transparent; transition: .2s; white-space: nowrap; display: flex; align-items: center; gap: 8px; }
+  .admin-tab:hover { color: var(--fg); background: rgba(255,255,255,.02); }
+  .admin-tab.active { color: var(--primary); border-bottom-color: var(--primary); background: rgba(59,130,246,.05); }
   .admin-tab-content { padding: 24px; display: none; }
   .admin-tab-content.active { display: block; }
-
-  /* تنسيق أقسام الإدارة */
-  .admin-section-header { background: rgba(255,255,255,0.03); padding: 12px 16px; border-radius: 8px; font-size: 16px; color: var(--gold); font-weight: bold; display: flex; align-items: center; gap: 10px; margin: 30px 0 16px; border-right: 4px solid var(--gold); box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-  
-  .log-item { background: rgba(0,0,0,0.3); padding: 16px; border-radius: 10px; margin-bottom: 12px; border-right: 4px solid var(--primary); display: flex; flex-direction: column; gap: 6px; transition: 0.2s; }
-  .log-item:hover { background: rgba(0,0,0,0.5); }
-  .log-header { display: flex; justify-content: space-between; align-items: center; }
-  .log-admin { font-weight: bold; color: var(--gold); font-size: 14px; display: flex; align-items: center; gap: 6px; }
+  .admin-section-header { background: rgba(255,255,255,.03); padding: 12px 16px; border-radius: 8px; font-size: 16px; color: var(--gold); font-weight: bold; display: flex; align-items: center; gap: 10px; margin: 30px 0 16px; border-right: 4px solid var(--gold); box-shadow: 0 4px 15px rgba(0,0,0,.1); }
+  .log-item { background: rgba(0,0,0,.3); padding: 16px; border-radius: 10px; margin-bottom: 12px; border-right: 4px solid var(--primary); display: flex; flex-direction: column; gap: 6px; transition: .2s; }
+  .log-item:hover { background: rgba(0,0,0,.5); }
+  .log-header { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .log-admin { font-weight: bold; color: var(--gold); font-size: 14px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
   .log-time { font-size: 12px; color: var(--fg-faint); }
-  .log-body { font-size: 14px; line-height: 1.6; color: var(--fg-soft); }
-  .log-badge { display: inline-block; padding: 3px 8px; border-radius: 6px; background: rgba(255,255,255,0.05); font-size: 11px; margin-right: 8px; font-weight: bold; letter-spacing: 0.5px; }
+  .log-body { font-size: 14px; line-height: 1.6; color: var(--fg-soft); word-break: break-word; }
+  .log-badge { display: inline-block; padding: 3px 8px; border-radius: 6px; background: rgba(255,255,255,.05); font-size: 11px; margin-right: 8px; font-weight: bold; letter-spacing: .5px; }
 
-  /* واجهة تتبع الطالب */
-  .track-avatar { width: 64px; height: 64px; border-radius: 50%; border: 2px solid var(--primary); display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 900; color: #fff; background: rgba(59, 130, 246, 0.15); margin: 0 auto; box-shadow: 0 0 15px rgba(59,130,246,0.3); }
+  /* تتبع الطالب */
+  .track-avatar { width: 64px; height: 64px; border-radius: 50%; border: 2px solid var(--primary); display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 900; color: #fff; background: rgba(59,130,246,.15); margin: 0 auto; box-shadow: 0 0 15px rgba(59,130,246,.3); }
   .track-stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
-  .track-stat-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; padding: 16px 8px; text-align: center; }
+  .track-stat-card { background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.05); border-radius: 12px; padding: 16px 8px; text-align: center; }
   .track-stat-title { font-size: 12px; color: var(--fg-soft); margin-bottom: 10px; font-weight: 700; }
   .track-stat-value { font-size: 18px; font-weight: 900; }
-  .track-subj-card { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; padding: 16px; margin-bottom: 12px; transition: 0.2s; }
-  .track-subj-card:hover { background: rgba(255,255,255,0.04); }
-  .track-progress-bar { height: 8px; background: rgba(0,0,0,0.5); border-radius: 4px; overflow: hidden; width: 100%; margin: 10px 0; border: 1px solid rgba(255,255,255,0.05); }
-  .track-progress-fill { height: 100%; border-radius: 4px; transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1); }
+  .track-subj-card { background: rgba(255,255,255,.02); border: 1px solid rgba(255,255,255,.05); border-radius: 12px; padding: 16px; margin-bottom: 12px; transition: .2s; }
+  .track-subj-card:hover { background: rgba(255,255,255,.04); }
+  .track-progress-bar { height: 8px; background: rgba(0,0,0,.5); border-radius: 4px; overflow: hidden; width: 100%; margin: 10px 0; border: 1px solid rgba(255,255,255,.05); }
+  .track-progress-fill { height: 100%; border-radius: 4px; transition: width .8s cubic-bezier(.4,0,.2,1); }
 
-  /* تخصيص SweetAlert2 للوضع المظلم الافتراضي */
-  div:where(.swal2-container) div:where(.swal2-popup) { background: #18181b !important; color: #fff !important; border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; font-family: 'Cairo', sans-serif; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
+  /* SweetAlert2 */
+  div:where(.swal2-container) div:where(.swal2-popup) { background: #18181b !important; color: #fff !important; border: 1px solid rgba(255,255,255,.1); border-radius: 16px; font-family: 'Cairo', sans-serif; box-shadow: 0 25px 50px -12px rgba(0,0,0,.5); max-width: 100%; }
   div:where(.swal2-container) button:where(.swal2-styled.swal2-confirm) { background-color: var(--primary) !important; border-radius: 8px; font-weight: bold; }
-  div:where(.swal2-container) button:where(.swal2-styled.swal2-cancel) { background-color: rgba(255,255,255,0.1) !important; color: #fff !important; border-radius: 8px; }
-  div:where(.swal2-container) input:where(.swal2-input), div:where(.swal2-container) textarea:where(.swal2-textarea) { color: #fff; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; }
+  div:where(.swal2-container) button:where(.swal2-styled.swal2-cancel) { background-color: rgba(255,255,255,.1) !important; color: #fff !important; border-radius: 8px; }
+  div:where(.swal2-container) input:where(.swal2-input), div:where(.swal2-container) textarea:where(.swal2-textarea) { color: #fff; background: rgba(0,0,0,.5); border: 1px solid rgba(255,255,255,.1); border-radius: 8px; font-size: 16px; max-width: 100%; }
   div:where(.swal2-container) input:where(.swal2-input):focus, div:where(.swal2-container) textarea:where(.swal2-textarea):focus { border-color: var(--primary); box-shadow: none; }
-  
-  #maintenance-overlay { display: none; position: fixed; inset: 0; background: rgba(5, 5, 5, 0.98); backdrop-filter: blur(20px); z-index: 9999999; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; }
-  
-  .flex-between { display: flex; justify-content: space-between; align-items: center; }
+
+  #maintenance-overlay { display: none; position: fixed; inset: 0; background: rgba(5,5,5,.98); backdrop-filter: blur(20px); z-index: 9999999; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; }
+  .flex-between { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
   .mb-4 { margin-bottom: 16px; }
 
-  /* التنبيه العاجل الثابت */
-  #alert-banner { display: none; background: linear-gradient(135deg, var(--warning), #d97706); color: #111; padding: 10px 16px; text-align: center; font-weight: 700; font-size: 14px; animation: pulseAlert 2s infinite; position: sticky; top: 60px; z-index: 39; }
-  @keyframes pulseAlert { 0% { opacity: 0.9; } 50% { opacity: 1; } 100% { opacity: 0.9; } }
+  /* التنبيه العاجل: ملتصق تحت الهيدر مباشرة */
+  #alert-banner { display: none; background: linear-gradient(135deg, var(--warning), #d97706); color: #111; padding: 10px 16px; text-align: center; font-weight: 700; font-size: 14px; animation: pulseAlert 2s infinite; position: sticky; top: var(--header-h); z-index: 49; word-break: break-word; }
+  @keyframes pulseAlert { 0% { opacity: .9; } 50% { opacity: 1; } 100% { opacity: .9; } }
+
+  /* ===== الهواتف ===== */
+  @media (max-width: 600px) {
+    :root { --header-h: 56px; }
+    .mark { font-size: 14px; }
+    .nav { gap: 6px; }
+    .nav .pill { padding: 0 10px; }
+    .btn-txt { display: none; }
+    .admin-btn, .logout-btn { width: 36px; padding: 0 !important; }
+    .user-greeting-btn { max-width: 90px; padding: 0 8px; font-size: 12px; }
+    .cinematic-hero { padding: 5vh 20px; }
+    .container { padding: 24px 12px; }
+    .level-tabs { gap: 6px; }
+    .level-tab-btn { padding: 10px 6px; font-size: 13px; }
+    .card { padding: 16px; }
+    .modal-box { padding: 20px 14px; }
+    .admin-header, .admin-tab-content { padding: 14px; }
+    .admin-tab { padding: 12px 14px; font-size: 13px; }
+    .admin-stat-num { font-size: 24px; }
+    .admin-stat-box { padding: 14px 8px; }
+    .track-stats-grid { grid-template-columns: 1fr; }
+    #subject-files .card, .flex-between { flex-wrap: wrap; }
+    .grid[style*="minmax(320px"], .grid[style*="minmax(300px"] { grid-template-columns: 1fr !important; }
+    #btn-reset-subject-quizzes { height: auto !important; padding: 6px 10px; }
+    .profile-row { flex-direction: column; align-items: flex-start; gap: 4px; }
+    .section-title { font-size: 18px; }
+  }
+  @media (max-width: 360px) { .mark-text { display: none; } }
 </style>
 </head>
 <body>
 
-  <!-- شاشة الصيانة -->
+  <div id="fb-error" style="display:none; position:fixed; inset:0; z-index:99999999; background:#0a0908; color:#fff; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:24px; font-family:'Cairo',sans-serif;">
+    <div style="font-size:52px; margin-bottom:12px;">📡</div>
+    <h2 style="margin:0 0 10px; color:#3b82f6;">تعذّر الاتصال بخدمة البيانات</h2>
+    <p style="max-width:460px; line-height:1.7; color:rgba(255,255,255,.8); margin:0 0 18px;">لم يتم تحميل مكتبة Firebase. تأكد من الإنترنت، أو أن الصفحة ليست مفتوحة داخل بيئة تحجب الاتصال بـ gstatic / cdnjs، ثم أعد المحاولة.</p>
+    <button onclick="location.reload()" style="background:#3b82f6; color:#fff; border:none; border-radius:8px; padding:12px 24px; font-family:inherit; font-weight:700; font-size:15px; cursor:pointer;">إعادة المحاولة 🔄</button>
+  </div>
+
   <div id="maintenance-overlay">
     <div style="font-size: 60px; margin-bottom: 20px; animation: bounce 2s infinite;">🛠️</div>
-    <h1 style="color: var(--primary); font-size: clamp(32px, 5vw, 48px); margin: 0 0 16px;">الموقع تحت الصيانة والتحديث</h1>
-    <p style="color: var(--fg-soft); font-size: clamp(16px, 2vw, 20px); max-width: 600px; line-height: 1.6;">
+    <h1 style="color: var(--primary); font-size: clamp(28px, 5vw, 48px); margin: 0 0 16px;">الموقع تحت الصيانة والتحديث</h1>
+    <p style="color: var(--fg-soft); font-size: clamp(15px, 2vw, 20px); max-width: 600px; line-height: 1.6;">
       نعمل حالياً على تطوير المنصة وإضافة ملخصات وأسئلة جديدة لتوفير تجربة أفضل. يرجى العودة لاحقاً!
     </p>
   </div>
@@ -262,23 +274,20 @@
   </section>
 
   <div id="main-site">
-    <header class="chrome liquid-glass" style="border-radius: 0; border-top: none; border-left: none; border-right: none;">
-      <div class="mark z-content" onclick="showHome()"><span class="mark-star">✦</span> أبحاث الجامعة</div>
+    <header class="chrome liquid-glass">
+      <div class="mark z-content" onclick="showHome()"><span class="mark-star">✦</span><span class="mark-text">أبحاث الجامعة</span></div>
       <nav class="nav z-content">
-        <!-- زر التبديل بين الليل والنهار -->
         <button class="pill theme-btn" id="theme-toggle-btn" onclick="toggleTheme()" title="تبديل الوضع">🌞</button>
-        
-        <div class="user-greeting-btn" onclick="showProfile()" id="user-greeting" title="عرض الملف الشخصي"></div>
-        <button class="pill admin-btn" id="admin-toggle-btn" onclick="toggleAdminPanel()" style="display:none;">⚙️ الإدارة</button>
-        <button class="pill logout-btn" onclick="logoutStudent()">خروج</button>
+        <div class="user-greeting-btn" onclick="showProfile()" id="user-greeting" title="الملف الشخصي"></div>
+        <button class="pill admin-btn" id="admin-toggle-btn" onclick="toggleAdminPanel()" style="display:none;"><span>⚙️</span><span class="btn-txt">الإدارة</span></button>
+        <button class="pill logout-btn" onclick="logoutStudent()"><span>🚪</span><span class="btn-txt">خروج</span></button>
       </nav>
     </header>
 
-    <!-- شريط التنبيه العاجل -->
     <div id="alert-banner">⚠️ <span id="alert-text-content"></span></div>
 
     <main class="container">
-      
+
       <!-- الرئيسية -->
       <div id="view-home">
         <div class="home-layout">
@@ -290,7 +299,7 @@
             </div>
             <h2 class="section-title z-content" id="current-level-heading">مواد المستوى الأول</h2>
             <div class="grid" id="subjects-grid" style="grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));"></div>
-            
+
             <div class="card liquid-glass" style="margin-top: 24px;">
               <h3 class="z-content" style="color: #25D366; margin: 0 0 12px; font-size: 18px; display: flex; align-items: center; gap: 8px;">
                 <span>💬</span> صندوق الملاحظات
@@ -303,36 +312,29 @@
               </form>
             </div>
 
-            <!-- قسم روابط جروبات الدفعة والمواد -->
             <div class="card liquid-glass" style="margin-top: 24px; border-color: var(--primary);">
               <h3 class="z-content" style="color: var(--primary); margin: 0 0 16px; font-size: 18px; display: flex; align-items: center; gap: 8px;">
                 <span>🔗</span> روابط جروبات الدفعة والمواد
               </h3>
               <div class="z-content" style="display: flex; flex-direction: column; gap: 10px;">
-                
-                <a href="https://chat.whatsapp.com/DyNRIR2xCTUIX1E29iuhIT?s=cl&p=i&mlu=4&ilr=4" target="_blank" class="quiz-btn" style="text-align: right; display: flex; justify-content: space-between; align-items: center; text-decoration: none;">
+                <a href="https://chat.whatsapp.com/DyNRIR2xCTUIX1E29iuhIT?s=cl&p=i&mlu=4&ilr=4" target="_blank" rel="noopener" class="quiz-btn" style="text-align: right; display: flex; justify-content: space-between; align-items: center; text-decoration: none;">
                   <span>جروب مادة افريقيا وحوض النيل</span>
                   <span style="color: var(--online-green);">🟢 انضمام</span>
                 </a>
-                
-                <a href="#" target="_blank" class="quiz-btn" style="text-align: right; display: flex; justify-content: space-between; align-items: center; text-decoration: none;">
+                <a href="#" target="_blank" rel="noopener" class="quiz-btn" style="text-align: right; display: flex; justify-content: space-between; align-items: center; text-decoration: none;">
                   <span>جروب مادة الاستشعار عن بعد</span>
                   <span style="color: var(--online-green);">🟢 انضمام</span>
                 </a>
-                
-                <a href="#" target="_blank" class="quiz-btn" style="text-align: right; display: flex; justify-content: space-between; align-items: center; text-decoration: none;">
+                <a href="#" target="_blank" rel="noopener" class="quiz-btn" style="text-align: right; display: flex; justify-content: space-between; align-items: center; text-decoration: none;">
                   <span>جروب مادة نظم المعلومات الجغرافية (GIS)</span>
                   <span style="color: var(--online-green);">🟢 انضمام</span>
                 </a>
-                
-                <a href="#" target="_blank" class="quiz-btn" style="text-align: right; display: flex; justify-content: space-between; align-items: center; text-decoration: none; border-color: #5865F2;">
+                <a href="#" target="_blank" rel="noopener" class="quiz-btn" style="text-align: right; display: flex; justify-content: space-between; align-items: center; text-decoration: none; border-color: #5865F2;">
                   <span>سيرفر الديسكورد للمذاكرة الجماعية</span>
                   <span style="color: #5865F2;">🟣 انضمام</span>
                 </a>
-
               </div>
             </div>
-
           </div>
           <div>
             <h2 class="section-title z-content" style="color: var(--gold);">🏆 لوحة الشرف</h2>
@@ -345,30 +347,26 @@
 
       <!-- صفحة المادة -->
       <div id="view-subject" style="display: none;">
-        <button class="pill z-content mb-4" style="background:rgba(255,255,255,0.1);" onclick="showHome()">⭠ رجوع للرئيسية</button>
+        <button class="pill z-content mb-4" style="background:rgba(255,255,255,.1);" onclick="showHome()">⭠ رجوع للرئيسية</button>
         <h2 class="section-title z-content" id="subject-title">اسم المادة</h2>
         <p id="subject-desc" class="z-content" style="color: var(--fg-soft); margin-bottom: 24px; font-size: 14px; line-height: 1.6;"></p>
-        
         <div id="subject-images" class="z-content" style="margin-bottom: 24px;"></div>
 
-        <h3 class="z-content" style="color: var(--primary); border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px; font-size: 17px;">الملفات والمصادر</h3>
+        <h3 class="z-content" style="color: var(--primary); border-bottom: 1px solid rgba(255,255,255,.1); padding-bottom: 8px; font-size: 17px;">الملفات والمصادر</h3>
         <div id="subject-files" style="margin-bottom: 32px;"></div>
-        
-        <div class="z-content flex-between" style="border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px; margin-bottom: 16px;">
+
+        <div class="z-content flex-between" style="border-bottom: 1px solid rgba(255,255,255,.1); padding-bottom: 8px; margin-bottom: 16px;">
            <h3 style="color: var(--primary); font-size: 17px; margin: 0;">بنك الأسئلة (MCQ)</h3>
-           <button id="btn-reset-subject-quizzes" class="pill" style="background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); font-size: 12px; height: 30px;" onclick="resetSubjectQuizzes()">🔄 إعادة امتحان المادة بالكامل</button>
+           <button id="btn-reset-subject-quizzes" class="pill" style="background: rgba(239,68,68,.15); color: #f87171; border: 1px solid rgba(239,68,68,.3); font-size: 12px; height: 30px;" onclick="resetSubjectQuizzes()">🔄 إعادة امتحان المادة بالكامل</button>
         </div>
-        
         <div class="grid" id="subject-quizzes"></div>
       </div>
 
-      <!-- لوحة الإدارة المتطورة -->
+      <!-- لوحة الإدارة -->
       <section id="admin-panel" class="z-content">
         <div class="admin-dashboard-container">
           <div class="admin-header">
-            <h2 style="color: var(--primary); margin: 0; font-size: 24px; display:flex; align-items:center; gap:8px;">
-              <span>👑</span> لوحة تحكم الإدارة
-            </h2>
+            <h2 style="color: var(--primary); margin: 0; font-size: 24px; display:flex; align-items:center; gap:8px;"><span>👑</span> لوحة تحكم الإدارة</h2>
             <div class="admin-stats-grid">
               <div class="admin-stat-box"><div class="admin-stat-num" id="stat-students">0</div><div class="admin-stat-label">إجمالي الطلاب</div></div>
               <div class="admin-stat-box"><div class="admin-stat-num" style="color:#4ade80;" id="stat-online">0</div><div class="admin-stat-label">متصل الآن</div></div>
@@ -384,33 +382,25 @@
             <div class="admin-tab" onclick="switchAdminTab('logs', this)">⏱️ سجل النشاط</div>
           </div>
 
-          <!-- Tab: الطلاب -->
           <div id="tab-students" class="admin-tab-content active">
              <div class="flex-between mb-4">
                 <h3 style="color: var(--gold); margin: 0; font-size: 16px;">قاعدة بيانات الطلاب</h3>
-                <div style="display:flex; gap:8px;">
-                   <button class="pill" style="background: #10b981; font-size: 12px;" onclick="exportStudentsCSV()">📥 تصدير Excel</button>
-                </div>
+                <button class="pill" style="background: #10b981; font-size: 12px;" onclick="exportStudentsCSV()">📥 تصدير Excel</button>
              </div>
              <div style="margin-bottom: 12px;">
-                 <input type="text" id="admin-search-student" class="search-box" style="margin-bottom:0; background: rgba(0,0,0,0.4);" placeholder="🔍 ابحث عن طالب بالاسم، الهاتف، أو الـ ID..." oninput="filterAdminStudents()">
+                 <input type="text" id="admin-search-student" class="search-box" style="margin-bottom:0; background: rgba(0,0,0,.4);" placeholder="🔍 ابحث عن طالب بالاسم، الهاتف، أو الـ ID..." oninput="filterAdminStudents()">
              </div>
              <div class="table-responsive">
                 <table class="styled-table">
-                   <thead>
-                      <tr><th>#</th><th>اسم الطالب</th><th>بيانات الاتصال / ID</th><th>النقاط</th><th>الإجراءات</th></tr>
-                   </thead>
+                   <thead><tr><th>#</th><th>اسم الطالب</th><th>بيانات الاتصال / ID</th><th>النقاط</th><th>الإجراءات</th></tr></thead>
                    <tbody id="students-table-body"><tr><td colspan="5" style="text-align:center;">جاري جلب البيانات...</td></tr></tbody>
                 </table>
              </div>
           </div>
 
-          <!-- Tab: المحتوى -->
           <div id="tab-content" class="admin-tab-content">
-             
-             <!-- قسم 1: إدارة المواد -->
              <div class="admin-section-header"><span>1️⃣</span> إدارة المواد الدراسية</div>
-             <div class="card liquid-glass" style="background:rgba(0,0,0,0.4); margin-bottom: 24px;">
+             <div class="card liquid-glass" style="background:rgba(0,0,0,.4); margin-bottom: 24px;">
                 <h3 style="color: #fbbf24; font-size: 16px; margin-top:0;">إضافة مادة جديدة</h3>
                 <form class="upload-form" onsubmit="addSubject(event)">
                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
@@ -422,11 +412,9 @@
                 </form>
              </div>
 
-             <!-- قسم 2: الملفات والوسائط -->
              <div class="admin-section-header"><span>2️⃣</span> إدارة الملفات والوسائط</div>
              <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); margin-bottom: 24px;">
-                
-                <div class="card liquid-glass" style="background:rgba(0,0,0,0.4);">
+                <div class="card liquid-glass" style="background:rgba(0,0,0,.4);">
                    <h3 style="font-size: 16px; margin-top:0;">رفع ملف (ملخص/محاضرة)</h3>
                    <form class="upload-form" onsubmit="addFile(event)">
                       <select class="input-group" id="file-subj-select" required></select>
@@ -436,8 +424,7 @@
                       <button class="pill" type="submit">نشر الملف</button>
                    </form>
                 </div>
-
-                <div class="card liquid-glass" style="background:rgba(0,0,0,0.4);">
+                <div class="card liquid-glass" style="background:rgba(0,0,0,.4);">
                    <h3 style="color: #ec4899; font-size: 16px; margin-top:0;">إضافة صورة للمادة (جدول/إعلان)</h3>
                    <form class="upload-form" onsubmit="addSubjectImage(event)">
                       <select class="input-group" id="img-subj-select" required></select>
@@ -448,15 +435,10 @@
                 </div>
              </div>
 
-             <!-- قسم 3: بنك الأسئلة -->
              <div class="admin-section-header"><span>3️⃣</span> إدارة بنك الأسئلة (MCQ)</div>
              <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); margin-bottom: 24px;">
-                
-                <!-- الرفع الذكي (يأخذ عرض الشاشة كاملاً) -->
-                <div class="card liquid-glass" style="background:rgba(0,0,0,0.4); grid-column: 1 / -1; border-color: #14b8a6;">
-                   <h3 style="color: #14b8a6; font-size: 16px; margin-top:0; display:flex; align-items:center; gap:8px;">
-                      <span>🤖</span> الرفع الذكي السريع للأسئلة (نسخ ولصق كود JSON)
-                   </h3>
+                <div class="card liquid-glass" style="background:rgba(0,0,0,.4); grid-column: 1 / -1; border-color: #14b8a6;">
+                   <h3 style="color: #14b8a6; font-size: 16px; margin-top:0; display:flex; align-items:center; gap:8px;"><span>🤖</span> الرفع الذكي السريع للأسئلة (نسخ ولصق كود JSON)</h3>
                    <p style="font-size:12px; color:var(--fg-faint); margin-bottom:10px;">انسخ كود الأسئلة الذي سيولده لك الذكاء الاصطناعي والصقه هنا مباشرة لإضافة مئات الأسئلة في ثانية واحدة.</p>
                    <form class="upload-form" onsubmit="addAIQuizzes(event)">
                       <select class="input-group" id="ai-quiz-subj-select" required></select>
@@ -465,8 +447,7 @@
                    </form>
                 </div>
 
-                <!-- إضافة سؤال مفرد -->
-                <div class="card liquid-glass" style="background:rgba(0,0,0,0.4);">
+                <div class="card liquid-glass" style="background:rgba(0,0,0,.4);">
                    <h3 style="color: #4ade80; font-size: 16px; margin-top:0;">إضافة سؤال يدوياً</h3>
                    <form class="upload-form" onsubmit="addQuiz(event)">
                       <select class="input-group" id="quiz-subj-select" required></select>
@@ -482,8 +463,7 @@
                    </form>
                 </div>
 
-                <!-- مسح كل الأسئلة -->
-                <div class="card liquid-glass" style="background:rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.3);">
+                <div class="card liquid-glass" style="background:rgba(239,68,68,.05); border: 1px solid rgba(239,68,68,.3);">
                    <h3 style="color: #f87171; font-size: 16px; margin-top:0;">🗑️ مسح كل أسئلة المادة</h3>
                    <p style="font-size:12px; color:var(--fg-faint); margin-bottom:10px;">احذر: سيتم مسح جميع الأسئلة الموجودة في بنك أسئلة المادة المحددة نهائياً، ولا يمكن التراجع عن هذا الإجراء!</p>
                    <div class="upload-form" style="margin-top: auto;">
@@ -491,52 +471,42 @@
                       <button class="pill" type="button" style="background: var(--danger); font-size: 14px;" onclick="deleteAllQuizzesFromSubject()">مسح بنك أسئلة المادة بالكامل ⚠️</button>
                    </div>
                 </div>
-
              </div>
           </div>
 
-          <!-- Tab: أدوات النظام -->
           <div id="tab-tools" class="admin-tab-content">
              <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));">
-                
-                <div class="card liquid-glass" style="background:rgba(0,0,0,0.4);">
+                <div class="card liquid-glass" style="background:rgba(0,0,0,.4);">
                    <h3 style="color: #c084fc; font-size: 16px; margin-top:0;">وضع الصيانة (الصيانة الشاملة)</h3>
                    <p style="font-size:13px; color:var(--fg-faint); margin-bottom:12px;">عند تفعيل هذا الوضع، سيتم إغلاق الموقع بالكامل أمام الطلاب، ولن يتمكن من الدخول سوى الإدارة.</p>
-                   
-                   <!-- مؤشر الحالة -->
-                   <div id="maintenance-status-badge" style="text-align:center; padding:10px; margin-bottom:12px; border-radius:8px; font-weight:bold; font-size:14px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1);">
-                      جاري التحقق من الحالة...
-                   </div>
-
+                   <div id="maintenance-status-badge" style="text-align:center; padding:10px; margin-bottom:12px; border-radius:8px; font-weight:bold; font-size:14px; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1);">جاري التحقق من الحالة...</div>
                    <div style="display:flex; gap:10px;">
                       <button class="pill" id="btn-enable-maint" onclick="setMaintenance(true)" style="background: var(--danger); flex:1;">تفعيل 🔴</button>
                       <button class="pill" id="btn-disable-maint" onclick="setMaintenance(false)" style="background: var(--online-green); flex:1;">إيقاف 🟢</button>
                    </div>
                 </div>
 
-                <div class="card liquid-glass" style="background:rgba(0,0,0,0.4);">
+                <div class="card liquid-glass" style="background:rgba(0,0,0,.4);">
                    <h3 style="color: #f87171; font-size: 16px; margin-top:0;">إرسال تنبيه عاجل للدفعة 🚨</h3>
                    <form class="upload-form" onsubmit="updateAlert(event)">
                       <input class="input-group" id="alert-input" placeholder="اكتب نص التنبيه ليظهر أعلى الموقع..." required>
                       <div style="display:flex; gap:10px;">
                          <button class="pill" type="submit" style="background: var(--danger); flex: 1;">نشر للكل</button>
-                         <button class="pill" type="button" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); flex: 1;" onclick="clearGlobalAlert()">إلغاء من الكل 🗑️</button>
+                         <button class="pill" type="button" style="background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); flex: 1;" onclick="clearGlobalAlert()">إلغاء من الكل 🗑️</button>
                       </div>
                    </form>
                 </div>
 
-                <div class="card liquid-glass" style="background:rgba(0,0,0,0.4); grid-column: 1/-1;">
+                <div class="card liquid-glass" style="background:rgba(0,0,0,.4); grid-column: 1/-1;">
                    <h3 style="color: var(--danger); font-size: 16px; margin-top:0;">منطقة الخطر (إجراءات حساسة)</h3>
                    <div style="display:flex; gap:10px; flex-wrap:wrap;">
                        <button class="pill" style="background: transparent; border: 1px solid var(--danger); color:var(--danger);" onclick="resetAllScores()">🔄 تصفير نقاط كل الطلاب</button>
                        <button class="pill" style="background: transparent; border: 1px solid var(--warning); color:var(--warning);" onclick="clearAdminLogs()">🗑️ مسح سجل النشاط بالكامل</button>
                    </div>
                 </div>
-
              </div>
           </div>
 
-          <!-- Tab: السجل -->
           <div id="tab-logs" class="admin-tab-content">
              <div class="flex-between mb-4">
                 <h3 style="margin:0; color:var(--primary); font-size: 16px;">سجل نشاط الإدارة</h3>
@@ -546,31 +516,24 @@
                 <div class="empty-state">جاري تحميل السجل...</div>
              </div>
           </div>
-
         </div>
       </section>
     </main>
   </div>
 
-  <!-- النوافذ المنبثقة الأساسية -->
+  <!-- نافذة الدخول -->
   <div id="auth-overlay" class="overlay-bg" style="display: none;">
     <div class="modal-box liquid-glass">
       <h2 id="auth-title" class="z-content" style="text-align: center; margin-top:0; color: var(--primary); font-size: 20px;">تسجيل دخول الطالب</h2>
       <form class="upload-form z-content" onsubmit="handleAuth(event)">
-        <div class="input-group" id="name-group"><label>الاسم الكامل</label><input type="text" id="auth-name" placeholder="الاسم رباعي"></div>
-        <div class="input-group" id="phone-group"><label>رقم الهاتف</label><input type="tel" id="auth-phone" placeholder="01xxxxxxxxx"></div>
-        
-        <!-- حقل المستوى الدراسي الذي يظهر فقط عند إنشاء الحساب -->
+        <div class="input-group" id="name-group"><label>الاسم الكامل</label><input type="text" id="auth-name" placeholder="الاسم رباعي" autocomplete="name"></div>
+        <div class="input-group" id="phone-group"><label>رقم الهاتف</label><input type="tel" id="auth-phone" placeholder="01xxxxxxxxx" autocomplete="tel"></div>
         <div class="input-group" id="level-group" style="display: none;">
           <label>المستوى الدراسي</label>
-          <select id="auth-level">
-            <option value="1">المستوى الأول</option>
-            <option value="2">المستوى الثاني</option>
-          </select>
+          <select id="auth-level"><option value="1">المستوى الأول</option><option value="2">المستوى الثاني</option></select>
         </div>
-
-        <div class="input-group"><label>البريد الإلكتروني</label><input type="email" id="auth-email" placeholder="student@example.com" required></div>
-        <div class="input-group" id="pass-group"><label>كلمة المرور</label><input type="password" id="auth-pass" placeholder="••••••••" minlength="6"></div>
+        <div class="input-group"><label>البريد الإلكتروني</label><input type="email" id="auth-email" placeholder="student@example.com" required autocomplete="email"></div>
+        <div class="input-group" id="pass-group"><label>كلمة المرور</label><input type="password" id="auth-pass" placeholder="••••••••" minlength="6" autocomplete="current-password"></div>
         <div id="forgot-pass-wrap" style="text-align: left; margin-top: 4px;"><a href="javascript:void(0)" onclick="handleForgotPassword()" style="color: var(--fg-soft); font-size: 12px; text-decoration: underline;">نسيت كلمة المرور؟</a></div>
         <button class="pill" type="submit" id="auth-submit-btn" style="width:100%; height:44px; margin-top:10px; font-size: 15px;">دخول</button>
       </form>
@@ -581,78 +544,68 @@
     </div>
   </div>
 
-  <!-- نافذة الملف الشخصي -->
   <div id="profile-overlay" class="overlay-bg" style="display: none;" onclick="closeModal(event, 'profile-overlay')">
     <div class="modal-box liquid-glass" onclick="event.stopPropagation()">
       <h2 class="z-content" style="text-align: center; color: var(--primary); margin-top: 0; margin-bottom: 20px;">الملف الشخصي 👤</h2>
       <div id="profile-content" class="z-content"></div>
-      <button class="pill z-content" style="width: 100%; background: rgba(100,100,100,0.2); margin-top: 10px; color: var(--fg);" onclick="closeModal(null, 'profile-overlay')">إغلاق</button>
+      <button class="pill z-content" style="width: 100%; background: rgba(100,100,100,.2); margin-top: 10px; color: var(--fg);" onclick="closeModal(null, 'profile-overlay')">إغلاق</button>
     </div>
   </div>
 
-  <!-- واجهة التتبع (النتائج) -->
   <div id="tracking-overlay" class="overlay-bg" style="display: none;" onclick="closeModal(event, 'tracking-overlay')">
     <div class="modal-box large liquid-glass" onclick="event.stopPropagation()" style="background: var(--shade); padding: 0;">
-      <div style="padding: 24px; max-height: 90vh; overflow-y: auto;">
+      <div style="padding: 24px;">
          <div id="tracking-content" class="z-content"></div>
-         <button class="pill z-content" style="width: 100%; background: rgba(100,100,100,0.2); margin-top: 16px; color: var(--fg); border: 1px solid rgba(100,100,100,0.2);" onclick="closeModal(null, 'tracking-overlay')">إغلاق</button>
+         <button class="pill z-content" style="width: 100%; background: rgba(100,100,100,.2); margin-top: 16px; color: var(--fg); border: 1px solid rgba(100,100,100,.2);" onclick="closeModal(null, 'tracking-overlay')">إغلاق</button>
       </div>
     </div>
   </div>
 
-  <!-- سكربت قواعد البيانات -->
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+  <!-- تحميل Firebase مع مصادر بديلة إذا فشل الأول -->
+  <script>
+    var __S=[function(n){return 'https://www.gstatic.com/firebasejs/8.10.1/firebase-'+n+'.js'},function(n){return 'https://cdnjs.cloudflare.com/ajax/libs/firebase/8.10.1/firebase-'+n+'.min.js'},function(n){return 'https://cdn.jsdelivr.net/npm/firebase@8.10.1/firebase-'+n+'.js'}];
+    function __fb(n,i){var f=window.firebase,ok=f&&(n==='app'||(n==='auth'?f.auth:f.database));if(ok)return;document.write('<scr'+'ipt src="'+__S[i](n)+'"></scr'+'ipt>');}
+  </script>
+  <script>__fb('app',0)</script><script>__fb('app',1)</script><script>__fb('app',2)</script>
+  <script>__fb('auth',0)</script><script>__fb('auth',1)</script><script>__fb('auth',2)</script>
+  <script>__fb('database',0)</script><script>__fb('database',1)</script><script>__fb('database',2)</script>
 
   <script>
-    const ADMIN_WHATSAPP_NUMBER = "201006109851"; 
+    const ADMIN_WHATSAPP_NUMBER = "201006109851";
     const firebaseConfig = { apiKey: "AIzaSyB6FXWiprXlv6eoLhRIDrwyzKmR9cf3F8Y", authDomain: "university-platform-f51a1.firebaseapp.com", databaseURL: "https://university-platform-f51a1-default-rtdb.firebaseio.com", projectId: "university-platform-f51a1", storageBucket: "university-platform-f51a1.firebasestorage.app", messagingSenderId: "160054277275", appId: "1:160054277275:web:79482938bc46e33c52c23e" };
 
-    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth(); const database = firebase.database();
-    let currentUser = null; let currentStudentData = null; let isRegisterMode = false; let activeLevel = 1; let allUsersList = []; let onlineUsersMap = {};
-    let adminLogsListening = false; let isMaintenanceActive = false; let privateAlertListening = false;
+    /* ===== كل المتغيرات معرّفة في الأعلى قبل أي استخدام (يمنع خطأ before initialization) ===== */
+    let currentUser = null, currentStudentData = null, isRegisterMode = false, activeLevel = 1, allUsersList = [], onlineUsersMap = {};
+    let adminLogsListening = false, isMaintenanceActive = false, privateAlertListening = false;
+    let db = [], currentSubjectId = null, userDataRef = null, searchTimeout = null;
+    let presenceInitialized = false, heartbeatInterval = null;
 
-    // دالة تبديل الثيم (الليل / النهار)
+    /* ===== تهيئة Firebase بأمان ===== */
+    const FB_OK = !!(window.firebase && window.firebase.auth && window.firebase.database);
+    function makeStub() { const p = new Proxy(function(){}, { get: (t, k) => (k === 'then' ? (() => p) : p), apply: () => p }); return p; }
+    const FB = FB_OK ? window.firebase : makeStub();
+    if (FB_OK) { if (!FB.apps.length) FB.initializeApp(firebaseConfig); }
+    const auth = FB_OK ? FB.auth() : makeStub();
+    const database = FB_OK ? FB.database() : makeStub();
+    if (!FB_OK) { document.getElementById('fb-error').style.display = 'flex'; console.error('Firebase library failed to load'); }
+
     function toggleTheme() {
-        const body = document.body;
-        const themeBtn = document.getElementById('theme-toggle-btn');
-        if (body.classList.contains('light-mode')) {
-            body.classList.remove('light-mode');
-            themeBtn.innerText = '🌞'; 
-            localStorage.setItem('theme', 'dark');
-        } else {
-            body.classList.add('light-mode');
-            themeBtn.innerText = '🌙'; 
-            localStorage.setItem('theme', 'light');
-        }
+        const body = document.body; const themeBtn = document.getElementById('theme-toggle-btn');
+        if (body.classList.contains('light-mode')) { body.classList.remove('light-mode'); themeBtn.innerText = '🌞'; try { localStorage.setItem('theme', 'dark'); } catch (e) {} }
+        else { body.classList.add('light-mode'); themeBtn.innerText = '🌙'; try { localStorage.setItem('theme', 'light'); } catch (e) {} }
     }
-
     function initTheme() {
-        const savedTheme = localStorage.getItem('theme');
+        let saved = null; try { saved = localStorage.getItem('theme'); } catch (e) {}
         const themeBtn = document.getElementById('theme-toggle-btn');
-        if (savedTheme === 'light') {
-            document.body.classList.add('light-mode');
-            if(themeBtn) themeBtn.innerText = '🌙';
-        }
+        if (saved === 'light') { document.body.classList.add('light-mode'); if (themeBtn) themeBtn.innerText = '🌙'; }
     }
 
-    function shuffleArray(array) {
-        for (let i = array.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [array[i], array[j]] = [array[j], array[i]];
-        }
-        return array;
-    }
+    function shuffleArray(array) { for (let i = array.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [array[i], array[j]] = [array[j], array[i]]; } return array; }
 
     function formatLastSeen(timestamp) {
       if (!timestamp) return 'غير متوفر';
       const diff = Math.max(0, Date.now() - timestamp);
-      const minutes = Math.floor(diff / 60000);
-      const hours = Math.floor(minutes / 60);
-      const days = Math.floor(hours / 24);
-
+      const minutes = Math.floor(diff / 60000); const hours = Math.floor(minutes / 60); const days = Math.floor(hours / 24);
       if (minutes < 1) return 'الآن';
       if (hours < 1) return `منذ ${minutes} دقيقة`;
       if (days < 1) return `منذ ${hours} ساعة`;
@@ -662,40 +615,29 @@
       return `منذ ${days} يوم`;
     }
 
-    function escapeHtml(str) {
-      if (str === null || str === undefined) return '';
-      return String(str).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\n/g, '\\n').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-    }
-    function escText(str) {
-      if (str === null || str === undefined) return '';
-      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-    }
+    function escapeHtml(str) { if (str === null || str === undefined) return ''; return String(str).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\n/g, '\\n').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+    function escText(str) { if (str === null || str === undefined) return ''; return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
+    /* يمنع روابط javascript: */
+    function safeUrl(u) { try { const x = new URL(u); return (x.protocol === 'https:' || x.protocol === 'http:') ? x.href : '#'; } catch (e) { return '#'; } }
 
-    function getStudentShortId(uid, customId) {
-        if (customId && customId.trim() !== '') return customId;
-        return uid ? uid.substring(0,6).toUpperCase() : 'غير متوفر';
-    }
+    function getStudentShortId(uid, customId) { if (customId && customId.trim() !== '') return customId; return uid ? uid.substring(0,6).toUpperCase() : 'غير متوفر'; }
 
     function listenToMaintenance() {
       database.ref('settings/maintenanceMode').on('value', snap => {
-        isMaintenanceActive = snap.val() || false; 
-        checkMaintenanceUI(); 
-        
+        isMaintenanceActive = snap.val() || false; checkMaintenanceUI();
         const statusBadge = document.getElementById('maintenance-status-badge');
-        const btnEnable = document.getElementById('btn-enable-maint');
-        const btnDisable = document.getElementById('btn-disable-maint');
-        
-        if(statusBadge && btnEnable && btnDisable) {
-          if(isMaintenanceActive) {
+        const btnEnable = document.getElementById('btn-enable-maint'); const btnDisable = document.getElementById('btn-disable-maint');
+        if (statusBadge && btnEnable && btnDisable) {
+          if (isMaintenanceActive) {
             statusBadge.innerHTML = 'الحالة الحالية: <span style="color:#ef4444;">مفعل 🔴 (الموقع مغلق)</span>';
-            statusBadge.style.borderColor = '#ef4444'; statusBadge.style.background = 'rgba(239, 68, 68, 0.1)';
-            btnEnable.style.opacity = '1'; btnEnable.style.boxShadow = '0 0 10px rgba(239, 68, 68, 0.5)';
-            btnDisable.style.opacity = '0.4'; btnDisable.style.boxShadow = 'none';
+            statusBadge.style.borderColor = '#ef4444'; statusBadge.style.background = 'rgba(239,68,68,.1)';
+            btnEnable.style.opacity = '1'; btnEnable.style.boxShadow = '0 0 10px rgba(239,68,68,.5)';
+            btnDisable.style.opacity = '.4'; btnDisable.style.boxShadow = 'none';
           } else {
             statusBadge.innerHTML = 'الحالة الحالية: <span style="color:#22c55e;">معطل 🟢 (الموقع مفتوح)</span>';
-            statusBadge.style.borderColor = '#22c55e'; statusBadge.style.background = 'rgba(34, 197, 94, 0.1)';
-            btnDisable.style.opacity = '1'; btnDisable.style.boxShadow = '0 0 10px rgba(34, 197, 94, 0.5)';
-            btnEnable.style.opacity = '0.4'; btnEnable.style.boxShadow = 'none';
+            statusBadge.style.borderColor = '#22c55e'; statusBadge.style.background = 'rgba(34,197,94,.1)';
+            btnDisable.style.opacity = '1'; btnDisable.style.boxShadow = '0 0 10px rgba(34,197,94,.5)';
+            btnEnable.style.opacity = '.4'; btnEnable.style.boxShadow = 'none';
           }
         }
       });
@@ -703,15 +645,10 @@
     listenToMaintenance();
 
     function checkMaintenanceUI() {
-      const overlay = document.getElementById('maintenance-overlay');
-      const mainSite = document.getElementById('main-site');
-      const cinematicHero = document.querySelector('.cinematic-hero');
+      const overlay = document.getElementById('maintenance-overlay'); const mainSite = document.getElementById('main-site'); const cinematicHero = document.querySelector('.cinematic-hero');
       const isUserAdmin = currentStudentData && currentStudentData.isAdmin === true;
-      if (isMaintenanceActive && !isUserAdmin) {
-        overlay.style.display = 'flex'; if(mainSite) mainSite.style.display = 'none'; if(cinematicHero) cinematicHero.style.display = 'none';
-      } else {
-        overlay.style.display = 'none'; if(mainSite) mainSite.style.display = 'block'; if(cinematicHero) cinematicHero.style.display = 'flex';
-      }
+      if (isMaintenanceActive && !isUserAdmin) { overlay.style.display = 'flex'; if (mainSite) mainSite.style.display = 'none'; if (cinematicHero) cinematicHero.style.display = 'none'; }
+      else { overlay.style.display = 'none'; if (mainSite) mainSite.style.display = 'block'; if (cinematicHero) cinematicHero.style.display = 'flex'; }
     }
 
     function setMaintenance(enable) {
@@ -726,7 +663,7 @@
           const val = snap.val();
           if (val && val.isBanned) { Swal.fire('محظور!', `⚠️ تم حظرك!\nالسبب: ${val.banReason}`, 'error'); logoutStudent(); return; }
           currentUser = user; document.getElementById('auth-overlay').style.display = 'none'; loadStudentData(user.uid);
-          listenToPrivateAlerts(user.uid); 
+          listenToPrivateAlerts(user.uid);
         });
       } else {
         currentUser = null; currentStudentData = null; privateAlertListening = false; checkMaintenanceUI();
@@ -735,41 +672,29 @@
     });
 
     function listenToPrivateAlerts(uid) {
-        if(privateAlertListening) return;
+        if (privateAlertListening) return;
         database.ref('users/' + uid + '/privateAlert').on('value', snap => {
             const msg = snap.val();
-            if(msg) {
-                Swal.fire({ title: '📩 رسالة إدارية هامة', text: msg, icon: 'info', confirmButtonText: 'حسناً، فهمت', allowOutsideClick: false, allowEscapeKey: false }).then(() => { database.ref('users/' + uid + '/privateAlert').remove(); });
-            }
+            if (msg) { Swal.fire({ title: '📩 رسالة إدارية هامة', text: msg, icon: 'info', confirmButtonText: 'حسناً، فهمت', allowOutsideClick: false, allowEscapeKey: false }).then(() => { database.ref('users/' + uid + '/privateAlert').remove(); }); }
         });
         privateAlertListening = true;
     }
 
-    let presenceInitialized = false; 
-    let heartbeatInterval = null;
 
     function setupPresence(uid, userData) {
-      const myStatusRef = database.ref('online_users/' + uid); 
-      const userLastSeenRef = database.ref('users/' + uid + '/lastSeen');
-
-      if (presenceInitialized) return;
-      presenceInitialized = true;
-
-      const connectedRef = database.ref('.info/connected');
-      connectedRef.on('value', (snap) => { 
-        if (snap.val() === true) { 
-          myStatusRef.onDisconnect().remove(); 
-          userLastSeenRef.onDisconnect().set(firebase.database.ServerValue.TIMESTAMP); 
-          myStatusRef.set({ name: userData.name, email: userData.email || '', loginTime: firebase.database.ServerValue.TIMESTAMP }); 
-          userLastSeenRef.set(firebase.database.ServerValue.TIMESTAMP);
-        } 
+      const myStatusRef = database.ref('online_users/' + uid); const userLastSeenRef = database.ref('users/' + uid + '/lastSeen');
+      if (presenceInitialized) return; presenceInitialized = true;
+      database.ref('.info/connected').on('value', (snap) => {
+        if (snap.val() === true) {
+          myStatusRef.onDisconnect().remove(); userLastSeenRef.onDisconnect().set(FB.database.ServerValue.TIMESTAMP);
+          myStatusRef.set({ name: userData.name, email: userData.email || '', loginTime: FB.database.ServerValue.TIMESTAMP });
+          userLastSeenRef.set(FB.database.ServerValue.TIMESTAMP);
+        }
       });
-
       if (heartbeatInterval) clearInterval(heartbeatInterval);
-      heartbeatInterval = setInterval(() => { if (currentUser) userLastSeenRef.set(firebase.database.ServerValue.TIMESTAMP); }, 60000);
-
-      document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden' && currentUser) userLastSeenRef.set(firebase.database.ServerValue.TIMESTAMP); });
-      window.addEventListener('pagehide', () => { if (currentUser) userLastSeenRef.set(firebase.database.ServerValue.TIMESTAMP); });
+      heartbeatInterval = setInterval(() => { if (currentUser) userLastSeenRef.set(FB.database.ServerValue.TIMESTAMP); }, 60000);
+      document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden' && currentUser) userLastSeenRef.set(FB.database.ServerValue.TIMESTAMP); });
+      window.addEventListener('pagehide', () => { if (currentUser) userLastSeenRef.set(FB.database.ServerValue.TIMESTAMP); });
     }
 
     function updateDashboardStats() {
@@ -787,27 +712,24 @@
     }
 
     function logAdminAction(actionTitle, detailsText) {
-      if(!currentStudentData || !currentUser || currentStudentData.isAdmin !== true) return;
-      database.ref('admin_logs').push({ adminName: currentStudentData.name, uid: currentUser.uid, action: actionTitle, details: detailsText, timestamp: firebase.database.ServerValue.TIMESTAMP });
+      if (!currentStudentData || !currentUser || currentStudentData.isAdmin !== true) return;
+      database.ref('admin_logs').push({ adminName: currentStudentData.name, uid: currentUser.uid, action: actionTitle, details: detailsText, timestamp: FB.database.ServerValue.TIMESTAMP });
     }
 
     function listenToAdminLogs() {
-      if(adminLogsListening) return;
-      const container = document.getElementById('admin-logs-list');
-      if(!container) return;
-
+      if (adminLogsListening) return;
+      const container = document.getElementById('admin-logs-list'); if (!container) return;
       database.ref('admin_logs').limitToLast(50).on('value', snap => {
         if (!snap.exists()) { container.innerHTML = '<div class="empty-state">لا يوجد نشاط مسجل حتى الآن. السجل فارغ.</div>'; return; }
         const logs = []; snap.forEach(c => { logs.push(c.val()); });
         logs.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-
         container.innerHTML = logs.map(l => {
           const timeNum = l.timestamp || Date.now(); const date = new Date(timeNum).toLocaleString('ar-EG', { timeZone: 'Africa/Cairo' });
           const actionText = l.action || 'إجراء'; let badgeColor = actionText.includes('حذف') || actionText.includes('مسح') || actionText.includes('تصفير') || actionText.includes('حظر') ? 'var(--danger)' : 'var(--primary)';
-          return `<div class="log-item"><div class="log-header"><div class="log-admin">👤 ${escText(l.adminName || 'أدمن')} <span class="log-badge" style="color:${badgeColor}; border:1px solid ${badgeColor};">${escText(actionText)}</span></div><div class="log-time">🕒 ${date}</div></div><div class="log-body" style="color:var(--fg-soft);">التفاصيل: <strong>${escText(l.details || 'لا توجد تفاصيل')}</strong></div></div>`;
+          return `<div class="log-item"><div class="log-header"><div class="log-admin">👤 ${escText(l.adminName || 'أدمن')} <span class="log-badge" style="color:${badgeColor}; border:1px solid ${badgeColor};">${escText(actionText)}</span></div><div class="log-time">🕒 ${date}</div></div><div class="log-body">التفاصيل: <strong>${escText(l.details || 'لا توجد تفاصيل')}</strong></div></div>`;
         }).join('');
       }, (error) => {
-        container.innerHTML = `<div class="empty-state" style="color:#ef4444; border: 1px solid #ef4444; background: rgba(239,68,68,0.1); padding: 15px;">❌ عذراً، تم رفض الوصول للسجل.<br>الخطأ: ${error.message}</div>`;
+        container.innerHTML = `<div class="empty-state" style="color:#ef4444; border: 1px solid #ef4444; background: rgba(239,68,68,.1); padding: 15px;">❌ عذراً، تم رفض الوصول للسجل.<br>الخطأ: ${escText(error.message)}</div>`;
       });
       adminLogsListening = true;
     }
@@ -818,110 +740,80 @@
       });
     }
 
+    function csvCell(v) { return '"' + String(v === null || v === undefined ? '' : v).replace(/"/g, '""') + '"'; }
     function exportStudentsCSV() {
         let csv = "ID,الاسم,رقم الهاتف,البريد الإلكتروني,النقاط,المستوى,الحالة\n";
         allUsersList.forEach(u => {
-            let status = u.isBanned ? "محظور" : "نشط";
-            csv += `${getStudentShortId(u.uid, u.studentId)},${u.name},${u.phone || ''},${u.email},${u.score || 0},${u.level || 1},${status}\n`;
+            const status = u.isBanned ? "محظور" : "نشط";
+            csv += [getStudentShortId(u.uid, u.studentId), u.name, u.phone || '', u.email, u.score || 0, u.level || 1, status].map(csvCell).join(',') + "\n";
         });
-        const blob = new Blob(["\uFEFF"+csv], { type: 'text/csv;charset=utf-8;' });
+        const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = "students_database.csv"; link.click();
         logAdminAction("تصدير بيانات", "تم تحميل قائمة الطلاب بملف Excel/CSV");
     }
 
     function filterAdminStudents() {
         const query = document.getElementById('admin-search-student').value.toLowerCase();
-        const rows = document.querySelectorAll('#students-table-body tr');
-        rows.forEach(row => {
-            if(row.cells.length > 1) { 
-                const text = row.innerText.toLowerCase();
-                row.style.display = text.includes(query) ? '' : 'none';
-            }
-        });
+        document.querySelectorAll('#students-table-body tr').forEach(row => { if (row.cells.length > 1) row.style.display = row.innerText.toLowerCase().includes(query) ? '' : 'none'; });
     }
 
     async function editStudentProfile(uid, currentName, currentPhone, currentStudentId) {
       const { value: formValues } = await Swal.fire({
         title: 'تعديل بيانات الطالب',
-        html: `<input id="swal-input1" class="swal2-input" value="${currentName}" placeholder="الاسم الكامل">` + 
-              `<input id="swal-input2" class="swal2-input" value="${currentPhone}" placeholder="رقم الهاتف">` +
-              `<input id="swal-input3" class="swal2-input" value="${currentStudentId && currentStudentId !== 'undefined' ? currentStudentId : ''}" placeholder="كود الطالب (ID)">`,
-        focusConfirm: false, showCancelButton: true, confirmButtonText: 'حفظ التعديل', preConfirm: () => { 
-          return [ 
-            document.getElementById('swal-input1').value, 
-            document.getElementById('swal-input2').value,
-            document.getElementById('swal-input3').value
-          ] 
-        }
+        html: `<input id="swal-input1" class="swal2-input" value="${escText(currentName)}" placeholder="الاسم الكامل">` +
+              `<input id="swal-input2" class="swal2-input" value="${escText(currentPhone)}" placeholder="رقم الهاتف">` +
+              `<input id="swal-input3" class="swal2-input" value="${escText(currentStudentId && currentStudentId !== 'undefined' ? currentStudentId : '')}" placeholder="كود الطالب (ID)">`,
+        focusConfirm: false, showCancelButton: true, confirmButtonText: 'حفظ التعديل',
+        preConfirm: () => [document.getElementById('swal-input1').value, document.getElementById('swal-input2').value, document.getElementById('swal-input3').value]
       });
       if (formValues && formValues[0]) {
-        database.ref('users/'+uid).update({
-          name: formValues[0], 
-          phone: formValues[1],
-          studentId: formValues[2]
-        });
-        logAdminAction('تعديل طالب', `تم تعديل بيانات: ${formValues[0]}`); 
+        database.ref('users/' + uid).update({ name: formValues[0], phone: formValues[1], studentId: formValues[2] });
+        logAdminAction('تعديل طالب', `تم تعديل بيانات: ${formValues[0]}`);
         Swal.fire('تم', 'تم تحديث بيانات الطالب بنجاح', 'success');
       }
     }
 
     function toggleAuthMode() {
       isRegisterMode = !isRegisterMode;
-      document.getElementById('name-group').style.display = isRegisterMode ? 'flex' : 'none'; 
-      document.getElementById('phone-group').style.display = isRegisterMode ? 'flex' : 'none'; 
-      document.getElementById('level-group').style.display = isRegisterMode ? 'flex' : 'none'; 
+      document.getElementById('name-group').style.display = isRegisterMode ? 'flex' : 'none';
+      document.getElementById('phone-group').style.display = isRegisterMode ? 'flex' : 'none';
+      document.getElementById('level-group').style.display = isRegisterMode ? 'flex' : 'none';
       document.getElementById('forgot-pass-wrap').style.display = isRegisterMode ? 'none' : 'block';
-      
-      document.getElementById('auth-title').innerText = isRegisterMode ? 'إنشاء حساب طالب جديد' : 'تسجيل دخول الطالب'; 
+      document.getElementById('auth-title').innerText = isRegisterMode ? 'إنشاء حساب طالب جديد' : 'تسجيل دخول الطالب';
       document.getElementById('auth-submit-btn').innerText = isRegisterMode ? 'تسجيل حساب' : 'دخول';
-      document.getElementById('auth-switch-text').innerText = isRegisterMode ? 'لديك حساب بالفعل؟' : 'ليس لديك حساب؟'; 
+      document.getElementById('auth-switch-text').innerText = isRegisterMode ? 'لديك حساب بالفعل؟' : 'ليس لديك حساب؟';
       document.getElementById('auth-switch-link').innerText = isRegisterMode ? 'تسجيل الدخول' : 'إنشاء حساب جديد';
     }
 
     async function handleAuth(e) {
       e.preventDefault();
-      const email = document.getElementById('auth-email').value.trim();
-      const pass = document.getElementById('auth-pass').value;
-      const name = document.getElementById('auth-name').value.trim();
-      const phone = document.getElementById('auth-phone').value.trim();
-      const level = document.getElementById('auth-level').value;
-
+      const email = document.getElementById('auth-email').value.trim(); const pass = document.getElementById('auth-pass').value;
+      const name = document.getElementById('auth-name').value.trim(); const phone = document.getElementById('auth-phone').value.trim(); const level = document.getElementById('auth-level').value;
       if (isRegisterMode) {
         if (!name) return Swal.fire('تنبيه', "يرجى كتابة الاسم.", 'warning');
         if (!phone || phone.length < 10) return Swal.fire('تنبيه', "رقم هاتف غير صحيح.", 'warning');
-
         let createdUser = null;
         try {
-          const res = await auth.createUserWithEmailAndPassword(email, pass);
-          createdUser = res.user;
-
-          await createdUser.getIdToken(true);
-          await new Promise(resolve => setTimeout(resolve, 400));
-
+          const res = await auth.createUserWithEmailAndPassword(email, pass); createdUser = res.user;
+          await createdUser.getIdToken(true); await new Promise(resolve => setTimeout(resolve, 400));
           const snapshot = await database.ref('users').orderByChild('phone').equalTo(phone).once('value');
-          if (snapshot.exists()) {
-            await createdUser.delete().catch(()=>{});
-            await auth.signOut().catch(()=>{});
-            return Swal.fire('خطأ', "هذا الرقم مسجل به حساب بالفعل!", 'error');
-          }
-
+          if (snapshot.exists()) { await createdUser.delete().catch(()=>{}); await auth.signOut().catch(()=>{}); return Swal.fire('خطأ', "هذا الرقم مسجل به حساب بالفعل!", 'error'); }
           await database.ref('users/' + createdUser.uid).set({ name, phone, email, level: parseInt(level) || 1, score: 0, isBanned: false, createdAt: Date.now() });
-        } catch (err) {
-          if (createdUser) await createdUser.delete().catch(()=>{});
-          Swal.fire('خطأ', err.message, 'error');
-        }
+        } catch (err) { if (createdUser) await createdUser.delete().catch(()=>{}); Swal.fire('خطأ', err.message, 'error'); }
       } else {
         auth.signInWithEmailAndPassword(email, pass).catch(() => Swal.fire('خطأ', 'بيانات الدخول غير صحيحة', 'error'));
       }
     }
 
     async function handleForgotPassword() {
-      const email = document.getElementById('auth-email').value.trim(); if(!email) return Swal.fire('تنبيه', 'يرجى كتابة البريد الإلكتروني في الخانة أولاً.', 'warning');
+      const email = document.getElementById('auth-email').value.trim(); if (!email) return Swal.fire('تنبيه', 'يرجى كتابة البريد الإلكتروني في الخانة أولاً.', 'warning');
       try { await auth.sendPasswordResetEmail(email); Swal.fire('تم!', 'تم إرسال رابط إعادة التعيين لبريدك.', 'success'); } catch (error) { Swal.fire('خطأ', error.message, 'error'); }
     }
 
     function loadStudentData(uid) {
-      database.ref('users/' + uid).on('value', (snap) => {
+      if (userDataRef) userDataRef.off();
+      userDataRef = database.ref('users/' + uid);
+      userDataRef.on('value', (snap) => {
         currentStudentData = snap.val(); checkMaintenanceUI();
         if (currentStudentData) {
           if (currentStudentData.isBanned) { Swal.fire('محظور!', `⚠️ تم حظرك!\nالسبب: ${currentStudentData.banReason}`, 'error'); logoutStudent(); return; }
@@ -930,14 +822,15 @@
           if (currentStudentData.isAdmin === true) { adminBtn.style.display = 'inline-flex'; listenToAdminLogs(); } else { adminBtn.style.display = 'none'; document.getElementById('admin-panel').style.display = 'none'; }
         }
       });
-      listenToUsersData(); listenToAlerts(); listenToOnlinePresence(); listenToSubjects();
+      /* المستمعات العامة تُشغَّل مرة واحدة فقط (بدون تكرار بعد الخروج والدخول) */
+      if (!window._listenersReady) { window._listenersReady = true; listenToUsersData(); listenToAlerts(); listenToOnlinePresence(); listenToSubjects(); }
     }
 
-    function logoutStudent() { 
+    function logoutStudent() {
       if (heartbeatInterval) { clearInterval(heartbeatInterval); heartbeatInterval = null; }
       presenceInitialized = false;
       if (currentUser) {
-        Promise.all([ database.ref('users/' + currentUser.uid + '/lastSeen').set(firebase.database.ServerValue.TIMESTAMP), database.ref('online_users/' + currentUser.uid).remove() ]).then(() => { auth.signOut(); }).catch(() => { auth.signOut(); });
+        Promise.all([ database.ref('users/' + currentUser.uid + '/lastSeen').set(FB.database.ServerValue.TIMESTAMP), database.ref('online_users/' + currentUser.uid).remove() ]).then(() => { auth.signOut(); }).catch(() => { auth.signOut(); });
       } else { auth.signOut(); }
     }
 
@@ -946,17 +839,16 @@
       const isOnline = onlineUsersMap.hasOwnProperty(currentUser.uid);
       const fallbackTime = currentStudentData.lastSeen || currentStudentData.createdAt;
       const lastSeenText = isOnline ? 'متصل الآن 🟢' : formatLastSeen(fallbackTime);
-      const studentId = getStudentShortId(currentUser.uid, currentStudentData.studentId);
+      const studentId = escText(getStudentShortId(currentUser.uid, currentStudentData.studentId));
       const levelText = currentStudentData.level == 2 ? 'المستوى الثاني' : 'المستوى الأول';
-
       document.getElementById('profile-content').innerHTML = `
-        <div class="profile-row z-content" style="border-color:var(--primary); background:rgba(59, 130, 246, 0.05);"><div class="profile-row-label">كود الطالب (ID)</div><div class="profile-row-value" style="color:var(--primary); font-family:monospace; font-size:18px;">${studentId}</div></div>
+        <div class="profile-row z-content" style="border-color:var(--primary); background:rgba(59,130,246,.05);"><div class="profile-row-label">كود الطالب (ID)</div><div class="profile-row-value" style="color:var(--primary); font-family:monospace; font-size:18px;">${studentId}</div></div>
         <div class="profile-row z-content"><div class="profile-row-label">الاسم الكامل</div><div class="profile-row-value">${escText(currentStudentData.name)}</div></div>
         <div class="profile-row z-content"><div class="profile-row-label">المستوى الدراسي</div><div class="profile-row-value">${levelText}</div></div>
         <div class="profile-row z-content"><div class="profile-row-label">رقم الهاتف</div><div class="profile-row-value" style="direction:ltr;">${escText(currentStudentData.phone || '-')}</div></div>
         <div class="profile-row z-content"><div class="profile-row-label">البريد الإلكتروني</div><div class="profile-row-value" style="color:var(--primary); font-size:13px;">${escText(currentStudentData.email)}</div></div>
         <div class="profile-row z-content"><div class="profile-row-label">حالة الاتصال</div><div class="profile-row-value" style="font-size:13px;">${lastSeenText}</div></div>
-        <div class="profile-row z-content" style="border-color:var(--gold); background:rgba(255,215,0,0.05);"><div class="profile-row-label">مجموع النقاط</div><div class="profile-row-value" style="color:var(--gold);">🏆 ${currentStudentData.score || 0} نقطة</div></div>`;
+        <div class="profile-row z-content" style="border-color:var(--gold); background:rgba(255,215,0,.05);"><div class="profile-row-label">مجموع النقاط</div><div class="profile-row-value" style="color:var(--gold);">🏆 ${currentStudentData.score || 0} نقطة</div></div>`;
       document.getElementById('profile-overlay').style.display = 'flex';
     }
 
@@ -966,44 +858,39 @@
     function renderLeaderboard(board) {
       const container = document.getElementById('leaderboard-container'); container.innerHTML = ''; let top = board.slice(0, 5);
       if (top.length === 0) { container.innerHTML = '<div class="empty-state">لا توجد نتائج حتى الآن.</div>'; return; }
-      top.forEach((s, idx) => { let medal = idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : `${idx + 1}.`; container.innerHTML += `<div class="rank-row z-content"><div class="rank-num">${medal}</div><div class="rank-name">${escText(s.name)}</div><div class="rank-score">${s.score || 0} ن</div></div>`; });
+      container.innerHTML = top.map((s, idx) => { const medal = idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : `${idx + 1}.`; return `<div class="rank-row z-content"><div class="rank-num">${medal}</div><div class="rank-name">${escText(s.name)}</div><div class="rank-score">${s.score || 0} ن</div></div>`; }).join('');
     }
 
     function renderStudentsTable() {
-      const tbody = document.getElementById('students-table-body'); if (!tbody) return; tbody.innerHTML = '';
+      const tbody = document.getElementById('students-table-body'); if (!tbody) return;
       if (allUsersList.length === 0) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">لم يسجل أحد بعد.</td></tr>'; return; }
-      
+      let html = '';
       allUsersList.forEach((u, i) => {
-        const isOnline = onlineUsersMap.hasOwnProperty(u.uid); 
-        let statusHtml = '';
+        const isOnline = onlineUsersMap.hasOwnProperty(u.uid); let statusHtml = '';
         if (u.isBanned) statusHtml = `<span class="status-badge status-banned">⛔ محظور</span>`;
         else if (isOnline) statusHtml = `<span class="status-badge status-online">🟢 متصل</span>`;
         else { const fallbackTime = u.lastSeen || u.createdAt; statusHtml = `<span class="status-badge status-offline">⚪ آخر ظهور: ${formatLastSeen(fallbackTime)}</span>`; }
-
-        let banBtn = u.isBanned ? `<button class="btn-sm btn-unban" onclick="unbanStudent('${u.uid}', '${escapeHtml(u.name)}')">فك حظر</button>` : `<button class="btn-sm btn-ban" onclick="banStudent('${u.uid}', '${escapeHtml(u.name)}')">حظر</button>`;
-        const studentId = getStudentShortId(u.uid, u.studentId);
-        
-        const levelBadge = u.level == 2 
-            ? `<span style="background: rgba(168, 85, 247, 0.15); color: #c084fc; padding: 2px 6px; border-radius: 4px; font-size: 10px; margin-right: 6px;">Lvl 2</span>` 
-            : `<span style="background: rgba(59, 130, 246, 0.15); color: #60a5fa; padding: 2px 6px; border-radius: 4px; font-size: 10px; margin-right: 6px;">Lvl 1</span>`;
-
-        tbody.innerHTML += `<tr><td>${i+1}</td>
-        <td><div style="font-weight:bold; color:var(--fg); margin-bottom:4px; display:flex; align-items:center;">${escText(u.name)} ${levelBadge}</div>${statusHtml}</td>
+        const banBtn = u.isBanned ? `<button class="btn-sm btn-unban" onclick="unbanStudent('${u.uid}', '${escapeHtml(u.name)}')">فك حظر</button>` : `<button class="btn-sm btn-ban" onclick="banStudent('${u.uid}', '${escapeHtml(u.name)}')">حظر</button>`;
+        const studentId = escText(getStudentShortId(u.uid, u.studentId));
+        const levelBadge = u.level == 2
+            ? `<span style="background: rgba(168,85,247,.15); color: #c084fc; padding: 2px 6px; border-radius: 4px; font-size: 10px; margin-right: 6px;">Lvl 2</span>`
+            : `<span style="background: rgba(59,130,246,.15); color: #60a5fa; padding: 2px 6px; border-radius: 4px; font-size: 10px; margin-right: 6px;">Lvl 1</span>`;
+        html += `<tr><td>${i+1}</td>
+        <td><div style="font-weight:bold; color:var(--fg); margin-bottom:4px; display:flex; align-items:center; flex-wrap:wrap;">${escText(u.name)} ${levelBadge}</div>${statusHtml}</td>
         <td>
             <div style="direction:ltr; font-size:13px; color:var(--fg-soft);">${escText(u.phone||'لا يوجد هاتف')}</div>
             <div style="direction:ltr; font-size:11px; color:var(--primary); margin-top:4px; font-weight:bold;">${escText(u.email||'')}</div>
             <div style="font-size:11px; color:var(--gold); font-family:monospace; margin-top:4px;">ID: ${studentId}</div>
         </td>
         <td><strong style="color:var(--gold); font-size:14px;">${u.score||0}</strong></td>
-        <td>
-          <div class="action-group">
+        <td><div class="action-group">
              <button class="btn-sm btn-track" onclick="trackStudent('${u.uid}')">📊 النتائج</button>
              <button class="btn-sm btn-msg" onclick="sendPrivateAlert('${u.uid}','${escapeHtml(u.name)}')">📩 رسالة</button>
              <button class="btn-sm btn-edit" onclick="editStudentProfile('${u.uid}','${escapeHtml(u.name)}','${escapeHtml(u.phone||'')}','${escapeHtml(u.studentId||'')}')">✏️ تعديل</button>
              ${banBtn}
-          </div>
-        </td></tr>`;
+        </div></td></tr>`;
       });
+      tbody.innerHTML = html;
       filterAdminStudents();
     }
 
@@ -1013,167 +900,102 @@
     }
 
     function trackStudent(uid) {
-      const content = document.getElementById('tracking-content'); const student = allUsersList.find(u => u.uid === uid); if(!student) return;
+      const content = document.getElementById('tracking-content'); const student = allUsersList.find(u => u.uid === uid); if (!student) return;
       const solvedQuizzes = student.solvedQuizzes || {}; let totalCorrect = 0; let totalAnswered = 0; let subjectsHtml = '';
-
       db.forEach(subj => {
-        if(subj.quizzes && subj.quizzes.length > 0) {
+        if (subj.quizzes && subj.quizzes.length > 0) {
           let subjCorrect = 0; let subjAnswered = 0;
-          subj.quizzes.forEach(q => { let sq = solvedQuizzes[q.key]; if(sq) { subjAnswered++; totalAnswered++; let isCorrect = sq === true || sq.status === 'correct'; if(isCorrect) { subjCorrect++; totalCorrect++; } } });
+          subj.quizzes.forEach(q => { let sq = solvedQuizzes[q.key]; if (sq) { subjAnswered++; totalAnswered++; let isCorrect = sq === true || sq.status === 'correct'; if (isCorrect) { subjCorrect++; totalCorrect++; } } });
           let subjAccuracy = subjAnswered === 0 ? 0 : Math.round((subjCorrect / subjAnswered) * 100); let barColor = subjAccuracy >= 80 ? '#22c55e' : (subjAccuracy >= 50 ? '#f59e0b' : '#ef4444');
           subjectsHtml += `<div class="track-subj-card"><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;"><div style="font-weight:bold; font-size:14px; display:flex; align-items:center; gap:6px;">📖 ${escText(subj.name)}</div><div style="color:${barColor}; font-weight:900; font-size:14px;">${subjAccuracy}%</div></div><div class="track-progress-bar"><div class="track-progress-fill" style="width:${subjAccuracy}%; background:${barColor};"></div></div><div style="font-size:11px; color:var(--fg-faint); margin-top:8px; text-align:right;">${subjCorrect} إجابة صحيحة من ${subjAnswered} (من إجمالي ${subj.quizzes.length} سؤال بالمادة)</div></div>`;
         }
       });
-
-      if(subjectsHtml === '') { subjectsHtml = '<div class="empty-state">لا توجد اختبارات متاحة في المواد حالياً.</div>'; }
-      let globalAccuracy = totalAnswered === 0 ? 0 : Math.round((totalCorrect / totalAnswered) * 100); let globalAccColor = globalAccuracy >= 80 ? '#22c55e' : (globalAccuracy >= 50 ? '#f59e0b' : '#ef4444'); let avatarChar = student.name ? student.name.charAt(0) : 'ش';
-      let mainHtml = `<div style="display:flex; flex-direction:column; align-items:center; margin-bottom:24px; margin-top:10px;"><div class="track-avatar">${avatarChar}</div><h3 style="margin:12px 0 4px; color:var(--fg); font-size:20px;">${escText(student.name)}</h3><p style="margin:0; color:var(--fg-faint); font-size:13px; direction:ltr;">${escText(student.email)}</p></div><div class="track-stats-grid"><div class="track-stat-card"><div class="track-stat-title">إجمالي الإجابات</div><div class="track-stat-value" style="color:var(--fg);">${totalCorrect}/${totalAnswered}</div></div><div class="track-stat-card"><div class="track-stat-title">نسبة الدقة</div><div class="track-stat-value" style="color:${globalAccColor};">${globalAccuracy}%</div></div><div class="track-stat-card"><div class="track-stat-title">النقاط</div><div class="track-stat-value" style="color:var(--gold);">${student.score || 0} 🏆</div></div></div><div style="text-align:right; margin-bottom:12px; color:var(--primary); font-weight:bold; font-size:14px; display:flex; align-items:center; gap:6px;">📋 سجل النتائج حسب المادة</div><div style="display:flex; flex-direction:column;">${subjectsHtml}</div>`;
-      content.innerHTML = mainHtml; document.getElementById('tracking-overlay').style.display = 'flex';
+      if (subjectsHtml === '') subjectsHtml = '<div class="empty-state">لا توجد اختبارات متاحة في المواد حالياً.</div>';
+      let globalAccuracy = totalAnswered === 0 ? 0 : Math.round((totalCorrect / totalAnswered) * 100); let globalAccColor = globalAccuracy >= 80 ? '#22c55e' : (globalAccuracy >= 50 ? '#f59e0b' : '#ef4444'); let avatarChar = student.name ? escText(student.name.charAt(0)) : 'ش';
+      content.innerHTML = `<div style="display:flex; flex-direction:column; align-items:center; margin-bottom:24px; margin-top:10px;"><div class="track-avatar">${avatarChar}</div><h3 style="margin:12px 0 4px; color:var(--fg); font-size:20px;">${escText(student.name)}</h3><p style="margin:0; color:var(--fg-faint); font-size:13px; direction:ltr;">${escText(student.email)}</p></div><div class="track-stats-grid"><div class="track-stat-card"><div class="track-stat-title">إجمالي الإجابات</div><div class="track-stat-value" style="color:var(--fg);">${totalCorrect}/${totalAnswered}</div></div><div class="track-stat-card"><div class="track-stat-title">نسبة الدقة</div><div class="track-stat-value" style="color:${globalAccColor};">${globalAccuracy}%</div></div><div class="track-stat-card"><div class="track-stat-title">النقاط</div><div class="track-stat-value" style="color:var(--gold);">${student.score || 0} 🏆</div></div></div><div style="text-align:right; margin-bottom:12px; color:var(--primary); font-weight:bold; font-size:14px; display:flex; align-items:center; gap:6px;">📋 سجل النتائج حسب المادة</div><div style="display:flex; flex-direction:column;">${subjectsHtml}</div>`;
+      document.getElementById('tracking-overlay').style.display = 'flex';
     }
 
-    async function banStudent(uid, n) { 
+    async function banStudent(uid, n) {
       const { value: r } = await Swal.fire({title: `سبب الحظر لـ ${n}`, input: 'text', showCancelButton: true, confirmButtonText: 'حظر', confirmButtonColor: '#ef4444'});
       if (r) { database.ref('users/'+uid).update({isBanned:true, banReason:r, score:0}); logAdminAction('حظر طالب', `اسم الطالب: ${n} | السبب: ${r}`); }
     }
     function unbanStudent(uid, n) { Swal.fire({title: `فك الحظر عن ${n}؟`, showCancelButton: true}).then((r)=>{ if(r.isConfirmed){ database.ref('users/'+uid).update({isBanned:false, banReason:null}); logAdminAction('فك حظر طالب', `اسم الطالب: ${n}`); }}); }
     function resetAllScores() { Swal.fire({title: "تصفير نقاط جميع الطلاب؟", icon:'warning', showCancelButton: true, confirmButtonColor: '#ef4444'}).then((r)=>{ if(r.isConfirmed) { let up={}; allUsersList.forEach(u => { up[u.uid+'/score']=0; up[u.uid+'/solvedQuizzes']=null; }); database.ref('users').update(up); logAdminAction('تصفير الدفعة', 'تم تصفير النقاط لجميع الطلاب'); Swal.fire('تم','تم تصفير الدفعة بنجاح','success'); } }); }
-    
+
     function listenToAlerts() { database.ref('alert').on('value', (snap) => { let msg = snap.val(); let banner = document.getElementById("alert-banner"); if (msg) { document.getElementById("alert-text-content").innerText = msg; banner.style.display = "block"; } else banner.style.display = "none"; }); }
-    
+
     function clearGlobalAlert() {
-        Swal.fire({
-            title: 'إلغاء التنبيه؟',
-            text: 'سيتم مسح التنبيه العاجل من شاشات جميع الطلاب فوراً.',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#ef4444',
-            cancelButtonColor: 'rgba(255,255,255,0.1)',
-            confirmButtonText: 'نعم، امسح التنبيه',
-            cancelButtonText: 'تراجع'
-        }).then((result) => {
-            if(result.isConfirmed) {
-                database.ref('alert').remove().then(() => {
-                    logAdminAction('إلغاء التنبيه', 'تم مسح التنبيه العاجل من الموقع');
-                    Swal.fire('تم', 'تم إخفاء التنبيه من عند جميع الطلاب بنجاح.', 'success');
-                });
-            }
+        Swal.fire({ title: 'إلغاء التنبيه؟', text: 'سيتم مسح التنبيه العاجل من شاشات جميع الطلاب فوراً.', icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', cancelButtonColor: 'rgba(255,255,255,.1)', confirmButtonText: 'نعم، امسح التنبيه', cancelButtonText: 'تراجع' }).then((result) => {
+            if (result.isConfirmed) { database.ref('alert').remove().then(() => { logAdminAction('إلغاء التنبيه', 'تم مسح التنبيه العاجل من الموقع'); Swal.fire('تم', 'تم إخفاء التنبيه من عند جميع الطلاب بنجاح.', 'success'); }); }
         });
     }
 
-    let db = []; let currentSubjectId = null;
     function listenToSubjects() {
       database.ref('subjects').on('value', (snap) => {
-        const val = snap.val() || {}; db = Object.keys(val).map(id => { const s = val[id]; return { id, level: s.level, name: s.name, desc: s.desc, images: s.images ? Object.keys(s.images).map(k=>({key:k,...s.images[k]})) : [], files: s.files ? Object.keys(s.files).map(k=>({key:k,...s.files[k]})) : [], quizzes: s.quizzes ? Object.keys(s.quizzes).map(k=>({key:k,...s.quizzes[k]})) : [] }; });
-        if (!currentSubjectId) renderHome(); else { const exist = db.find(s=>s.id===currentSubjectId); if(exist) openSubject(currentSubjectId); else showHome(); } updateAdminSelects(); updateDashboardStats();
+        const val = snap.val() || {};
+        db = Object.keys(val).map(id => { const s = val[id]; return { id, level: s.level, name: s.name, desc: s.desc, images: s.images ? Object.keys(s.images).map(k=>({key:k,...s.images[k]})) : [], files: s.files ? Object.keys(s.files).map(k=>({key:k,...s.files[k]})) : [], quizzes: s.quizzes ? Object.keys(s.quizzes).map(k=>({key:k,...s.quizzes[k]})) : [] }; });
+        if (!currentSubjectId) renderHome(); else { const exist = db.find(s=>s.id===currentSubjectId); if (exist) openSubject(currentSubjectId); else showHome(); }
+        updateAdminSelects(); updateDashboardStats();
       });
     }
 
-    function switchAdminTab(tabId, btnElement) { 
-      document.querySelectorAll('.admin-tab-content').forEach(el => el.classList.remove('active')); 
-      document.querySelectorAll('.admin-tab').forEach(el => el.classList.remove('active')); 
-      document.getElementById('tab-' + tabId).classList.add('active'); 
-      btnElement.classList.add('active'); 
+    function switchAdminTab(tabId, btnElement) {
+      document.querySelectorAll('.admin-tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.admin-tab').forEach(el => el.classList.remove('active'));
+      document.getElementById('tab-' + tabId).classList.add('active'); btnElement.classList.add('active');
       if (tabId === 'logs') listenToAdminLogs();
     }
-    
+
     function toggleAdminPanel() { if (!currentStudentData || currentStudentData.isAdmin !== true) { Swal.fire('تنبيه','غير مصرح لك.','warning'); return; } const p = document.getElementById("admin-panel"); const vis = p.style.display === "block"; p.style.display = vis ? "none" : "block"; if (!vis) { updateAdminSelects(); p.scrollIntoView({behavior:'smooth'}); } }
-    function updateAlert(e) { e.preventDefault(); let text = document.getElementById("alert-input").value; database.ref('alert').set(text); e.target.reset(); logAdminAction('نشر تنبيه للدفعة', text); Swal.fire('تم', 'تم نشر التنبيه بنجاح', 'success');}
-    
-    function updateAdminSelects() { 
-        let opts = db.map(s => `<option value="${s.id}">[مستوى ${s.level}] ${s.name}</option>`).join(''); 
-        document.getElementById('file-subj-select').innerHTML = opts; 
-        document.getElementById('quiz-subj-select').innerHTML = opts; 
-        document.getElementById('ai-quiz-subj-select').innerHTML = opts; 
-        document.getElementById('img-subj-select').innerHTML = opts;
-        document.getElementById('delete-all-quiz-subj-select').innerHTML = opts;
+    function updateAlert(e) { e.preventDefault(); let text = document.getElementById("alert-input").value; database.ref('alert').set(text); e.target.reset(); logAdminAction('نشر تنبيه للدفعة', text); Swal.fire('تم', 'تم نشر التنبيه بنجاح', 'success'); }
+
+    function updateAdminSelects() {
+        const opts = db.map(s => `<option value="${escText(s.id)}">[مستوى ${s.level}] ${escText(s.name)}</option>`).join('');
+        ['file-subj-select','quiz-subj-select','ai-quiz-subj-select','img-subj-select','delete-all-quiz-subj-select'].forEach(id => { const el = document.getElementById(id); if (el) { const prev = el.value; el.innerHTML = opts; if (prev) el.value = prev; } });
     }
-    
+
     function addSubject(e) { e.preventDefault(); const id = "subj-" + Date.now(); const n = document.getElementById("new-subj-name").value; database.ref('subjects/'+id).set({ level: parseInt(document.getElementById("new-subj-level").value, 10), name: n, desc: document.getElementById("new-subj-desc").value }).then(() => { e.target.reset(); logAdminAction('إضافة مادة جديدة', `المادة: ${n}`); Swal.fire('تم', "تمت إضافة المادة!", 'success'); }); }
     function addFile(e) { e.preventDefault(); const title = document.getElementById("file-title").value; const sId = document.getElementById("file-subj-select").value; const subj = db.find(x=>x.id===sId); database.ref('subjects/'+sId+'/files').push({ title: title, link: document.getElementById("file-link").value, category: document.getElementById("file-category").value }).then(() => { e.target.reset(); logAdminAction('رفع ملف', `عنوان الملف: ${title} | المادة: ${subj?subj.name:''}`); Swal.fire('تم', "تم الرفع بنجاح!", 'success'); }); }
-    
+
     function addSubjectImage(e) {
         e.preventDefault();
-        const sId = document.getElementById("img-subj-select").value;
-        const title = document.getElementById("img-title").value;
-        const link = document.getElementById("img-link").value;
-        const subj = db.find(x=>x.id===sId);
-        
-        database.ref('subjects/'+sId+'/images').push({ title: title, url: link }).then(() => {
-            e.target.reset(); logAdminAction('رفع صورة للمادة', `الوصف: ${title} | المادة: ${subj?subj.name:''}`); Swal.fire('تم', "تمت إضافة الصورة بنجاح وستظهر للطلاب!", 'success');
-        });
+        const sId = document.getElementById("img-subj-select").value; const title = document.getElementById("img-title").value; const link = document.getElementById("img-link").value; const subj = db.find(x=>x.id===sId);
+        database.ref('subjects/'+sId+'/images').push({ title: title, url: link }).then(() => { e.target.reset(); logAdminAction('رفع صورة للمادة', `الوصف: ${title} | المادة: ${subj?subj.name:''}`); Swal.fire('تم', "تمت إضافة الصورة بنجاح وستظهر للطلاب!", 'success'); });
     }
-
-    function deleteSubjectImage(sId, imgKey, imgTitle) {
-         Swal.fire({title: "حذف الصورة؟", showCancelButton: true, confirmButtonColor: '#ef4444'}).then((r)=>{ if(r.isConfirmed) { database.ref('subjects/'+sId+'/images/'+imgKey).remove(); logAdminAction('حذف صورة', `الصورة: ${imgTitle}`); }});
-    }
+    function deleteSubjectImage(sId, imgKey, imgTitle) { Swal.fire({title: "حذف الصورة؟", showCancelButton: true, confirmButtonColor: '#ef4444'}).then((r)=>{ if(r.isConfirmed) { database.ref('subjects/'+sId+'/images/'+imgKey).remove(); logAdminAction('حذف صورة', `الصورة: ${imgTitle}`); }}); }
 
     function addQuiz(e) { e.preventDefault(); const qText = document.getElementById("quiz-q").value; const sId = document.getElementById("quiz-subj-select").value; const subj = db.find(x=>x.id===sId); database.ref('subjects/'+sId+'/quizzes').push({ q: qText, opt1: document.getElementById("quiz-opt1").value, opt2: document.getElementById("quiz-opt2").value, opt3: document.getElementById("quiz-opt3").value, opt4: document.getElementById("quiz-opt4").value, ans: document.getElementById("quiz-ans").value }).then(() => { e.target.reset(); logAdminAction('إضافة سؤال MCQ', `للمادة: ${subj?subj.name:''}`); Swal.fire('تم', "تمت إضافة السؤال بنجاح!", 'success'); }); }
-    
+
     function addAIQuizzes(e) {
         e.preventDefault();
-        const sId = document.getElementById("ai-quiz-subj-select").value;
-        const jsonText = document.getElementById("ai-quiz-data").value.trim();
-        const subj = db.find(x=>x.id===sId);
-
-        if(!jsonText) return Swal.fire('تنبيه', 'برجاء لصق الكود أولاً', 'warning');
-
+        const sId = document.getElementById("ai-quiz-subj-select").value; const jsonText = document.getElementById("ai-quiz-data").value.trim(); const subj = db.find(x=>x.id===sId);
+        if (!jsonText) return Swal.fire('تنبيه', 'برجاء لصق الكود أولاً', 'warning');
         try {
             const questions = JSON.parse(jsonText);
-            
-            if (!Array.isArray(questions)) {
-                throw new Error("الكود يجب أن يبدأ بـ [ وينتهي بـ ] (مصفوفة)");
-            }
-
+            if (!Array.isArray(questions)) throw new Error("الكود يجب أن يبدأ بـ [ وينتهي بـ ] (مصفوفة)");
             let added = 0;
             questions.forEach(q => {
-                if(q.q && q.opt1 && q.opt2 && q.opt3 && q.opt4 && q.ans) {
-                    database.ref('subjects/'+sId+'/quizzes').push({
-                        q: q.q, 
-                        opt1: q.opt1, 
-                        opt2: q.opt2, 
-                        opt3: q.opt3, 
-                        opt4: q.opt4, 
-                        ans: q.ans.toString() 
-                    });
+                if (q.q && q.opt1 && q.opt2 && q.opt3 && q.opt4 && q.ans) {
+                    database.ref('subjects/'+sId+'/quizzes').push({ q: q.q, opt1: q.opt1, opt2: q.opt2, opt3: q.opt3, opt4: q.opt4, ans: q.ans.toString() });
                     added++;
                 }
             });
-
             logAdminAction('الرفع الذكي للأسئلة', `تم رفع ${added} سؤال | للمادة: ${subj?subj.name:''}`);
             Swal.fire('تم يا بطل!', `تم إضافة ${added} سؤال للموقع بنجاح في أقل من ثانية.`, 'success');
             document.getElementById("ai-quiz-data").value = '';
-            
         } catch (error) {
-            Swal.fire({
-                title: 'خطأ في الكود', 
-                html: 'تأكد إنك نسخت الكود زي ما الذكاء الاصطناعي عمله بالظبط بدون أي نقص.<br><br><span style="font-size:12px; color:#ef4444;">تفاصيل الخطأ: ' + error.message + '</span>', 
-                icon: 'error'
-            });
+            Swal.fire({ title: 'خطأ في الكود', html: 'تأكد إنك نسخت الكود زي ما الذكاء الاصطناعي عمله بالظبط بدون أي نقص.<br><br><span style="font-size:12px; color:#ef4444;">تفاصيل الخطأ: ' + escText(error.message) + '</span>', icon: 'error' });
         }
     }
 
     function deleteAllQuizzesFromSubject() {
         const sId = document.getElementById("delete-all-quiz-subj-select").value;
-        if(!sId) return Swal.fire('تنبيه', 'يرجى اختيار المادة أولاً', 'warning');
+        if (!sId) return Swal.fire('تنبيه', 'يرجى اختيار المادة أولاً', 'warning');
         const subj = db.find(x => x.id === sId);
-        
-        Swal.fire({
-            title: 'هل أنت متأكد؟',
-            text: `سيتم مسح جميع الأسئلة الخاصة بمادة "${subj ? subj.name : ''}" نهائياً ولن يمكنك استعادتها!`,
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#ef4444',
-            cancelButtonColor: 'rgba(255,255,255,0.1)',
-            confirmButtonText: 'نعم، امسح كل الأسئلة!',
-            cancelButtonText: 'إلغاء'
-        }).then((result) => {
-            if(result.isConfirmed) {
-                database.ref('subjects/'+sId+'/quizzes').remove().then(() => {
-                    logAdminAction('مسح كل أسئلة المادة', `المادة: ${subj ? subj.name : ''}`);
-                    Swal.fire('تم المسح', 'تم مسح بنك الأسئلة بالكامل لهذه المادة بنجاح.', 'success');
-                }).catch((err) => {
-                    Swal.fire('خطأ', err.message, 'error');
-                });
+        Swal.fire({ title: 'هل أنت متأكد؟', text: `سيتم مسح جميع الأسئلة الخاصة بمادة "${subj ? subj.name : ''}" نهائياً ولن يمكنك استعادتها!`, icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', cancelButtonColor: 'rgba(255,255,255,.1)', confirmButtonText: 'نعم، امسح كل الأسئلة!', cancelButtonText: 'إلغاء' }).then((result) => {
+            if (result.isConfirmed) {
+                database.ref('subjects/'+sId+'/quizzes').remove().then(() => { logAdminAction('مسح كل أسئلة المادة', `المادة: ${subj ? subj.name : ''}`); Swal.fire('تم المسح', 'تم مسح بنك الأسئلة بالكامل لهذه المادة بنجاح.', 'success'); }).catch((err) => { Swal.fire('خطأ', err.message, 'error'); });
             }
         });
     }
@@ -1184,151 +1006,98 @@
 
     function showHome() { document.getElementById('view-home').style.display = 'block'; document.getElementById('view-subject').style.display = 'none'; document.getElementById('search-box').value = ''; currentSubjectId = null; renderHome(); updateAdminSelects(); window.scrollTo({ top: document.getElementById('main-site').offsetTop, behavior: 'smooth' }); }
     function switchLevel(lvl) { activeLevel = lvl; document.getElementById('tab-lvl-1').classList.toggle('active', lvl===1); document.getElementById('tab-lvl-2').classList.toggle('active', lvl===2); document.getElementById('current-level-heading').innerText = lvl===1 ? "مواد المستوى الأول" : "مواد المستوى الثاني"; document.getElementById('search-box').value = ''; renderHome(); }
-    
-    let searchTimeout = null;
-    function filterSubjects() { 
-        clearTimeout(searchTimeout);
-        searchTimeout = setTimeout(() => {
-            renderHome(document.getElementById('search-box').value.toLowerCase()); 
-        }, 300);
-    }
+
+    function filterSubjects() { clearTimeout(searchTimeout); searchTimeout = setTimeout(() => { renderHome(document.getElementById('search-box').value.toLowerCase()); }, 300); }
 
     function renderHome(searchQuery = '') {
-      const grid = document.getElementById('subjects-grid'); grid.innerHTML = ''; let filtered = db.filter(s => s.level === activeLevel); if(searchQuery) filtered = filtered.filter(s => s.name.toLowerCase().includes(searchQuery));
+      const grid = document.getElementById('subjects-grid'); let filtered = db.filter(s => s.level === activeLevel); if (searchQuery) filtered = filtered.filter(s => (s.name || '').toLowerCase().includes(searchQuery));
       if (filtered.length === 0) { grid.innerHTML = `<div class="empty-state z-content" style="grid-column:1/-1;">لا توجد مواد مطابقة.</div>`; return; }
       const isAdmin = currentStudentData && currentStudentData.isAdmin === true;
-      filtered.forEach(subj => { grid.innerHTML += `<div class="card liquid-glass"><div class="z-content" style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px;"><h3 style="margin:0 0 8px; font-size:17px; cursor:pointer;" onclick="openSubject('${subj.id}')">📚 ${escText(subj.name)}</h3>${isAdmin ? `<button class="btn-sm btn-ban" onclick="event.stopPropagation(); deleteSubject('${subj.id}','${escapeHtml(subj.name)}')">🗑️ حذف</button>` : ''}</div><p class="z-content" style="font-size:13px; color:var(--fg-soft); margin:0 0 16px; line-height:1.5; cursor:pointer;" onclick="openSubject('${subj.id}')">${escText(subj.desc)}</p><button class="pill z-content" style="width:100%; height:38px;" onclick="openSubject('${subj.id}')">تصفح المادة</button></div>`; });
+      grid.innerHTML = filtered.map(subj => `<div class="card liquid-glass"><div class="z-content" style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px;"><h3 style="margin:0 0 8px; font-size:17px; cursor:pointer;" onclick="openSubject('${subj.id}')">📚 ${escText(subj.name)}</h3>${isAdmin ? `<button class="btn-sm btn-ban" onclick="event.stopPropagation(); deleteSubject('${subj.id}','${escapeHtml(subj.name)}')">🗑️ حذف</button>` : ''}</div><p class="z-content" style="font-size:13px; color:var(--fg-soft); margin:0 0 16px; line-height:1.5; cursor:pointer;" onclick="openSubject('${subj.id}')">${escText(subj.desc)}</p><button class="pill z-content" style="width:100%; height:38px;" onclick="openSubject('${subj.id}')">تصفح المادة</button></div>`).join('');
     }
 
     function renderFilesCategory(filesList, categoryName, icon, isAdmin, subjId) {
       const filtered = filesList.filter(f => (f.category || 'محاضرات') === categoryName); if (filtered.length === 0) return '';
-      let html = `<div class="file-category-header z-content">${icon} ${escText(categoryName)}</div>`; html += filtered.map(f => `<div class="card liquid-glass" style="flex-direction:row; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px; padding: 12px 16px;"><h4 class="z-content" style="margin:0; font-size:14px;">${escText(f.title)}</h4><div class="z-content" style="display:flex; gap:8px;"><a href="${f.link}" target="_blank" class="pill" style="height:32px; font-size:12px;">فتح الملف ↗</a>${isAdmin ? `<button class="btn-sm btn-ban" onclick="deleteFile('${subjId}','${f.key}','${escapeHtml(f.title)}')">🗑️</button>` : ''}</div></div>`).join(''); return html;
+      let html = `<div class="file-category-header z-content">${icon} ${escText(categoryName)}</div>`;
+      html += filtered.map(f => `<div class="card liquid-glass" style="flex-direction:row; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px; padding: 12px 16px;"><h4 class="z-content" style="margin:0; font-size:14px; min-width:0; word-break:break-word;">${escText(f.title)}</h4><div class="z-content" style="display:flex; gap:8px; flex-shrink:0;"><a href="${escText(safeUrl(f.link))}" target="_blank" rel="noopener noreferrer" class="pill" style="height:32px; font-size:12px;">فتح الملف ↗</a>${isAdmin ? `<button class="btn-sm btn-ban" onclick="deleteFile('${subjId}','${f.key}','${escapeHtml(f.title)}')">🗑️</button>` : ''}</div></div>`).join('');
+      return html;
     }
 
     function resetSubjectQuizzes() {
         if (!currentUser || !currentSubjectId) return;
-
-        Swal.fire({
-            title: 'هل تريد إعادة امتحان المادة؟',
-            text: "سيتم مسح إجاباتك السابقة في هذه المادة فقط (ولن يتم خصم أي نقاط من لوحة الشرف)، وسيتم لخبطة الأسئلة لتبدأ من جديد للتدريب.",
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonColor: '#3b82f6',
-            cancelButtonColor: '#ef4444',
-            confirmButtonText: 'نعم، ابدأ من جديد',
-            cancelButtonText: 'إلغاء'
-        }).then((result) => {
+        Swal.fire({ title: 'هل تريد إعادة امتحان المادة؟', text: "سيتم مسح إجاباتك السابقة في هذه المادة فقط (ولن يتم خصم أي نقاط من لوحة الشرف)، وسيتم خلط الأسئلة لتبدأ من جديد للتدريب.", icon: 'question', showCancelButton: true, confirmButtonColor: '#3b82f6', cancelButtonColor: '#ef4444', confirmButtonText: 'نعم، ابدأ من جديد', cancelButtonText: 'إلغاء' }).then((result) => {
             if (result.isConfirmed) {
-                const subj = db.find(s => s.id === currentSubjectId);
-                if (!subj || !subj.quizzes) return;
-
+                const subj = db.find(s => s.id === currentSubjectId); if (!subj || !subj.quizzes) return;
                 const quizKeys = subj.quizzes.map(q => q.key);
-                
                 database.ref('users/' + currentUser.uid + '/solvedQuizzes').once('value').then(snap => {
-                    let currentSolved = snap.val() || {};
-                    let updates = {};
-                    
-                    quizKeys.forEach(k => {
-                        if (currentSolved[k]) {
-                            updates[k] = null;
-                        }
-                    });
-
-                    database.ref('users/' + currentUser.uid + '/solvedQuizzes').update(updates).then(() => {
-                        Swal.fire('تم!', 'تم تجهيز الامتحان من جديد وبترتيب مختلف.', 'success').then(() => {
-                            openSubject(currentSubjectId);
-                        });
-                    });
+                    let currentSolved = snap.val() || {}; let updates = {};
+                    quizKeys.forEach(k => { if (currentSolved[k]) updates[k] = null; });
+                    database.ref('users/' + currentUser.uid + '/solvedQuizzes').update(updates).then(() => { Swal.fire('تم!', 'تم تجهيز الامتحان من جديد وبترتيب مختلف.', 'success').then(() => { openSubject(currentSubjectId); }); });
                 });
             }
         });
     }
 
     function openSubject(id) {
-      currentSubjectId = id; const subj = db.find(s => s.id === id); document.getElementById('view-home').style.display = 'none'; document.getElementById('view-subject').style.display = 'block'; document.getElementById('subject-title').innerText = "📚 " + subj.name; document.getElementById('subject-desc').innerText = subj.desc;
+      currentSubjectId = id; const subj = db.find(s => s.id === id); if (!subj) return showHome();
+      document.getElementById('view-home').style.display = 'none'; document.getElementById('view-subject').style.display = 'block'; document.getElementById('subject-title').innerText = "📚 " + subj.name; document.getElementById('subject-desc').innerText = subj.desc;
       const isAdmin = currentStudentData && currentStudentData.isAdmin === true; const solvedQuizzes = (currentStudentData && currentStudentData.solvedQuizzes) ? currentStudentData.solvedQuizzes : {};
-      
-      if(subj.images && subj.images.length > 0) {
+
+      if (subj.images && subj.images.length > 0) {
           document.getElementById('subject-images').innerHTML = subj.images.map(img => `
               <div class="subject-image-container z-content">
-                 <img src="${escapeHtml(img.url)}" alt="صورة المادة">
+                 <img src="${escText(safeUrl(img.url))}" alt="صورة المادة" loading="lazy" onerror="this.parentElement.style.display='none'">
                  <div class="subject-image-title">${escText(img.title)} ${isAdmin ? `<button class="btn-sm btn-ban" style="float:left;" onclick="deleteSubjectImage('${subj.id}','${img.key}','${escapeHtml(img.title)}')">حذف</button>` : ''}</div>
-              </div>
-          `).join('');
+              </div>`).join('');
       } else { document.getElementById('subject-images').innerHTML = ''; }
 
-      if(subj.files.length === 0) document.getElementById('subject-files').innerHTML = '<div class="empty-state z-content">لا توجد ملفات.</div>';
+      if (subj.files.length === 0) document.getElementById('subject-files').innerHTML = '<div class="empty-state z-content">لا توجد ملفات.</div>';
       else { let filesHtml = renderFilesCategory(subj.files, 'محاضرات', '📖', isAdmin, subj.id) + renderFilesCategory(subj.files, 'سكاشن', '🔬', isAdmin, subj.id) + renderFilesCategory(subj.files, 'امتحانات', '📝', isAdmin, subj.id); document.getElementById('subject-files').innerHTML = filesHtml || '<div class="empty-state z-content">لا توجد ملفات مصنفة.</div>'; }
 
-      let shuffledQuizzes = [...subj.quizzes];
-      shuffledQuizzes = shuffleArray(shuffledQuizzes);
+      let shuffledQuizzes = shuffleArray([...subj.quizzes]);
 
       document.getElementById('subject-quizzes').innerHTML = shuffledQuizzes.length === 0 ? '<div class="empty-state z-content">بنك الأسئلة فارغ حالياً.</div>' : shuffledQuizzes.map((q, idx) => {
         const sq = solvedQuizzes[q.key]; const isSolved = !!sq; const status = sq ? (sq.status || (sq === true ? 'correct' : null)) : null; const selectedOpt = sq ? sq.selected : null;
-        const getBtnStyle = (optNum) => { if(!isSolved) return ''; if(status === 'correct' && q.ans == optNum) return 'background: #15803d; border-color: #22c55e; opacity: 1;'; if(status === 'wrong' && q.ans == optNum) return 'background: #15803d; border-color: #22c55e; opacity: 1;'; if(status === 'wrong' && selectedOpt == optNum) return 'background: #b91c1c; border-color: #ef4444; opacity: 1;'; return 'opacity: 0.5; cursor: not-allowed;'; };
-        const badgeHtml = isSolved ? (status === 'correct' ? `<div class="z-content quiz-solved-badge" style="background:rgba(34,197,94,0.2); color:#4ade80; border:1px solid #22c55e;">✔️ إجابة صحيحة</div>` : `<div class="z-content quiz-solved-badge" style="background:rgba(239,68,68,0.2); color:#f87171; border:1px solid #ef4444;">❌ إجابة خاطئة</div>`) : '';
-        
-        let options = [
-            { text: q.opt1, num: '1' },
-            { text: q.opt2, num: '2' },
-            { text: q.opt3, num: '3' },
-            { text: q.opt4, num: '4' }
-        ];
-        
-        if (!isSolved) { options = shuffleArray(options); }
-
-        let optionsHtml = options.map(opt => 
-            `<button class="quiz-btn" ${isSolved ? 'disabled' : ''} style="${getBtnStyle(opt.num)}" onclick="checkAnswer(this,'${opt.num}','${q.ans}','${q.key}')">${escText(opt.text)}</button>`
-        ).join('');
-
+        const getBtnStyle = (optNum) => { if (!isSolved) return ''; if (status === 'correct' && q.ans == optNum) return 'background: #15803d; border-color: #22c55e; opacity: 1;'; if (status === 'wrong' && q.ans == optNum) return 'background: #15803d; border-color: #22c55e; opacity: 1;'; if (status === 'wrong' && selectedOpt == optNum) return 'background: #b91c1c; border-color: #ef4444; opacity: 1;'; return 'opacity: .5; cursor: not-allowed;'; };
+        const badgeHtml = isSolved ? (status === 'correct' ? `<div class="z-content quiz-solved-badge" style="background:rgba(34,197,94,.2); color:#4ade80; border:1px solid #22c55e;">✔️ إجابة صحيحة</div>` : `<div class="z-content quiz-solved-badge" style="background:rgba(239,68,68,.2); color:#f87171; border:1px solid #ef4444;">❌ إجابة خاطئة</div>`) : '';
+        let options = [ { text: q.opt1, num: '1' }, { text: q.opt2, num: '2' }, { text: q.opt3, num: '3' }, { text: q.opt4, num: '4' } ];
+        if (!isSolved) options = shuffleArray(options);
+        const optionsHtml = options.map(opt => `<button class="quiz-btn" ${isSolved ? 'disabled' : ''} style="${getBtnStyle(opt.num)}" onclick="checkAnswer(this,'${opt.num}','${q.ans}','${q.key}')">${escText(opt.text)}</button>`).join('');
         return `<div class="card liquid-glass" style="padding:20px; border: ${isSolved ? (status==='correct' ? '1px solid #15803d' : '1px solid #b91c1c') : 'none'};"><div class="z-content" style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px;"><p style="font-weight:700; font-size:16px; margin:0 0 12px; display:flex; align-items:center; gap:6px;">س${idx+1}: ${escText(q.q)}</p>${isAdmin ? `<button class="btn-sm btn-ban" onclick="deleteQuiz('${subj.id}','${q.key}','${escapeHtml(q.q)}')">🗑️</button>` : ''}</div>
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-          ${badgeHtml}
-        </div>
-        <div class="quiz-options z-content" style="margin-top:16px;">
-          ${optionsHtml}
-        </div></div>`
-      }).join(''); window.scrollTo({ top: document.getElementById('main-site').offsetTop, behavior: 'smooth' });
+        <div style="display:flex; justify-content:space-between; align-items:center;">${badgeHtml}</div>
+        <div class="quiz-options z-content" style="margin-top:16px;">${optionsHtml}</div></div>`;
+      }).join('');
+      window.scrollTo({ top: document.getElementById('main-site').offsetTop, behavior: 'smooth' });
     }
 
     function checkAnswer(btn, selected, correct, quizKey) {
-      let buttons = btn.parentElement.querySelectorAll('button'); buttons.forEach(b => { b.disabled = true; b.style.cursor = "not-allowed"; }); 
-      
+      let buttons = btn.parentElement.querySelectorAll('button'); buttons.forEach(b => { b.disabled = true; b.style.cursor = "not-allowed"; });
       const isAlreadySolved = currentStudentData && currentStudentData.solvedQuizzes && currentStudentData.solvedQuizzes[quizKey];
       const isCorrect = (selected === correct); const solveData = { status: isCorrect ? 'correct' : 'wrong', selected: selected, timestamp: Date.now() };
-
       if (isCorrect) {
-        btn.style.background = "#15803d"; btn.style.borderColor = "#22c55e"; btn.style.opacity = "1"; btn.innerHTML += " ✔️"; 
-        buttons.forEach(b => { if(b !== btn) b.style.opacity = "0.5"; });
-        
-        if (currentUser && !isAlreadySolved) { 
-            database.ref('users/'+currentUser.uid+'/score').transaction(s => (s||0)+1); 
-            database.ref('users/'+currentUser.uid+'/solvedQuizzes/'+quizKey).set(solveData); 
-            Swal.fire({title: 'إجابة صحيحة!', text: 'تمت إضافة نقطة لرصيدك 🏆', icon: 'success', timer: 1500, showConfirmButton: false}); 
+        btn.style.background = "#15803d"; btn.style.borderColor = "#22c55e"; btn.style.opacity = "1"; btn.innerHTML += " ✔️";
+        buttons.forEach(b => { if (b !== btn) b.style.opacity = ".5"; });
+        if (currentUser && !isAlreadySolved) {
+            database.ref('users/'+currentUser.uid+'/score').transaction(s => (s||0)+1);
+            database.ref('users/'+currentUser.uid+'/solvedQuizzes/'+quizKey).set(solveData);
+            Swal.fire({title: 'إجابة صحيحة!', text: 'تمت إضافة نقطة لرصيدك 🏆', icon: 'success', timer: 1500, showConfirmButton: false});
         }
       } else {
-        btn.style.background = "#b91c1c"; btn.style.borderColor = "#ef4444"; btn.style.opacity = "1"; btn.innerHTML += " ❌"; 
-        
-        buttons.forEach(b => { 
-            if(b.getAttribute('onclick').includes(`,'${correct}',`)) {
-                b.style.background = "#15803d"; 
-                b.style.borderColor = "#22c55e"; 
-                b.style.opacity = "1";
-            } else if (b !== btn) {
-                b.style.opacity = "0.5";
-            }
+        btn.style.background = "#b91c1c"; btn.style.borderColor = "#ef4444"; btn.style.opacity = "1"; btn.innerHTML += " ❌";
+        buttons.forEach(b => {
+            if (b.getAttribute('onclick').includes(`,'${correct}',`)) { b.style.background = "#15803d"; b.style.borderColor = "#22c55e"; b.style.opacity = "1"; }
+            else if (b !== btn) { b.style.opacity = ".5"; }
         });
-        
-        if(currentUser && !isAlreadySolved) database.ref('users/'+currentUser.uid+'/solvedQuizzes/'+quizKey).set(solveData);
+        if (currentUser && !isAlreadySolved) database.ref('users/'+currentUser.uid+'/solvedQuizzes/'+quizKey).set(solveData);
       }
     }
 
-    window.onload = () => { 
-      document.getElementById('name-group').style.display = 'none'; 
-      document.getElementById('phone-group').style.display = 'none'; 
+    window.onload = () => {
+      document.getElementById('name-group').style.display = 'none';
+      document.getElementById('phone-group').style.display = 'none';
       document.getElementById('level-group').style.display = 'none';
-      initTheme(); /* تفعيل الثيم المحفوظ عند الدخول */
-      showHome(); 
+      initTheme();
+      showHome();
     };
   </script>
 </body>
