@@ -362,6 +362,15 @@
             </div>
           </div>
         </div>
+
+        <div class="card liquid-glass" style="margin-top: 24px; border-color: #14b8a6;" id="research-section">
+          <div class="z-content flex-between" style="margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
+            <h3 style="color: #14b8a6; margin: 0; font-size: 18px; display: flex; align-items: center; gap: 8px;"><span>🔬</span> حجز الأبحاث</h3>
+            <div id="my-research-status" style="font-size: 13px;"></div>
+          </div>
+          <input type="text" id="research-search" class="search-box z-content" style="margin-bottom: 16px;" placeholder="🔍 دوّر على بحث..." oninput="filterResearch()">
+          <div class="grid z-content" id="research-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));"></div>
+        </div>
       </div>
 
       <!-- صفحة المادة -->
@@ -491,6 +500,39 @@
                    </div>
                 </div>
              </div>
+
+             <div class="admin-section-header"><span>4️⃣</span> إدارة الأبحاث (حجز الطلاب)</div>
+             <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); margin-bottom: 24px;">
+                <div class="card liquid-glass" style="background:rgba(0,0,0,.4); grid-column: 1 / -1; border-color: #14b8a6;">
+                   <h3 style="color: #14b8a6; font-size: 16px; margin-top:0;">إضافة أبحاث بالجملة (كل بحث في سطر)</h3>
+                   <p style="font-size:12px; color:var(--fg-faint); margin-bottom:10px;">اكتب أو الصق أسماء الأبحاث، كل بحث في سطر منفصل، وهيتضافوا كلهم دفعة واحدة كـ"متاح" لحجز الطلاب.</p>
+                   <form class="upload-form" onsubmit="addBulkResearchTopics(event)">
+                      <textarea class="input-group" id="bulk-research-data" rows="5" placeholder="بحث 1&#10;بحث 2&#10;بحث 3" required style="resize:vertical;"></textarea>
+                      <button class="pill" type="submit" style="background: #14b8a6; width: fit-content;">إضافة كل الأبحاث 🚀</button>
+                   </form>
+                </div>
+                <div class="card liquid-glass" style="background:rgba(0,0,0,.4);">
+                   <h3 style="font-size: 16px; margin-top:0;">إضافة بحث واحد</h3>
+                   <form class="upload-form" onsubmit="addResearchTopic(event)">
+                      <input class="input-group" id="single-research-name" placeholder="اسم البحث" required>
+                      <button class="pill" type="submit">إضافة</button>
+                   </form>
+                </div>
+                <div class="card liquid-glass" style="background:rgba(0,0,0,.4);">
+                   <h3 style="font-size: 16px; margin-top:0;">تصدير قائمة الحجوزات</h3>
+                   <p style="font-size:12px; color:var(--fg-faint); margin-bottom:10px;">تحميل ملف Excel يوضح كل بحث وين أخده.</p>
+                   <button class="pill" style="background: #10b981;" onclick="exportResearchCSV()">📥 تصدير Excel</button>
+                </div>
+             </div>
+             <div style="margin-bottom: 12px;">
+                <input type="text" id="admin-search-research" class="search-box" style="margin-bottom:0; background: rgba(0,0,0,.4);" placeholder="🔍 دوّر على بحث أو اسم طالب..." oninput="filterAdminResearch()">
+             </div>
+             <div class="table-responsive">
+                <table class="styled-table">
+                   <thead><tr><th>#</th><th>اسم البحث</th><th>الحالة</th><th>الطالب الحاجز</th><th>الإجراءات</th></tr></thead>
+                   <tbody id="research-table-body"><tr><td colspan="5" style="text-align:center;">جاري التحميل...</td></tr></tbody>
+                </table>
+             </div>
           </div>
 
           <div id="tab-tools" class="admin-tab-content">
@@ -598,6 +640,7 @@
     let currentUser = null, currentStudentData = null, isRegisterMode = false, activeLevel = 1, allUsersList = [], onlineUsersMap = {};
     let adminLogsListening = false, isMaintenanceActive = false, privateAlertListening = false;
     let db = [], currentSubjectId = null, userDataRef = null, searchTimeout = null;
+    let researchTopics = [], researchSearchTimeout = null, researchListening = false;
     let presenceInitialized = false, heartbeatInterval = null;
 
     /* ===== تهيئة Firebase بأمان ===== */
@@ -885,7 +928,7 @@
         }
       });
       /* المستمعات العامة تُشغَّل مرة واحدة فقط (بدون تكرار بعد الخروج والدخول) */
-      if (!window._listenersReady) { window._listenersReady = true; listenToAlerts(); listenToSubjects(); listenToLeaderboard(); }
+      if (!window._listenersReady) { window._listenersReady = true; listenToAlerts(); listenToSubjects(); listenToLeaderboard(); listenToResearchTopics(); }
     }
 
     function logoutStudent() {
@@ -1061,6 +1104,127 @@
                 database.ref('subjects/'+sId+'/quizzes').remove().then(() => { logAdminAction('مسح كل أسئلة المادة', `المادة: ${subj ? subj.name : ''}`); Swal.fire('تم المسح', 'تم مسح بنك الأسئلة بالكامل لهذه المادة بنجاح.', 'success'); }).catch((err) => { Swal.fire('خطأ', err.message, 'error'); });
             }
         });
+    }
+
+    /* ===== الأبحاث ===== */
+    function listenToResearchTopics() {
+      if (researchListening) return; researchListening = true;
+      database.ref('research_topics').on('value', snap => {
+        const val = snap.val() || {};
+        researchTopics = Object.keys(val).map(k => ({ key: k, ...val[k] }));
+        researchTopics.sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ar'));
+        renderResearchHome(); renderAdminResearchTable();
+      });
+    }
+
+    function myResearch() { if (!currentStudentData || !currentStudentData.researchTopic) return null; return researchTopics.find(r => r.key === currentStudentData.researchTopic) || null; }
+
+    function renderResearchHome(searchQuery = '') {
+      const grid = document.getElementById('research-grid'); if (!grid) return;
+      const statusEl = document.getElementById('my-research-status');
+      const mine = myResearch();
+      if (statusEl) {
+        statusEl.innerHTML = mine
+          ? `<span style="color:#4ade80;">✅ بحثك: ${escText(mine.name)}</span> <button class="btn-sm btn-ban" style="margin-right:8px;" onclick="cancelMyResearch('${mine.key}')">إلغاء الحجز</button>`
+          : `<span style="color:var(--fg-faint);">لسة مخترتش بحث</span>`;
+      }
+      let list = researchTopics;
+      if (searchQuery) list = list.filter(r => (r.name || '').toLowerCase().includes(searchQuery));
+      if (list.length === 0) { grid.innerHTML = `<div class="empty-state z-content" style="grid-column:1/-1;">${researchTopics.length === 0 ? 'لا توجد أبحاث متاحة حاليًا.' : 'لا توجد نتائج مطابقة.'}</div>`; return; }
+      grid.innerHTML = list.map(r => {
+        const taken = !!r.claimedBy; const isMine = currentUser && r.claimedBy === currentUser.uid;
+        let btn;
+        if (isMine) btn = `<button class="pill" style="width:100%; background: rgba(34,197,94,.2); color:#4ade80; border:1px solid #22c55e; cursor:default;">✅ بحثك</button>`;
+        else if (taken) btn = `<button class="pill" style="width:100%; background: rgba(255,255,255,.06); color: var(--fg-faint); cursor:not-allowed;" disabled>محجوز</button>`;
+        else btn = `<button class="pill" style="width:100%; background:#14b8a6;" onclick="claimResearch('${r.key}','${escapeHtml(r.name)}')">احجز البحث ده</button>`;
+        return `<div class="card liquid-glass" style="padding:14px 16px; border-color:${isMine ? '#22c55e' : (taken ? 'rgba(255,255,255,.06)' : '#14b8a6')};"><h4 class="z-content" style="margin:0 0 10px; font-size:14px; word-break:break-word;">${escText(r.name)}</h4>${btn}</div>`;
+      }).join('');
+    }
+
+    function filterResearch() { clearTimeout(researchSearchTimeout); researchSearchTimeout = setTimeout(() => { renderResearchHome(document.getElementById('research-search').value.toLowerCase()); }, 300); }
+
+    function claimResearch(id, name) {
+      if (!currentUser || !currentStudentData) return Swal.fire('تنبيه', 'سجّل دخول الأول.', 'warning');
+      const existing = myResearch();
+      if (existing) return Swal.fire('عندك بحث بالفعل', `انت محجوز بحث "${existing.name}" بالفعل، لازم تلغيه الأول لو عايز تغيّره.`, 'warning');
+      Swal.fire({ title: `تأكيد حجز "${name}"؟`, text: 'مش هتقدر تحجز بحث تاني إلا لو لغيت الحجز ده.', icon: 'question', showCancelButton: true, confirmButtonText: 'أيوه احجزه', cancelButtonText: 'تراجع' }).then(result => {
+        if (!result.isConfirmed) return;
+        database.ref('research_topics/' + id + '/claimedBy').transaction(cur => cur === null || cur === undefined ? currentUser.uid : undefined).then(tr => {
+          if (!tr.committed) { Swal.fire('للأسف اتأخرت!', 'حد تاني حجز البحث ده قبلك بلحظة.', 'error'); return; }
+          const up = {}; up['research_topics/' + id + '/claimedByName'] = currentStudentData.name; up['research_topics/' + id + '/claimedAt'] = FB.database.ServerValue.TIMESTAMP;
+          up['users/' + currentUser.uid + '/researchTopic'] = id; up['users/' + currentUser.uid + '/researchTopicName'] = name;
+          database.ref().update(up).then(() => { Swal.fire('تم الحجز! 🎉', `اتسجل بحث "${name}" باسمك.`, 'success'); });
+        }).catch(err => Swal.fire('خطأ', escText(err.message), 'error'));
+      });
+    }
+
+    function cancelMyResearch(id) {
+      if (!currentUser) return;
+      Swal.fire({ title: 'إلغاء حجز البحث؟', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'نعم، إلغاء' }).then(result => {
+        if (!result.isConfirmed) return;
+        const up = {}; up['research_topics/' + id + '/claimedBy'] = null; up['research_topics/' + id + '/claimedByName'] = null; up['research_topics/' + id + '/claimedAt'] = null;
+        up['users/' + currentUser.uid + '/researchTopic'] = null; up['users/' + currentUser.uid + '/researchTopicName'] = null;
+        database.ref().update(up).then(() => Swal.fire('تم', 'اتلغى حجزك، البحث بقى متاح تاني.', 'success'));
+      });
+    }
+
+    function addResearchTopic(e) {
+      e.preventDefault(); const name = document.getElementById('single-research-name').value.trim(); if (!name) return;
+      database.ref('research_topics').push({ name, claimedBy: null }).then(() => { e.target.reset(); logAdminAction('إضافة بحث', `البحث: ${name}`); Swal.fire('تم', 'تمت إضافة البحث.', 'success'); });
+    }
+
+    function addBulkResearchTopics(e) {
+      e.preventDefault();
+      const lines = document.getElementById('bulk-research-data').value.split('\n').map(l => l.trim()).filter(Boolean);
+      if (!lines.length) return Swal.fire('تنبيه', 'اكتب اسم بحث واحد على الأقل.', 'warning');
+      const up = {}; const base = database.ref('research_topics');
+      lines.forEach(name => { up[base.push().key] = { name, claimedBy: null }; });
+      base.update(up).then(() => { logAdminAction('إضافة أبحاث بالجملة', `عدد ${lines.length} بحث`); Swal.fire('تم يا بطل!', `تمت إضافة ${lines.length} بحث بنجاح.`, 'success'); document.getElementById('bulk-research-data').value = ''; });
+    }
+
+    function adminFreeResearch(id, name) {
+      Swal.fire({ title: `إلغاء حجز "${name}"؟`, text: 'هيبقى متاح لأي طالب تاني يحجزه.', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'نعم، إلغاء الحجز' }).then(result => {
+        if (!result.isConfirmed) return;
+        const topic = researchTopics.find(r => r.key === id); const uid = topic ? topic.claimedBy : null;
+        const up = {}; up['research_topics/' + id + '/claimedBy'] = null; up['research_topics/' + id + '/claimedByName'] = null; up['research_topics/' + id + '/claimedAt'] = null;
+        if (uid) { up['users/' + uid + '/researchTopic'] = null; up['users/' + uid + '/researchTopicName'] = null; }
+        database.ref().update(up).then(() => { logAdminAction('إلغاء حجز بحث', `البحث: ${name}`); Swal.fire('تم', 'اتلغى الحجز.', 'success'); });
+      });
+    }
+
+    function adminDeleteResearchTopic(id, name) {
+      Swal.fire({ title: `حذف بحث "${name}" نهائيًا؟`, showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'نعم، احذف' }).then(result => {
+        if (!result.isConfirmed) return;
+        const topic = researchTopics.find(r => r.key === id); const uid = topic ? topic.claimedBy : null;
+        const up = {}; up['research_topics/' + id] = null; if (uid) { up['users/' + uid + '/researchTopic'] = null; up['users/' + uid + '/researchTopicName'] = null; }
+        database.ref().update(up).then(() => { logAdminAction('حذف بحث', `البحث: ${name}`); Swal.fire('تم الحذف', '', 'success'); });
+      });
+    }
+
+    function renderAdminResearchTable() {
+      const tbody = document.getElementById('research-table-body'); if (!tbody) return;
+      if (researchTopics.length === 0) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">لا توجد أبحاث مضافة بعد.</td></tr>'; return; }
+      tbody.innerHTML = researchTopics.map((r, i) => {
+        const taken = !!r.claimedBy;
+        const statusHtml = taken ? `<span class="status-badge status-online">🟢 محجوز</span>` : `<span class="status-badge status-offline">⚪ متاح</span>`;
+        const studentHtml = taken ? escText(r.claimedByName || 'غير معروف') : '<span style="color:var(--fg-faint);">-</span>';
+        const actions = `<div class="action-group">${taken ? `<button class="btn-sm btn-msg" onclick="adminFreeResearch('${r.key}','${escapeHtml(r.name)}')">🔓 إلغاء الحجز</button>` : ''}<button class="btn-sm btn-ban" onclick="adminDeleteResearchTopic('${r.key}','${escapeHtml(r.name)}')">🗑️ حذف</button></div>`;
+        return `<tr><td>${i + 1}</td><td>${escText(r.name)}</td><td>${statusHtml}</td><td>${studentHtml}</td><td>${actions}</td></tr>`;
+      }).join('');
+      filterAdminResearch();
+    }
+
+    function filterAdminResearch() {
+      const el = document.getElementById('admin-search-research'); if (!el) return; const query = el.value.toLowerCase();
+      document.querySelectorAll('#research-table-body tr').forEach(row => { if (row.cells.length > 1) row.style.display = row.innerText.toLowerCase().includes(query) ? '' : 'none'; });
+    }
+
+    function exportResearchCSV() {
+      let csv = "اسم البحث,الحالة,الطالب الحاجز\n";
+      researchTopics.forEach(r => { csv += [r.name, r.claimedBy ? 'محجوز' : 'متاح', r.claimedByName || ''].map(csvCell).join(',') + "\n"; });
+      const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = "research_topics.csv"; link.click();
+      logAdminAction("تصدير الأبحاث", "تم تحميل قائمة الأبحاث بملف Excel/CSV");
     }
 
     function deleteFile(s, f, fName) { Swal.fire({title: "حذف الملف؟", showCancelButton: true, confirmButtonColor: '#ef4444'}).then((r)=>{ if(r.isConfirmed) { database.ref('subjects/'+s+'/files/'+f).remove(); logAdminAction('حذف ملف', `الملف: ${fName}`); }}); }
