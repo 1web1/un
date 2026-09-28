@@ -11,6 +11,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com">
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
 <style>
   :root {
@@ -521,7 +522,7 @@
                 <div class="card liquid-glass" style="background:rgba(0,0,0,.4);">
                    <h3 style="font-size: 16px; margin-top:0;">تصدير قائمة الحجوزات</h3>
                    <p style="font-size:12px; color:var(--fg-faint); margin-bottom:10px;">تحميل ملف Excel يوضح كل بحث وين أخده.</p>
-                   <button class="pill" style="background: #10b981;" onclick="exportResearchCSV()">📥 تصدير Excel</button>
+                   <button class="pill" style="background: #10b981;" onclick="exportResearchCSV()">📥 تصدير Excel (.xlsx)</button>
                 </div>
              </div>
              <div style="margin-bottom: 12px;">
@@ -1220,11 +1221,24 @@
     }
 
     function exportResearchCSV() {
-      let csv = "اسم البحث,الحالة,الطالب الحاجز\n";
-      researchTopics.forEach(r => { csv += [r.name, r.claimedBy ? 'محجوز' : 'متاح', r.claimedByName || ''].map(csvCell).join(',') + "\n"; });
-      const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
-      const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = "research_topics.csv"; link.click();
-      logAdminAction("تصدير الأبحاث", "تم تحميل قائمة الأبحاث بملف Excel/CSV");
+      if (typeof XLSX === 'undefined') return Swal.fire('خطأ', 'مكتبة Excel لسه بتحمّل، جرّب تاني بعد ثانية.', 'error');
+      const findUser = uid => allUsersList.find(u => u.uid === uid);
+      const rows = [["#", "اسم البحث", "الحالة", "اسم الطالب", "رقم الهاتف", "البريد الإلكتروني", "تاريخ الحجز"]];
+      const sorted = [...researchTopics].sort((a, b) => {
+        if (!!a.claimedBy === !!b.claimedBy) return (a.name || '').localeCompare(b.name || '', 'ar');
+        return a.claimedBy ? -1 : 1;
+      });
+      sorted.forEach((r, i) => {
+        const u = r.claimedBy ? findUser(r.claimedBy) : null;
+        const dateStr = r.claimedAt ? new Date(r.claimedAt).toLocaleString('ar-EG', { timeZone: 'Africa/Cairo' }) : '';
+        rows.push([i + 1, r.name || '', r.claimedBy ? 'محجوز' : 'متاح', r.claimedByName || (u ? u.name : '') || '', u ? (u.phone || '') : '', u ? (u.email || '') : '', dateStr]);
+      });
+      const ws = XLSX.utils.aoa_to_sheet(rows);
+      ws['!cols'] = [{ wch: 5 }, { wch: 34 }, { wch: 10 }, { wch: 24 }, { wch: 16 }, { wch: 28 }, { wch: 20 }];
+      ws['!views'] = [{ rightToLeft: true }];
+      const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "الأبحاث");
+      XLSX.writeFile(wb, "أبحاث_الدفعة.xlsx");
+      logAdminAction("تصدير الأبحاث", "تم تحميل قائمة الأبحاث بملف Excel");
     }
 
     function deleteFile(s, f, fName) { Swal.fire({title: "حذف الملف؟", showCancelButton: true, confirmButtonColor: '#ef4444'}).then((r)=>{ if(r.isConfirmed) { database.ref('subjects/'+s+'/files/'+f).remove(); logAdminAction('حذف ملف', `الملف: ${fName}`); }}); }
