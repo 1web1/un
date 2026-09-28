@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>منصة الدفعة التعليمية | قسم المساحة ونظم المعلومات</title>
+<meta name="description" content="منصة الدفعة التعليمية - قسم المساحة ونظم المعلومات: ملخصات وبنك أسئلة ولوحة شرف">
+<meta name="theme-color" content="#0a0908">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Ctext y=%27.9em%27 font-size=%2790%27%3E%F0%9F%8E%93%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com">
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
@@ -239,6 +242,9 @@
     .section-title { font-size: 18px; }
   }
   @media (max-width: 360px) { .mark-text { display: none; } }
+  #auth-overlay { z-index: 10000000; }
+  div:where(.swal2-container) { z-index: 20000000 !important; }
+  @media (prefers-reduced-motion: reduce) { .cinematic-video { display: none; } }
 </style>
 </head>
 <body>
@@ -256,6 +262,7 @@
     <p style="color: var(--fg-soft); font-size: clamp(15px, 2vw, 20px); max-width: 600px; line-height: 1.6;">
       نعمل حالياً على تطوير المنصة وإضافة ملخصات وأسئلة جديدة لتوفير تجربة أفضل. يرجى العودة لاحقاً!
     </p>
+    <button id="maint-admin-btn" onclick="document.getElementById('auth-overlay').style.display='flex'" style="margin-top:24px;background:transparent;border:1px solid var(--primary);color:var(--primary);border-radius:8px;padding:10px 20px;font-family:inherit;cursor:pointer;">دخول الإدارة 🔐</button>
   </div>
 
   <section class="cinematic-hero">
@@ -275,7 +282,7 @@
 
   <div id="main-site">
     <header class="chrome liquid-glass">
-      <div class="mark z-content" onclick="showHome()"><span class="mark-star">✦</span><span class="mark-text">أبحاث الجامعة</span></div>
+      <div class="mark z-content" onclick="showHome()"><span class="mark-star">✦</span><span class="mark-text">منصة الدفعة</span></div>
       <nav class="nav z-content">
         <button class="pill theme-btn" id="theme-toggle-btn" onclick="toggleTheme()" title="تبديل الوضع">🌞</button>
         <div class="user-greeting-btn" onclick="showProfile()" id="user-greeting" title="الملف الشخصي"></div>
@@ -501,6 +508,7 @@
                    <h3 style="color: var(--danger); font-size: 16px; margin-top:0;">منطقة الخطر (إجراءات حساسة)</h3>
                    <div style="display:flex; gap:10px; flex-wrap:wrap;">
                        <button class="pill" style="background: transparent; border: 1px solid var(--danger); color:var(--danger);" onclick="resetAllScores()">🔄 تصفير نقاط كل الطلاب</button>
+                       <button class="pill" style="background: transparent; border: 1px solid var(--primary); color:var(--primary);" onclick="syncAllLeaderboard()">🔁 مزامنة لوحة الشرف والأرقام (مرة واحدة بعد التحديث)</button>
                        <button class="pill" style="background: transparent; border: 1px solid var(--warning); color:var(--warning);" onclick="clearAdminLogs()">🗑️ مسح سجل النشاط بالكامل</button>
                    </div>
                 </div>
@@ -589,6 +597,29 @@
     const database = FB_OK ? FB.database() : makeStub();
     if (!FB_OK) { document.getElementById('fb-error').style.display = 'flex'; console.error('Firebase library failed to load'); }
 
+    window.addEventListener('unhandledrejection', e => { const m = (e.reason && e.reason.message) || String(e.reason); if (window.Swal) Swal.fire('حصل خطأ', escText(m), 'error'); });
+    let isRegistering = false, authReady = false, leaderboardSynced = '', adminListenersOn = false, lbQuery = null;
+    const quizOrder = {};
+    function detachAll(uid) {
+      ['users', 'online_users', 'alert', 'subjects', 'admin_logs', '.info/connected'].forEach(p => database.ref(p).off());
+      if (lbQuery) { lbQuery.off(); lbQuery = null; }
+      if (userDataRef) { userDataRef.off(); userDataRef = null; }
+      if (uid) database.ref('users/' + uid + '/privateAlert').off();
+      window._listenersReady = false; window._lvlSet = false; adminListenersOn = false; adminLogsListening = false; privateAlertListening = false; presenceInitialized = false; leaderboardSynced = '';
+      db = []; allUsersList = []; onlineUsersMap = {};
+    }
+    function _seenNow(e) { if (!currentUser) return; if (e && e.type === 'visibilitychange' && document.visibilityState !== 'hidden') return; database.ref('users/' + currentUser.uid + '/lastSeen').set(FB.database.ServerValue.TIMESTAMP); }
+    function syncLeaderboard(uid, d) { if (!d || d.isBanned) return; const sig = d.name + '|' + (d.score || 0) + '|' + (d.level || 1); if (sig === leaderboardSynced) return; leaderboardSynced = sig; database.ref('leaderboard/' + uid).update({ name: d.name, score: d.score || 0, level: d.level || 1 }); }
+    function listenToLeaderboard() { lbQuery = database.ref('leaderboard').orderByChild('score').limitToLast(5); lbQuery.on('value', snap => { const a = []; snap.forEach(c => { if (c.val() && c.val().name) a.push({ uid: c.key, ...c.val() }); }); a.sort((x, y) => (y.score || 0) - (x.score || 0)); renderLeaderboard(a); }); }
+    function syncAllLeaderboard() {
+      const up = {};
+      allUsersList.forEach(u => {
+        up['leaderboard/' + u.uid] = u.isBanned ? null : { name: u.name, score: u.score || 0, level: u.level || 1 };
+        const p = String(u.phone || '').replace(/\D/g, ''); if (p) up['phones/' + p] = u.uid;
+        const sv = u.solvedQuizzes || {}; Object.keys(sv).forEach(k => { const x = sv[k]; if (x === true || (x && x.status === 'correct')) up['users/' + u.uid + '/scoredQuizzes/' + k] = true; });
+      });
+      database.ref().update(up).then(() => { logAdminAction('مزامنة', 'مزامنة لوحة الشرف والأرقام'); Swal.fire('تم', 'تمت المزامنة بنجاح', 'success'); });
+    }
     function toggleTheme() {
         const body = document.body; const themeBtn = document.getElementById('theme-toggle-btn');
         if (body.classList.contains('light-mode')) { body.classList.remove('light-mode'); themeBtn.innerText = '🌞'; try { localStorage.setItem('theme', 'dark'); } catch (e) {} }
@@ -615,7 +646,7 @@
       return `منذ ${days} يوم`;
     }
 
-    function escapeHtml(str) { if (str === null || str === undefined) return ''; return String(str).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\n/g, '\\n').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+    function escapeHtml(str) { if (str === null || str === undefined) return ''; return String(str).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\r?\n/g, '\\n').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
     function escText(str) { if (str === null || str === undefined) return ''; return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
     /* يمنع روابط javascript: */
     function safeUrl(u) { try { const x = new URL(u); return (x.protocol === 'https:' || x.protocol === 'http:') ? x.href : '#'; } catch (e) { return '#'; } }
@@ -647,8 +678,8 @@
     function checkMaintenanceUI() {
       const overlay = document.getElementById('maintenance-overlay'); const mainSite = document.getElementById('main-site'); const cinematicHero = document.querySelector('.cinematic-hero');
       const isUserAdmin = currentStudentData && currentStudentData.isAdmin === true;
-      if (isMaintenanceActive && !isUserAdmin) { overlay.style.display = 'flex'; if (mainSite) mainSite.style.display = 'none'; if (cinematicHero) cinematicHero.style.display = 'none'; }
-      else { overlay.style.display = 'none'; if (mainSite) mainSite.style.display = 'block'; if (cinematicHero) cinematicHero.style.display = 'flex'; }
+      if (isMaintenanceActive && !isUserAdmin) { overlay.style.display = 'flex'; const ab = document.getElementById('maint-admin-btn'); if (ab) ab.style.display = currentUser ? 'none' : 'inline-block'; if (mainSite) mainSite.style.display = 'none'; if (cinematicHero) cinematicHero.style.display = 'none'; }
+      else { overlay.style.display = 'none'; if (authReady && !currentUser && !isRegistering) document.getElementById('auth-overlay').style.display = 'flex'; if (mainSite) mainSite.style.display = 'block'; if (cinematicHero) cinematicHero.style.display = 'flex'; }
     }
 
     function setMaintenance(enable) {
@@ -657,17 +688,25 @@
       Swal.fire('تم التحديث', enable ? 'تم إغلاق الموقع عن الطلاب وتفعيل الصيانة.' : 'تم فتح الموقع للجميع بنجاح.', 'success');
     }
 
+    function startSession(user) {
+      window._lastUid = user.uid;
+      database.ref('users/' + user.uid).once('value').then((snap) => {
+        const val = snap.val();
+        if (val && val.isBanned) { Swal.fire('محظور!', `⚠️ تم حظرك!<br>السبب: ${escText(val.banReason)}`, 'error'); logoutStudent(); return; }
+        currentUser = user; document.getElementById('auth-overlay').style.display = 'none';
+        if (val && !window._lvlSet) { window._lvlSet = true; switchLevel(val.level == 2 ? 2 : 1); }
+        loadStudentData(user.uid); listenToPrivateAlerts(user.uid);
+      }).catch((err) => { Swal.fire('تعذّر تحميل حسابك', escText(err.message), 'error'); auth.signOut(); });
+    }
     auth.onAuthStateChanged((user) => {
-      if (user) {
-        database.ref('users/' + user.uid).once('value', (snap) => {
-          const val = snap.val();
-          if (val && val.isBanned) { Swal.fire('محظور!', `⚠️ تم حظرك!\nالسبب: ${val.banReason}`, 'error'); logoutStudent(); return; }
-          currentUser = user; document.getElementById('auth-overlay').style.display = 'none'; loadStudentData(user.uid);
-          listenToPrivateAlerts(user.uid);
-        });
-      } else {
-        currentUser = null; currentStudentData = null; privateAlertListening = false; checkMaintenanceUI();
-        document.getElementById('auth-overlay').style.display = 'flex'; document.getElementById('user-greeting').innerHTML = '';
+      authReady = true;
+      if (isRegistering) return;
+      if (user) startSession(user);
+      else {
+        detachAll(window._lastUid);
+        currentUser = null; currentStudentData = null; checkMaintenanceUI();
+        document.getElementById('auth-overlay').style.display = isMaintenanceActive ? 'none' : 'flex'; document.getElementById('user-greeting').innerHTML = '';
+        document.getElementById('admin-panel').style.display = 'none';
       }
     });
 
@@ -693,8 +732,8 @@
       });
       if (heartbeatInterval) clearInterval(heartbeatInterval);
       heartbeatInterval = setInterval(() => { if (currentUser) userLastSeenRef.set(FB.database.ServerValue.TIMESTAMP); }, 60000);
-      document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden' && currentUser) userLastSeenRef.set(FB.database.ServerValue.TIMESTAMP); });
-      window.addEventListener('pagehide', () => { if (currentUser) userLastSeenRef.set(FB.database.ServerValue.TIMESTAMP); });
+      document.addEventListener('visibilitychange', _seenNow);
+      window.addEventListener('pagehide', _seenNow);
     }
 
     function updateDashboardStats() {
@@ -707,7 +746,7 @@
     function listenToUsersData() {
       database.ref('users').on('value', (snapshot) => {
         let users = snapshot.val() || {}; allUsersList = []; for (let id in users) allUsersList.push({ uid: id, ...users[id] });
-        allUsersList.sort((a, b) => (b.score || 0) - (a.score || 0)); updateDashboardStats(); renderLeaderboard(allUsersList.filter(u => !u.isBanned)); renderStudentsTable();
+        allUsersList.sort((a, b) => (b.score || 0) - (a.score || 0)); updateDashboardStats(); renderStudentsTable();
       });
     }
 
@@ -740,7 +779,7 @@
       });
     }
 
-    function csvCell(v) { return '"' + String(v === null || v === undefined ? '' : v).replace(/"/g, '""') + '"'; }
+    function csvCell(v) { let t = String(v === null || v === undefined ? '' : v); if (/^[=+\-@\t\r]/.test(t)) t = "'" + t; return '"' + t.replace(/"/g, '""') + '"'; }
     function exportStudentsCSV() {
         let csv = "ID,الاسم,رقم الهاتف,البريد الإلكتروني,النقاط,المستوى,الحالة\n";
         allUsersList.forEach(u => {
@@ -767,7 +806,7 @@
         preConfirm: () => [document.getElementById('swal-input1').value, document.getElementById('swal-input2').value, document.getElementById('swal-input3').value]
       });
       if (formValues && formValues[0]) {
-        database.ref('users/' + uid).update({ name: formValues[0], phone: formValues[1], studentId: formValues[2] });
+        database.ref('users/' + uid).update({ name: formValues[0], phone: formValues[1], studentId: formValues[2] }); database.ref('leaderboard/' + uid + '/name').set(formValues[0]);
         logAdminAction('تعديل طالب', `تم تعديل بيانات: ${formValues[0]}`);
         Swal.fire('تم', 'تم تحديث بيانات الطالب بنجاح', 'success');
       }
@@ -787,22 +826,33 @@
 
     async function handleAuth(e) {
       e.preventDefault();
+      const btn = document.getElementById('auth-submit-btn'); if (btn.disabled) return;
       const email = document.getElementById('auth-email').value.trim(); const pass = document.getElementById('auth-pass').value;
-      const name = document.getElementById('auth-name').value.trim(); const phone = document.getElementById('auth-phone').value.trim(); const level = document.getElementById('auth-level').value;
-      if (isRegisterMode) {
-        if (!name) return Swal.fire('تنبيه', "يرجى كتابة الاسم.", 'warning');
-        if (!phone || phone.length < 10) return Swal.fire('تنبيه', "رقم هاتف غير صحيح.", 'warning');
-        let createdUser = null;
-        try {
-          const res = await auth.createUserWithEmailAndPassword(email, pass); createdUser = res.user;
-          await createdUser.getIdToken(true); await new Promise(resolve => setTimeout(resolve, 400));
-          const snapshot = await database.ref('users').orderByChild('phone').equalTo(phone).once('value');
-          if (snapshot.exists()) { await createdUser.delete().catch(()=>{}); await auth.signOut().catch(()=>{}); return Swal.fire('خطأ', "هذا الرقم مسجل به حساب بالفعل!", 'error'); }
-          await database.ref('users/' + createdUser.uid).set({ name, phone, email, level: parseInt(level) || 1, score: 0, isBanned: false, createdAt: Date.now() });
-        } catch (err) { if (createdUser) await createdUser.delete().catch(()=>{}); Swal.fire('خطأ', err.message, 'error'); }
-      } else {
-        auth.signInWithEmailAndPassword(email, pass).catch(() => Swal.fire('خطأ', 'بيانات الدخول غير صحيحة', 'error'));
-      }
+      const name = document.getElementById('auth-name').value.trim(); const level = document.getElementById('auth-level').value;
+      const phone = document.getElementById('auth-phone').value.replace(/[\s\-+]/g, '').replace(/^002/, '').replace(/^20(?=1)/, '0');
+      btn.disabled = true;
+      try {
+        if (isRegisterMode) {
+          if (name.split(/\s+/).filter(Boolean).length < 2) return Swal.fire('تنبيه', 'اكتب اسمك الكامل (اسمين على الأقل).', 'warning');
+          if (!/^01[0125]\d{8}$/.test(phone)) return Swal.fire('تنبيه', 'رقم الهاتف غير صحيح (مثال: 01012345678).', 'warning');
+          if (pass.length < 6) return Swal.fire('تنبيه', 'كلمة المرور 6 حروف على الأقل.', 'warning');
+          isRegistering = true; let createdUser = null, ok = false;
+          try {
+            createdUser = (await auth.createUserWithEmailAndPassword(email, pass)).user;
+            const tr = await database.ref('phones/' + phone).transaction(cur => cur === null ? createdUser.uid : undefined).catch(() => ({ committed: false }));
+            if (!tr.committed) { await createdUser.delete().catch(() => {}); createdUser = null; return Swal.fire('خطأ', 'هذا الرقم مسجل به حساب بالفعل!', 'error'); }
+            const lvl = parseInt(level) || 1;
+            await database.ref().update({ ['users/' + createdUser.uid]: { name, phone, email, level: lvl, score: 0, isBanned: false, createdAt: Date.now() }, ['leaderboard/' + createdUser.uid]: { name, score: 0, level: lvl } });
+            ok = true;
+          } catch (err) {
+            if (createdUser) { await database.ref('phones/' + phone).remove().catch(() => {}); await createdUser.delete().catch(() => {}); }
+            return Swal.fire('خطأ', escText(err.message), 'error');
+          } finally { isRegistering = false; if (ok && auth.currentUser) startSession(auth.currentUser); }
+        } else {
+          try { await auth.signInWithEmailAndPassword(email, pass); }
+          catch (err) { Swal.fire('خطأ', ({ 'auth/too-many-requests': 'محاولات كثيرة، حاول بعد قليل.', 'auth/network-request-failed': 'تأكد من الإنترنت.' })[err.code] || 'بيانات الدخول غير صحيحة', 'error'); }
+        }
+      } finally { btn.disabled = false; }
     }
 
     async function handleForgotPassword() {
@@ -816,14 +866,14 @@
       userDataRef.on('value', (snap) => {
         currentStudentData = snap.val(); checkMaintenanceUI();
         if (currentStudentData) {
-          if (currentStudentData.isBanned) { Swal.fire('محظور!', `⚠️ تم حظرك!\nالسبب: ${currentStudentData.banReason}`, 'error'); logoutStudent(); return; }
-          document.getElementById('user-greeting').innerHTML = `👤 ${escText(currentStudentData.name)}`; setupPresence(uid, currentStudentData);
+          if (currentStudentData.isBanned) { Swal.fire('محظور!', `⚠️ تم حظرك!<br>السبب: ${escText(currentStudentData.banReason)}`, 'error'); logoutStudent(); return; }
+          document.getElementById('user-greeting').innerHTML = `👤 ${escText(currentStudentData.name)}`; setupPresence(uid, currentStudentData); syncLeaderboard(uid, currentStudentData);
           const adminBtn = document.getElementById('admin-toggle-btn');
-          if (currentStudentData.isAdmin === true) { adminBtn.style.display = 'inline-flex'; listenToAdminLogs(); } else { adminBtn.style.display = 'none'; document.getElementById('admin-panel').style.display = 'none'; }
+          if (currentStudentData.isAdmin === true) { adminBtn.style.display = 'inline-flex'; listenToAdminLogs(); if (!adminListenersOn) { adminListenersOn = true; listenToUsersData(); listenToOnlinePresence(); } } else { adminBtn.style.display = 'none'; document.getElementById('admin-panel').style.display = 'none'; }
         }
       });
       /* المستمعات العامة تُشغَّل مرة واحدة فقط (بدون تكرار بعد الخروج والدخول) */
-      if (!window._listenersReady) { window._listenersReady = true; listenToUsersData(); listenToAlerts(); listenToOnlinePresence(); listenToSubjects(); }
+      if (!window._listenersReady) { window._listenersReady = true; listenToAlerts(); listenToSubjects(); listenToLeaderboard(); }
     }
 
     function logoutStudent() {
@@ -836,7 +886,7 @@
 
     function showProfile() {
       if (!currentStudentData) return;
-      const isOnline = onlineUsersMap.hasOwnProperty(currentUser.uid);
+      const isOnline = true;
       const fallbackTime = currentStudentData.lastSeen || currentStudentData.createdAt;
       const lastSeenText = isOnline ? 'متصل الآن 🟢' : formatLastSeen(fallbackTime);
       const studentId = escText(getStudentShortId(currentUser.uid, currentStudentData.studentId));
@@ -918,10 +968,10 @@
 
     async function banStudent(uid, n) {
       const { value: r } = await Swal.fire({title: `سبب الحظر لـ ${n}`, input: 'text', showCancelButton: true, confirmButtonText: 'حظر', confirmButtonColor: '#ef4444'});
-      if (r) { database.ref('users/'+uid).update({isBanned:true, banReason:r, score:0}); logAdminAction('حظر طالب', `اسم الطالب: ${n} | السبب: ${r}`); }
+      if (r) { database.ref('users/'+uid).update({isBanned:true, banReason:r, score:0}); database.ref('leaderboard/'+uid).remove(); logAdminAction('حظر طالب', `اسم الطالب: ${n} | السبب: ${r}`); }
     }
     function unbanStudent(uid, n) { Swal.fire({title: `فك الحظر عن ${n}؟`, showCancelButton: true}).then((r)=>{ if(r.isConfirmed){ database.ref('users/'+uid).update({isBanned:false, banReason:null}); logAdminAction('فك حظر طالب', `اسم الطالب: ${n}`); }}); }
-    function resetAllScores() { Swal.fire({title: "تصفير نقاط جميع الطلاب؟", icon:'warning', showCancelButton: true, confirmButtonColor: '#ef4444'}).then((r)=>{ if(r.isConfirmed) { let up={}; allUsersList.forEach(u => { up[u.uid+'/score']=0; up[u.uid+'/solvedQuizzes']=null; }); database.ref('users').update(up); logAdminAction('تصفير الدفعة', 'تم تصفير النقاط لجميع الطلاب'); Swal.fire('تم','تم تصفير الدفعة بنجاح','success'); } }); }
+    function resetAllScores() { Swal.fire({title: "تصفير نقاط جميع الطلاب؟", icon:'warning', showCancelButton: true, confirmButtonColor: '#ef4444'}).then((r)=>{ if(r.isConfirmed) { let up={}, lb={}; allUsersList.forEach(u => { up[u.uid+'/score']=0; up[u.uid+'/solvedQuizzes']=null; up[u.uid+'/scoredQuizzes']=null; if (!u.isBanned) lb['leaderboard/'+u.uid+'/score']=0; }); database.ref('users').update(up); database.ref().update(lb); logAdminAction('تصفير الدفعة', 'تم تصفير النقاط لجميع الطلاب'); Swal.fire('تم','تم تصفير الدفعة بنجاح','success'); } }); }
 
     function listenToAlerts() { database.ref('alert').on('value', (snap) => { let msg = snap.val(); let banner = document.getElementById("alert-banner"); if (msg) { document.getElementById("alert-text-content").innerText = msg; banner.style.display = "block"; } else banner.style.display = "none"; }); }
 
@@ -935,7 +985,7 @@
       database.ref('subjects').on('value', (snap) => {
         const val = snap.val() || {};
         db = Object.keys(val).map(id => { const s = val[id]; return { id, level: s.level, name: s.name, desc: s.desc, images: s.images ? Object.keys(s.images).map(k=>({key:k,...s.images[k]})) : [], files: s.files ? Object.keys(s.files).map(k=>({key:k,...s.files[k]})) : [], quizzes: s.quizzes ? Object.keys(s.quizzes).map(k=>({key:k,...s.quizzes[k]})) : [] }; });
-        if (!currentSubjectId) renderHome(); else { const exist = db.find(s=>s.id===currentSubjectId); if (exist) openSubject(currentSubjectId); else showHome(); }
+        if (!currentSubjectId) renderHome(); else { const exist = db.find(s=>s.id===currentSubjectId); if (exist) openSubject(currentSubjectId, true); else showHome(); }
         updateAdminSelects(); updateDashboardStats();
       });
     }
@@ -972,18 +1022,19 @@
         const sId = document.getElementById("ai-quiz-subj-select").value; const jsonText = document.getElementById("ai-quiz-data").value.trim(); const subj = db.find(x=>x.id===sId);
         if (!jsonText) return Swal.fire('تنبيه', 'برجاء لصق الكود أولاً', 'warning');
         try {
-            const questions = JSON.parse(jsonText);
+            const questions = JSON.parse(jsonText.replace(/^```(?:json)?/i, '').replace(/```$/, '').trim());
             if (!Array.isArray(questions)) throw new Error("الكود يجب أن يبدأ بـ [ وينتهي بـ ] (مصفوفة)");
-            let added = 0;
+            let added = 0, skipped = 0; const up = {}; const base = database.ref('subjects/' + sId + '/quizzes');
             questions.forEach(q => {
-                if (q.q && q.opt1 && q.opt2 && q.opt3 && q.opt4 && q.ans) {
-                    database.ref('subjects/'+sId+'/quizzes').push({ q: q.q, opt1: q.opt1, opt2: q.opt2, opt3: q.opt3, opt4: q.opt4, ans: q.ans.toString() });
-                    added++;
-                }
+                const ans = q && q.ans !== undefined ? String(q.ans).trim() : '';
+                if (q && q.q && q.opt1 && q.opt2 && q.opt3 && q.opt4 && ['1','2','3','4'].includes(ans)) { up[base.push().key] = { q: String(q.q), opt1: String(q.opt1), opt2: String(q.opt2), opt3: String(q.opt3), opt4: String(q.opt4), ans }; added++; } else skipped++;
             });
-            logAdminAction('الرفع الذكي للأسئلة', `تم رفع ${added} سؤال | للمادة: ${subj?subj.name:''}`);
-            Swal.fire('تم يا بطل!', `تم إضافة ${added} سؤال للموقع بنجاح في أقل من ثانية.`, 'success');
+            if (!added) throw new Error("لا توجد أسئلة صالحة (تأكد أن ans رقم من 1 إلى 4)");
+            base.update(up).then(() => {
+                        logAdminAction('الرفع الذكي للأسئلة', `تم رفع ${added} سؤال | للمادة: ${subj?subj.name:''}`);
+            Swal.fire('تم يا بطل!', `تم إضافة ${added} سؤال بنجاح.${skipped ? ' (تم تجاهل ' + skipped + ' سؤال ناقص/غير صحيح)' : ''}`, 'success');
             document.getElementById("ai-quiz-data").value = '';
+            });
         } catch (error) {
             Swal.fire({ title: 'خطأ في الكود', html: 'تأكد إنك نسخت الكود زي ما الذكاء الاصطناعي عمله بالظبط بدون أي نقص.<br><br><span style="font-size:12px; color:#ef4444;">تفاصيل الخطأ: ' + escText(error.message) + '</span>', icon: 'error' });
         }
@@ -1004,7 +1055,7 @@
     function deleteQuiz(s, q, qName) { Swal.fire({title: "حذف السؤال؟", showCancelButton: true, confirmButtonColor: '#ef4444'}).then((r)=>{ if(r.isConfirmed) { database.ref('subjects/'+s+'/quizzes/'+q).remove(); logAdminAction('حذف سؤال', `السؤال: ${qName}`); }}); }
     function deleteSubject(s, n) { Swal.fire({title: `حذف المادة ${n} نهائياً؟`, icon:'warning', showCancelButton: true, confirmButtonColor: '#ef4444'}).then((r)=>{ if(r.isConfirmed) { database.ref('subjects/'+s).remove().then(()=>{ logAdminAction('حذف مادة', `المادة: ${n}`); if(currentSubjectId===s) showHome(); }); }}); }
 
-    function showHome() { document.getElementById('view-home').style.display = 'block'; document.getElementById('view-subject').style.display = 'none'; document.getElementById('search-box').value = ''; currentSubjectId = null; renderHome(); updateAdminSelects(); window.scrollTo({ top: document.getElementById('main-site').offsetTop, behavior: 'smooth' }); }
+    function showHome(noScroll) { document.getElementById('view-home').style.display = 'block'; document.getElementById('view-subject').style.display = 'none'; document.getElementById('search-box').value = ''; currentSubjectId = null; renderHome(); updateAdminSelects(); if (!noScroll) window.scrollTo({ top: document.getElementById('main-site').offsetTop, behavior: 'smooth' }); }
     function switchLevel(lvl) { activeLevel = lvl; document.getElementById('tab-lvl-1').classList.toggle('active', lvl===1); document.getElementById('tab-lvl-2').classList.toggle('active', lvl===2); document.getElementById('current-level-heading').innerText = lvl===1 ? "مواد المستوى الأول" : "مواد المستوى الثاني"; document.getElementById('search-box').value = ''; renderHome(); }
 
     function filterSubjects() { clearTimeout(searchTimeout); searchTimeout = setTimeout(() => { renderHome(document.getElementById('search-box').value.toLowerCase()); }, 300); }
@@ -1032,13 +1083,13 @@
                 database.ref('users/' + currentUser.uid + '/solvedQuizzes').once('value').then(snap => {
                     let currentSolved = snap.val() || {}; let updates = {};
                     quizKeys.forEach(k => { if (currentSolved[k]) updates[k] = null; });
-                    database.ref('users/' + currentUser.uid + '/solvedQuizzes').update(updates).then(() => { Swal.fire('تم!', 'تم تجهيز الامتحان من جديد وبترتيب مختلف.', 'success').then(() => { openSubject(currentSubjectId); }); });
+                    Promise.resolve(Object.keys(updates).length ? database.ref('users/' + currentUser.uid + '/solvedQuizzes').update(updates) : null).then(() => { delete quizOrder[currentSubjectId]; Swal.fire('تم!', 'تم تجهيز الامتحان من جديد وبترتيب مختلف.', 'success').then(() => { openSubject(currentSubjectId); }); });
                 });
             }
         });
     }
 
-    function openSubject(id) {
+    function openSubject(id, silent) {
       currentSubjectId = id; const subj = db.find(s => s.id === id); if (!subj) return showHome();
       document.getElementById('view-home').style.display = 'none'; document.getElementById('view-subject').style.display = 'block'; document.getElementById('subject-title').innerText = "📚 " + subj.name; document.getElementById('subject-desc').innerText = subj.desc;
       const isAdmin = currentStudentData && currentStudentData.isAdmin === true; const solvedQuizzes = (currentStudentData && currentStudentData.solvedQuizzes) ? currentStudentData.solvedQuizzes : {};
@@ -1054,7 +1105,8 @@
       if (subj.files.length === 0) document.getElementById('subject-files').innerHTML = '<div class="empty-state z-content">لا توجد ملفات.</div>';
       else { let filesHtml = renderFilesCategory(subj.files, 'محاضرات', '📖', isAdmin, subj.id) + renderFilesCategory(subj.files, 'سكاشن', '🔬', isAdmin, subj.id) + renderFilesCategory(subj.files, 'امتحانات', '📝', isAdmin, subj.id); document.getElementById('subject-files').innerHTML = filesHtml || '<div class="empty-state z-content">لا توجد ملفات مصنفة.</div>'; }
 
-      let shuffledQuizzes = shuffleArray([...subj.quizzes]);
+      if (!silent || !quizOrder[id]) quizOrder[id] = shuffleArray(subj.quizzes.map(q => q.key));
+      let shuffledQuizzes = quizOrder[id].map(k => subj.quizzes.find(q => q.key === k)).filter(Boolean).concat(subj.quizzes.filter(q => !quizOrder[id].includes(q.key)));
 
       document.getElementById('subject-quizzes').innerHTML = shuffledQuizzes.length === 0 ? '<div class="empty-state z-content">بنك الأسئلة فارغ حالياً.</div>' : shuffledQuizzes.map((q, idx) => {
         const sq = solvedQuizzes[q.key]; const isSolved = !!sq; const status = sq ? (sq.status || (sq === true ? 'correct' : null)) : null; const selectedOpt = sq ? sq.selected : null;
@@ -1067,7 +1119,7 @@
         <div style="display:flex; justify-content:space-between; align-items:center;">${badgeHtml}</div>
         <div class="quiz-options z-content" style="margin-top:16px;">${optionsHtml}</div></div>`;
       }).join('');
-      window.scrollTo({ top: document.getElementById('main-site').offsetTop, behavior: 'smooth' });
+      if (!silent) window.scrollTo({ top: document.getElementById('main-site').offsetTop, behavior: 'smooth' });
     }
 
     function checkAnswer(btn, selected, correct, quizKey) {
@@ -1078,9 +1130,8 @@
         btn.style.background = "#15803d"; btn.style.borderColor = "#22c55e"; btn.style.opacity = "1"; btn.innerHTML += " ✔️";
         buttons.forEach(b => { if (b !== btn) b.style.opacity = ".5"; });
         if (currentUser && !isAlreadySolved) {
-            database.ref('users/'+currentUser.uid+'/score').transaction(s => (s||0)+1);
-            database.ref('users/'+currentUser.uid+'/solvedQuizzes/'+quizKey).set(solveData);
-            Swal.fire({title: 'إجابة صحيحة!', text: 'تمت إضافة نقطة لرصيدك 🏆', icon: 'success', timer: 1500, showConfirmButton: false});
+            const uu = 'users/'+currentUser.uid, already = !!(currentStudentData && currentStudentData.scoredQuizzes && currentStudentData.scoredQuizzes[quizKey]); const up = {}; up[uu+'/solvedQuizzes/'+quizKey] = solveData; if (!already) { up[uu+'/scoredQuizzes/'+quizKey] = true; up[uu+'/score'] = FB.database.ServerValue.increment(1); up['leaderboard/'+currentUser.uid+'/score'] = FB.database.ServerValue.increment(1); } database.ref().update(up);
+            Swal.fire({title: 'إجابة صحيحة!', text: (already ? 'صحيح! (نقطة هذا السؤال احتُسبت لك سابقاً)' : 'تمت إضافة نقطة لرصيدك 🏆'), icon: 'success', timer: 1500, showConfirmButton: false});
         }
       } else {
         btn.style.background = "#b91c1c"; btn.style.borderColor = "#ef4444"; btn.style.opacity = "1"; btn.innerHTML += " ❌";
@@ -1097,7 +1148,8 @@
       document.getElementById('phone-group').style.display = 'none';
       document.getElementById('level-group').style.display = 'none';
       initTheme();
-      showHome();
+      showHome(true);
+      document.querySelectorAll('a[href="#"][target="_blank"]').forEach(a => a.style.display = 'none');
     };
   </script>
 </body>
