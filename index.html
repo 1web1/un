@@ -1274,6 +1274,22 @@
       if (!r.ok) throw new Error('HTTP ' + r.status);
       return true;
     }
+    /* لو فيه بيانات حجز قديمة عند الطالب (لبحث اتمسح/اتحرر)، ننضفها عشان يقدر يحجز */
+    async function __healStaleTopic() {
+      try {
+        const uid = currentUser.uid, t = encodeURIComponent(await currentUser.getIdToken());
+        const r = await fetch(__DB + '/users/' + uid + '/researchTopic.json?auth=' + t, { cache: 'no-store' });
+        if (!r.ok) return false;
+        const tid = await r.json(); if (!tid) return false;
+        const g = await fetch(__DB + '/research_topics/' + encodeURIComponent(tid) + '/claimedBy.json?auth=' + t, { cache: 'no-store' });
+        if (!g.ok) return false;
+        if ((await g.json()) === uid) return 'mine';
+        const up = {}; up['users/' + uid + '/researchTopic'] = null; up['users/' + uid + '/researchTopicName'] = null;
+        await __restPatch(up);
+        if (currentStudentData) { currentStudentData.researchTopic = null; currentStudentData.researchTopicName = null; }
+        return true;
+      } catch (e) { return false; }
+    }
     async function __restPatch(up) {
       const t = await currentUser.getIdToken();
       const r = await fetch(__DB + '/.json?auth=' + encodeURIComponent(t), { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(up) });
@@ -1417,13 +1433,21 @@
           const uid = currentUser.uid, up = {};
           up['research_topics/' + id + '/claimedBy'] = uid; up['research_topics/' + id + '/claimedByName'] = currentStudentData.name; up['research_topics/' + id + '/claimedAt'] = { '.sv': 'timestamp' };
           up['users/' + uid + '/researchTopic'] = id; up['users/' + uid + '/researchTopicName'] = name;
-          const tk = await currentUser.getIdToken();
-          const resp = await fetch(__DB + '/.json?auth=' + encodeURIComponent(tk), { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(up) });
+          const send = async () => fetch(__DB + '/.json?auth=' + encodeURIComponent(await currentUser.getIdToken()), { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(up) });
+          let resp = await send();
+          if (!resp.ok && (resp.status === 401 || resp.status === 403)) {
+            await __fetchTopics();
+            const cur0 = researchTopics.find(x => x.key === id);
+            if (cur0 && cur0.claimedBy && cur0.claimedBy !== uid) { Swal.fire('للأسف اتأخرت!', 'حد تاني حجز البحث ده قبلك بلحظة.', 'error'); return; }
+            const heal = await __healStaleTopic();
+            if (heal === 'mine') { Swal.fire('عندك بحث بالفعل', 'انت حاجز بحث قبل كده. لازم تلغيه الأول لو عايز تغيّره.', 'warning'); __fetchTopics(); return; }
+            if (heal === true) resp = await send();
+          }
           if (!resp.ok) {
             await __fetchTopics();
             const cur = researchTopics.find(x => x.key === id);
             if (cur && cur.claimedBy && cur.claimedBy !== uid) { Swal.fire('للأسف اتأخرت!', 'حد تاني حجز البحث ده قبلك بلحظة.', 'error'); return; }
-            if (resp.status === 401 || resp.status === 403) { Swal.fire('تعذّر الحجز', 'الحجز اترفض من الصلاحيات (Rules). كلّم الأدمن.', 'error'); return; }
+            if (resp.status === 401 || resp.status === 403) { Swal.fire('تعذّر الحجز', 'الحجز اترفض من الصلاحيات (Rules) - كود ' + resp.status + '. ابعت الرسالة دي للأدمن.', 'error'); return; }
             throw new Error('HTTP ' + resp.status);
           }
           currentStudentData.researchTopic = id; currentStudentData.researchTopicName = name;
