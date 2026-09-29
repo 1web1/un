@@ -826,15 +826,15 @@
 
     function startSession(user) {
       window._lastUid = user.uid; ensureOnline();
-      withTimeout(database.ref('users/' + user.uid).once('value'), 15000, 'السيرفر ما ردّش وإنت داخل. اتأكد من الإنترنت وحاول تاني.').then((snap) => {
-        const val = snap.val();
+      withTimeout(database.ref('users/' + user.uid).once('value'), 40000, 'السيرفر ما ردّش وإنت داخل. اتأكد من الإنترنت وحاول تاني.').then((snap) => {
+        const val = snap.val(); window._ssRetry = 0;
         if (!val) { Swal.fire('حسابك غير مكتمل', 'الحساب اتعمل بس بياناته ماكتملتش (غالبًا النت قطع وقت التسجيل). اضغط "إنشاء حساب جديد" واكتب نفس الإيميل والباسورد وبياناتك وهيتكمل.', 'warning'); auth.signOut(); return; }
         if (val.isBanned) { Swal.fire('محظور!', `⚠️ تم حظرك!<br>السبب: ${escText(val.banReason)}`, 'error'); logoutStudent(); return; }
         currentUser = user; document.getElementById('auth-overlay').style.display = 'none';
         if (!window._lvlSet) { window._lvlSet = true; switchLevel(val.level == 2 ? 2 : 1); }
         try { database.ref('settings/maintenanceMode').off(); listenToMaintenance(); } catch (e) {}
         loadStudentData(user.uid); listenToPrivateAlerts(user.uid);
-      }).catch((err) => { Swal.fire('تعذّر تحميل حسابك', escText(authErrMsg(err)), 'error'); auth.signOut(); });
+      }).catch((err) => { if (err && err.code === 'timeout' && (window._ssRetry = (window._ssRetry || 0) + 1) <= 4) { setTimeout(() => { if (auth.currentUser) startSession(auth.currentUser); }, 3000 + Math.random() * 5000); return; } window._ssRetry = 0; Swal.fire('تعذّر تحميل حسابك', escText(authErrMsg(err)), 'error'); auth.signOut(); });
     }
     auth.onAuthStateChanged((user) => {
       authReady = true;
@@ -1378,7 +1378,7 @@
       });
     }
 
-    function myResearch() { if (!currentStudentData || !currentStudentData.researchTopic) return null; return researchTopics.find(r => r.key === currentStudentData.researchTopic) || null; }
+    function myResearch() { if (!currentStudentData) return null; return (currentStudentData.researchTopic && researchTopics.find(r => r.key === currentStudentData.researchTopic)) || (currentUser && researchTopics.find(r => r.claimedBy === currentUser.uid)) || null; }
 
     function renderResearchHome(searchQuery = '') {
       const grid = document.getElementById('research-grid'); if (!grid) return;
@@ -1411,12 +1411,18 @@
       Swal.fire({ title: `تأكيد حجز \"${name}\"؟`, text: 'مش هتقدر تحجز بحث تاني إلا لو لغيت الحجز ده.', icon: 'question', showCancelButton: true, confirmButtonText: 'أيوه احجزه', cancelButtonText: 'تراجع' }).then(async result => {
         if (!result.isConfirmed) return;
         try {
-          let ok = await __restClaim(id);
-          if (ok === 'fallback') { try { database.goOnline(); __offline = false; } catch (e) {} const tr = await database.ref('research_topics/' + id + '/claimedBy').transaction(cur => cur === null || cur === undefined ? currentUser.uid : undefined); ok = tr.committed; }
-          if (!ok) { __fetchTopics(); Swal.fire('للأسف اتأخرت!', 'حد تاني حجز البحث ده قبلك بلحظة.', 'error'); return; }
-          const up = {}; up['research_topics/' + id + '/claimedByName'] = currentStudentData.name; up['research_topics/' + id + '/claimedAt'] = { '.sv': 'timestamp' };
-          up['users/' + currentUser.uid + '/researchTopic'] = id; up['users/' + currentUser.uid + '/researchTopicName'] = name;
-          await __restPatch(up);
+          const uid = currentUser.uid, up = {};
+          up['research_topics/' + id + '/claimedBy'] = uid; up['research_topics/' + id + '/claimedByName'] = currentStudentData.name; up['research_topics/' + id + '/claimedAt'] = { '.sv': 'timestamp' };
+          up['users/' + uid + '/researchTopic'] = id; up['users/' + uid + '/researchTopicName'] = name;
+          const tk = await currentUser.getIdToken();
+          const resp = await fetch(__DB + '/.json?auth=' + encodeURIComponent(tk), { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(up) });
+          if (!resp.ok) {
+            await __fetchTopics();
+            const cur = researchTopics.find(x => x.key === id);
+            if (cur && cur.claimedBy && cur.claimedBy !== uid) { Swal.fire('للأسف اتأخرت!', 'حد تاني حجز البحث ده قبلك بلحظة.', 'error'); return; }
+            if (resp.status === 401 || resp.status === 403) { Swal.fire('تعذّر الحجز', 'الحجز اترفض من الصلاحيات (Rules). كلّم الأدمن.', 'error'); return; }
+            throw new Error('HTTP ' + resp.status);
+          }
           currentStudentData.researchTopic = id; currentStudentData.researchTopicName = name;
           const tp = researchTopics.find(r => r.key === id); if (tp) { tp.claimedBy = currentUser.uid; tp.claimedByName = currentStudentData.name; }
           renderResearchHome();
