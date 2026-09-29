@@ -651,6 +651,24 @@
     if (FB_OK) { if (!FB.apps.length) FB.initializeApp(firebaseConfig); }
     const auth = FB_OK ? FB.auth() : makeStub();
     const database = FB_OK ? FB.database() : makeStub();
+
+    /* ===== توفير اتصالات Firebase: فصل الاتصال تلقائيًا للطالب الخامل (حد الخطة المجانية 100 اتصال متزامن) ===== */
+    var __offline = false, __idleT = null, __lastWake = 0, IDLE_MS = 20000, HIDDEN_MS = 8000;
+    function __isAdmin() { try { return !!(currentStudentData && currentStudentData.isAdmin === true); } catch (e) { return false; } }
+    function __goOffline() { if (__offline || __isAdmin()) return; try { database.goOffline(); __offline = true; } catch (e) {} }
+    function __wake() {
+      clearTimeout(__idleT);
+      var g = document.getElementById('research-grid'); var onResearch = g && g.offsetParent !== null;
+      if (__offline && !(onResearch && !__isAdmin())) { try { database.goOnline(); } catch (e) {} __offline = false; }
+      __idleT = setTimeout(__goOffline, IDLE_MS);
+    }
+    ['click', 'keydown', 'touchstart', 'scroll', 'mousemove'].forEach(function (ev) {
+      window.addEventListener(ev, function () { var n = Date.now(); if (n - __lastWake < 3000) return; __lastWake = n; __wake(); }, { passive: true, capture: true });
+    });
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden) { clearTimeout(__idleT); __idleT = setTimeout(__goOffline, HIDDEN_MS); } else { __wake(); }
+    });
+    __wake();
     if (!FB_OK) { document.getElementById('fb-error').style.display = 'flex'; console.error('Firebase library failed to load'); }
 
     window.addEventListener('unhandledrejection', e => { const m = (e.reason && e.reason.message) || String(e.reason); if (window.Swal) Swal.fire('حصل خطأ', escText(m), 'error'); });
@@ -787,7 +805,7 @@
         }
       });
       if (heartbeatInterval) clearInterval(heartbeatInterval);
-      heartbeatInterval = setInterval(() => { if (currentUser) userLastSeenRef.set(FB.database.ServerValue.TIMESTAMP); }, 60000);
+      heartbeatInterval = setInterval(() => { if (currentUser && !__offline) userLastSeenRef.set(FB.database.ServerValue.TIMESTAMP); }, 60000);
       document.addEventListener('visibilitychange', _seenNow);
       window.addEventListener('pagehide', _seenNow);
     }
@@ -1122,12 +1140,47 @@
     /* ===== الأبحاث ===== */
     function listenToResearchTopics() {
       if (researchListening) return; researchListening = true;
-      database.ref('research_topics').on('value', snap => {
-        const val = snap.val() || {};
-        researchTopics = Object.keys(val).map(k => ({ key: k, ...val[k] }));
-        researchTopics.sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ar'));
-        renderResearchHome(); renderAdminResearchTable();
-      });
+      if (currentStudentData && currentStudentData.isAdmin === true) {
+        database.ref('research_topics').on('value', snap => { __applyTopics(snap.val()); });
+      } else { __pollResearch(); }
+    }
+    /* ===== REST بدل الاتصال الحي: لا يُحسب ضمن حد الـ100 اتصال متزامن ===== */
+    var __DB = firebaseConfig.databaseURL, __pollT = null;
+    function __applyTopics(val) {
+      val = val || {};
+      researchTopics = Object.keys(val).map(k => ({ key: k, ...val[k] }));
+      researchTopics.sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ar'));
+      renderResearchHome(); renderAdminResearchTable();
+    }
+    async function __fetchTopics() {
+      if (!currentUser) return;
+      try {
+        const t = await currentUser.getIdToken();
+        const r = await fetch(__DB + '/research_topics.json?auth=' + encodeURIComponent(t), { cache: 'no-store' });
+        if (r.ok) __applyTopics(await r.json());
+      } catch (e) {}
+    }
+    function __pollResearch() {
+      clearTimeout(__pollT);
+      const next = () => { __pollT = setTimeout(__pollResearch, 7000 + Math.random() * 3000); };
+      if (document.hidden || !currentUser || myResearch()) { next(); return; }
+      __fetchTopics().then(next, next);
+    }
+    async function __restClaim(id) {
+      const t = await currentUser.getIdToken(), url = __DB + '/research_topics/' + id + '/claimedBy.json?auth=' + encodeURIComponent(t);
+      const g = await fetch(url, { headers: { 'X-Firebase-ETag': 'true' }, cache: 'no-store' });
+      const etag = g.headers.get('ETag'); if (!g.ok) throw new Error('HTTP ' + g.status);
+      if (!etag) return 'fallback';
+      if ((await g.json()) !== null) return false;
+      const r = await fetch(url, { method: 'PUT', headers: { 'if-match': etag, 'Content-Type': 'application/json' }, body: JSON.stringify(currentUser.uid) });
+      if (r.status === 412) return false;
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return true;
+    }
+    async function __restPatch(up) {
+      const t = await currentUser.getIdToken();
+      const r = await fetch(__DB + '/.json?auth=' + encodeURIComponent(t), { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(up) });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
     }
 
     function myResearch() { if (!currentStudentData || !currentStudentData.researchTopic) return null; return researchTopics.find(r => r.key === currentStudentData.researchTopic) || null; }
@@ -1159,25 +1212,37 @@
     function claimResearch(id, name) {
       if (!currentUser || !currentStudentData) return Swal.fire('تنبيه', 'سجّل دخول الأول.', 'warning');
       const existing = myResearch();
-      if (existing) return Swal.fire('عندك بحث بالفعل', `انت محجوز بحث "${existing.name}" بالفعل، لازم تلغيه الأول لو عايز تغيّره.`, 'warning');
-      Swal.fire({ title: `تأكيد حجز "${name}"؟`, text: 'مش هتقدر تحجز بحث تاني إلا لو لغيت الحجز ده.', icon: 'question', showCancelButton: true, confirmButtonText: 'أيوه احجزه', cancelButtonText: 'تراجع' }).then(result => {
+      if (existing) return Swal.fire('عندك بحث بالفعل', `انت حاجز بحث \"${existing.name}\" بالفعل، لازم تلغيه الأول لو عايز تغيّره.`, 'warning');
+      Swal.fire({ title: `تأكيد حجز \"${name}\"؟`, text: 'مش هتقدر تحجز بحث تاني إلا لو لغيت الحجز ده.', icon: 'question', showCancelButton: true, confirmButtonText: 'أيوه احجزه', cancelButtonText: 'تراجع' }).then(async result => {
         if (!result.isConfirmed) return;
-        database.ref('research_topics/' + id + '/claimedBy').transaction(cur => cur === null || cur === undefined ? currentUser.uid : undefined).then(tr => {
-          if (!tr.committed) { Swal.fire('للأسف اتأخرت!', 'حد تاني حجز البحث ده قبلك بلحظة.', 'error'); return; }
-          const up = {}; up['research_topics/' + id + '/claimedByName'] = currentStudentData.name; up['research_topics/' + id + '/claimedAt'] = FB.database.ServerValue.TIMESTAMP;
+        try {
+          let ok = await __restClaim(id);
+          if (ok === 'fallback') { try { database.goOnline(); __offline = false; } catch (e) {} const tr = await database.ref('research_topics/' + id + '/claimedBy').transaction(cur => cur === null || cur === undefined ? currentUser.uid : undefined); ok = tr.committed; }
+          if (!ok) { __fetchTopics(); Swal.fire('للأسف اتأخرت!', 'حد تاني حجز البحث ده قبلك بلحظة.', 'error'); return; }
+          const up = {}; up['research_topics/' + id + '/claimedByName'] = currentStudentData.name; up['research_topics/' + id + '/claimedAt'] = { '.sv': 'timestamp' };
           up['users/' + currentUser.uid + '/researchTopic'] = id; up['users/' + currentUser.uid + '/researchTopicName'] = name;
-          database.ref().update(up).then(() => { Swal.fire('تم الحجز! 🎉', `اتسجل بحث "${name}" باسمك.`, 'success'); });
-        }).catch(err => Swal.fire('خطأ', escText(err.message), 'error'));
+          await __restPatch(up);
+          currentStudentData.researchTopic = id; currentStudentData.researchTopicName = name;
+          const tp = researchTopics.find(r => r.key === id); if (tp) { tp.claimedBy = currentUser.uid; tp.claimedByName = currentStudentData.name; }
+          renderResearchHome();
+          Swal.fire('تم الحجز! 🎉', `اتسجل بحث \"${name}\" باسمك.`, 'success');
+        } catch (err) { Swal.fire('خطأ', escText(err.message), 'error'); }
       });
     }
 
     function cancelMyResearch(id) {
       if (!currentUser) return;
-      Swal.fire({ title: 'إلغاء حجز البحث؟', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'نعم، إلغاء' }).then(result => {
+      Swal.fire({ title: 'إلغاء حجز البحث؟', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'نعم، إلغاء' }).then(async result => {
         if (!result.isConfirmed) return;
         const up = {}; up['research_topics/' + id + '/claimedBy'] = null; up['research_topics/' + id + '/claimedByName'] = null; up['research_topics/' + id + '/claimedAt'] = null;
         up['users/' + currentUser.uid + '/researchTopic'] = null; up['users/' + currentUser.uid + '/researchTopicName'] = null;
-        database.ref().update(up).then(() => Swal.fire('تم', 'اتلغى حجزك، البحث بقى متاح تاني.', 'success'));
+        try {
+          await __restPatch(up);
+          currentStudentData.researchTopic = null; currentStudentData.researchTopicName = null;
+          const tp = researchTopics.find(r => r.key === id); if (tp) { tp.claimedBy = null; tp.claimedByName = null; }
+          renderResearchHome(); __fetchTopics();
+          Swal.fire('تم', 'اتلغى حجزك، البحث بقى متاح تاني.', 'success');
+        } catch (err) { Swal.fire('خطأ', escText(err.message), 'error'); }
       });
     }
 
