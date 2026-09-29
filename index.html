@@ -652,7 +652,7 @@
     let adminLogsListening = false, isMaintenanceActive = false, privateAlertListening = false;
     let db = [], currentSubjectId = null, userDataRef = null, searchTimeout = null;
     let researchTopics = [], researchSearchTimeout = null, researchListening = false;
-    let researchRequests = [], myRequest = null;
+    let researchRequests = [], myRequest = null, adminResearchOn = false;
     let presenceInitialized = false, heartbeatInterval = null;
 
     /* ===== تهيئة Firebase بأمان ===== */
@@ -737,7 +737,7 @@
 
     const quizOrder = {};
     function detachAll(uid) {
-      ['users', 'online_users', 'alert', 'subjects', 'admin_logs', '.info/connected'].forEach(p => database.ref(p).off());
+      ['users', 'online_users', 'alert', 'subjects', 'admin_logs', 'research_topics', 'research_requests', '.info/connected'].forEach(p => database.ref(p).off()); adminResearchOn = false; researchRequests = [];
       if (lbQuery) { lbQuery.off(); lbQuery = null; }
       if (userDataRef) { userDataRef.off(); userDataRef = null; }
       if (uid) database.ref('users/' + uid + '/privateAlert').off();
@@ -1041,7 +1041,7 @@
           if (currentStudentData.isBanned) { Swal.fire('محظور!', `⚠️ تم حظرك!<br>السبب: ${escText(currentStudentData.banReason)}`, 'error'); logoutStudent(); return; }
           document.getElementById('user-greeting').innerHTML = `👤 ${escText(currentStudentData.name)}`; setupPresence(uid, currentStudentData); syncLeaderboard(uid, currentStudentData);
           const adminBtn = document.getElementById('admin-toggle-btn');
-          if (currentStudentData.isAdmin === true) { adminBtn.style.display = 'inline-flex'; listenToAdminLogs(); if (!adminListenersOn) { adminListenersOn = true; listenToUsersData(); listenToOnlinePresence(); } } else { adminBtn.style.display = 'none'; document.getElementById('admin-panel').style.display = 'none'; }
+          if (currentStudentData.isAdmin === true) { adminBtn.style.display = 'inline-flex'; listenToAdminLogs(); if (!adminListenersOn) { adminListenersOn = true; listenToUsersData(); listenToOnlinePresence(); } listenToAdminResearch(); } else { adminBtn.style.display = 'none'; document.getElementById('admin-panel').style.display = 'none'; }
         }
         renderResearchHome();
       });
@@ -1230,10 +1230,15 @@
     /* ===== الأبحاث ===== */
     function listenToResearchTopics() {
       if (researchListening) return; researchListening = true;
-      if (currentStudentData && currentStudentData.isAdmin === true) {
-        database.ref('research_topics').on('value', snap => { __applyTopics(snap.val()); });
-        database.ref('research_requests').on('value', snap => { const v = snap.val() || {}; researchRequests = Object.keys(v).map(k => ({ uid: k, ...v[k] })); renderAdminRequests(); });
-      } else { __pollResearch(); }
+      if (currentStudentData && currentStudentData.isAdmin === true) { listenToAdminResearch(); }
+      else { __pollResearch(); }
+    }
+    function listenToAdminResearch() {
+      if (adminResearchOn) return; adminResearchOn = true;
+      database.ref('research_topics').on('value', snap => { __applyTopics(snap.val()); });
+      database.ref('research_requests').on('value', snap => {
+        const v = snap.val() || {}; researchRequests = Object.keys(v).map(k => ({ uid: k, ...v[k] })); renderAdminRequests();
+      }, err => { console.error('research_requests:', err); const b = document.getElementById('research-requests-list'); if (b) b.innerHTML = '<div style="color:#f87171; font-size:13px;">مش قادر أقرأ الطلبات: ' + escText(err.message) + ' — راجع قواعد Firebase.</div>'; });
     }
     /* ===== REST بدل الاتصال الحي: لا يُحسب ضمن حد الـ100 اتصال متزامن ===== */
     var __DB = firebaseConfig.databaseURL, __pollT = null;
@@ -1255,7 +1260,7 @@
     function __pollResearch() {
       clearTimeout(__pollT);
       const next = () => { __pollT = setTimeout(__pollResearch, 7000 + Math.random() * 3000); };
-      if (document.hidden || !currentUser || myResearch()) { next(); return; }
+      if (document.hidden || !currentUser || myResearch() || __isAdmin()) { next(); return; }
       __fetchTopics().then(next, next);
     }
     async function __restClaim(id) {
