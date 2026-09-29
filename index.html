@@ -371,6 +371,11 @@
           </div>
           <input type="text" id="research-search" class="search-box z-content" style="margin-bottom: 16px;" placeholder="🔍 دوّر على بحث..." oninput="filterResearch()">
           <div class="grid z-content" id="research-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));"></div>
+          <div class="z-content" id="research-request-box" style="margin-top:18px; padding-top:16px; border-top:1px dashed rgba(20,184,166,.4);">
+            <div id="research-request-status" style="font-size:13px; margin-bottom:10px;"></div>
+            <button class="pill" id="research-request-btn" style="background:#8b5cf6;" onclick="requestNewResearch()">✍️ عايز بحث مش موجود في القائمة؟ اطلبه</button>
+            <p style="font-size:12px; color:var(--fg-faint); margin:8px 0 0;">الطلب بيوصل للإدارة، ولو وافقت بيتحجزلك البحث تلقائي.</p>
+          </div>
         </div>
       </div>
 
@@ -504,6 +509,11 @@
 
              <div class="admin-section-header"><span>4️⃣</span> إدارة الأبحاث (حجز الطلاب)</div>
              <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); margin-bottom: 24px;">
+                <div class="card liquid-glass" style="background:rgba(0,0,0,.4); grid-column: 1 / -1; border-color: #8b5cf6;">
+                   <h3 style="color:#8b5cf6; font-size:16px; margin-top:0;">📨 طلبات أبحاث جديدة من الطلاب <span id="research-req-count" class="status-badge status-offline" style="margin-right:8px;">0</span></h3>
+                   <p style="font-size:12px; color:var(--fg-faint); margin-bottom:10px;">لما توافق، البحث بيتضاف للقائمة ويتحجز للطالب اللي طلبه مباشرة.</p>
+                   <div id="research-requests-list"><div style="text-align:center; color:var(--fg-faint); font-size:13px;">مفيش طلبات</div></div>
+                </div>
                 <div class="card liquid-glass" style="background:rgba(0,0,0,.4); grid-column: 1 / -1; border-color: #14b8a6;">
                    <h3 style="color: #14b8a6; font-size: 16px; margin-top:0;">إضافة أبحاث بالجملة (كل بحث في سطر)</h3>
                    <p style="font-size:12px; color:var(--fg-faint); margin-bottom:10px;">اكتب أو الصق أسماء الأبحاث، كل بحث في سطر منفصل، وهيتضافوا كلهم دفعة واحدة كـ"متاح" لحجز الطلاب.</p>
@@ -642,6 +652,7 @@
     let adminLogsListening = false, isMaintenanceActive = false, privateAlertListening = false;
     let db = [], currentSubjectId = null, userDataRef = null, searchTimeout = null;
     let researchTopics = [], researchSearchTimeout = null, researchListening = false;
+    let researchRequests = [], myRequest = null;
     let presenceInitialized = false, heartbeatInterval = null;
 
     /* ===== تهيئة Firebase بأمان ===== */
@@ -1142,6 +1153,7 @@
       if (researchListening) return; researchListening = true;
       if (currentStudentData && currentStudentData.isAdmin === true) {
         database.ref('research_topics').on('value', snap => { __applyTopics(snap.val()); });
+        database.ref('research_requests').on('value', snap => { const v = snap.val() || {}; researchRequests = Object.keys(v).map(k => ({ uid: k, ...v[k] })); renderAdminRequests(); });
       } else { __pollResearch(); }
     }
     /* ===== REST بدل الاتصال الحي: لا يُحسب ضمن حد الـ100 اتصال متزامن ===== */
@@ -1150,7 +1162,7 @@
       val = val || {};
       researchTopics = Object.keys(val).map(k => ({ key: k, ...val[k] }));
       researchTopics.sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ar'));
-      renderResearchHome(); renderAdminResearchTable();
+      renderResearchHome(); renderAdminResearchTable(); renderMyRequest();
     }
     async function __fetchTopics() {
       if (!currentUser) return;
@@ -1158,6 +1170,7 @@
         const t = await currentUser.getIdToken();
         const r = await fetch(__DB + '/research_topics.json?auth=' + encodeURIComponent(t), { cache: 'no-store' });
         if (r.ok) __applyTopics(await r.json());
+        await __fetchMyRequest(t);
       } catch (e) {}
     }
     function __pollResearch() {
@@ -1181,6 +1194,104 @@
       const t = await currentUser.getIdToken();
       const r = await fetch(__DB + '/.json?auth=' + encodeURIComponent(t), { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(up) });
       if (!r.ok) throw new Error('HTTP ' + r.status);
+    }
+
+
+    /* ===================== طلبات الأبحاث الجديدة ===================== */
+    async function __fetchMyRequest(tok) {
+      if (!currentUser || (currentStudentData && currentStudentData.isAdmin === true)) return;
+      try {
+        const t = tok || await currentUser.getIdToken();
+        const r = await fetch(__DB + '/research_requests/' + currentUser.uid + '.json?auth=' + encodeURIComponent(t), { cache: 'no-store' });
+        if (r.ok) { myRequest = await r.json(); renderMyRequest(); }
+      } catch (e) {}
+    }
+
+    function renderMyRequest() {
+      const box = document.getElementById('research-request-box'); if (!box) return;
+      const st = document.getElementById('research-request-status');
+      const btn = document.getElementById('research-request-btn');
+      if (myResearch()) { box.style.display = 'none'; return; }
+      box.style.display = 'block';
+      if (myRequest && myRequest.status === 'pending') {
+        st.innerHTML = `<span style="color:#fbbf24;">⏳ طلبك "${escText(myRequest.title)}" مستني موافقة الإدارة</span> <button class="btn-sm btn-ban" style="margin-right:8px;" onclick="cancelResearchRequest()">إلغاء الطلب</button>`;
+        btn.style.display = 'none';
+      } else if (myRequest && myRequest.status === 'rejected') {
+        st.innerHTML = `<span style="color:#f87171;">❌ الإدارة رفضت طلب "${escText(myRequest.title)}"${myRequest.reason ? ' — السبب: ' + escText(myRequest.reason) : ''}. تقدر تطلب بحث تاني أو تحجز من القائمة.</span>`;
+        btn.style.display = '';
+      } else { st.innerHTML = ''; btn.style.display = ''; }
+    }
+
+    function requestNewResearch() {
+      if (!currentUser || !currentStudentData) return Swal.fire('', 'لازم تسجل دخول الأول.', 'warning');
+      if (myResearch()) return Swal.fire('عندك بحث', 'إنت حاجز بحث بالفعل، الغي الحجز الأول لو عايز تطلب غيره.', 'warning');
+      if (myRequest && myRequest.status === 'pending') return Swal.fire('', 'عندك طلب لسه مستني الرد.', 'info');
+      Swal.fire({
+        title: 'اطلب بحث جديد',
+        text: 'اكتب عنوان البحث اللي عايزه، ولو الإدارة وافقت هيتحجزلك.',
+        input: 'text', inputPlaceholder: 'عنوان البحث', showCancelButton: true,
+        confirmButtonText: 'إرسال الطلب', cancelButtonText: 'إلغاء',
+        inputValidator: v => { v = (v || '').trim(); if (v.length < 5) return 'العنوان قصير جدًا'; if (v.length > 150) return 'العنوان طويل جدًا (150 حرف حد أقصى)'; }
+      }).then(async res => {
+        if (!res.isConfirmed) return;
+        const title = res.value.trim();
+        const dup = researchTopics.find(r => (r.name || '').trim().toLowerCase() === title.toLowerCase());
+        if (dup) return Swal.fire('البحث موجود', dup.claimedBy ? 'البحث ده موجود في القائمة لكنه محجوز لطالب تاني.' : 'البحث ده موجود في القائمة وفاضي، احجزه مباشرة.', 'info');
+        try {
+          const t = await currentUser.getIdToken();
+          const body = { uid: currentUser.uid, name: currentStudentData.name || '', title, status: 'pending', createdAt: Date.now() };
+          const r = await fetch(__DB + '/research_requests/' + currentUser.uid + '.json?auth=' + encodeURIComponent(t), { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+          if (!r.ok) throw new Error('HTTP ' + r.status);
+          myRequest = body; renderMyRequest();
+          Swal.fire('تم الإرسال ✅', 'طلبك وصل للإدارة، هتلاقي الرد هنا.', 'success');
+        } catch (err) { Swal.fire('خطأ', escText(err.message), 'error'); }
+      });
+    }
+
+    async function cancelResearchRequest() {
+      if (!currentUser) return;
+      try {
+        const t = await currentUser.getIdToken();
+        const r = await fetch(__DB + '/research_requests/' + currentUser.uid + '.json?auth=' + encodeURIComponent(t), { method: 'DELETE' });
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        myRequest = null; renderMyRequest();
+      } catch (err) { Swal.fire('خطأ', escText(err.message), 'error'); }
+    }
+
+    /* ----- الأدمن ----- */
+    function renderAdminRequests() {
+      const box = document.getElementById('research-requests-list'); if (!box) return;
+      const pending = researchRequests.filter(r => r.status === 'pending').sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+      const cnt = document.getElementById('research-req-count'); if (cnt) { cnt.textContent = pending.length; cnt.className = 'status-badge ' + (pending.length ? 'status-online' : 'status-offline'); }
+      if (!pending.length) { box.innerHTML = '<div style="text-align:center; color:var(--fg-faint); font-size:13px;">مفيش طلبات جديدة</div>'; return; }
+      box.innerHTML = pending.map(r => `<div class="profile-row" style="display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px; padding:10px 12px; margin-bottom:8px; border-radius:10px; background:rgba(255,255,255,.04);">
+        <div style="min-width:200px; flex:1;"><div style="font-weight:bold; word-break:break-word;">${escText(r.title)}</div><div style="font-size:12px; color:var(--fg-faint);">الطالب: ${escText(r.name || 'غير معروف')}</div></div>
+        <div class="action-group"><button class="btn-sm btn-msg" onclick="approveResearchRequest('${r.uid}')">✅ موافقة وحجز</button><button class="btn-sm btn-ban" onclick="rejectResearchRequest('${r.uid}')">❌ رفض</button></div></div>`).join('');
+    }
+
+    function approveResearchRequest(uid) {
+      const req = researchRequests.find(r => r.uid === uid); if (!req) return;
+      const u = allUsersList.find(x => x.uid === uid);
+      if (u && u.researchTopic) return Swal.fire('مش ممكن', 'الطالب ده حاجز بحث تاني بالفعل. ارفض الطلب أو حرّر حجزه الأول.', 'warning');
+      Swal.fire({ title: 'الموافقة على الطلب؟', text: `"${req.title}" — هيتضاف للقائمة ويتحجز للطالب ${req.name || ''}.`, icon: 'question', showCancelButton: true, confirmButtonText: 'موافقة', cancelButtonText: 'إلغاء' }).then(res => {
+        if (!res.isConfirmed) return;
+        const id = database.ref('research_topics').push().key, up = {};
+        up['research_topics/' + id] = { name: req.title, claimedBy: uid, claimedByName: req.name || '', claimedAt: { '.sv': 'timestamp' } };
+        up['users/' + uid + '/researchTopic'] = id; up['users/' + uid + '/researchTopicName'] = req.title;
+        up['research_requests/' + uid] = null;
+        database.ref().update(up).then(() => { logAdminAction('موافقة على طلب بحث', `${req.title} — ${req.name || uid}`); Swal.fire('تمت الموافقة ✅', 'البحث اتضاف واتحجز للطالب.', 'success'); })
+          .catch(err => Swal.fire('خطأ', escText(err.message), 'error'));
+      });
+    }
+
+    function rejectResearchRequest(uid) {
+      const req = researchRequests.find(r => r.uid === uid); if (!req) return;
+      Swal.fire({ title: 'رفض الطلب', text: `"${req.title}"`, input: 'text', inputPlaceholder: 'سبب الرفض (اختياري)', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'رفض', cancelButtonText: 'إلغاء' }).then(res => {
+        if (!res.isConfirmed) return;
+        const reason = (res.value || '').trim().slice(0, 200);
+        database.ref('research_requests/' + uid).update({ status: 'rejected', reason }).then(() => { logAdminAction('رفض طلب بحث', `${req.title} — ${req.name || uid}`); Swal.fire('تم', 'تم رفض الطلب.', 'success'); })
+          .catch(err => Swal.fire('خطأ', escText(err.message), 'error'));
+      });
     }
 
     function myResearch() { if (!currentStudentData || !currentStudentData.researchTopic) return null; return researchTopics.find(r => r.key === currentStudentData.researchTopic) || null; }
