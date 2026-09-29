@@ -883,7 +883,7 @@
 
     function listenToUsersData() {
       database.ref('users').on('value', (snapshot) => {
-        let users = snapshot.val() || {}; allUsersList = []; for (let id in users) allUsersList.push({ uid: id, ...users[id] });
+        let users = snapshot.val() || {}; allUsersList = []; for (let id in users) allUsersList.push({ uid: id, ...users[id] }); try { renderAdminResearchTable(); } catch (e) {}
         allUsersList.sort((a, b) => (b.score || 0) - (a.score || 0)); updateDashboardStats(); renderStudentsTable();
       });
     }
@@ -1493,11 +1493,14 @@
       const __cnt = {}; researchTopics.forEach(r => { const k = normName(r.name); __cnt[k] = (__cnt[k] || 0) + 1; });
       tbody.innerHTML = researchTopics.map((r, i) => {
         const taken = !!r.claimedBy;
+        const holders = allUsersList.filter(u => u.researchTopic === r.key);
+        const conflict = holders.length > 1 || (r.claimedBy && holders.length === 1 && holders[0].uid !== r.claimedBy);
+        const conflictTag = conflict ? ' <span class="status-badge" style="background:#dc2626;color:#fff;">⚠ تعارض في الحجز: ' + holders.map(u => escText(u.name || '?')).join(' + ') + '</span>' : '';
         const dupTag = __cnt[normName(r.name)] > 1 ? ' <span class="status-badge status-banned" style="background:#ef4444;color:#fff;">مكرر</span>' : '';
         const statusHtml = taken ? `<span class="status-badge status-online">🟢 محجوز</span>` : `<span class="status-badge status-offline">⚪ متاح</span>`;
         const studentHtml = taken ? escText(r.claimedByName || 'غير معروف') : '<span style="color:var(--fg-faint);">-</span>';
         const actions = `<div class="action-group">${taken ? `<button class="btn-sm btn-msg" onclick="adminFreeResearch('${r.key}','${escapeHtml(r.name)}')">🔓 إلغاء الحجز</button>` : ''}<button class="btn-sm btn-ban" onclick="adminDeleteResearchTopic('${r.key}','${escapeHtml(r.name)}')">🗑️ حذف</button></div>`;
-        return `<tr><td>${i + 1}</td><td>${escText(r.name)}${dupTag}</td><td>${statusHtml}</td><td>${studentHtml}</td><td>${actions}</td></tr>`;
+        return `<tr><td>${i + 1}</td><td>${escText(r.name)}${dupTag}${conflictTag}</td><td>${statusHtml}</td><td>${studentHtml}</td><td>${actions}</td></tr>`;
       }).join('');
       filterAdminResearch();
     }
