@@ -1284,7 +1284,7 @@
         const g = await fetch(__DB + '/research_topics/' + encodeURIComponent(tid) + '/claimedBy.json?auth=' + t, { cache: 'no-store' });
         if (!g.ok) return false;
         if ((await g.json()) === uid) return 'mine';
-        const up = {}; up['users/' + uid + '/researchTopic'] = null; up['users/' + uid + '/researchTopicName'] = null;
+        const up = {}; up['users/' + uid + '/researchTopic'] = null; up['users/' + uid + '/researchTopicName'] = null; up['users/' + uid + '/researchTopicAt'] = null;
         await __restPatch(up);
         if (currentStudentData) { currentStudentData.researchTopic = null; currentStudentData.researchTopicName = null; }
         return true;
@@ -1380,7 +1380,7 @@
         const id = ex ? ex.key : database.ref('research_topics').push().key, up = {};
         if (ex) { up['research_topics/' + id + '/claimedBy'] = uid; up['research_topics/' + id + '/claimedByName'] = req.name || ''; up['research_topics/' + id + '/claimedAt'] = { '.sv': 'timestamp' }; }
         else up['research_topics/' + id] = { name: req.title, claimedBy: uid, claimedByName: req.name || '', claimedAt: { '.sv': 'timestamp' } };
-        up['users/' + uid + '/researchTopic'] = id; up['users/' + uid + '/researchTopicName'] = req.title;
+        up['users/' + uid + '/researchTopic'] = id; up['users/' + uid + '/researchTopicName'] = req.title; up['users/' + uid + '/researchTopicAt'] = { '.sv': 'timestamp' };
         up['research_requests/' + uid] = null;
         database.ref().update(up).then(() => { logAdminAction('موافقة على طلب بحث', `${req.title} — ${req.name || uid}`); Swal.fire('تمت الموافقة ✅', 'البحث اتضاف واتحجز للطالب.', 'success'); })
           .catch(err => Swal.fire('خطأ', escText(err.message), 'error'));
@@ -1432,7 +1432,7 @@
         try {
           const uid = currentUser.uid, up = {};
           up['research_topics/' + id + '/claimedBy'] = uid; up['research_topics/' + id + '/claimedByName'] = currentStudentData.name; up['research_topics/' + id + '/claimedAt'] = { '.sv': 'timestamp' };
-          up['users/' + uid + '/researchTopic'] = id; up['users/' + uid + '/researchTopicName'] = name;
+          up['users/' + uid + '/researchTopic'] = id; up['users/' + uid + '/researchTopicName'] = name; up['users/' + uid + '/researchTopicAt'] = { '.sv': 'timestamp' };
           const send = async () => fetch(__DB + '/.json?auth=' + encodeURIComponent(await currentUser.getIdToken()), { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(up) });
           let resp = await send();
           if (!resp.ok && (resp.status === 401 || resp.status === 403)) {
@@ -1463,7 +1463,7 @@
       Swal.fire({ title: 'إلغاء حجز البحث؟', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'نعم، إلغاء' }).then(async result => {
         if (!result.isConfirmed) return;
         const up = {}; up['research_topics/' + id + '/claimedBy'] = null; up['research_topics/' + id + '/claimedByName'] = null; up['research_topics/' + id + '/claimedAt'] = null;
-        up['users/' + currentUser.uid + '/researchTopic'] = null; up['users/' + currentUser.uid + '/researchTopicName'] = null;
+        up['users/' + currentUser.uid + '/researchTopic'] = null; up['users/' + currentUser.uid + '/researchTopicName'] = null; up['users/' + currentUser.uid + '/researchTopicAt'] = null;
         try {
           await __restPatch(up);
           currentStudentData.researchTopic = null; currentStudentData.researchTopicName = null;
@@ -1474,6 +1474,16 @@
       });
     }
 
+    function fixResearchConflict(key) {
+      const r = researchTopics.find(x => x.key === key); if (!r) return;
+      const bad = allUsersList.filter(u => u.researchTopic === key && u.uid !== r.claimedBy);
+      if (!bad.length) return Swal.fire('لا يوجد تعارض', '', 'info');
+      Swal.fire({ title: 'إصلاح التعارض؟', html: 'صاحب الحجز الفعلي: <b>' + escText(r.claimedByName || '—') + '</b><br>هيتم مسح الحجز القديم من: <b>' + bad.map(u => escText(u.name || u.uid)).join('، ') + '</b>', icon: 'question', showCancelButton: true, confirmButtonText: 'أيوه، صلّح', cancelButtonText: 'تراجع' }).then(res => {
+        if (!res.isConfirmed) return;
+        const up = {}; bad.forEach(u => { up['users/' + u.uid + '/researchTopic'] = null; up['users/' + u.uid + '/researchTopicName'] = null; up['users/' + u.uid + '/researchTopicAt'] = null; });
+        database.ref().update(up).then(() => { logAdminAction('إصلاح تعارض حجز', r.name + ' -- ' + bad.map(u => u.name || u.uid).join(', ')); Swal.fire('تم', 'اتصلح التعارض.', 'success'); }).catch(err => Swal.fire('خطأ', escText(err.message), 'error'));
+      });
+    }
     function normName(x) { return String(x || '').toLowerCase().replace(/[\u064B-\u0652\u0640]/g, '').replace(/[أإآٱ]/g, 'ا').replace(/ى/g, 'ي').replace(/ة/g, 'ه').replace(/[^\u0621-\u064A0-9a-z]+/g, ''); }
     function addResearchTopic(e) {
       e.preventDefault(); const name = document.getElementById('single-research-name').value.trim(); if (!name) return;
@@ -1497,7 +1507,7 @@
         if (!result.isConfirmed) return;
         const topic = researchTopics.find(r => r.key === id); const uid = topic ? topic.claimedBy : null;
         const up = {}; up['research_topics/' + id + '/claimedBy'] = null; up['research_topics/' + id + '/claimedByName'] = null; up['research_topics/' + id + '/claimedAt'] = null;
-        if (uid) { up['users/' + uid + '/researchTopic'] = null; up['users/' + uid + '/researchTopicName'] = null; }
+        if (uid) { up['users/' + uid + '/researchTopic'] = null; up['users/' + uid + '/researchTopicName'] = null; up['users/' + uid + '/researchTopicAt'] = null; }
         database.ref().update(up).then(() => { logAdminAction('إلغاء حجز بحث', `البحث: ${name}`); Swal.fire('تم', 'اتلغى الحجز.', 'success'); });
       });
     }
@@ -1506,7 +1516,7 @@
       Swal.fire({ title: `حذف بحث "${name}" نهائيًا؟`, showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'نعم، احذف' }).then(result => {
         if (!result.isConfirmed) return;
         const topic = researchTopics.find(r => r.key === id); const uid = topic ? topic.claimedBy : null;
-        const up = {}; up['research_topics/' + id] = null; if (uid) { up['users/' + uid + '/researchTopic'] = null; up['users/' + uid + '/researchTopicName'] = null; }
+        const up = {}; up['research_topics/' + id] = null; if (uid) { up['users/' + uid + '/researchTopic'] = null; up['users/' + uid + '/researchTopicName'] = null; up['users/' + uid + '/researchTopicAt'] = null; }
         database.ref().update(up).then(() => { logAdminAction('حذف بحث', `البحث: ${name}`); Swal.fire('تم الحذف', '', 'success'); });
       });
     }
@@ -1519,7 +1529,7 @@
         const taken = !!r.claimedBy;
         const holders = allUsersList.filter(u => u.researchTopic === r.key);
         const conflict = holders.length > 1 || (r.claimedBy && holders.length === 1 && holders[0].uid !== r.claimedBy);
-        const conflictTag = conflict ? ' <span class="status-badge" style="background:#dc2626;color:#fff;">⚠ تعارض في الحجز: ' + holders.map(u => escText(u.name || '?')).join(' + ') + '</span>' : '';
+        const conflictTag = conflict ? ' <span class="status-badge" style="background:#dc2626;color:#fff;">⚠ تعارض في الحجز: ' + holders.map(u => escText(u.name || '?')).join(' + ') + '</span> <button class="btn-sm btn-msg" onclick="fixResearchConflict(\'' + r.key + '\')">إصلاح التعارض</button>' : '';
         const dupTag = __cnt[normName(r.name)] > 1 ? ' <span class="status-badge status-banned" style="background:#ef4444;color:#fff;">مكرر</span>' : '';
         const statusHtml = taken ? `<span class="status-badge status-online">🟢 محجوز</span>` : `<span class="status-badge status-offline">⚪ متاح</span>`;
         const studentHtml = taken ? escText(r.claimedByName || 'غير معروف') : '<span style="color:var(--fg-faint);">-</span>';
@@ -1534,25 +1544,95 @@
       document.querySelectorAll('#research-table-body tr').forEach(row => { if (row.cells.length > 1) row.style.display = row.innerText.toLowerCase().includes(query) ? '' : 'none'; });
     }
 
-    function exportResearchCSV() {
-      if (typeof XLSX === 'undefined') return Swal.fire('خطأ', 'مكتبة Excel لسه بتحمّل، جرّب تاني بعد ثانية.', 'error');
-      const findUser = uid => allUsersList.find(u => u.uid === uid);
-      const rows = [["#", "اسم البحث", "الحالة", "اسم الطالب", "رقم الهاتف", "البريد الإلكتروني", "تاريخ الحجز"]];
-      const sorted = [...researchTopics].sort((a, b) => {
-        if (!!a.claimedBy === !!b.claimedBy) return (a.name || '').localeCompare(b.name || '', 'ar');
-        return a.claimedBy ? -1 : 1;
+    function __loadScript(src) {
+      return new Promise((res, rej) => {
+        if (document.querySelector('script[data-x="' + src + '"]')) return res();
+        const el = document.createElement('script'); el.src = src; el.dataset.x = src; el.onload = res; el.onerror = () => rej(new Error('load'));
+        document.head.appendChild(el);
       });
-      sorted.forEach((r, i) => {
-        const u = r.claimedBy ? findUser(r.claimedBy) : null;
-        const dateStr = r.claimedAt ? new Date(r.claimedAt).toLocaleString('ar-EG', { timeZone: 'Africa/Cairo' }) : '';
-        rows.push([i + 1, r.name || '', r.claimedBy ? 'محجوز' : 'متاح', r.claimedByName || (u ? u.name : '') || '', u ? (u.phone || '') : '', u ? (u.email || '') : '', dateStr]);
+    }
+    function __fmtTime(ms) {
+      if (!ms) return '';
+      const p = new Intl.DateTimeFormat('en-GB', { timeZone: 'Africa/Cairo', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }).format(new Date(ms));
+      return p.replace(',', '') + '.' + String(ms % 1000).padStart(3, '0');
+    }
+    async function exportResearchCSV() {
+      try { if (typeof ExcelJS === 'undefined') await __loadScript('https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js'); }
+      catch (e) { return Swal.fire('خطأ', 'مكتبة Excel مقدرتش تتحمّل. اتأكد من النت وجرّب تاني.', 'error'); }
+      const usersBy = {}; allUsersList.forEach(u => { usersBy[u.uid] = u; });
+      const nameCnt = {}; researchTopics.forEach(r => { const k = normName(r.name); nameCnt[k] = (nameCnt[k] || 0) + 1; });
+      const info = researchTopics.map(r => {
+        const holders = allUsersList.filter(u => u.researchTopic === r.key);
+        const conflict = holders.length > 1 || (!!r.claimedBy && holders.length === 1 && holders[0].uid !== r.claimedBy);
+        return { r, holders, conflict, dup: nameCnt[normName(r.name)] > 1 };
+      }).sort((x, y) => (y.conflict - x.conflict) || ((!!y.r.claimedBy) - (!!x.r.claimedBy)) || (x.r.name || '').localeCompare(y.r.name || '', 'ar'));
+      const total = info.length, taken = info.filter(i => i.r.claimedBy).length, conflicts = info.filter(i => i.conflict).length;
+
+      const C = { teal: 'FF0F766E', tealD: 'FF115E59', tealL: 'FFF0FDFA', line: 'FFCBD5E1', green: 'FFDCFCE7', greenT: 'FF166534', gray: 'FFF1F5F9', grayT: 'FF64748B', red: 'FFFEE2E2', redD: 'FFDC2626', redT: 'FF991B1B', amber: 'FFFEF3C7', amberT: 'FF92400E' };
+      const fill = argb => ({ type: 'pattern', pattern: 'solid', fgColor: { argb } });
+      const border = { top: { style: 'thin', color: { argb: C.line } }, left: { style: 'thin', color: { argb: C.line } }, bottom: { style: 'thin', color: { argb: C.line } }, right: { style: 'thin', color: { argb: C.line } } };
+      const mid = { vertical: 'middle', horizontal: 'center', wrapText: true, readingOrder: 'rtl' };
+      const wb = new ExcelJS.Workbook(); wb.creator = 'منصة الدفعة'; wb.created = new Date();
+      const now = __fmtTime(Date.now()).slice(0, 19);
+
+      /* ===== الشيت الأول: الأبحاث ===== */
+      const ws = wb.addWorksheet('الأبحاث', { views: [{ rightToLeft: true, state: 'frozen', ySplit: 4 }], properties: { tabColor: { argb: C.teal } } });
+      ws.columns = [{ width: 6 }, { width: 44 }, { width: 13 }, { width: 28 }, { width: 16 }, { width: 32 }, { width: 27 }, { width: 22 }];
+      ws.mergeCells('A1:H1'); Object.assign(ws.getCell('A1'), { value: '🔬 تقرير حجز الأبحاث', fill: fill(C.teal), font: { size: 20, bold: true, color: { argb: 'FFFFFFFF' } }, alignment: mid }); ws.getRow(1).height = 40;
+      ws.mergeCells('A2:H2'); Object.assign(ws.getCell('A2'), { value: 'تاريخ التقرير (بتوقيت القاهرة): ' + now, fill: fill(C.tealL), font: { size: 11, color: { argb: C.tealD } }, alignment: mid }); ws.getRow(2).height = 22;
+      ws.mergeCells('A3:H3'); Object.assign(ws.getCell('A3'), { value: `إجمالي الأبحاث: ${total}    |    محجوز: ${taken}    |    متاح: ${total - taken}    |    تعارضات: ${conflicts}`, fill: fill(conflicts ? C.red : C.green), font: { size: 13, bold: true, color: { argb: conflicts ? C.redT : C.greenT } }, alignment: mid }); ws.getRow(3).height = 28;
+      const head = ws.getRow(4); head.values = ['#', 'عنوان البحث', 'الحالة', 'اسم الطالب', 'التليفون', 'الإيميل', 'وقت الحجز (القاهرة)', 'ملاحظات'];
+      head.height = 30; head.eachCell(c => { c.fill = fill(C.tealD); c.font = { bold: true, size: 12, color: { argb: 'FFFFFFFF' } }; c.alignment = mid; c.border = border; });
+      info.forEach((it, i) => {
+        const r = it.r, u = r.claimedBy ? usersBy[r.claimedBy] : null;
+        const note = it.conflict ? '⚠ تعارض في الحجز (شوف شيت التعارضات)' : (it.dup ? '⚠ اسم بحث مكرر' : '');
+        const row = ws.addRow([i + 1, r.name || '', r.claimedBy ? 'محجوز ✔' : 'متاح', r.claimedByName || (u && u.name) || '', u ? (u.phone || '') : '', u ? (u.email || '') : '', __fmtTime(r.claimedAt), note]);
+        row.height = 26;
+        const base = it.conflict ? C.red : (i % 2 ? C.tealL : 'FFFFFFFF');
+        row.eachCell(c => { c.fill = fill(base); c.border = border; c.alignment = mid; c.font = { size: 11 }; });
+        row.getCell(2).alignment = { ...mid, horizontal: 'right' };
+        const st = row.getCell(3); st.font = { bold: true, size: 11, color: { argb: r.claimedBy ? C.greenT : C.grayT } }; st.fill = fill(r.claimedBy ? C.green : C.gray);
+        if (note) { const n = row.getCell(8); n.fill = fill(it.conflict ? C.redD : C.amber); n.font = { bold: true, color: { argb: it.conflict ? 'FFFFFFFF' : C.amberT } }; }
       });
-      const ws = XLSX.utils.aoa_to_sheet(rows);
-      ws['!cols'] = [{ wch: 5 }, { wch: 34 }, { wch: 10 }, { wch: 24 }, { wch: 16 }, { wch: 28 }, { wch: 20 }];
-      ws['!views'] = [{ rightToLeft: true }];
-      const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "الأبحاث");
-      XLSX.writeFile(wb, "أبحاث_الدفعة.xlsx");
-      logAdminAction("تصدير الأبحاث", "تم تحميل قائمة الأبحاث بملف Excel");
+      ws.autoFilter = { from: 'A4', to: 'H' + (4 + total) };
+      ws.pageSetup = { orientation: 'landscape', fitToPage: true, fitToWidth: 1, fitToHeight: 0 };
+
+      /* ===== الشيت الثاني: التعارضات ===== */
+      const wc = wb.addWorksheet('التعارضات', { views: [{ rightToLeft: true, state: 'frozen', ySplit: 3 }], properties: { tabColor: { argb: conflicts ? C.redD : 'FF16A34A' } } });
+      wc.columns = [{ width: 40 }, { width: 14 }, { width: 28 }, { width: 28 }, { width: 30 }, { width: 16 }, { width: 30 }];
+      wc.mergeCells('A1:G1'); Object.assign(wc.getCell('A1'), { value: '⚠ تقرير التعارضات في الحجز', fill: fill(conflicts ? 'FFB91C1C' : 'FF16A34A'), font: { size: 18, bold: true, color: { argb: 'FFFFFFFF' } }, alignment: mid }); wc.getRow(1).height = 38;
+      wc.mergeCells('A2:G2'); Object.assign(wc.getCell('A2'), { value: 'الترتيب حسب وقت الحجز الفعلي (بتوقيت القاهرة وبالملي ثانية). «الأول» = اللي حجز الأسبق. الحجز الحالي = اللي محفوظ في جدول الأبحاث.', fill: fill(C.amber), font: { size: 11, color: { argb: C.amberT } }, alignment: mid }); wc.getRow(2).height = 34;
+      const h2 = wc.getRow(3); h2.values = ['عنوان البحث', 'الترتيب', 'اسم الطالب', 'وقت الحجز (القاهرة)', 'الوضع', 'التليفون', 'الإيميل'];
+      h2.height = 28; h2.eachCell(c => { c.fill = fill(C.tealD); c.font = { bold: true, size: 12, color: { argb: 'FFFFFFFF' } }; c.alignment = mid; c.border = border; });
+      const ord = ['🥇 الأول', '🥈 التاني', '🥉 التالت', 'الرابع', 'الخامس', 'السادس'];
+      const cons = info.filter(i => i.conflict);
+      if (!cons.length) {
+        wc.mergeCells('A4:G4'); Object.assign(wc.getCell('A4'), { value: '✅ لا توجد تعارضات في الحجز', fill: fill(C.green), font: { size: 15, bold: true, color: { argb: C.greenT } }, alignment: mid }); wc.getRow(4).height = 40;
+      }
+      cons.forEach(it => {
+        const r = it.r;
+        const list = it.holders.map(u => ({ u, t: u.researchTopicAt || (u.uid === r.claimedBy ? r.claimedAt : 0) || 0 }));
+        if (r.claimedBy && !list.some(x => x.u.uid === r.claimedBy)) { const cu = usersBy[r.claimedBy] || { uid: r.claimedBy, name: r.claimedByName }; list.push({ u: cu, t: r.claimedAt || 0 }); }
+        list.sort((a, b) => (a.t || Infinity) - (b.t || Infinity));
+        const start = wc.rowCount + 1;
+        list.forEach((x, k) => {
+          const owner = x.u.uid === r.claimedBy;
+          const row = wc.addRow([r.name || '', x.t ? ord[k] || String(k + 1) : 'غير معروف', x.u.name || x.u.uid, x.t ? __fmtTime(x.t) : 'حجز قديم بدون وقت', owner ? 'صاحب الحجز الحالي ✔' : 'حجز متعارض ✖ (محتاج إصلاح)', x.u.phone || '', x.u.email || '']);
+          row.height = 28;
+          row.eachCell(c => { c.fill = fill(owner ? C.green : C.red); c.border = border; c.alignment = mid; c.font = { size: 11 }; });
+          row.getCell(5).font = { bold: true, color: { argb: owner ? C.greenT : C.redT } };
+          if (k === 0 && x.t) row.getCell(2).font = { bold: true, size: 12, color: { argb: 'FFB45309' } };
+        });
+        const end = wc.rowCount;
+        if (end > start) wc.mergeCells('A' + start + ':A' + end);
+        Object.assign(wc.getCell('A' + start), { alignment: { ...mid, horizontal: 'right' }, font: { bold: true, size: 12 } });
+      });
+
+      const buf = await wb.xlsx.writeBuffer();
+      const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'أبحاث_الدفعة_' + now.slice(0, 10).replace(/\//g, '-') + '.xlsx';
+      document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 3000);
+      logAdminAction('تصدير الأبحاث', 'تصدير جدول الأبحاث إلى Excel');
     }
 
     function deleteFile(s, f, fName) { Swal.fire({title: "حذف الملف؟", showCancelButton: true, confirmButtonColor: '#ef4444'}).then((r)=>{ if(r.isConfirmed) { database.ref('subjects/'+s+'/files/'+f).remove(); logAdminAction('حذف ملف', `الملف: ${fName}`); }}); }
