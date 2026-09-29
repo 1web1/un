@@ -308,7 +308,7 @@
             <h2 class="section-title z-content" id="current-level-heading">مواد المستوى الأول</h2>
             <div class="grid" id="subjects-grid" style="grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));"></div>
 
-            <div class="card liquid-glass" style="margin-top: 24px;">
+            <div class="card liquid-glass" id="feedback-box" style="margin-top: 24px;">
               <h3 class="z-content" style="color: #25D366; margin: 0 0 12px; font-size: 18px; display: flex; align-items: center; gap: 8px;">
                 <span>💬</span> صندوق الملاحظات
               </h3>
@@ -549,6 +549,15 @@
           <div id="tab-tools" class="admin-tab-content">
              <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));">
                 <div class="card liquid-glass" style="background:rgba(0,0,0,.4);">
+                   <h3 style="color:#25D366; font-size:16px; margin-top:0;">📩 صندوق الملاحظات</h3>
+                   <div id="fb-status-badge" style="text-align:center; padding:10px; margin-bottom:12px; border-radius:8px; font-weight:bold; font-size:14px; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1);">جاري التحميل...</div>
+                   <div class="input-group"><label>رقم واتساب استقبال الملاحظات</label><input type="tel" id="fb-number" dir="ltr" placeholder="01012345678" inputmode="tel"></div>
+                   <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                      <button class="pill" onclick="saveFeedbackSettings(true)" style="background:#25D366; color:#111; flex:1;">💾 حفظ وإظهار</button>
+                      <button class="pill" onclick="saveFeedbackSettings(false)" style="background: var(--danger); flex:1;">🙈 إخفاء الصندوق</button>
+                   </div>
+                </div>
+                <div class="card liquid-glass" style="background:rgba(0,0,0,.4);">
                    <h3 style="color: #c084fc; font-size: 16px; margin-top:0;">وضع الصيانة (الصيانة الشاملة)</h3>
                    <p style="font-size:13px; color:var(--fg-faint); margin-bottom:12px;">عند تفعيل هذا الوضع، سيتم إغلاق الموقع بالكامل أمام الطلاب، ولن يتمكن من الدخول سوى الإدارة.</p>
                    <div id="maintenance-status-badge" style="text-align:center; padding:10px; margin-bottom:12px; border-radius:8px; font-weight:bold; font-size:14px; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1);">جاري التحقق من الحالة...</div>
@@ -645,6 +654,7 @@
 
   <script>
     const ADMIN_WHATSAPP_NUMBER = "201006109851";
+    let feedbackCfg = { enabled: true, number: '' };
     const firebaseConfig = { apiKey: "AIzaSyB6FXWiprXlv6eoLhRIDrwyzKmR9cf3F8Y", authDomain: "university-platform-f51a1.firebaseapp.com", databaseURL: "https://university-platform-f51a1-default-rtdb.firebaseio.com", projectId: "university-platform-f51a1", storageBucket: "university-platform-f51a1.firebasestorage.app", messagingSenderId: "160054277275", appId: "1:160054277275:web:79482938bc46e33c52c23e" };
 
     /* ===== كل المتغيرات معرّفة في الأعلى قبل أي استخدام (يمنع خطأ before initialization) ===== */
@@ -677,6 +687,7 @@
       window.addEventListener(ev, function () { var n = Date.now(); if (n - __lastWake < 3000) return; __lastWake = n; __wake(); }, { passive: true, capture: true });
     });
     document.addEventListener('visibilitychange', function () {
+      if (!document.hidden) { try { __fetchFeedbackCfg(); } catch (e) {} }
       if (document.hidden) { clearTimeout(__idleT); __idleT = setTimeout(__goOffline, HIDDEN_MS); } else { __wake(); }
     });
     __wake();
@@ -1046,7 +1057,7 @@
         renderResearchHome();
       });
       /* المستمعات العامة تُشغَّل مرة واحدة فقط (بدون تكرار بعد الخروج والدخول) */
-      if (!window._listenersReady) { window._listenersReady = true; listenToAlerts(); listenToSubjects(); listenToLeaderboard(); listenToResearchTopics(); }
+      if (!window._listenersReady) { window._listenersReady = true; listenToAlerts(); listenToSubjects(); listenToLeaderboard(); listenToResearchTopics(); __fetchFeedbackCfg(); }
     }
 
     function logoutStudent() {
@@ -1078,7 +1089,39 @@
     }
 
     function closeModal(e, id) { if (e && e.target.id !== id && e.target.tagName !== 'BUTTON') return; document.getElementById(id).style.display = 'none'; }
-    function sendFeedbackToWhatsApp(e) { e.preventDefault(); const msg = document.getElementById('feedback-message').value.trim(); if (!msg) return; const text = `📌 *ملاحظة جديدة:*\n👤 *الطالب:* ${currentStudentData?.name}\n📞 *الهاتف:* ${currentStudentData?.phone}\n📝 *الملاحظة:* ${msg}`; window.open(`https://wa.me/${ADMIN_WHATSAPP_NUMBER}?text=${encodeURIComponent(text)}`, '_blank'); document.getElementById('feedback-message').value = ''; }
+    /* ===== إعدادات صندوق الملاحظات (إظهار/إخفاء + رقم التواصل) ===== */
+    function normalizeWaNumber(x) {
+      let d = normDigits(x).replace(/\D/g, '').replace(/^00/, '');
+      if (/^01\d{9}$/.test(d)) d = '2' + d;
+      return /^\d{10,15}$/.test(d) ? d : '';
+    }
+    function applyFeedbackCfg() {
+      const box = document.getElementById('feedback-box'); if (box) box.style.display = feedbackCfg.enabled === false ? 'none' : '';
+      const b = document.getElementById('fb-status-badge');
+      if (b) { const on = feedbackCfg.enabled !== false; b.innerHTML = on ? '🟢 الصندوق ظاهر للطلاب' : '🔴 الصندوق مخفي عن الطلاب'; b.style.color = on ? '#4ade80' : '#f87171'; }
+      const inp = document.getElementById('fb-number'); if (inp && document.activeElement !== inp) inp.value = feedbackCfg.number || ADMIN_WHATSAPP_NUMBER;
+    }
+    async function __fetchFeedbackCfg() {
+      try {
+        if (!currentUser) return;
+        const t = await currentUser.getIdToken();
+        const r = await fetch(__DB + '/settings/feedbackBox.json?auth=' + encodeURIComponent(t), { cache: 'no-store' });
+        if (r.ok) { const v = await r.json(); if (v) feedbackCfg = { enabled: v.enabled !== false, number: v.number || '' }; }
+      } catch (e) {}
+      applyFeedbackCfg();
+    }
+    function saveFeedbackSettings(enabled) {
+      const raw = document.getElementById('fb-number').value.trim();
+      const number = normalizeWaNumber(raw);
+      if (enabled && !number) return Swal.fire('رقم غير صحيح', 'اكتب رقم واتساب صحيح (مثال: 01012345678).', 'warning');
+      const cfg = { enabled: !!enabled, number: number || feedbackCfg.number || '' };
+      database.ref('settings/feedbackBox').set(cfg).then(() => {
+        feedbackCfg = cfg; applyFeedbackCfg();
+        logAdminAction('صندوق الملاحظات', (enabled ? 'إظهار' : 'إخفاء') + ' -- الرقم: ' + (cfg.number || '-'));
+        Swal.fire('تم', enabled ? 'الصندوق ظاهر للطلاب والرقم اتحفظ.' : 'الصندوق اتخفى عن الطلاب.', 'success');
+      }).catch(err => Swal.fire('خطأ', escText(err.message), 'error'));
+    }
+    function sendFeedbackToWhatsApp(e) { e.preventDefault(); const msg = document.getElementById('feedback-message').value.trim(); if (!msg) return; const text = `📌 *ملاحظة جديدة:*\n👤 *الطالب:* ${currentStudentData?.name}\n📞 *الهاتف:* ${currentStudentData?.phone}\n📝 *الملاحظة:* ${msg}`; window.open(`https://wa.me/${feedbackCfg.number || ADMIN_WHATSAPP_NUMBER}?text=${encodeURIComponent(text)}`, '_blank'); document.getElementById('feedback-message').value = ''; }
 
     function renderLeaderboard(board) {
       const container = document.getElementById('leaderboard-container'); container.innerHTML = ''; let top = board.slice(0, 5);
