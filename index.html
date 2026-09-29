@@ -605,8 +605,8 @@
           <label>المستوى الدراسي</label>
           <select id="auth-level"><option value="1">المستوى الأول</option><option value="2">المستوى الثاني</option></select>
         </div>
-        <div class="input-group"><label>البريد الإلكتروني</label><input type="email" id="auth-email" placeholder="student@example.com" required autocomplete="email"></div>
-        <div class="input-group" id="pass-group"><label>كلمة المرور</label><input type="password" id="auth-pass" placeholder="••••••••" minlength="6" autocomplete="current-password"></div>
+        <div class="input-group"><label>البريد الإلكتروني</label><input type="email" id="auth-email" placeholder="student@example.com" required autocomplete="email" autocapitalize="none" autocorrect="off" spellcheck="false" inputmode="email" dir="ltr"></div>
+        <div class="input-group" id="pass-group"><label>كلمة المرور</label><input type="password" id="auth-pass" placeholder="••••••••" minlength="6" autocomplete="current-password" autocapitalize="none" autocorrect="off" spellcheck="false" dir="ltr"><a href="javascript:void(0)" onclick="togglePassVisibility()" id="pass-eye" style="font-size:12px; color:var(--fg-soft); margin-top:6px; text-decoration:underline;">👁️ إظهار كلمة المرور</a></div>
         <div id="forgot-pass-wrap" style="text-align: left; margin-top: 4px;"><a href="javascript:void(0)" onclick="handleForgotPassword()" style="color: var(--fg-soft); font-size: 12px; text-decoration: underline;">نسيت كلمة المرور؟</a></div>
         <button class="pill" type="submit" id="auth-submit-btn" style="width:100%; height:44px; margin-top:10px; font-size: 15px;">دخول</button>
       </form>
@@ -666,11 +666,11 @@
     /* ===== توفير اتصالات Firebase: فصل الاتصال تلقائيًا للطالب الخامل (حد الخطة المجانية 100 اتصال متزامن) ===== */
     var __offline = false, __idleT = null, __lastWake = 0, IDLE_MS = 20000, HIDDEN_MS = 8000;
     function __isAdmin() { try { return !!(currentStudentData && currentStudentData.isAdmin === true); } catch (e) { return false; } }
-    function __goOffline() { if (__offline || __isAdmin()) return; try { database.goOffline(); __offline = true; } catch (e) {} }
+    function __goOffline() { if (__offline || __isAdmin() || isRegistering) return; try { database.goOffline(); __offline = true; } catch (e) {} }
     function __wake() {
       clearTimeout(__idleT);
       var g = document.getElementById('research-grid'); var onResearch = g && g.offsetParent !== null;
-      if (__offline && !(onResearch && !__isAdmin())) { try { database.goOnline(); } catch (e) {} __offline = false; }
+      if (__offline && !(onResearch && currentUser && !__isAdmin())) { try { database.goOnline(); } catch (e) {} __offline = false; }
       __idleT = setTimeout(__goOffline, IDLE_MS);
     }
     ['click', 'keydown', 'touchstart', 'scroll', 'mousemove'].forEach(function (ev) {
@@ -684,6 +684,57 @@
 
     window.addEventListener('unhandledrejection', e => { const m = (e.reason && e.reason.message) || String(e.reason); if (window.Swal) Swal.fire('حصل خطأ', escText(m), 'error'); });
     let isRegistering = false, authReady = false, leaderboardSynced = '', adminListenersOn = false, lbQuery = null;
+
+    /* ===== أدوات مساعدة للتسجيل والدخول ===== */
+    function ensureOnline() { clearTimeout(__idleT); if (__offline) { try { database.goOnline(); } catch (e) {} __offline = false; } __idleT = setTimeout(__goOffline, IDLE_MS); }
+    function withTimeout(p, ms, msg) {
+      return new Promise((res, rej) => {
+        const t = setTimeout(() => rej(Object.assign(new Error(msg || 'السيرفر اتأخر في الرد، اتأكد من الإنترنت وجرب تاني.'), { code: 'timeout' })), ms);
+        Promise.resolve(p).then(v => { clearTimeout(t); res(v); }, e => { clearTimeout(t); rej(e); });
+      });
+    }
+    function normDigits(x) { return String(x || '').replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d)); }
+    function authErrMsg(err) {
+      const c = (err && (err.code || '')) || '';
+      const bad = 'الإيميل أو كلمة المرور غلط. اتأكد منهم، ولو نسيت الباسورد اضغط "نسيت كلمة المرور".';
+      const m = {
+        'auth/invalid-email': 'صيغة الإيميل غير صحيحة.',
+        'auth/user-not-found': 'مفيش حساب بالإيميل ده. اتأكد من الإيميل أو أنشئ حساب جديد.',
+        'auth/wrong-password': 'كلمة المرور غلط. لو نسيتها اضغط "نسيت كلمة المرور".',
+        'auth/invalid-credential': bad, 'auth/invalid-login-credentials': bad, 'auth/invalid-login-credential': bad,
+        'auth/user-disabled': 'الحساب ده موقوف. كلّم الإدارة.',
+        'auth/too-many-requests': 'محاولات كتير غلط. استنى كام دقيقة أو استعمل "نسيت كلمة المرور".',
+        'auth/network-request-failed': 'فيه مشكلة في الإنترنت، جرب تاني.',
+        'auth/email-already-in-use': 'الإيميل ده مسجل قبل كده. سجّل دخول أو استعمل "نسيت كلمة المرور".',
+        'auth/weak-password': 'كلمة المرور ضعيفة (6 حروف على الأقل).',
+        'auth/missing-password': 'اكتب كلمة المرور.',
+        'auth/operation-not-allowed': 'تسجيل الدخول بالإيميل غير مفعّل في Firebase (Authentication ← Sign-in method ← Email/Password).',
+        'auth/unauthorized-domain': 'دومين الموقع غير مضاف في Firebase (Authentication ← Settings ← Authorized domains).',
+        'auth/invalid-api-key': 'مفتاح Firebase غير صحيح.',
+        'auth/web-storage-unsupported': 'المتصفح بيمنع التخزين. افتح الموقع من Chrome أو Safari (مش من جوه واتساب/فيسبوك) وبدون وضع التصفح الخفي.',
+        'auth/internal-error': 'حصل خطأ داخلي، جرب تاني بعد شوية.',
+        'PERMISSION_DENIED': 'قواعد قاعدة البيانات (Rules) رفضت العملية. راجع القواعد.',
+        'timeout': (err && err.message) || 'انتهت المهلة.'
+      };
+      if (c === 'auth/internal-error') {
+        const raw = String((err && err.message) || '');
+        if (/CONFIGURATION_NOT_FOUND/.test(raw)) return 'خدمة Authentication مش متفعّلة في مشروع Firebase. ادخل Firebase Console ← Authentication ← اضغط Get started، وبعدها فعّل Email/Password.';
+        if (/API_KEY_SERVICE_BLOCKED|API_KEY_HTTP_REFERRER_BLOCKED|referer|IP_ADDRESS_BLOCKED/i.test(raw)) return 'مفتاح API مقيّد. ادخل Google Cloud Console ← APIs & Services ← Credentials ← المفتاح، وضيف https://1web1.github.io/* في HTTP referrers، وتأكد إن Identity Toolkit API مسموح للمفتاح.';
+        if (/OPERATION_NOT_ALLOWED/.test(raw)) return m['auth/operation-not-allowed'];
+        if (/USER_DISABLED/.test(raw)) return m['auth/user-disabled'];
+        console.error('Firebase internal-error:', raw);
+        return 'خطأ داخلي من Firebase. التفاصيل: ' + raw.replace(/\s+/g, ' ').slice(0, 220);
+      }
+      if (m[c]) return m[c];
+      if (/permission_denied/i.test((err && err.message) || '')) return m['PERMISSION_DENIED'];
+      return 'حصل خطأ غير متوقع' + (c ? ' (' + c + ')' : '') + '. ' + ((err && err.message) ? '' : '');
+    }
+    function togglePassVisibility() {
+      const i = document.getElementById('auth-pass'), a = document.getElementById('pass-eye');
+      const show = i.type === 'password'; i.type = show ? 'text' : 'password'; a.innerText = show ? '🙈 إخفاء كلمة المرور' : '👁️ إظهار كلمة المرور';
+    }
+    if (FB_OK) { try { auth.setPersistence(FB.auth.Auth.Persistence.LOCAL).catch(() => auth.setPersistence(FB.auth.Auth.Persistence.SESSION).catch(() => {})); } catch (e) {} }
+
     const quizOrder = {};
     function detachAll(uid) {
       ['users', 'online_users', 'alert', 'subjects', 'admin_logs', '.info/connected'].forEach(p => database.ref(p).off());
@@ -774,14 +825,16 @@
     }
 
     function startSession(user) {
-      window._lastUid = user.uid;
-      database.ref('users/' + user.uid).once('value').then((snap) => {
+      window._lastUid = user.uid; ensureOnline();
+      withTimeout(database.ref('users/' + user.uid).once('value'), 15000, 'السيرفر ما ردّش وإنت داخل. اتأكد من الإنترنت وحاول تاني.').then((snap) => {
         const val = snap.val();
-        if (val && val.isBanned) { Swal.fire('محظور!', `⚠️ تم حظرك!<br>السبب: ${escText(val.banReason)}`, 'error'); logoutStudent(); return; }
+        if (!val) { Swal.fire('حسابك غير مكتمل', 'الحساب اتعمل بس بياناته ماكتملتش (غالبًا النت قطع وقت التسجيل). اضغط "إنشاء حساب جديد" واكتب نفس الإيميل والباسورد وبياناتك وهيتكمل.', 'warning'); auth.signOut(); return; }
+        if (val.isBanned) { Swal.fire('محظور!', `⚠️ تم حظرك!<br>السبب: ${escText(val.banReason)}`, 'error'); logoutStudent(); return; }
         currentUser = user; document.getElementById('auth-overlay').style.display = 'none';
-        if (val && !window._lvlSet) { window._lvlSet = true; switchLevel(val.level == 2 ? 2 : 1); }
+        if (!window._lvlSet) { window._lvlSet = true; switchLevel(val.level == 2 ? 2 : 1); }
+        try { database.ref('settings/maintenanceMode').off(); listenToMaintenance(); } catch (e) {}
         loadStudentData(user.uid); listenToPrivateAlerts(user.uid);
-      }).catch((err) => { Swal.fire('تعذّر تحميل حسابك', escText(err.message), 'error'); auth.signOut(); });
+      }).catch((err) => { Swal.fire('تعذّر تحميل حسابك', escText(authErrMsg(err)), 'error'); auth.signOut(); });
     }
     auth.onAuthStateChanged((user) => {
       authReady = true;
@@ -904,6 +957,7 @@
       document.getElementById('level-group').style.display = isRegisterMode ? 'flex' : 'none';
       document.getElementById('forgot-pass-wrap').style.display = isRegisterMode ? 'none' : 'block';
       document.getElementById('auth-title').innerText = isRegisterMode ? 'إنشاء حساب طالب جديد' : 'تسجيل دخول الطالب';
+      document.getElementById('auth-pass').setAttribute('autocomplete', isRegisterMode ? 'new-password' : 'current-password');
       document.getElementById('auth-submit-btn').innerText = isRegisterMode ? 'تسجيل حساب' : 'دخول';
       document.getElementById('auth-switch-text').innerText = isRegisterMode ? 'لديك حساب بالفعل؟' : 'ليس لديك حساب؟';
       document.getElementById('auth-switch-link').innerText = isRegisterMode ? 'تسجيل الدخول' : 'إنشاء حساب جديد';
@@ -912,32 +966,54 @@
     async function handleAuth(e) {
       e.preventDefault();
       const btn = document.getElementById('auth-submit-btn'); if (btn.disabled) return;
-      const email = document.getElementById('auth-email').value.trim(); const pass = document.getElementById('auth-pass').value;
-      const name = document.getElementById('auth-name').value.trim(); const level = document.getElementById('auth-level').value;
-      const phone = document.getElementById('auth-phone').value.replace(/[\s\-+]/g, '').replace(/^002/, '').replace(/^20(?=1)/, '0');
-      btn.disabled = true;
+      if (!FB_OK) return Swal.fire('خطأ', 'مكتبة Firebase ماتحمّلتش (النت ضعيف أو محجوب). حدّث الصفحة وجرب تاني.', 'error');
+      const email = document.getElementById('auth-email').value.trim().toLowerCase(); const pass = document.getElementById('auth-pass').value;
+      const name = document.getElementById('auth-name').value.trim().replace(/\s+/g, ' '); const level = document.getElementById('auth-level').value;
+      const phone = normDigits(document.getElementById('auth-phone').value).replace(/[\s\-+()]/g, '').replace(/^002/, '').replace(/^20(?=1)/, '0');
+      if (!email || !pass) return Swal.fire('تنبيه', 'اكتب الإيميل وكلمة المرور.', 'warning');
+      btn.disabled = true; btn.innerText = 'جاري المعالجة...'; ensureOnline();
+      try { if (isRegisterMode) await doRegister(email, pass, name, level, phone); else await doLogin(email, pass); }
+      finally { btn.disabled = false; btn.innerText = isRegisterMode ? 'تسجيل حساب' : 'دخول'; }
+    }
+
+    async function doLogin(email, pass) {
+      try { await auth.signInWithEmailAndPassword(email, pass); }
+      catch (err) { Swal.fire('تعذّر تسجيل الدخول', authErrMsg(err), 'error'); }
+    }
+
+    async function doRegister(email, pass, name, level, phone) {
+      if (name.split(' ').filter(Boolean).length < 4) return Swal.fire('تنبيه', 'لازم تكتب اسمك الرباعي كامل (4 أسماء على الأقل).', 'warning');
+      if (!/^01[0125]\d{8}$/.test(phone)) return Swal.fire('تنبيه', 'رقم الهاتف غير صحيح (مثال: 01012345678).', 'warning');
+      if (pass.length < 6) return Swal.fire('تنبيه', 'كلمة المرور 6 حروف على الأقل.', 'warning');
+      isRegistering = true;
+      let user = null, isNew = false, ok = false, phoneReserved = false;
       try {
-        if (isRegisterMode) {
-          if (name.split(/\s+/).filter(Boolean).length < 4) return Swal.fire('تنبيه', 'لازم تكتب اسمك الرباعي كامل (4 أسماء على الأقل).', 'warning');
-          if (!/^01[0125]\d{8}$/.test(phone)) return Swal.fire('تنبيه', 'رقم الهاتف غير صحيح (مثال: 01012345678).', 'warning');
-          if (pass.length < 6) return Swal.fire('تنبيه', 'كلمة المرور 6 حروف على الأقل.', 'warning');
-          isRegistering = true; let createdUser = null, ok = false;
-          try {
-            createdUser = (await auth.createUserWithEmailAndPassword(email, pass)).user;
-            const tr = await database.ref('phones/' + phone).transaction(cur => cur === null ? createdUser.uid : undefined).catch(() => ({ committed: false }));
-            if (!tr.committed) { await createdUser.delete().catch(() => {}); createdUser = null; return Swal.fire('خطأ', 'هذا الرقم مسجل به حساب بالفعل!', 'error'); }
-            const lvl = parseInt(level) || 1;
-            await database.ref().update({ ['users/' + createdUser.uid]: { name, phone, email, level: lvl, score: 0, isBanned: false, createdAt: Date.now() }, ['leaderboard/' + createdUser.uid]: { name, score: 0, level: lvl } });
-            ok = true;
-          } catch (err) {
-            if (createdUser) { await database.ref('phones/' + phone).remove().catch(() => {}); await createdUser.delete().catch(() => {}); }
-            return Swal.fire('خطأ', escText(err.message), 'error');
-          } finally { isRegistering = false; if (ok && auth.currentUser) startSession(auth.currentUser); }
-        } else {
-          try { await auth.signInWithEmailAndPassword(email, pass); }
-          catch (err) { Swal.fire('خطأ', ({ 'auth/too-many-requests': 'محاولات كثيرة، حاول بعد قليل.', 'auth/network-request-failed': 'تأكد من الإنترنت.' })[err.code] || 'بيانات الدخول غير صحيحة', 'error'); }
+        try { user = (await auth.createUserWithEmailAndPassword(email, pass)).user; isNew = true; }
+        catch (err) {
+          if (err.code !== 'auth/email-already-in-use') throw err;
+          /* الحساب موجود: لو الباسورد صح نكمّل بياناته الناقصة أو ندخّله */
+          let cred; try { cred = await auth.signInWithEmailAndPassword(email, pass); } catch (e2) { return Swal.fire('الإيميل مسجل قبل كده', authErrMsg(err), 'info'); }
+          user = cred.user;
+          const ex = await withTimeout(database.ref('users/' + user.uid).once('value'), 15000);
+          if (ex.exists()) { ok = true; return; }
         }
-      } finally { btn.disabled = false; }
+        const tr = await withTimeout(database.ref('phones/' + phone).transaction(cur => cur === null ? user.uid : undefined), 15000);
+        if (tr.committed) phoneReserved = true;
+        else if (tr.snapshot && tr.snapshot.val() === user.uid) phoneReserved = true;
+        else {
+          if (isNew) await user.delete().catch(() => {}); else await auth.signOut().catch(() => {});
+          user = null; return Swal.fire('خطأ', 'رقم الهاتف ده مسجل به حساب تاني بالفعل!', 'error');
+        }
+        const lvl = parseInt(level) || 1;
+        await withTimeout(database.ref().update({ ['users/' + user.uid]: { name, phone, email, level: lvl, score: 0, isBanned: false, createdAt: Date.now() }, ['leaderboard/' + user.uid]: { name, score: 0, level: lvl } }), 15000);
+        ok = true;
+      } catch (err) {
+        if (user) {
+          if (phoneReserved) await withTimeout(database.ref('phones/' + phone).transaction(cur => cur === user.uid ? null : undefined), 5000).catch(() => {});
+          if (isNew) await user.delete().catch(() => {}); else await auth.signOut().catch(() => {});
+        }
+        Swal.fire('تعذّر إنشاء الحساب', escText(authErrMsg(err)), 'error');
+      } finally { isRegistering = false; if (ok && auth.currentUser) startSession(auth.currentUser); }
     }
 
     function adminSendPasswordReset(email, name) {
@@ -951,8 +1027,9 @@
     }
 
     async function handleForgotPassword() {
-      const email = document.getElementById('auth-email').value.trim(); if (!email) return Swal.fire('تنبيه', 'يرجى كتابة البريد الإلكتروني في الخانة أولاً.', 'warning');
-      try { await auth.sendPasswordResetEmail(email); Swal.fire('تم!', 'تم إرسال رابط إعادة التعيين لبريدك.', 'success'); } catch (error) { Swal.fire('خطأ', error.message, 'error'); }
+      const email = document.getElementById('auth-email').value.trim().toLowerCase(); if (!email) return Swal.fire('تنبيه', 'اكتب الإيميل في الخانة الأول.', 'warning');
+      try { await auth.sendPasswordResetEmail(email); Swal.fire('تم!', 'لو الإيميل مسجل هيوصلك رابط إعادة التعيين. شوف الـ Spam لو ما لقيتوش.', 'success'); }
+      catch (error) { Swal.fire('خطأ', authErrMsg(error), 'error'); }
     }
 
     function loadStudentData(uid) {
@@ -975,9 +1052,11 @@
     function logoutStudent() {
       if (heartbeatInterval) { clearInterval(heartbeatInterval); heartbeatInterval = null; }
       presenceInitialized = false;
+      const done = () => { auth.signOut(); };
       if (currentUser) {
-        Promise.all([ database.ref('users/' + currentUser.uid + '/lastSeen').set(FB.database.ServerValue.TIMESTAMP), database.ref('online_users/' + currentUser.uid).remove() ]).then(() => { auth.signOut(); }).catch(() => { auth.signOut(); });
-      } else { auth.signOut(); }
+        ensureOnline();
+        withTimeout(Promise.all([ database.ref('users/' + currentUser.uid + '/lastSeen').set(FB.database.ServerValue.TIMESTAMP), database.ref('online_users/' + currentUser.uid).remove() ]), 4000).then(done, done);
+      } else { done(); }
     }
 
     function showProfile() {
