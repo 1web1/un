@@ -1319,7 +1319,7 @@
       }).then(async res => {
         if (!res.isConfirmed) return;
         const title = res.value.trim();
-        const dup = researchTopics.find(r => (r.name || '').trim().toLowerCase() === title.toLowerCase());
+        const dup = researchTopics.find(r => normName(r.name) === normName(title));
         if (dup) return Swal.fire('البحث موجود', dup.claimedBy ? 'البحث ده موجود في القائمة لكنه محجوز لطالب تاني.' : 'البحث ده موجود في القائمة وفاضي، احجزه مباشرة.', 'info');
         try {
           const t = await currentUser.getIdToken();
@@ -1359,8 +1359,11 @@
       if (u && u.researchTopic) return Swal.fire('مش ممكن', 'الطالب ده حاجز بحث تاني بالفعل. ارفض الطلب أو حرّر حجزه الأول.', 'warning');
       Swal.fire({ title: 'الموافقة على الطلب؟', text: `"${req.title}" — هيتضاف للقائمة ويتحجز للطالب ${req.name || ''}.`, icon: 'question', showCancelButton: true, confirmButtonText: 'موافقة', cancelButtonText: 'إلغاء' }).then(res => {
         if (!res.isConfirmed) return;
-        const id = database.ref('research_topics').push().key, up = {};
-        up['research_topics/' + id] = { name: req.title, claimedBy: uid, claimedByName: req.name || '', claimedAt: { '.sv': 'timestamp' } };
+        const ex = researchTopics.find(r => normName(r.name) === normName(req.title));
+        if (ex && ex.claimedBy) return Swal.fire('بحث مكرر', 'فيه بحث بنفس الاسم محجوز لطالب تاني. ارفض الطلب.', 'warning');
+        const id = ex ? ex.key : database.ref('research_topics').push().key, up = {};
+        if (ex) { up['research_topics/' + id + '/claimedBy'] = uid; up['research_topics/' + id + '/claimedByName'] = req.name || ''; up['research_topics/' + id + '/claimedAt'] = { '.sv': 'timestamp' }; }
+        else up['research_topics/' + id] = { name: req.title, claimedBy: uid, claimedByName: req.name || '', claimedAt: { '.sv': 'timestamp' } };
         up['users/' + uid + '/researchTopic'] = id; up['users/' + uid + '/researchTopicName'] = req.title;
         up['research_requests/' + uid] = null;
         database.ref().update(up).then(() => { logAdminAction('موافقة على طلب بحث', `${req.title} — ${req.name || uid}`); Swal.fire('تمت الموافقة ✅', 'البحث اتضاف واتحجز للطالب.', 'success'); })
@@ -1447,8 +1450,10 @@
       });
     }
 
+    function normName(x) { return String(x || '').toLowerCase().replace(/[\u064B-\u0652\u0640]/g, '').replace(/[أإآٱ]/g, 'ا').replace(/ى/g, 'ي').replace(/ة/g, 'ه').replace(/[^\u0621-\u064A0-9a-z]+/g, ''); }
     function addResearchTopic(e) {
       e.preventDefault(); const name = document.getElementById('single-research-name').value.trim(); if (!name) return;
+      if (researchTopics.some(r => normName(r.name) === normName(name))) return Swal.fire('بحث مكرر', 'فيه بحث بنفس الاسم موجود بالفعل.', 'warning');
       database.ref('research_topics').push({ name, claimedBy: null }).then(() => { e.target.reset(); logAdminAction('إضافة بحث', `البحث: ${name}`); Swal.fire('تم', 'تمت إضافة البحث.', 'success'); });
     }
 
@@ -1456,9 +1461,11 @@
       e.preventDefault();
       const lines = document.getElementById('bulk-research-data').value.split('\n').map(l => l.trim()).filter(Boolean);
       if (!lines.length) return Swal.fire('تنبيه', 'اكتب اسم بحث واحد على الأقل.', 'warning');
+      const seen = new Set(researchTopics.map(r => normName(r.name))); let skipped = 0;
       const up = {}; const base = database.ref('research_topics');
-      lines.forEach(name => { up[base.push().key] = { name, claimedBy: null }; });
-      base.update(up).then(() => { logAdminAction('إضافة أبحاث بالجملة', `عدد ${lines.length} بحث`); Swal.fire('تم يا بطل!', `تمت إضافة ${lines.length} بحث بنجاح.`, 'success'); document.getElementById('bulk-research-data').value = ''; });
+      lines.forEach(name => { const k = normName(name); if (!k || seen.has(k)) { skipped++; return; } seen.add(k); up[base.push().key] = { name, claimedBy: null }; });
+      if (!Object.keys(up).length) return Swal.fire('بحث مكرر', 'كل الأبحاث دي موجودة بالفعل.', 'info');
+      base.update(up).then(() => { if (skipped) Swal.fire('تم', 'اتضاف ' + Object.keys(up).length + ' بحث، وتم تخطي ' + skipped + ' مكرر.', 'success'); logAdminAction('إضافة أبحاث بالجملة', `عدد ${lines.length} بحث`); Swal.fire('تم يا بطل!', `تمت إضافة ${lines.length} بحث بنجاح.`, 'success'); document.getElementById('bulk-research-data').value = ''; });
     }
 
     function adminFreeResearch(id, name) {
@@ -1483,12 +1490,14 @@
     function renderAdminResearchTable() {
       const tbody = document.getElementById('research-table-body'); if (!tbody) return;
       if (researchTopics.length === 0) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">لا توجد أبحاث مضافة بعد.</td></tr>'; return; }
+      const __cnt = {}; researchTopics.forEach(r => { const k = normName(r.name); __cnt[k] = (__cnt[k] || 0) + 1; });
       tbody.innerHTML = researchTopics.map((r, i) => {
         const taken = !!r.claimedBy;
+        const dupTag = __cnt[normName(r.name)] > 1 ? ' <span class="status-badge status-banned" style="background:#ef4444;color:#fff;">مكرر</span>' : '';
         const statusHtml = taken ? `<span class="status-badge status-online">🟢 محجوز</span>` : `<span class="status-badge status-offline">⚪ متاح</span>`;
         const studentHtml = taken ? escText(r.claimedByName || 'غير معروف') : '<span style="color:var(--fg-faint);">-</span>';
         const actions = `<div class="action-group">${taken ? `<button class="btn-sm btn-msg" onclick="adminFreeResearch('${r.key}','${escapeHtml(r.name)}')">🔓 إلغاء الحجز</button>` : ''}<button class="btn-sm btn-ban" onclick="adminDeleteResearchTopic('${r.key}','${escapeHtml(r.name)}')">🗑️ حذف</button></div>`;
-        return `<tr><td>${i + 1}</td><td>${escText(r.name)}</td><td>${statusHtml}</td><td>${studentHtml}</td><td>${actions}</td></tr>`;
+        return `<tr><td>${i + 1}</td><td>${escText(r.name)}${dupTag}</td><td>${statusHtml}</td><td>${studentHtml}</td><td>${actions}</td></tr>`;
       }).join('');
       filterAdminResearch();
     }
