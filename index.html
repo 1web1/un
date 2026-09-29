@@ -760,7 +760,7 @@
       if (user) startSession(user);
       else {
         detachAll(window._lastUid);
-        currentUser = null; currentStudentData = null; checkMaintenanceUI();
+        currentUser = null; currentStudentData = null; checkMaintenanceUI(); renderResearchHome();
         document.getElementById('auth-overlay').style.display = isMaintenanceActive ? 'none' : 'flex'; document.getElementById('user-greeting').innerHTML = '';
         document.getElementById('admin-panel').style.display = 'none';
       }
@@ -889,7 +889,7 @@
       btn.disabled = true;
       try {
         if (isRegisterMode) {
-          if (name.split(/\s+/).filter(Boolean).length < 2) return Swal.fire('تنبيه', 'اكتب اسمك الكامل (اسمين على الأقل).', 'warning');
+          if (name.split(/\s+/).filter(Boolean).length < 4) return Swal.fire('تنبيه', 'لازم تكتب اسمك الرباعي كامل (4 أسماء على الأقل).', 'warning');
           if (!/^01[0125]\d{8}$/.test(phone)) return Swal.fire('تنبيه', 'رقم الهاتف غير صحيح (مثال: 01012345678).', 'warning');
           if (pass.length < 6) return Swal.fire('تنبيه', 'كلمة المرور 6 حروف على الأقل.', 'warning');
           isRegistering = true; let createdUser = null, ok = false;
@@ -911,6 +911,16 @@
       } finally { btn.disabled = false; }
     }
 
+    function adminSendPasswordReset(email, name) {
+      if (!email) return Swal.fire('خطأ', 'الطالب ده مسجّل من غير إيميل واضح في بياناته.', 'error');
+      Swal.fire({ title: `إرسال رابط استعادة لـ ${name}؟`, text: email, showCancelButton: true, confirmButtonText: 'أيوه ابعت' }).then(result => {
+        if (!result.isConfirmed) return;
+        auth.sendPasswordResetEmail(email)
+          .then(() => { logAdminAction('إرسال رابط استعادة باسورد', `الطالب: ${name}`); Swal.fire('تم الإرسال! ✅', `اتبعت رابط استعادة الباسورد لإيميل ${email}. قوله يشوف Spam لو ملقاهوش.`, 'success'); })
+          .catch(err => Swal.fire('خطأ', escText(err.message), 'error'));
+      });
+    }
+
     async function handleForgotPassword() {
       const email = document.getElementById('auth-email').value.trim(); if (!email) return Swal.fire('تنبيه', 'يرجى كتابة البريد الإلكتروني في الخانة أولاً.', 'warning');
       try { await auth.sendPasswordResetEmail(email); Swal.fire('تم!', 'تم إرسال رابط إعادة التعيين لبريدك.', 'success'); } catch (error) { Swal.fire('خطأ', error.message, 'error'); }
@@ -927,6 +937,7 @@
           const adminBtn = document.getElementById('admin-toggle-btn');
           if (currentStudentData.isAdmin === true) { adminBtn.style.display = 'inline-flex'; listenToAdminLogs(); if (!adminListenersOn) { adminListenersOn = true; listenToUsersData(); listenToOnlinePresence(); } } else { adminBtn.style.display = 'none'; document.getElementById('admin-panel').style.display = 'none'; }
         }
+        renderResearchHome();
       });
       /* المستمعات العامة تُشغَّل مرة واحدة فقط (بدون تكرار بعد الخروج والدخول) */
       if (!window._listenersReady) { window._listenersReady = true; listenToAlerts(); listenToSubjects(); listenToLeaderboard(); listenToResearchTopics(); }
@@ -992,6 +1003,7 @@
         <td><div class="action-group">
              <button class="btn-sm btn-track" onclick="trackStudent('${u.uid}')">📊 النتائج</button>
              <button class="btn-sm btn-msg" onclick="sendPrivateAlert('${u.uid}','${escapeHtml(u.name)}')">📩 رسالة</button>
+             <button class="btn-sm btn-track" style="background: rgba(168,85,247,.15); color:#c084fc; border-color:#a855f7;" onclick="adminSendPasswordReset('${escapeHtml(u.email||'')}','${escapeHtml(u.name)}')">🔑 استعادة الباسورد</button>
              <button class="btn-sm btn-edit" onclick="editStudentProfile('${u.uid}','${escapeHtml(u.name)}','${escapeHtml(u.phone||'')}','${escapeHtml(u.studentId||'')}')">✏️ تعديل</button>
              ${banBtn}
         </div></td></tr>`;
