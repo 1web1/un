@@ -1606,7 +1606,10 @@
       const tbody = document.getElementById('research-table-body'); if (!tbody) return;
       if (researchTopics.length === 0) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">لا توجد أبحاث مضافة بعد.</td></tr>'; return; }
       const __cnt = {}; researchTopics.forEach(r => { const k = normName(r.name); __cnt[k] = (__cnt[k] || 0) + 1; });
-      tbody.innerHTML = researchTopics.map((r, i) => {
+      /* المحجوز يطلع فوق (الأقدم حجزًا الأول)، وبعده المتاح بالترتيب الأبجدي */
+      const __claimTime = r => { if (typeof r.claimedAt === 'number') return r.claimedAt; const u = allUsersList.find(x => x.researchTopic === r.key); return (u && typeof u.researchTopicAt === 'number') ? u.researchTopicAt : Number.MAX_SAFE_INTEGER; };
+      const __sorted = researchTopics.slice().sort((a, b) => { const ta = !!a.claimedBy, tb = !!b.claimedBy; if (ta !== tb) return ta ? -1 : 1; if (ta) return __claimTime(a) - __claimTime(b); return 0; });
+      tbody.innerHTML = __sorted.map((r, i) => {
         const taken = !!r.claimedBy;
         const holders = allUsersList.filter(u => u.researchTopic === r.key);
         const conflict = holders.length > 1 || (r.claimedBy && holders.length === 1 && holders[0].uid !== r.claimedBy);
@@ -1615,7 +1618,7 @@
         const statusHtml = taken ? `<span class="status-badge status-online">🟢 محجوز</span>` : `<span class="status-badge status-offline">⚪ متاح</span>`;
         const studentHtml = taken ? escText(r.claimedByName || 'غير معروف') : '<span style="color:var(--fg-faint);">-</span>';
         const actions = `<div class="action-group">${taken ? `<button class="btn-sm btn-msg" onclick="adminFreeResearch('${r.key}','${escapeHtml(r.name)}')">🔓 إلغاء الحجز</button>` : ''}<button class="btn-sm btn-ban" onclick="adminDeleteResearchTopic('${r.key}','${escapeHtml(r.name)}')">🗑️ حذف</button></div>`;
-        return `<tr><td>${i + 1}</td><td>${escText(r.name)}${dupTag}${conflictTag}</td><td>${statusHtml}</td><td>${studentHtml}</td><td>${actions}</td></tr>`;
+        return `<tr${taken ? ' style="background:rgba(34,197,94,.10); box-shadow: inset -4px 0 0 #22c55e;"' : ''}><td>${i + 1}</td><td>${escText(r.name)}${dupTag}${conflictTag}</td><td>${statusHtml}</td><td>${studentHtml}</td><td>${actions}</td></tr>`;
       }).join('');
       filterAdminResearch();
     }
