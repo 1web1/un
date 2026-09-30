@@ -160,6 +160,11 @@
   .profile-row-value { font-size: 15px; font-weight: 700; color: var(--fg); word-break: break-all; }
   .file-category-header { background: rgba(0,0,0,.3); padding: 10px 14px; border-radius: 8px; font-size: 14px; color: var(--gold); margin: 20px 0 10px; font-weight: bold; display: flex; align-items: center; gap: 8px; border-right: 3px solid var(--gold); }
   .z-content { position: relative; z-index: 2; }
+  .research-nav-btn { background: #14b8a6; }
+  .research-nav-btn:hover { background: #0d9488; }
+  .research-entry { transition: transform .2s var(--ease), box-shadow .2s var(--ease); }
+  .research-entry:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(20,184,166,.25); }
+  #research-tabs .level-tab-btn.active { background: #14b8a6; box-shadow: 0 4px 15px rgba(20,184,166,.4); }
 
   .subject-image-container { margin-bottom: 20px; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,.1); }
   .subject-image-container img { width: 100%; height: auto; display: block; }
@@ -287,6 +292,7 @@
       <nav class="nav z-content">
         <button class="pill theme-btn" id="theme-toggle-btn" onclick="toggleTheme()" title="تبديل الوضع">🌞</button>
         <div class="user-greeting-btn" onclick="showProfile()" id="user-greeting" title="الملف الشخصي"></div>
+        <button class="pill research-nav-btn" id="research-nav-btn" onclick="showResearch()" title="قسم الأبحاث"><span>🔬</span><span class="btn-txt">الأبحاث</span></button>
         <button class="pill admin-btn" id="admin-toggle-btn" onclick="toggleAdminPanel()" style="display:none;"><span>⚙️</span><span class="btn-txt">الإدارة</span></button>
         <button class="pill logout-btn" onclick="logoutStudent()"><span>🚪</span><span class="btn-txt">خروج</span></button>
       </nav>
@@ -364,17 +370,47 @@
           </div>
         </div>
 
-        <div class="card liquid-glass" style="margin-top: 24px; border-color: #14b8a6;" id="research-section">
-          <div class="z-content flex-between" style="margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
-            <h3 style="color: #14b8a6; margin: 0; font-size: 18px; display: flex; align-items: center; gap: 8px;"><span>🔬</span> حجز الأبحاث</h3>
-            <div id="my-research-status" style="font-size: 13px;"></div>
+        <div class="card liquid-glass research-entry" style="margin-top: 24px; border-color: #14b8a6; cursor:pointer;" onclick="showResearch()">
+          <div class="z-content flex-between" style="gap:12px; flex-wrap:wrap;">
+            <div>
+              <h3 style="color:#14b8a6; margin:0 0 6px; font-size:18px; display:flex; align-items:center; gap:8px;"><span>🔬</span> قسم الأبحاث</h3>
+              <p style="margin:0; font-size:13px; color:var(--fg-soft);">اختار بحث جاهز من القائمة أو اطلب بحث مش موجود.</p>
+            </div>
+            <button class="pill" style="background:#14b8a6;" onclick="event.stopPropagation(); showResearch()">دخول القسم ⭠</button>
           </div>
-          <input type="text" id="research-search" class="search-box z-content" style="margin-bottom: 16px;" placeholder="🔍 دوّر على بحث..." oninput="filterResearch()">
-          <div class="grid z-content" id="research-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));"></div>
-          <div class="z-content" id="research-request-box" style="margin-top:18px; padding-top:16px; border-top:1px dashed rgba(20,184,166,.4);">
-            <div id="research-request-status" style="font-size:13px; margin-bottom:10px;"></div>
-            <button class="pill" id="research-request-btn" style="background:#8b5cf6;" onclick="requestNewResearch()">✍️ عايز بحث مش موجود في القائمة؟ اطلبه</button>
-            <p style="font-size:12px; color:var(--fg-faint); margin:8px 0 0;">الطلب بيوصل للإدارة، ولو وافقت بيتحجزلك البحث تلقائي.</p>
+        </div>
+      </div>
+
+      <!-- قسم الأبحاث -->
+      <div id="view-research" style="display: none;">
+        <button class="pill z-content mb-4" style="background:rgba(255,255,255,.1);" onclick="showHome()">⭠ رجوع للرئيسية</button>
+        <div class="z-content flex-between" style="margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+          <h2 class="section-title" style="color:#14b8a6; margin:0;">🔬 قسم الأبحاث</h2>
+          <div id="my-research-status" style="font-size: 13px;"></div>
+        </div>
+
+        <div class="level-tabs liquid-glass" id="research-tabs">
+          <button class="level-tab-btn z-content active" id="tab-res-pick" onclick="switchResearchTab('pick')">📚 اختار بحث جاهز</button>
+          <button class="level-tab-btn z-content" id="tab-res-new" onclick="switchResearchTab('new')">✍️ انشئ بحث مش موجود في القائمة</button>
+        </div>
+
+        <div class="card liquid-glass" style="border-color:#14b8a6;">
+          <!-- اختيار بحث جاهز -->
+          <div id="research-pane-pick">
+            <p class="z-content" style="font-size:13px; color:var(--fg-soft); margin:0 0 14px;">اختار بحث من القائمة واحجزه باسمك. البحث المحجوز مش بيظهر لغيرك.</p>
+            <input type="text" id="research-search" class="search-box z-content" style="margin-bottom: 16px;" placeholder="🔍 دوّر على بحث..." oninput="filterResearch()">
+            <div class="grid z-content" id="research-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));"></div>
+          </div>
+
+          <!-- إنشاء بحث جديد -->
+          <div id="research-pane-new" style="display:none;">
+            <p class="z-content" style="font-size:13px; color:var(--fg-soft); margin:0 0 14px;">البحث اللي عايزه مش موجود في القائمة؟ اكتب عنوانه وابعته للإدارة.</p>
+            <div id="research-new-blocked" class="z-content" style="display:none; font-size:13px; color:#fbbf24;">إنت حاجز بحث بالفعل. الغي الحجز الأول لو عايز تطلب بحث تاني.</div>
+            <div class="z-content" id="research-request-box">
+              <div id="research-request-status" style="font-size:13px; margin-bottom:10px;"></div>
+              <button class="pill" id="research-request-btn" style="background:#8b5cf6;" onclick="requestNewResearch()">✍️ اطلب بحث جديد</button>
+              <p style="font-size:12px; color:var(--fg-faint); margin:8px 0 0;">الطلب بيوصل للإدارة، ولو وافقت بيتحجزلك البحث تلقائي.</p>
+            </div>
           </div>
         </div>
       </div>
@@ -1354,7 +1390,9 @@
       const box = document.getElementById('research-request-box'); if (!box) return;
       const st = document.getElementById('research-request-status');
       const btn = document.getElementById('research-request-btn');
-      if (myResearch()) { box.style.display = 'none'; return; }
+      const __blk = document.getElementById('research-new-blocked');
+      if (myResearch()) { box.style.display = 'none'; if (__blk) __blk.style.display = 'block'; return; }
+      if (__blk) __blk.style.display = 'none';
       box.style.display = 'block';
       if (myRequest && myRequest.status === 'pending') {
         st.innerHTML = `<span style="color:#fbbf24;">⏳ طلبك "${escText(myRequest.title)}" مستني موافقة الإدارة</span> <button class="btn-sm btn-ban" style="margin-right:8px;" onclick="cancelResearchRequest()">إلغاء الطلب</button>`;
@@ -1682,7 +1720,23 @@
     function deleteQuiz(s, q, qName) { Swal.fire({title: "حذف السؤال؟", showCancelButton: true, confirmButtonColor: '#ef4444'}).then((r)=>{ if(r.isConfirmed) { database.ref('subjects/'+s+'/quizzes/'+q).remove(); logAdminAction('حذف سؤال', `السؤال: ${qName}`); }}); }
     function deleteSubject(s, n) { Swal.fire({title: `حذف المادة ${n} نهائياً؟`, icon:'warning', showCancelButton: true, confirmButtonColor: '#ef4444'}).then((r)=>{ if(r.isConfirmed) { database.ref('subjects/'+s).remove().then(()=>{ logAdminAction('حذف مادة', `المادة: ${n}`); if(currentSubjectId===s) showHome(); }); }}); }
 
-    function showHome(noScroll) { document.getElementById('view-home').style.display = 'block'; document.getElementById('view-subject').style.display = 'none'; document.getElementById('search-box').value = ''; currentSubjectId = null; renderHome(); updateAdminSelects(); if (!noScroll) window.scrollTo({ top: document.getElementById('main-site').offsetTop, behavior: 'smooth' }); }
+    function showHome(noScroll) { document.getElementById('view-home').style.display = 'block'; document.getElementById('view-subject').style.display = 'none'; document.getElementById('view-research').style.display = 'none'; document.getElementById('search-box').value = ''; currentSubjectId = null; renderHome(); updateAdminSelects(); if (!noScroll) window.scrollTo({ top: document.getElementById('main-site').offsetTop, behavior: 'smooth' }); }
+    function showResearch(tab) {
+      document.getElementById('view-home').style.display = 'none';
+      document.getElementById('view-subject').style.display = 'none';
+      document.getElementById('view-research').style.display = 'block';
+      currentSubjectId = null;
+      switchResearchTab(tab || 'pick');
+      renderResearchHome(); renderMyRequest();
+      window.scrollTo({ top: document.getElementById('main-site').offsetTop, behavior: 'smooth' });
+    }
+    function switchResearchTab(tab) {
+      const pick = tab !== 'new';
+      document.getElementById('tab-res-pick').classList.toggle('active', pick);
+      document.getElementById('tab-res-new').classList.toggle('active', !pick);
+      document.getElementById('research-pane-pick').style.display = pick ? 'block' : 'none';
+      document.getElementById('research-pane-new').style.display = pick ? 'none' : 'block';
+    }
     function switchLevel(lvl) { activeLevel = lvl; document.getElementById('tab-lvl-1').classList.toggle('active', lvl===1); document.getElementById('tab-lvl-2').classList.toggle('active', lvl===2); document.getElementById('current-level-heading').innerText = lvl===1 ? "مواد المستوى الأول" : "مواد المستوى الثاني"; document.getElementById('search-box').value = ''; renderHome(); }
 
     function filterSubjects() { clearTimeout(searchTimeout); searchTimeout = setTimeout(() => { renderHome(document.getElementById('search-box').value.toLowerCase()); }, 300); }
@@ -1718,7 +1772,7 @@
 
     function openSubject(id, silent) {
       currentSubjectId = id; const subj = db.find(s => s.id === id); if (!subj) return showHome();
-      document.getElementById('view-home').style.display = 'none'; document.getElementById('view-subject').style.display = 'block'; document.getElementById('subject-title').innerText = "📚 " + subj.name; document.getElementById('subject-desc').innerText = subj.desc;
+      document.getElementById('view-home').style.display = 'none'; document.getElementById('view-research').style.display = 'none'; document.getElementById('view-subject').style.display = 'block'; document.getElementById('subject-title').innerText = "📚 " + subj.name; document.getElementById('subject-desc').innerText = subj.desc;
       const isAdmin = currentStudentData && currentStudentData.isAdmin === true; const solvedQuizzes = (currentStudentData && currentStudentData.solvedQuizzes) ? currentStudentData.solvedQuizzes : {};
 
       if (subj.images && subj.images.length > 0) {
