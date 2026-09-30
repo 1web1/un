@@ -305,7 +305,7 @@
     <div class="hero-content">
       <div class="hero-label">قسم المساحة ونظم المعلومات</div>
       <h1 class="hero-title">منصة الدفعة<br>التعليمية</h1>
-      <p class="hero-desc">منصتكم الموحدة للملخصات، بنك الأسئلة، ولوحة شرف المتفوقين لكل المستويات.</p>
+      <p class="hero-desc">منصتكم الموحدة للملخصات، بنك الأسئلة، وأوائل الدفعة المتفوقين لكل المستويات.</p>
       <div class="scroll-down-btn" onclick="document.getElementById('main-site').scrollIntoView({behavior: 'smooth'})">
         <span>استكشف المنصة</span>
         <div class="arrow-down">↓</div>
@@ -390,10 +390,11 @@
             </div>
           </div>
           <div>
-            <h2 class="section-title z-content" style="color: var(--gold);">🏆 لوحة الشرف</h2>
+            <h2 class="section-title z-content" style="color: var(--gold);">🏆 أوائل الدفعة</h2>
             <div class="card liquid-glass leaderboard-card" id="leaderboard-container">
               <div class="empty-state">جاري تحميل البيانات...</div>
             </div>
+            <div id="lb-my-research" style="display:none; margin-top:12px;"></div>
           </div>
         </div>
 
@@ -1248,7 +1249,7 @@
     function renderLeaderboard(board) {
       const container = document.getElementById('leaderboard-container'); container.innerHTML = ''; let top = board.slice(0, 5);
       if (top.length === 0) { container.innerHTML = '<div class="empty-state">لا توجد نتائج حتى الآن.</div>'; return; }
-      container.innerHTML = top.map((s, idx) => { const medal = idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : `${idx + 1}.`; return `<div class="rank-row z-content"><div class="rank-num">${medal}</div><div class="rank-name">${escText(s.name)}</div><div class="rank-score">${s.score || 0} ن</div></div>`; }).join('');
+      container.innerHTML = top.map((s, idx) => { const medal = idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : `${idx + 1}.`; return `<div class="rank-row z-content"><div class="rank-num">${medal}</div><div class="rank-name">${escText(s.name)}</div><div class="rank-score">${s.score || 0}</div></div>`; }).join('');
     }
 
     function renderStudentsTable() {
@@ -1574,7 +1575,7 @@
       if (!box && !home) return;
       let boxHtml = '', homeHtml = '', color = 'var(--fg-faint)';
       if (!currentUser || (currentStudentData && currentStudentData.isAdmin === true)) {
-        if (box) box.style.display = 'none'; if (home) home.innerHTML = ''; return;
+        if (box) box.style.display = 'none'; if (home) home.innerHTML = ''; const __lb0 = document.getElementById('lb-my-research'); if (__lb0) { __lb0.style.display = 'none'; __lb0.innerHTML = ''; } return;
       }
       const mine = myResearch();
       if (mine) {
@@ -1595,6 +1596,16 @@
       }
       if (box) { box.style.display = ''; box.style.borderColor = color; box.innerHTML = boxHtml; }
       if (home) home.innerHTML = homeHtml;
+      const lbBox = document.getElementById('lb-my-research');
+      if (lbBox) {
+        let lbHtml;
+        if (mine) lbHtml = `<div style="font-size:12px; color:#4ade80; font-weight:700; margin-bottom:4px;">✅ بحثك (مقبول)</div><div style="font-size:15px; font-weight:800; word-break:break-word;">${escText(mine.name)}</div>`;
+        else if (myRequest && myRequest.status === 'pending') lbHtml = `<div style="font-size:12px; color:#fbbf24; font-weight:700; margin-bottom:4px;">⏳ قيد المراجعة</div><div style="font-size:15px; font-weight:800; word-break:break-word;">${escText(myRequest.title)}</div>`;
+        else if (myRequest && myRequest.status === 'rejected') lbHtml = `<div style="font-size:12px; color:#f87171; font-weight:700; margin-bottom:4px;">❌ طلبك اترفض</div><div style="font-size:15px; font-weight:800; word-break:break-word;">${escText(myRequest.title)}</div>`;
+        else lbHtml = `<div style="font-size:12px; color:var(--fg-faint); font-weight:700; margin-bottom:4px;">📌 بحثك</div><div style="font-size:14px; color:var(--fg-soft);">لسه ما اخترتش بحث</div>`;
+        lbBox.style.display = '';
+        lbBox.innerHTML = `<div class="card liquid-glass" style="border-color:${color}; cursor:pointer;" onclick="showResearch()"><div class="z-content">${lbHtml}</div></div>`;
+      }
     }
 
     function renderResearchHome(searchQuery = '') {
