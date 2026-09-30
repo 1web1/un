@@ -248,6 +248,33 @@
     .section-title { font-size: 18px; }
   }
   @media (max-width: 360px) { .mark-text { display: none; } }
+
+  /* ===== تحسينات الموبايل ===== */
+  html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+  img, video, iframe, canvas { max-width: 100%; }
+  button, a, .pill, .btn-sm, .level-tab-btn, .admin-tab { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+  .card, .styled-table td { overflow-wrap: anywhere; }
+  @supports (padding: env(safe-area-inset-top)) {
+    .chrome { padding-top: env(safe-area-inset-top); height: calc(var(--header-h) + env(safe-area-inset-top)); }
+    .container { padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
+  }
+  @media (max-width: 600px) {
+    /* منع تكبير الشاشة تلقائي في iPhone عند الضغط على أي خانة */
+    input, select, textarea, .swal2-input, .swal2-textarea { font-size: 16px !important; }
+    .pill, .btn-sm { min-height: 40px; }
+    .research-nav-btn { width: 36px; padding: 0 !important; }
+    #research-tabs { flex-direction: column; }
+    #research-tabs .level-tab-btn { width: 100%; white-space: normal; line-height: 1.5; padding: 12px 10px; font-size: 14px; }
+    #research-grid { grid-template-columns: 1fr !important; }
+    .research-entry .pill { width: 100%; }
+    .styled-table { min-width: 640px; font-size: 12px; }
+    .styled-table th, .styled-table td { padding: 10px 8px; }
+    .swal2-popup { width: 92% !important; max-width: 420px; padding: 18px 14px !important; }
+    .swal2-title { font-size: 20px !important; }
+    .swal2-html-container { font-size: 14px !important; margin: 8px 6px !important; }
+    .swal2-actions { flex-wrap: wrap; gap: 8px; }
+    .swal2-styled { min-height: 42px; }
+  }
   #auth-overlay { z-index: 10000000; }
   div:where(.swal2-container) { z-index: 20000000 !important; }
   @media (prefers-reduced-motion: reduce) { .cinematic-video { display: none; } }
@@ -399,7 +426,7 @@
           <div id="research-pane-pick">
             <p class="z-content" style="font-size:13px; color:var(--fg-soft); margin:0 0 14px;">اختار بحث من القائمة واحجزه باسمك. البحث المحجوز مش بيظهر لغيرك.</p>
             <input type="text" id="research-search" class="search-box z-content" style="margin-bottom: 16px;" placeholder="🔍 دوّر على بحث..." oninput="filterResearch()">
-            <div class="grid z-content" id="research-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));"></div>
+            <div class="grid z-content" id="research-grid" style="grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));"></div>
           </div>
 
           <!-- إنشاء بحث جديد -->
@@ -652,7 +679,7 @@
         </div>
         <div class="input-group"><label>البريد الإلكتروني</label><input type="email" id="auth-email" placeholder="student@example.com" required autocomplete="email" autocapitalize="none" autocorrect="off" spellcheck="false" inputmode="email" dir="ltr"></div>
         <div class="input-group" id="pass-group"><label>كلمة المرور</label><input type="password" id="auth-pass" placeholder="••••••••" minlength="6" autocomplete="current-password" autocapitalize="none" autocorrect="off" spellcheck="false" dir="ltr"><a href="javascript:void(0)" onclick="togglePassVisibility()" id="pass-eye" style="font-size:12px; color:var(--fg-soft); margin-top:6px; text-decoration:underline;">👁️ إظهار كلمة المرور</a></div>
-        <div id="forgot-pass-wrap" style="text-align: left; margin-top: 4px;"><a href="javascript:void(0)" onclick="handleForgotPassword()" style="color: var(--fg-soft); font-size: 12px; text-decoration: underline;">نسيت كلمة المرور؟</a></div>
+        <div id="forgot-pass-wrap" style="text-align: left; margin-top: 4px;"><a href="javascript:void(0)" onclick="handleForgotPassword()" style="color: var(--fg-soft); font-size: 12px; text-decoration: underline;">نسيت كلمة المرور؟</a> <span style="color:var(--fg-faint); font-size:12px;">•</span> <a href="javascript:void(0)" onclick="resetWithPastedLink()" style="color: var(--gold); font-size: 12px; text-decoration: underline;">معايا رابط الاستعادة</a></div>
         <button class="pill" type="submit" id="auth-submit-btn" style="width:100%; height:44px; margin-top:10px; font-size: 15px;">دخول</button>
       </form>
       <p class="z-content" style="text-align:center; font-size:13px; margin-top:16px; color:var(--fg-soft);">
@@ -768,6 +795,7 @@
         if (/CONFIGURATION_NOT_FOUND/.test(raw)) return 'خدمة Authentication مش متفعّلة في مشروع Firebase. ادخل Firebase Console ← Authentication ← اضغط Get started، وبعدها فعّل Email/Password.';
         if (/API_KEY_SERVICE_BLOCKED|API_KEY_HTTP_REFERRER_BLOCKED|referer|IP_ADDRESS_BLOCKED/i.test(raw)) return 'مفتاح API مقيّد. ادخل Google Cloud Console ← APIs & Services ← Credentials ← المفتاح، وضيف https://1web1.github.io/* في HTTP referrers، وتأكد إن Identity Toolkit API مسموح للمفتاح.';
         if (/OPERATION_NOT_ALLOWED/.test(raw)) return m['auth/operation-not-allowed'];
+        if (/INVALID_LOGIN_CREDENTIALS|INVALID_PASSWORD|EMAIL_NOT_FOUND|INVALID_CREDENTIAL/.test(raw)) return bad;
         if (/USER_DISABLED/.test(raw)) return m['auth/user-disabled'];
         console.error('Firebase internal-error:', raw);
         return 'خطأ داخلي من Firebase. التفاصيل: ' + raw.replace(/\s+/g, ' ').slice(0, 220);
@@ -981,6 +1009,34 @@
         document.querySelectorAll('#students-table-body tr').forEach(row => { if (row.cells.length > 1) row.style.display = row.innerText.toLowerCase().includes(query) ? '' : 'none'; });
     }
 
+    /* ===== إدارة: إضافة/خصم نقاط لطالب معين (تظهر في لوحة الشرف) ===== */
+    async function adminAddPoints(uid) {
+      const u = allUsersList.find(x => x.uid === uid); if (!u) return;
+      const cur = u.score || 0;
+      const { value: vals } = await Swal.fire({
+        title: 'نقاط الطالب: ' + escText(u.name),
+        html: `<div style="font-size:14px; margin-bottom:8px;">النقاط الحالية: <b style="color:#ffd700;">${cur}</b></div>` +
+              `<input id="pts-amount" type="number" step="1" class="swal2-input" placeholder="عدد النقاط (سالب للخصم)" style="direction:ltr;">` +
+              `<input id="pts-reason" class="swal2-input" placeholder="السبب (اختياري)">`,
+        focusConfirm: false, showCancelButton: true, confirmButtonText: 'تطبيق', cancelButtonText: 'إلغاء',
+        preConfirm: () => {
+          const n = parseInt(document.getElementById('pts-amount').value, 10);
+          if (!Number.isFinite(n) || n === 0) { Swal.showValidationMessage('اكتب عدد نقاط صحيح (غير صفر)'); return false; }
+          return { n, reason: document.getElementById('pts-reason').value.trim() };
+        }
+      });
+      if (!vals) return;
+      const delta = Math.max(vals.n, -cur);
+      if (delta === 0) return Swal.fire('تنبيه', 'رصيد الطالب صفر بالفعل، مفيش نقاط تتخصم.', 'info');
+      const inc = FB.database.ServerValue.increment(delta), up = {};
+      up['users/' + uid + '/score'] = inc;
+      if (!u.isBanned) { up['leaderboard/' + uid + '/score'] = inc; up['leaderboard/' + uid + '/name'] = u.name; up['leaderboard/' + uid + '/level'] = u.level || 1; }
+      try {
+        await database.ref().update(up);
+        logAdminAction(delta > 0 ? 'إضافة نقاط' : 'خصم نقاط', `الطالب: ${u.name} | ${delta > 0 ? '+' : ''}${delta}${vals.reason ? ' | السبب: ' + vals.reason : ''}`);
+        Swal.fire('تم ✅', `${delta > 0 ? 'اتضافت' : 'اتخصمت'} ${Math.abs(delta)} نقطة ${delta > 0 ? 'لـ' : 'من'} ${escText(u.name)}.` + (u.isBanned ? ' (الطالب محظور فمش هيظهر في لوحة الشرف)' : ''), 'success');
+      } catch (e) { Swal.fire('خطأ', 'معرفناش نحدّث النقاط: ' + (e && e.message ? e.message : ''), 'error'); }
+    }
     async function editStudentProfile(uid, currentName, currentPhone, currentStudentId) {
       const { value: formValues } = await Swal.fire({
         title: 'تعديل بيانات الطالب',
@@ -1024,8 +1080,15 @@
     }
 
     async function doLogin(email, pass) {
+      const __isBad = e => /invalid-(login-)?credentials?|wrong-password|user-not-found/.test((e && e.code) || '') || /INVALID_LOGIN_CREDENTIALS|INVALID_PASSWORD|EMAIL_NOT_FOUND/.test(String((e && e.message) || ''));
       try { await auth.signInWithEmailAndPassword(email, pass); }
-      catch (err) { Swal.fire('تعذّر تسجيل الدخول', authErrMsg(err), 'error'); }
+      catch (err) {
+        /* مسافة زيادة في أول/آخر الباسورد (كيبورد الموبايل) نجرب بدونها مرة واحدة */
+        if (__isBad(err) && pass !== pass.trim() && pass.trim()) {
+          try { await auth.signInWithEmailAndPassword(email, pass.trim()); return; } catch (e2) { err = e2; }
+        }
+        Swal.fire('تعذّر تسجيل الدخول', authErrMsg(err), 'error');
+      }
     }
 
     async function doRegister(email, pass, name, level, phone) {
@@ -1068,14 +1131,35 @@
       Swal.fire({ title: `إرسال رابط استعادة لـ ${name}؟`, text: email, showCancelButton: true, confirmButtonText: 'أيوه ابعت' }).then(result => {
         if (!result.isConfirmed) return;
         auth.sendPasswordResetEmail(email)
-          .then(() => { logAdminAction('إرسال رابط استعادة باسورد', `الطالب: ${name}`); Swal.fire('تم الإرسال! ✅', `اتبعت رابط استعادة الباسورد لإيميل ${email}. قوله يشوف Spam لو ملقاهوش.`, 'success'); })
+          .then(() => { logAdminAction('إرسال رابط استعادة باسورد', `الطالب: ${name}`); Swal.fire('تم الإرسال! ✅', `اتبعت رابط استعادة الباسورد لإيميل ${email}. قوله يشوف Spam لو ملقاهوش. ولو الرابط ما اشتغلش يعمل نسخ للرابط ويستخدم "معايا رابط الاستعادة" في شاشة الدخول.`, 'success'); })
           .catch(err => Swal.fire('خطأ', escText(err.message), 'error'));
       });
     }
 
+    /* تعيين الباسورد بلصق رابط الاستعادة (من غير صفحة Firebase الافتراضية) */
+    async function resetWithPastedLink() {
+      if (!FB_OK) return Swal.fire('خطأ', 'حدّث الصفحة وجرب تاني.', 'error');
+      const { value: v } = await Swal.fire({
+        title: 'تعيين كلمة مرور جديدة 🔑',
+        html: '<div style="font-size:13px; margin-bottom:8px; line-height:1.8;">من الإيميل: اضغط مطولًا على زر/رابط إعادة التعيين واختار <b>نسخ الرابط</b> (من غير ما تفتحه)، والصقه هنا.</div>' +
+              '<textarea id="rp-link" class="swal2-textarea" placeholder="الصق الرابط هنا" style="direction:ltr; font-size:12px; height:90px;"></textarea>' +
+              '<input id="rp-pass" type="password" class="swal2-input" placeholder="كلمة المرور الجديدة (6 أحرف على الأقل)" autocomplete="new-password">',
+        focusConfirm: false, showCancelButton: true, confirmButtonText: 'حفظ', cancelButtonText: 'إلغاء', showLoaderOnConfirm: true,
+        preConfirm: async () => {
+          const raw = (document.getElementById('rp-link').value || '').trim(), pw = document.getElementById('rp-pass').value;
+          const m = raw.match(/oobCode=([^&\s#]+)/i); const code = m ? decodeURIComponent(m[1]) : '';
+          if (!code) { Swal.showValidationMessage('الرابط مش صحيح. لازم يكون فيه oobCode='); return false; }
+          if (!pw || pw.length < 6) { Swal.showValidationMessage('اكتب 6 أحرف على الأقل'); return false; }
+          try { await auth.confirmPasswordReset(code, pw); return true; }
+          catch (e) { Swal.showValidationMessage(__resetErrMsg(e)); return false; }
+        }
+      });
+      if (v) Swal.fire('تم ✅', 'اتغيرت كلمة المرور. سجّل دخول بيها دلوقتي.', 'success');
+    }
+
     async function handleForgotPassword() {
       const email = document.getElementById('auth-email').value.trim().toLowerCase(); if (!email) return Swal.fire('تنبيه', 'اكتب الإيميل في الخانة الأول.', 'warning');
-      try { await auth.sendPasswordResetEmail(email); Swal.fire('تم!', 'لو الإيميل مسجل هيوصلك رابط إعادة التعيين. شوف الـ Spam لو ما لقيتوش.', 'success'); }
+      try { await auth.sendPasswordResetEmail(email); Swal.fire('تم!', 'لو الإيميل مسجل هيوصلك رابط إعادة التعيين (شوف الـ Spam). لو الرابط قال منتهي أو مستخدم: انسخه من غير ما تفتحه واضغط "معايا رابط الاستعادة" في شاشة الدخول.', 'success'); }
       catch (error) { Swal.fire('خطأ', authErrMsg(error), 'error'); }
     }
 
@@ -1191,6 +1275,7 @@
              <button class="btn-sm btn-track" onclick="trackStudent('${u.uid}')">📊 النتائج</button>
              <button class="btn-sm btn-msg" onclick="sendPrivateAlert('${u.uid}','${escapeHtml(u.name)}')">📩 رسالة</button>
              <button class="btn-sm btn-track" style="background: rgba(168,85,247,.15); color:#c084fc; border-color:#a855f7;" onclick="adminSendPasswordReset('${escapeHtml(u.email||'')}','${escapeHtml(u.name)}')">🔑 استعادة الباسورد</button>
+             <button class="btn-sm btn-track" style="background: rgba(255,215,0,.15); color:var(--gold); border-color:var(--gold);" onclick="adminAddPoints('${u.uid}')">⭐ نقاط</button>
              <button class="btn-sm btn-edit" onclick="editStudentProfile('${u.uid}','${escapeHtml(u.name)}','${escapeHtml(u.phone||'')}','${escapeHtml(u.studentId||'')}')">✏️ تعديل</button>
              ${banBtn}
         </div></td></tr>`;
@@ -1827,7 +1912,34 @@
       }
     }
 
+    /* ===== صفحة إعادة تعيين الباسورد داخل الموقع (بدل صفحة Firebase الافتراضية) ===== */
+    function __resetErrMsg(e) {
+      const c = (e && e.code) || '';
+      if (c === 'auth/expired-action-code') return 'الرابط انتهت صلاحيته (ساعة واحدة). اطلب رابط جديد واستخدمه فورًا.';
+      if (c === 'auth/invalid-action-code') return 'الرابط اتستخدم قبل كده أو مش صالح. اطلب رابط جديد وافتح آخر إيميل بس. (' + c + ')';
+      if (c === 'auth/weak-password') return 'كلمة المرور ضعيفة، اكتب 6 أحرف على الأقل.';
+      if (c === 'auth/user-disabled') return 'الحساب ده متوقف. كلّم الإدارة.';
+      return 'حصل خطأ: ' + (c || (e && e.message) || 'غير معروف');
+    }
+    function handleAuthActionLink() {
+      let p; try { p = new URLSearchParams(location.search); } catch (e) { return; }
+      const mode = p.get('mode'), code = p.get('oobCode');
+      if (mode !== 'resetPassword' || !code) return;
+      try { history.replaceState(null, '', location.pathname.replace(/\/usermgmt\/?$/, '/')); } catch (e) {}
+      Swal.fire({
+        title: 'تعيين كلمة مرور جديدة 🔑', text: 'اكتب كلمة المرور الجديدة واضغط حفظ.',
+        input: 'password', inputPlaceholder: 'كلمة المرور الجديدة (6 أحرف على الأقل)', inputAttributes: { autocomplete: 'new-password' },
+        confirmButtonText: 'حفظ', allowOutsideClick: false, allowEscapeKey: false, showLoaderOnConfirm: true,
+        preConfirm: async (pw) => {
+          if (!pw || pw.length < 6) { Swal.showValidationMessage('اكتب 6 أحرف على الأقل'); return false; }
+          try { await auth.confirmPasswordReset(code, pw); return true; }
+          catch (e) { Swal.showValidationMessage(__resetErrMsg(e)); return false; }
+        }
+      }).then(r => { if (r.isConfirmed) Swal.fire('تم ✅', 'اتغيرت كلمة المرور. سجّل دخول بيها دلوقتي.', 'success'); });
+    }
+
     window.onload = () => {
+      try { handleAuthActionLink(); } catch (e) {}
       document.getElementById('name-group').style.display = 'none';
       document.getElementById('phone-group').style.display = 'none';
       document.getElementById('level-group').style.display = 'none';
