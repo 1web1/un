@@ -402,6 +402,7 @@
             <div>
               <h3 style="color:#14b8a6; margin:0 0 6px; font-size:18px; display:flex; align-items:center; gap:8px;"><span>🔬</span> قسم الأبحاث</h3>
               <p style="margin:0; font-size:13px; color:var(--fg-soft);">اختار بحث جاهز من القائمة أو اطلب بحث مش موجود.</p>
+              <div id="home-research-status" style="margin-top:8px; font-size:13px; font-weight:700;"></div>
             </div>
             <button class="pill" style="background:#14b8a6;" onclick="event.stopPropagation(); showResearch()">دخول القسم ⭠</button>
           </div>
@@ -413,8 +414,9 @@
         <button class="pill z-content mb-4" style="background:rgba(255,255,255,.1);" onclick="showHome()">⭠ رجوع للرئيسية</button>
         <div class="z-content flex-between" style="margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
           <h2 class="section-title" style="color:#14b8a6; margin:0;">🔬 قسم الأبحاث</h2>
-          <div id="my-research-status" style="font-size: 13px;"></div>
         </div>
+
+        <div id="my-research-box" class="card liquid-glass" style="margin-bottom: 16px;"></div>
 
         <div class="level-tabs liquid-glass" id="research-tabs">
           <button class="level-tab-btn z-content active" id="tab-res-pick" onclick="switchResearchTab('pick')">📚 اختار بحث جاهز</button>
@@ -1472,6 +1474,7 @@
     }
 
     function renderMyRequest() {
+      renderMyResearchBox();
       const box = document.getElementById('research-request-box'); if (!box) return;
       const st = document.getElementById('research-request-status');
       const btn = document.getElementById('research-request-btn');
@@ -1565,15 +1568,39 @@
 
     function myResearch() { if (!currentStudentData) return null; return (currentStudentData.researchTopic && researchTopics.find(r => r.key === currentStudentData.researchTopic)) || (currentUser && researchTopics.find(r => r.claimedBy === currentUser.uid)) || null; }
 
-    function renderResearchHome(searchQuery = '') {
-      const grid = document.getElementById('research-grid'); if (!grid) return;
-      const statusEl = document.getElementById('my-research-status');
-      const mine = myResearch();
-      if (statusEl) {
-        statusEl.innerHTML = mine
-          ? `<span style="color:#4ade80;">✅ بحثك: ${escText(mine.name)}</span> <button class="btn-sm btn-ban" style="margin-right:8px;" onclick="cancelMyResearch('${mine.key}')">إلغاء الحجز</button>`
-          : `<span style="color:var(--fg-faint);">لسة مخترتش بحث</span>`;
+    /* صندوق "بحثي": مقبول / قيد المراجعة / مرفوض */
+    function renderMyResearchBox() {
+      const box = document.getElementById('my-research-box'), home = document.getElementById('home-research-status');
+      if (!box && !home) return;
+      let boxHtml = '', homeHtml = '', color = 'var(--fg-faint)';
+      if (!currentUser || (currentStudentData && currentStudentData.isAdmin === true)) {
+        if (box) box.style.display = 'none'; if (home) home.innerHTML = ''; return;
       }
+      const mine = myResearch();
+      if (mine) {
+        color = '#22c55e';
+        boxHtml = `<div class="z-content flex-between" style="gap:10px; flex-wrap:wrap;"><div><div style="font-size:12px; color:#4ade80; font-weight:700; margin-bottom:4px;">✅ بحثك (مقبول)</div><div style="font-size:16px; font-weight:800; word-break:break-word;">${escText(mine.name)}</div></div><button class="btn-sm btn-ban" onclick="cancelMyResearch('${mine.key}')">إلغاء الحجز</button></div>`;
+        homeHtml = `<span style="color:#4ade80;">✅ بحثك: ${escText(mine.name)}</span>`;
+      } else if (myRequest && myRequest.status === 'pending') {
+        color = '#fbbf24';
+        boxHtml = `<div class="z-content flex-between" style="gap:10px; flex-wrap:wrap;"><div><div style="font-size:12px; color:#fbbf24; font-weight:700; margin-bottom:4px;">⏳ قيد المراجعة (مستني موافقة الإدارة)</div><div style="font-size:16px; font-weight:800; word-break:break-word;">${escText(myRequest.title)}</div></div><button class="btn-sm btn-ban" onclick="cancelResearchRequest()">إلغاء الطلب</button></div>`;
+        homeHtml = `<span style="color:#fbbf24;">⏳ طلبك قيد المراجعة: ${escText(myRequest.title)}</span>`;
+      } else if (myRequest && myRequest.status === 'rejected') {
+        color = '#f87171';
+        boxHtml = `<div class="z-content"><div style="font-size:12px; color:#f87171; font-weight:700; margin-bottom:4px;">❌ الإدارة رفضت طلبك</div><div style="font-size:16px; font-weight:800; word-break:break-word;">${escText(myRequest.title)}</div>${myRequest.reason ? `<div style="font-size:13px; color:var(--fg-soft); margin-top:4px;">السبب: ${escText(myRequest.reason)}</div>` : ''}<div style="font-size:12px; color:var(--fg-faint); margin-top:6px;">تقدر تحجز بحث من القائمة أو تطلب بحث تاني.</div></div>`;
+        homeHtml = `<span style="color:#f87171;">❌ طلبك اترفض</span>`;
+      } else {
+        boxHtml = `<div class="z-content"><div style="font-size:12px; color:var(--fg-faint); font-weight:700; margin-bottom:4px;">📌 بحثك</div><div style="font-size:14px; color:var(--fg-soft);">لسه ما اخترتش بحث. اختار من القائمة أو اطلب بحث جديد.</div></div>`;
+        homeHtml = `<span style="color:var(--fg-faint);">لسه ما اخترتش بحث</span>`;
+      }
+      if (box) { box.style.display = ''; box.style.borderColor = color; box.innerHTML = boxHtml; }
+      if (home) home.innerHTML = homeHtml;
+    }
+
+    function renderResearchHome(searchQuery = '') {
+      renderMyResearchBox();
+      const grid = document.getElementById('research-grid'); if (!grid) return;
+      const mine = myResearch();
       let list = researchTopics;
       if (searchQuery) list = list.filter(r => (r.name || '').toLowerCase().includes(searchQuery));
       if (list.length === 0) { grid.innerHTML = `<div class="empty-state z-content" style="grid-column:1/-1;">${researchTopics.length === 0 ? 'لا توجد أبحاث متاحة حاليًا.' : 'لا توجد نتائج مطابقة.'}</div>`; return; }
