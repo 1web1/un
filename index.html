@@ -61,6 +61,14 @@
   .liquid-glass { position: relative; background: rgba(255,255,255,.06); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,.12); border-radius: 16px; box-shadow: 0 8px 32px rgba(0,0,0,.35); overflow: hidden; }
   .liquid-glass::before { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(180deg, rgba(255,255,255,.08), transparent 40%); z-index: 1; }
 
+  
+  /* ===== وضع توفير البيانات (Data Saver / Lite Mode) ===== */
+  body.data-saver .cinematic-video { display: none !important; }
+  body.data-saver .cinematic-hero { background: #07090e !important; height: auto !important; min-height: 400px !important; }
+  body.data-saver .liquid-glass { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; background: rgba(18,18,22,.97) !important; box-shadow: 0 4px 15px rgba(0,0,0,.4) !important; }
+  body.data-saver.light-mode .liquid-glass { background: #ffffff !important; }
+  body.data-saver .noise-overlay { display: none !important; }
+
   /* ===== الهيدر (منظم في صف واحد) ===== */
   .chrome { position: sticky; top: 0; z-index: 50; height: var(--header-h); display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 0 clamp(12px, 4vw, 44px); border-radius: 0 !important; border-top: none; border-left: none; border-right: none; background: rgba(10,9,8,.8); overflow: visible; }
   .mark { display: flex; align-items: center; gap: 6px; font-weight: 900; font-size: 17px; cursor: pointer; white-space: nowrap; min-width: 0; }
@@ -259,7 +267,6 @@
     .container { padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
   }
   @media (max-width: 600px) {
-    /* منع تكبير الشاشة تلقائي في iPhone عند الضغط على أي خانة */
     input, select, textarea, .swal2-input, .swal2-textarea { font-size: 16px !important; }
     .pill, .btn-sm { min-height: 40px; }
     .research-nav-btn { width: 36px; padding: 0 !important; }
@@ -276,8 +283,488 @@
     .swal2-styled { min-height: 42px; }
   }
   #auth-overlay { z-index: 10000000; }
+  #pdf-viewer-overlay { z-index: 15000000; }
   div:where(.swal2-container) { z-index: 20000000 !important; }
   @media (prefers-reduced-motion: reduce) { .cinematic-video { display: none; } }
+
+  /* ===== تحسين شريط التنقل العلوي وتجاوب الموبايل لمنع تداخل الأيقونات ===== */
+  .mobile-tools-btn {
+    display: none !important;
+    background: rgba(255,255,255,.1);
+    border: 1px solid rgba(255,255,255,.2);
+    width: 36px;
+    height: 36px;
+    padding: 0 !important;
+    font-size: 16px;
+    border-radius: 8px;
+    align-items: center;
+    justify-content: center;
+    color: var(--fg);
+    cursor: pointer;
+  }
+  .mobile-tools-btn:hover {
+    background: rgba(255,255,255,.18);
+  }
+  .mobile-tools-dropdown {
+    position: absolute;
+    top: calc(var(--header-h) + 6px);
+    left: 10px;
+    width: min(290px, calc(100vw - 20px));
+    background: rgba(20, 18, 16, 0.97);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 14px;
+    box-shadow: 0 20px 45px rgba(0,0,0,0.65);
+    padding: 10px;
+    z-index: 1000;
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    animation: slideDownToolsMenu .2s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  @keyframes slideDownToolsMenu {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .mobile-tools-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 6px 8px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    margin-bottom: 6px;
+  }
+  .mobile-tools-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .mobile-tool-item {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 10px;
+    border-radius: 10px;
+    background: transparent;
+    border: none;
+    color: var(--fg);
+    cursor: pointer;
+    text-align: right;
+    transition: background .15s;
+    font-family: inherit;
+    box-sizing: border-box;
+  }
+  .mobile-tool-item:hover, .mobile-tool-item:active {
+    background: rgba(255,255,255,0.08);
+  }
+  .mti-icon {
+    font-size: 18px;
+    width: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .mti-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+  .mti-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--fg);
+  }
+  .mti-status {
+    font-size: 11px;
+    color: var(--fg-soft);
+  }
+  .mti-arrow {
+    font-size: 14px;
+    color: var(--fg-faint);
+    flex-shrink: 0;
+  }
+  body.light-mode .mobile-tools-dropdown {
+    background: rgba(255, 255, 255, 0.98);
+    border-color: rgba(0, 0, 0, 0.12);
+    box-shadow: 0 20px 45px rgba(0,0,0,0.18);
+  }
+  body.light-mode .mobile-tools-header {
+    border-bottom-color: rgba(0,0,0,0.08);
+  }
+  body.light-mode .mobile-tool-item:hover, body.light-mode .mobile-tool-item:active {
+    background: rgba(0,0,0,0.05);
+  }
+
+  /* تنسيق اسم المستخدم لمنع التمدد أو التداخل */
+  .user-greeting-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    height: 36px !important;
+    min-height: 36px !important;
+    max-height: 36px !important;
+    max-width: 140px;
+    padding: 0 10px;
+    border-radius: 8px;
+    background: rgba(255,255,255,.08);
+    border: 1px solid rgba(255,255,255,.15);
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    flex-shrink: 1;
+    min-width: 0;
+    box-sizing: border-box;
+    overflow: hidden;
+  }
+  .user-greeting-btn .user-name-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    display: inline-block;
+    min-width: 0;
+  }
+
+  @media (max-width: 680px) {
+    :root { --header-h: 56px; }
+    .chrome {
+      padding: 0 10px !important;
+      gap: 6px !important;
+      justify-content: space-between !important;
+    }
+    .mark {
+      font-size: 14px !important;
+      flex-shrink: 0 !important;
+      min-width: 0 !important;
+    }
+    .nav {
+      gap: 5px !important;
+      flex-shrink: 0 !important;
+    }
+    .nav-desktop-only {
+      display: none !important;
+    }
+    .mobile-tools-btn {
+      display: inline-flex !important;
+    }
+    .nav .pill {
+      padding: 0 !important;
+      width: 36px !important;
+      min-width: 36px !important;
+      max-width: 36px !important;
+      height: 36px !important;
+      min-height: 36px !important;
+      max-height: 36px !important;
+      justify-content: center !important;
+      border-radius: 8px !important;
+      flex-shrink: 0 !important;
+    }
+    .nav .pill .btn-txt {
+      display: none !important;
+    }
+    .user-greeting-btn {
+      height: 36px !important;
+      min-height: 36px !important;
+      max-height: 36px !important;
+      max-width: 85px !important;
+      padding: 0 6px !important;
+      font-size: 12px !important;
+      border-radius: 8px !important;
+      flex-shrink: 1 !important;
+    }
+  }
+  @media (max-width: 380px) {
+    .user-greeting-btn {
+      max-width: 68px !important;
+      padding: 0 4px !important;
+      font-size: 11px !important;
+    }
+    .mark {
+      font-size: 13px !important;
+    }
+  }
+  @media (max-width: 340px) {
+    .mark-text {
+      display: none !important;
+    }
+  }
+
+
+  /* =========================================================================
+     نظام التصميم والتنسيق الشامل الحديث (Ultra Modern Educational UI)
+     ========================================================================= */
+  :root {
+    --bg-base: #090a12;
+    --bg-surface: rgba(255, 255, 255, 0.035);
+    --bg-surface-hover: rgba(255, 255, 255, 0.065);
+    --border-subtle: rgba(255, 255, 255, 0.08);
+    --border-hover: rgba(59, 130, 246, 0.4);
+    --shadow-card: 0 10px 30px -10px rgba(0, 0, 0, 0.5), 0 0 1px 1px rgba(255, 255, 255, 0.05);
+    --shadow-card-hover: 0 20px 40px -12px rgba(59, 130, 246, 0.15), 0 0 0 1px rgba(59, 130, 246, 0.3);
+    --primary-gradient: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    --accent-gold: #f59e0b;
+    --accent-emerald: #10b981;
+    --accent-purple: #8b5cf6;
+    --accent-pink: #ec4899;
+  }
+
+  body {
+    background-color: var(--bg-base);
+    background-image: 
+      radial-gradient(at 50% 0%, rgba(59, 130, 246, 0.12) 0px, transparent 65%),
+      radial-gradient(at 100% 100%, rgba(139, 92, 246, 0.08) 0px, transparent 50%);
+    background-attachment: fixed;
+    color: var(--fg);
+    min-height: 100vh;
+  }
+
+  body.light-mode {
+    --bg-base: #f8fafc;
+    --bg-surface: rgba(255, 255, 255, 0.9);
+    --bg-surface-hover: rgba(255, 255, 255, 1);
+    --border-subtle: rgba(0, 0, 0, 0.07);
+    --border-hover: rgba(59, 130, 246, 0.4);
+    --shadow-card: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 0 1px 1px rgba(0, 0, 0, 0.04);
+    --shadow-card-hover: 0 20px 35px -10px rgba(59, 130, 246, 0.12), 0 0 0 1px rgba(59, 130, 246, 0.3);
+    background-color: var(--bg-base);
+    background-image: 
+      radial-gradient(at 50% 0%, rgba(59, 130, 246, 0.08) 0px, transparent 65%),
+      radial-gradient(at 100% 100%, rgba(139, 92, 246, 0.05) 0px, transparent 50%);
+  }
+
+  /* بطاقات الوصول السريع في أعلى الرئيسية */
+  .quick-access-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 14px;
+    margin-bottom: 28px;
+  }
+  .quick-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: 16px;
+    padding: 18px 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: var(--shadow-card);
+    position: relative;
+    overflow: hidden;
+  }
+  .quick-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 4px;
+    height: 100%;
+    background: var(--card-accent, var(--primary));
+    opacity: 0.8;
+  }
+  .quick-card:hover {
+    transform: translateY(-3px);
+    border-color: var(--card-accent, var(--primary));
+    background: var(--bg-surface-hover);
+    box-shadow: var(--shadow-card-hover);
+  }
+  .quick-card-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    background: var(--icon-bg, rgba(59, 130, 246, 0.15));
+    color: var(--card-accent, var(--primary));
+    flex-shrink: 0;
+  }
+  .quick-card-info {
+    flex: 1;
+    min-width: 0;
+  }
+  .quick-card-title {
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--fg);
+    margin-bottom: 3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .quick-card-desc {
+    font-size: 12px;
+    color: var(--fg-soft);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* بطاقة الترحيب المحدثة (Dashboard Hero Banner) */
+  .dashboard-hero-banner {
+    position: relative;
+    border-radius: 20px;
+    overflow: hidden;
+    padding: 32px 28px;
+    margin-bottom: 24px;
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.9) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.5);
+  }
+  body.light-mode .dashboard-hero-banner {
+    background: linear-gradient(135deg, rgba(238, 242, 255, 0.85) 0%, rgba(224, 231, 255, 0.95) 100%);
+    border-color: rgba(99, 102, 241, 0.15);
+    box-shadow: 0 15px 35px -5px rgba(99, 102, 241, 0.08);
+  }
+  .dashboard-hero-video {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.22;
+    z-index: 1;
+    pointer-events: none;
+  }
+  .dashboard-hero-content {
+    position: relative;
+    z-index: 2;
+  }
+  .hero-dept-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    background: rgba(59, 130, 246, 0.2);
+    border: 1px solid rgba(59, 130, 246, 0.35);
+    color: #93c5fd;
+    font-size: 12px;
+    font-weight: 700;
+    margin-bottom: 12px;
+  }
+  body.light-mode .hero-dept-tag {
+    background: rgba(59, 130, 246, 0.1);
+    border-color: rgba(59, 130, 246, 0.25);
+    color: #1d4ed8;
+  }
+
+  /* تحسين بطاقات المواد */
+  .subject-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: 18px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: var(--shadow-card);
+    position: relative;
+  }
+  .subject-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--border-hover);
+    box-shadow: var(--shadow-card-hover);
+    background: var(--bg-surface-hover);
+  }
+  .subject-badges-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 12px 0 16px;
+  }
+  .subj-badge {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--fg-soft);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  body.light-mode .subj-badge {
+    background: rgba(0, 0, 0, 0.05);
+    color: #334155;
+    border-color: rgba(0, 0, 0, 0.06);
+  }
+
+  /* تبويبات الأقسام داخل المادة (Subject Section Tabs) */
+  .subject-nav-tabs {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding: 6px;
+    margin-bottom: 24px;
+    background: rgba(0, 0, 0, 0.35);
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    -webkit-overflow-scrolling: touch;
+  }
+  body.light-mode .subject-nav-tabs {
+    background: rgba(0, 0, 0, 0.04);
+    border-color: rgba(0, 0, 0, 0.06);
+  }
+  .subject-nav-tabs .level-tab-btn {
+    white-space: nowrap;
+    border-radius: 10px;
+    padding: 8px 16px;
+    font-size: 13px;
+  }
+
+  /* بطاقة ترتيبك الشخصي في لوحة الشرف */
+  .my-rank-pinned-card {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(217, 119, 6, 0.25) 100%);
+    border: 1px solid #f59e0b;
+    border-radius: 14px;
+    padding: 12px 14px;
+    margin-top: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  /* شريط البحث المحدث */
+  .search-wrapper {
+    position: relative;
+    margin-bottom: 18px;
+  }
+  .search-wrapper .search-box {
+    width: 100%;
+    padding: 12px 42px 12px 36px;
+    border-radius: 12px;
+    box-sizing: border-box;
+    font-size: 14px;
+    margin-bottom: 0;
+  }
+  .search-icon-inside {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 16px;
+    color: var(--fg-faint);
+    pointer-events: none;
+  }
+  .search-clear-btn {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    color: var(--fg-faint);
+    font-size: 14px;
+    cursor: pointer;
+    padding: 4px;
+    display: none;
+  }
+
 </style>
 </head>
 <body>
@@ -298,31 +785,76 @@
     <button id="maint-admin-btn" onclick="document.getElementById('auth-overlay').style.display='flex'" style="margin-top:24px;background:transparent;border:1px solid var(--primary);color:var(--primary);border-radius:8px;padding:10px 20px;font-family:inherit;cursor:pointer;">دخول الإدارة 🔐</button>
   </div>
 
-  <section class="cinematic-hero">
-    <video class="cinematic-video" src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260405_170732_8a9ccda6-5cff-4628-b164-059c500a2b41.mp4" autoplay loop muted playsinline></video>
-    <div class="noise-overlay"></div>
-    <div class="gradient-overlay"></div>
-    <div class="hero-content">
-      <div class="hero-label">قسم المساحة ونظم المعلومات</div>
-      <h1 class="hero-title">منصة الدفعة<br>التعليمية</h1>
-      <p class="hero-desc">منصتكم الموحدة للملخصات، بنك الأسئلة، وأوائل الدفعة المتفوقين لكل المستويات.</p>
-      <div class="scroll-down-btn" onclick="document.getElementById('main-site').scrollIntoView({behavior: 'smooth'})">
-        <span>استكشف المنصة</span>
-        <div class="arrow-down">↓</div>
-      </div>
-    </div>
-  </section>
+  
 
   <div id="main-site">
     <header class="chrome liquid-glass">
-      <div class="mark z-content" onclick="showHome()"><span class="mark-star">✦</span><span class="mark-text">منصة الدفعة</span></div>
+      <div class="mark z-content" onclick="navigateTo('#home')"><span class="mark-star">✦</span><span class="mark-text">منصة الدفعة</span></div>
       <nav class="nav z-content">
-        <button class="pill theme-btn" id="theme-toggle-btn" onclick="toggleTheme()" title="تبديل الوضع">🌞</button>
+        <button class="pill theme-btn nav-desktop-only" id="theme-toggle-btn" onclick="toggleTheme()" title="تبديل الوضع">🌞</button>
+        <button class="pill theme-btn nav-desktop-only" id="sound-toggle-btn" onclick="toggleSound()" title="كتم/تشغيل المؤثرات الصوتية">🔊</button>
+        <button class="pill theme-btn nav-desktop-only" id="data-saver-btn" onclick="toggleDataSaver()" title="وضع توفير البيانات (إيقاف الفيديو والتأثيرات)">📶</button>
+        <button class="pill nav-desktop-only" id="gpa-nav-btn" onclick="navigateTo('#gpa')" title="حاسبة المعدل التراكمي GPA" style="background:#8b5cf6;"><span>🧮</span><span class="btn-txt">حاسبة GPA</span></button>
         <div class="user-greeting-btn" onclick="showProfile()" id="user-greeting" title="الملف الشخصي"></div>
-        <button class="pill research-nav-btn" id="research-nav-btn" onclick="showResearch()" title="قسم الأبحاث"><span>🔬</span><span class="btn-txt">الأبحاث</span></button>
+        <button class="pill research-nav-btn" id="research-nav-btn" onclick="navigateTo('#research')" title="قسم الأبحاث"><span>🔬</span><span class="btn-txt">الأبحاث</span></button>
         <button class="pill admin-btn" id="admin-toggle-btn" onclick="toggleAdminPanel()" style="display:none;"><span>⚙️</span><span class="btn-txt">الإدارة</span></button>
+        <button class="pill mobile-tools-btn" id="mobile-tools-btn" onclick="toggleMobileToolsMenu(event)" title="أدوات وإعدادات سريعة"><span>⚡</span></button>
         <button class="pill logout-btn" onclick="logoutStudent()"><span>🚪</span><span class="btn-txt">خروج</span></button>
       </nav>
+
+      <!-- القائمة المنسدلة الذكية للأدوات على الموبايل -->
+      <div id="mobile-tools-dropdown" class="mobile-tools-dropdown" style="display:none;" onclick="event.stopPropagation();">
+        <div class="mobile-tools-header">
+          <span style="font-weight:bold; font-size:13px; color:var(--fg); display:flex; align-items:center; gap:6px;">⚡ <span>أدوات وإعدادات سريعة</span></span>
+          <button type="button" onclick="closeMobileToolsMenu()" style="background:transparent; border:none; color:var(--fg-faint); font-size:16px; cursor:pointer; padding:2px 6px;">✕</button>
+        </div>
+        <div class="mobile-tools-list">
+          <button type="button" class="mobile-tool-item" onclick="toggleTheme(); updateMobileToolsState();">
+            <span class="mti-icon" id="mti-theme-icon">🌞</span>
+            <div class="mti-info">
+              <span class="mti-title">المظهر والوضع</span>
+              <span class="mti-status" id="mti-theme-status">الوضع الداكن</span>
+            </div>
+            <span class="mti-arrow">⇄</span>
+          </button>
+
+          <button type="button" class="mobile-tool-item" onclick="toggleSound(); updateMobileToolsState();">
+            <span class="mti-icon" id="mti-sound-icon">🔊</span>
+            <div class="mti-info">
+              <span class="mti-title">المؤثرات الصوتية</span>
+              <span class="mti-status" id="mti-sound-status">مفعّلة</span>
+            </div>
+            <span class="mti-arrow">⇄</span>
+          </button>
+
+          <button type="button" class="mobile-tool-item" onclick="toggleDataSaver(); updateMobileToolsState();">
+            <span class="mti-icon" id="mti-data-icon">📶</span>
+            <div class="mti-info">
+              <span class="mti-title">توفير باقة النت</span>
+              <span class="mti-status" id="mti-data-status">معطّل</span>
+            </div>
+            <span class="mti-arrow">⇄</span>
+          </button>
+
+          <button type="button" class="mobile-tool-item" onclick="closeMobileToolsMenu(); navigateTo('#gpa');">
+            <span class="mti-icon">🧮</span>
+            <div class="mti-info">
+              <span class="mti-title">حاسبة المعدل التراكمي GPA</span>
+              <span class="mti-status" style="color:#a855f7;">حساب تقديرات وتراكمي</span>
+            </div>
+            <span class="mti-arrow">↗</span>
+          </button>
+
+          <button type="button" class="mobile-tool-item" onclick="closeMobileToolsMenu(); showProfile();">
+            <span class="mti-icon">👤</span>
+            <div class="mti-info">
+              <span class="mti-title">الملف الشخصي</span>
+              <span class="mti-status">عرض الإنجازات والبيانات</span>
+            </div>
+            <span class="mti-arrow">↗</span>
+          </button>
+        </div>
+      </div>
     </header>
 
     <div id="alert-banner">⚠️ <span id="alert-text-content"></span></div>
@@ -331,13 +863,69 @@
 
       <!-- الرئيسية -->
       <div id="view-home">
+        
+        <!-- بطاقة الترحيب والواجهة الرئيسية (Dashboard Hero) -->
+        <div class="dashboard-hero-banner z-content">
+          <video class="dashboard-hero-video cinematic-video" src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260405_170732_8a9ccda6-5cff-4628-b164-059c500a2b41.mp4" autoplay loop muted playsinline></video>
+          <div class="dashboard-hero-content">
+            <div class="hero-dept-tag">🏛️ قسم المساحة ونظم المعلومات الجغرافية (GIS)</div>
+            <h1 style="margin: 0 0 8px; font-size: clamp(20px, 4vw, 28px); font-weight: 900; color: var(--fg); letter-spacing: -0.5px;">منصة الدفعة التعليمية ✦</h1>
+            <p id="dashboard-student-greeting" style="margin: 0; font-size: 14px; color: var(--fg-soft); line-height: 1.6;">
+              أهلاً بك في منصتك الموحدة للمحاضرات والسكاشن، بنك الأسئلة، ولوحة شرف المتفوقين.
+            </p>
+          </div>
+        </div>
+
+        <!-- بطاقات الوصول السريع (Quick Navigation Hub) -->
+        <div class="quick-access-grid z-content">
+          <div class="quick-card" onclick="document.getElementById('subjects-section-anchor').scrollIntoView({behavior:'smooth'})" style="--card-accent:#3b82f6; --icon-bg:rgba(59,130,246,.15);">
+            <div class="quick-card-icon">📚</div>
+            <div class="quick-card-info">
+              <div class="quick-card-title">المواد الدراسية</div>
+              <div class="quick-card-desc">محاضرات، سكاشن، وفيديوهات</div>
+            </div>
+          </div>
+
+          <div class="quick-card" onclick="navigateTo('#research')" style="--card-accent:#14b8a6; --icon-bg:rgba(20,184,166,.15);">
+            <div class="quick-card-icon">🔬</div>
+            <div class="quick-card-info">
+              <div class="quick-card-title">قسم الأبحاث</div>
+              <div class="quick-card-desc" id="hub-research-status">تسجيل ومتابعة الأبحاث</div>
+            </div>
+          </div>
+
+          <div class="quick-card" onclick="navigateTo('#gpa')" style="--card-accent:#8b5cf6; --icon-bg:rgba(139,92,246,.15);">
+            <div class="quick-card-icon">🧮</div>
+            <div class="quick-card-info">
+              <div class="quick-card-title">حاسبة المعدل GPA</div>
+              <div class="quick-card-desc">حساب التقدير والمعدل التراكمي</div>
+            </div>
+          </div>
+
+          <div class="quick-card" onclick="document.getElementById('leaderboard-container').scrollIntoView({behavior:'smooth'})" style="--card-accent:#f59e0b; --icon-bg:rgba(245,158,11,.15);">
+            <div class="quick-card-icon">🏆</div>
+            <div class="quick-card-info">
+              <div class="quick-card-title">لوحة الشرف</div>
+              <div class="quick-card-desc">ترتيب أوائل الدفعة ونقاطك</div>
+            </div>
+          </div>
+        </div>
+
+        <div id="subjects-section-anchor"></div>
         <div class="home-layout">
           <div>
-            <input type="text" id="search-box" class="search-box z-content" placeholder="🔍 ابحث عن مادة..." oninput="filterSubjects()">
+            <div class="search-wrapper z-content">
+              <span class="search-icon-inside">🔍</span>
+              <input type="text" id="search-box" class="search-box" placeholder="ابحث عن اسم مادة، ملخص، أو سكشن..." oninput="onSearchBoxInput()">
+              <button type="button" id="search-clear-btn" class="search-clear-btn" onclick="clearSearchBox()">✕</button>
+            </div>
             <div class="level-tabs liquid-glass">
               <button class="level-tab-btn z-content active" id="tab-lvl-1" onclick="switchLevel(1)">المستوى الأول 🎓</button>
               <button class="level-tab-btn z-content" id="tab-lvl-2" onclick="switchLevel(2)">المستوى الثاني 🚀</button>
             </div>
+            <!-- لوحة الإعلانات والتنبيهات الموجهة -->
+            <div id="announcements-board" class="z-content" style="margin-bottom: 20px;"></div>
+
             <h2 class="section-title z-content" id="current-level-heading">مواد المستوى الأول</h2>
             <div class="grid" id="subjects-grid" style="grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));"></div>
 
@@ -398,21 +986,24 @@
           </div>
         </div>
 
-        <div class="card liquid-glass research-entry" style="margin-top: 24px; border-color: #14b8a6; cursor:pointer;" onclick="showResearch()">
+        <div class="card liquid-glass research-entry" style="margin-top: 24px; border-color: #14b8a6; cursor:pointer;" onclick="navigateTo('#research')">
           <div class="z-content flex-between" style="gap:12px; flex-wrap:wrap;">
             <div>
               <h3 style="color:#14b8a6; margin:0 0 6px; font-size:18px; display:flex; align-items:center; gap:8px;"><span>🔬</span> قسم الأبحاث</h3>
               <p style="margin:0; font-size:13px; color:var(--fg-soft);">اختار بحث جاهز من القائمة أو اطلب بحث مش موجود.</p>
               <div id="home-research-status" style="margin-top:8px; font-size:13px; font-weight:700;"></div>
             </div>
-            <button class="pill" style="background:#14b8a6;" onclick="event.stopPropagation(); showResearch()">دخول القسم ⭠</button>
+            <button class="pill" style="background:#14b8a6;" onclick="event.stopPropagation(); navigateTo('#research')">دخول القسم ⭠</button>
           </div>
         </div>
       </div>
 
       <!-- قسم الأبحاث -->
       <div id="view-research" style="display: none;">
-        <button class="pill z-content mb-4" style="background:rgba(255,255,255,.1);" onclick="showHome()">⭠ رجوع للرئيسية</button>
+        <div class="z-content flex-between mb-4" style="flex-wrap: wrap; gap: 8px;">
+          <button class="pill" style="background:rgba(255,255,255,.1);" onclick="navigateTo('#home')">⭠ رجوع للرئيسية</button>
+          <button class="pill" style="background:#14b8a6; font-size:12px; height:32px;" onclick="shareDirectLink('#research', 'قسم الأبحاث')">🔗 مشاركة رابط الأبحاث</button>
+        </div>
         <div class="z-content flex-between" style="margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
           <h2 class="section-title" style="color:#14b8a6; margin:0;">🔬 قسم الأبحاث</h2>
         </div>
@@ -420,8 +1011,8 @@
         <div id="my-research-box" class="card liquid-glass" style="margin-bottom: 16px;"></div>
 
         <div class="level-tabs liquid-glass" id="research-tabs">
-          <button class="level-tab-btn z-content active" id="tab-res-pick" onclick="switchResearchTab('pick')">📚 اختار بحث جاهز</button>
-          <button class="level-tab-btn z-content" id="tab-res-new" onclick="switchResearchTab('new')">✍️ انشئ بحث مش موجود في القائمة</button>
+          <button class="level-tab-btn z-content active" id="tab-res-pick" onclick="switchResearchTab('pick', true)">📚 اختار بحث جاهز</button>
+          <button class="level-tab-btn z-content" id="tab-res-new" onclick="switchResearchTab('new', true)">✍️ انشئ بحث مش موجود في القائمة</button>
         </div>
 
         <div class="card liquid-glass" style="border-color:#14b8a6;">
@@ -445,21 +1036,202 @@
         </div>
       </div>
 
+      <!-- قسم حاسبة المعدل التراكمي (GPA Calculator) طبقاً للائحة الكلية 2025-2026 -->
+      <div id="view-gpa" style="display: none;">
+        <div class="z-content flex-between mb-4" style="flex-wrap: wrap; gap: 8px;">
+          <button class="pill" style="background:rgba(255,255,255,.1);" onclick="navigateTo('#home')">⭠ رجوع للرئيسية</button>
+          <div style="display: flex; gap: 6px;">
+             <button class="pill" style="background:#14b8a6; font-size:12px; height:32px;" onclick="toggleGpaScaleTable()">📜 لائحة التقديرات الرسمية</button>
+             <button class="pill" style="background:#8b5cf6; font-size:12px; height:32px;" onclick="shareDirectLink('#gpa', 'حاسبة المعدل التراكمي GPA')">🔗 مشاركة الحاسبة</button>
+          </div>
+        </div>
+        <h2 class="section-title z-content" style="color: #c084fc;">🧮 حاسبة المعدل التراكمي والفصلي (لائحة الساعات المعتمدة الرسمية)</h2>
+        <p class="z-content" style="font-size: 14px; color: var(--fg-soft); margin-bottom: 20px; line-height: 1.6;">
+          حساب دقيق لمعدلك الفصلي والتراكمي طبقاً للائحة الساعات المعتمدة للكلية (سلم النقاط من 4.00 مع حساب العبء الدراسي المسموح به للتسجيل).
+        </p>
+
+        <!-- كروت النتائج الرئيسية -->
+        <div class="grid z-content" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-bottom: 20px;">
+           <div class="card liquid-glass" style="text-align: center; border-color: #c084fc; background: rgba(139,92,246,.08);">
+              <div style="font-size: 13px; color: var(--fg-soft); font-weight: bold; margin-bottom: 6px;">معدل الفصل الحالي (Semester GPA)</div>
+              <div id="gpa-semester-val" style="font-size: 36px; font-weight: 900; color: #c084fc;">0.00</div>
+              <div id="gpa-semester-grade" style="font-size: 13px; font-weight: bold; color: var(--gold); margin-top: 4px;">-</div>
+           </div>
+           <div class="card liquid-glass" style="text-align: center; border-color: var(--gold); background: rgba(255,215,0,.08);">
+              <div style="font-size: 13px; color: var(--fg-soft); font-weight: bold; margin-bottom: 6px;">المعدل التراكمي الإجمالي (Cumulative GPA)</div>
+              <div id="gpa-cumulative-val" style="font-size: 36px; font-weight: 900; color: var(--gold);">0.00</div>
+              <div id="gpa-cumulative-grade" style="font-size: 13px; font-weight: bold; color: #4ade80; margin-top: 4px;">-</div>
+           </div>
+           <div class="card liquid-glass" style="text-align: center; border-color: var(--primary); background: rgba(59,130,246,.08);">
+              <div style="font-size: 13px; color: var(--fg-soft); font-weight: bold; margin-bottom: 6px;">إجمالي الساعات المكتسبة الكلية</div>
+              <div id="gpa-hours-val" style="font-size: 36px; font-weight: 900; color: var(--primary);">0</div>
+              <div id="gpa-progress-text" style="font-size: 12px; color: var(--fg-soft); margin-top: 4px;">من إجمالي 144 ساعة للتخرج</div>
+           </div>
+        </div>
+
+        <!-- بطاقة الإرشاد الأكاديمي والعبء الدراسي المسموح -->
+        <div id="gpa-standing-card" class="card liquid-glass z-content" style="margin-bottom: 20px; border-color: #10b981; background: rgba(16,185,129,.06); display: flex; flex-direction: row; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap;">
+           <div style="display: flex; align-items: center; gap: 10px;">
+              <span id="gpa-standing-icon" style="font-size: 30px;">🎓</span>
+              <div>
+                 <div id="gpa-standing-title" style="font-weight: bold; font-size: 15px; color: #4ade80;">الوضع الأكاديمي والعبء الدراسي للترم القادم</div>
+                 <div id="gpa-standing-desc" style="font-size: 13px; color: var(--fg-soft); margin-top: 2px;">أدخل درجاتك لمعرفة الحد الأقصى للساعات المسموح لك بتسجيلها وفق اللائحة.</div>
+              </div>
+           </div>
+           <div id="gpa-standing-badge" class="status-badge" style="font-size: 13px; padding: 6px 14px; background: rgba(34,197,94,.2); color: #4ade80; border: 1px solid #22c55e;">
+              الحد الأقصى: 18 ساعة
+           </div>
+        </div>
+
+        <!-- الساعات والمعدل السابق (اختياري لحساب التراكمي بدقة) -->
+        <div class="card liquid-glass z-content" style="margin-bottom: 20px; background: rgba(0,0,0,.35);">
+           <h3 style="font-size: 15px; margin: 0 0 12px; color: var(--gold); display: flex; align-items: center; gap: 6px;">
+             <span>📊</span> المعدل والساعات السابقة (اختياري - لحساب التراكمي الإجمالي)
+           </h3>
+           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+              <div class="input-group">
+                 <label>المعدل التراكمي السابق (من 4.00)</label>
+                 <input type="number" id="gpa-prev-gpa" step="0.01" min="0" max="4" placeholder="مثال: 3.25" oninput="calculateGPA()">
+              </div>
+              <div class="input-group">
+                 <label>عدد الساعات المكتسبة السابقة (التي نجحت بها)</label>
+                 <input type="number" id="gpa-prev-hours" step="1" min="0" placeholder="مثال: 36" oninput="calculateGPA()">
+              </div>
+           </div>
+        </div>
+
+        <!-- جدول المواد الدراسية للترم الحالي -->
+        <div class="card liquid-glass z-content" style="background: rgba(0,0,0,.35);">
+           <div class="flex-between mb-4" style="flex-wrap: wrap; gap: 8px;">
+              <h3 style="font-size: 16px; margin: 0; color: var(--primary); display: flex; align-items: center; gap: 6px;">
+                <span>📚</span> مواد الفصل الدراسي الحالي
+              </h3>
+              <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                 <button class="pill" style="background: #10b981; font-size: 12px; height: 32px;" onclick="importCurrentLevelSubjectsToGPA()">استيراد مواد مستواي 🎓</button>
+                 <button class="pill" style="background: var(--primary); font-size: 12px; height: 32px;" onclick="addGpaCourseRow()">+ إضافة مادة</button>
+              </div>
+           </div>
+
+           <div class="table-responsive">
+              <table class="styled-table" style="min-width: 620px;">
+                 <thead>
+                    <tr>
+                       <th style="width: 32%;">اسم المادة</th>
+                       <th style="width: 18%;">الساعات</th>
+                       <th style="width: 25%;">التقدير (سلم 4.00)</th>
+                       <th style="width: 17%;">أو الدرجة (%)</th>
+                       <th style="width: 8%;">حذف</th>
+                    </tr>
+                 </thead>
+                 <tbody id="gpa-courses-table-body">
+                 </tbody>
+              </table>
+           </div>
+
+           <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px; flex-wrap: wrap; gap: 10px;">
+              <div style="font-size: 12px; color: var(--fg-faint);">
+                 * المقررات من نوع ناجح/راسب (P/F) كالتدريب الميداني ومشروع التخرج تحتسب ساعاتها فقط ولا تدخل في حساب الـ GPA.
+              </div>
+              <button class="pill" style="background: rgba(239,68,68,.15); color: #f87171; border: 1px solid rgba(239,68,68,.3); font-size: 12px;" onclick="resetGpaForm()">مسح الجدول 🗑️</button>
+           </div>
+        </div>
+
+        <!-- جدول اللائحة الرسمي القابل للطي -->
+        <div id="gpa-official-scale-box" class="card liquid-glass z-content" style="margin-top: 20px; background: rgba(0,0,0,.45); border-color: #14b8a6; display: none;">
+           <div class="flex-between mb-4">
+              <h3 style="margin: 0; font-size: 16px; color: #14b8a6;">📜 جدول نقاط وتقديرات المقررات الدراسية (اللائحة الرسمية 2025-2026)</h3>
+              <button class="btn-sm btn-ban" onclick="toggleGpaScaleTable()">✕ إغلاق</button>
+           </div>
+           <div class="table-responsive">
+              <table class="styled-table" style="min-width: 500px; text-align: center;">
+                 <thead>
+                    <tr style="background: rgba(20,184,166,.15); color: #14b8a6;">
+                       <th>التقدير بالحروف</th>
+                       <th>نقاط الساعة (Grade Points)</th>
+                       <th>النسبة المئوية (%)</th>
+                       <th>المدلول والتقييم</th>
+                    </tr>
+                 </thead>
+                 <tbody>
+                    <tr><td><b>A+</b></td><td style="color:#ffd700; font-weight:bold;">4.00</td><td>97% فأعلى</td><td>ممتاز مرتفع</td></tr>
+                    <tr><td><b>A</b></td><td style="color:#ffd700; font-weight:bold;">4.00</td><td>93% حتى أقل من 97%</td><td>ممتاز</td></tr>
+                    <tr><td><b>A-</b></td><td style="color:#ffd700; font-weight:bold;">3.70</td><td>89% حتى أقل من 93%</td><td>ممتاز منخفض</td></tr>
+                    <tr><td><b>B+</b></td><td style="color:#60a5fa; font-weight:bold;">3.30</td><td>84% حتى أقل من 89%</td><td>جيد جداً مرتفع</td></tr>
+                    <tr><td><b>B</b></td><td style="color:#60a5fa; font-weight:bold;">3.00</td><td>80% حتى أقل من 84%</td><td>جيد جداً</td></tr>
+                    <tr><td><b>B-</b></td><td style="color:#60a5fa; font-weight:bold;">2.70</td><td>76% حتى أقل من 80%</td><td>جيد جداً منخفض</td></tr>
+                    <tr><td><b>C+</b></td><td style="color:#34d399; font-weight:bold;">2.30</td><td>73% حتى أقل من 76%</td><td>جيد مرتفع</td></tr>
+                    <tr><td><b>C</b></td><td style="color:#34d399; font-weight:bold;">2.00</td><td>70% حتى أقل من 73%</td><td>جيد (الحد الأدنى للتخرج)</td></tr>
+                    <tr><td><b>C-</b></td><td style="color:#fbbf24; font-weight:bold;">1.70</td><td>67% حتى أقل من 70%</td><td>مقبول مرتفع</td></tr>
+                    <tr><td><b>D+</b></td><td style="color:#fbbf24; font-weight:bold;">1.30</td><td>64% حتى أقل من 67%</td><td>مقبول متوسط</td></tr>
+                    <tr><td><b>D</b></td><td style="color:#fbbf24; font-weight:bold;">1.00</td><td>60% حتى أقل من 64%</td><td>مقبول (الحد الأدنى للنجاح بمقرر)</td></tr>
+                    <tr style="background: rgba(239,68,68,.08);"><td style="color:#f87171;"><b>F</b></td><td style="color:#f87171; font-weight:bold;">0.00</td><td>أقل من 60%</td><td>راسب (يلزم إعادة دراسة المقرر)</td></tr>
+                    <tr><td><b>P / F</b></td><td>-</td><td>ناجح / راسب</td><td>التدريب الميداني ومشروع التخرج (ساعات معتمدة دون نقاط)</td></tr>
+                 </tbody>
+              </table>
+           </div>
+           <div style="font-size: 12px; color: var(--fg-soft); margin-top: 12px; line-height: 1.6;">
+              📌 <b>قواعد تهمك من اللائحة:</b><br>
+              • تقييم المقرر: 60 درجة أعمال سنة + 40 درجة الامتحان التحريري النهائي.<br>
+              • شرط النجاح بالمقرر: الحصول على 60% بالمجموع الكلي بشرط ألا تقل درجة التحريري النهائي عن 20 من 40 (50%).<br>
+              • شروط التخرج: إتمام 144 ساعة معتمدة بنجاح + معدل تراكمي لا يقل عن 2.00.<br>
+              • شروط التسجيل للترم التالي: أقل من 1.50 (حد أقصى 12 ساعة) | 1.50 إلى 1.99 (حد أقصى 15 ساعة) | 2.00 فأعلى (حد أقصى 18 ساعة).
+           </div>
+        </div>
+      </div>
+
       <!-- صفحة المادة -->
       <div id="view-subject" style="display: none;">
-        <button class="pill z-content mb-4" style="background:rgba(255,255,255,.1);" onclick="showHome()">⭠ رجوع للرئيسية</button>
+        <div class="z-content flex-between mb-4" style="flex-wrap: wrap; gap: 8px;">
+          <button class="pill" style="background:rgba(255,255,255,.1);" onclick="navigateTo('#home')">⭠ رجوع للرئيسية</button>
+          <div style="display:flex; gap:6px; flex-wrap:wrap;">
+            <button class="pill" style="background: #10b981; font-size:12px; height:34px;" onclick="openContributionModal()">➕ شارك ملخص</button>
+            <button class="pill" style="background:var(--primary); font-size:12px; height:34px;" onclick="shareCurrentSubject()">🔗 مشاركة المادة</button>
+          </div>
+        </div>
         <h2 class="section-title z-content" id="subject-title">اسم المادة</h2>
-        <p id="subject-desc" class="z-content" style="color: var(--fg-soft); margin-bottom: 24px; font-size: 14px; line-height: 1.6;"></p>
-        <div id="subject-images" class="z-content" style="margin-bottom: 24px;"></div>
+        <p id="subject-desc" class="z-content" style="color: var(--fg-soft); margin-bottom: 20px; font-size: 14px; line-height: 1.6;"></p>
+        <div id="subject-images" class="z-content" style="margin-bottom: 20px;"></div>
 
-        <h3 class="z-content" style="color: var(--primary); border-bottom: 1px solid rgba(255,255,255,.1); padding-bottom: 8px; font-size: 17px;">الملفات والمصادر</h3>
-        <div id="subject-files" style="margin-bottom: 32px;"></div>
+        <!-- شريط تبويبات أقسام المادة لتصفح فائق السرعة -->
+        <div class="subject-nav-tabs z-content" id="subject-section-tabs">
+          <button type="button" class="level-tab-btn active" id="sec-tab-all" onclick="switchSubjectTab('all')">🌟 عرض الكل</button>
+          <button type="button" class="level-tab-btn" id="sec-tab-files" onclick="switchSubjectTab('files')">📖 المحاضرات والملفات <span id="sec-badge-files" class="subj-badge" style="margin-right:4px;">0</span></button>
+          <button type="button" class="level-tab-btn" id="sec-tab-videos" onclick="switchSubjectTab('videos')">🎥 شروحات الفيديو <span id="sec-badge-videos" class="subj-badge" style="margin-right:4px; color:#f472b6;">0</span></button>
+          <button type="button" class="level-tab-btn" id="sec-tab-quizzes" onclick="switchSubjectTab('quizzes')">🧠 بنك الأسئلة <span id="sec-badge-quizzes" class="subj-badge" style="margin-right:4px; color:#60a5fa;">0</span></button>
+        </div>
 
-        <div class="z-content flex-between" style="border-bottom: 1px solid rgba(255,255,255,.1); padding-bottom: 8px; margin-bottom: 16px;">
-           <h3 style="color: var(--primary); font-size: 17px; margin: 0;">بنك الأسئلة (MCQ)</h3>
+        <div id="sec-container-files" class="subject-content-sec">
+          <div class="z-content flex-between" style="border-bottom: 1px solid rgba(255,255,255,.1); padding-bottom: 8px; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+             <h3 style="color: var(--primary); font-size: 17px; margin: 0; display:flex; align-items:center; gap:6px;">📖 <span>الملفات والمحاضرات</span></h3>
+          </div>
+          <div id="subject-files" style="margin-bottom: 32px;"></div>
+        </div>
+
+        <!-- قسم شروحات الفيديو والسكاشن المسجلة -->
+        <div id="sec-container-videos" class="subject-content-sec">
+          <div class="z-content flex-between" style="border-bottom: 1px solid rgba(255,255,255,.1); padding-bottom: 8px; margin-bottom: 14px; flex-wrap: wrap; gap: 8px;">
+             <h3 style="color: #ec4899; font-size: 17px; margin: 0; display: flex; align-items: center; gap: 6px;">
+               <span>🎥</span> <span>شروحات الفيديو والسكاشن المسجلة</span>
+             </h3>
+             <span id="subject-videos-count" style="font-size: 12px; color: var(--fg-soft);"></span>
+          </div>
+          <div id="subject-videos" class="grid z-content" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; margin-bottom: 32px;"></div>
+        </div>
+
+        <div id="sec-container-quizzes" class="subject-content-sec">
+        <div class="z-content flex-between" style="border-bottom: 1px solid rgba(255,255,255,.1); padding-bottom: 8px; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+           <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+              <h3 style="color: var(--primary); font-size: 17px; margin: 0;">بنك الأسئلة (MCQ)</h3>
+              <div class="level-tabs" style="padding: 2px; margin-bottom: 0; background: rgba(0,0,0,.35);">
+                 <button class="level-tab-btn active" id="quiz-filter-all" style="padding: 4px 10px; font-size: 12px; min-height: 28px;" onclick="setQuizFilter('all')">الكل 📚</button>
+                 <button class="level-tab-btn" id="quiz-filter-mistakes" style="padding: 4px 10px; font-size: 12px; min-height: 28px; color: #f87171;" onclick="setQuizFilter('mistakes')">أخطائي ❌ <span id="quiz-mistakes-badge"></span></button>
+                 <button class="level-tab-btn" id="quiz-filter-unsolved" style="padding: 4px 10px; font-size: 12px; min-height: 28px;" onclick="setQuizFilter('unsolved')">غير محلول ⏳</button>
+              </div>
+           </div>
            <button id="btn-reset-subject-quizzes" class="pill" style="background: rgba(239,68,68,.15); color: #f87171; border: 1px solid rgba(239,68,68,.3); font-size: 12px; height: 30px;" onclick="resetSubjectQuizzes()">🔄 إعادة امتحان المادة بالكامل</button>
         </div>
         <div class="grid" id="subject-quizzes"></div>
+        </div>
       </div>
 
       <!-- لوحة الإدارة -->
@@ -478,6 +1250,7 @@
           <div class="admin-tabs">
             <div class="admin-tab active" onclick="switchAdminTab('students', this)">👥 إدارة الطلاب</div>
             <div class="admin-tab" onclick="switchAdminTab('content', this)">📚 إدارة المحتوى</div>
+            <div class="admin-tab" onclick="switchAdminTab('analytics', this)">📊 الأسئلة الأصعب والمساهمات</div>
             <div class="admin-tab" onclick="switchAdminTab('tools', this)">⚙️ أدوات النظام</div>
             <div class="admin-tab" onclick="switchAdminTab('logs', this)">⏱️ سجل النشاط</div>
           </div>
@@ -535,7 +1308,26 @@
                 </div>
              </div>
 
-             <div class="admin-section-header"><span>3️⃣</span> إدارة بنك الأسئلة (MCQ)</div>
+             <div class="card liquid-glass" style="background:rgba(0,0,0,.4); margin-bottom: 24px; border-color: #ec4899;">
+                   <h3 style="color: #ec4899; font-size: 16px; margin-top:0; display:flex; align-items:center; gap:8px;">
+                     <span>🎥</span> إضافة فيديو شرح أو قائمة تشغيل للمادة
+                   </h3>
+                   <form class="upload-form" onsubmit="addSubjectVideo(event)">
+                      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px;">
+                         <select class="input-group" id="video-subj-select" required></select>
+                         <select class="input-group" id="video-category" required>
+                            <option value="شروحات نظري">شروحات نظري</option>
+                            <option value="سكاشن وتطبيقات عملية">سكاشن وتطبيقات عملية (برامج)</option>
+                            <option value="مراجعات وحل امتحانات">مراجعات وحل امتحانات</option>
+                         </select>
+                      </div>
+                      <input class="input-group" id="video-title" placeholder="عنوان الفيديو (مثال: شرح عملي لبرنامج ArcGIS - المحاضرة 4)" required>
+                      <input class="input-group" id="video-link" type="url" placeholder="رابط فيديو اليوتيوب أو قائمة التشغيل Playlist" required>
+                      <button class="pill" type="submit" style="background: #ec4899; width: fit-content;">نشر الفيديو للمادة 🚀</button>
+                   </form>
+                </div>
+
+                <div class="admin-section-header"><span>3️⃣</span> إدارة بنك الأسئلة (MCQ)</div>
              <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); margin-bottom: 24px;">
                 <div class="card liquid-glass" style="background:rgba(0,0,0,.4); grid-column: 1 / -1; border-color: #14b8a6;">
                    <h3 style="color: #14b8a6; font-size: 16px; margin-top:0; display:flex; align-items:center; gap:8px;"><span>🤖</span> الرفع الذكي السريع للأسئلة (نسخ ولصق كود JSON)</h3>
@@ -612,6 +1404,25 @@
              </div>
           </div>
 
+          <div id="tab-analytics" class="admin-tab-content">
+             <div class="admin-section-header"><span>📨</span> مساهمات الطلاب المقترحة (الملخصات والتفريغات) <span id="admin-contrib-count" class="status-badge status-offline" style="margin-right:8px;">0</span></div>
+             <p style="font-size:12px; color:var(--fg-faint); margin-bottom:12px;">مراجعة الملفات والملخصات التي أرسلها الطلاب لنشرها في المواد الدراسية.</p>
+             <div id="admin-contributions-list" style="margin-bottom: 24px;"><div class="empty-state">لا توجد مساهمات جديدة للمراجعة.</div></div>
+
+             <div class="admin-section-header"><span>🔥</span> تحليل الأسئلة الأكثر صعوبة (Hardest Questions Analytics)</div>
+             <p style="font-size:12px; color:var(--fg-faint); margin-bottom:12px;">ترتيب الأسئلة التي يخطئ فيها معظم الطلاب لمساعدة المعيدين في التركيز عليها.</p>
+             <div style="margin-bottom: 14px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                <select id="analytics-subj-select" class="input-group" style="max-width: 320px;" onchange="renderHardestQuestionsTable()"></select>
+                <button class="pill" style="background: rgba(255,255,255,.1); font-size: 12px; height: 38px;" onclick="renderHardestQuestionsTable()">تحديث الإحصائيات 🔄</button>
+             </div>
+             <div class="table-responsive">
+                <table class="styled-table">
+                   <thead><tr><th>#</th><th>المادة</th><th>نص السؤال</th><th>إجمالي المحاولات</th><th>نسبة الخطأ %</th><th>حالة الصعوبة</th></tr></thead>
+                   <tbody id="hardest-questions-body"><tr><td colspan="6" style="text-align:center;">جاري تحليل البيانات...</td></tr></tbody>
+                </table>
+             </div>
+          </div>
+
           <div id="tab-tools" class="admin-tab-content">
              <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));">
                 <div class="card liquid-glass" style="background:rgba(0,0,0,.4);">
@@ -644,6 +1455,62 @@
                    </form>
                 </div>
 
+                <!-- إدارة الإعلانات الموجهة -->
+                <div class="card liquid-glass" style="background:rgba(0,0,0,.4); grid-column: 1/-1; border-color: var(--primary);">
+                   <h3 style="color: var(--primary); font-size: 16px; margin-top:0; display: flex; align-items: center; gap: 8px;">
+                     <span>📢</span> مركز الإعلانات والتنبيهات الموجهة حسب المستوى
+                   </h3>
+                   <p style="font-size:12px; color:var(--fg-faint); margin-bottom:12px;">نشر إعلانات تظهر في شريط الأخبار لطلاب المستوى الأول فقط، الثاني فقط، أو للدفعة بالكامل.</p>
+                   <form class="upload-form" onsubmit="postTargetedAnnouncement(event)" style="margin-bottom: 20px;">
+                      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;">
+                         <select class="input-group" id="ann-target-level" required>
+                            <option value="all">📢 لجميع المستويات (لكل الدفعة)</option>
+                            <option value="1">🎓 لطلاب المستوى الأول فقط</option>
+                            <option value="2">🚀 لطلاب المستوى الثاني فقط</option>
+                         </select>
+                         <select class="input-group" id="ann-priority" required>
+                            <option value="normal">إعلان عادي (في لوحة الإعلانات)</option>
+                            <option value="urgent">🚨 تنبيه عاجل (بارز مع إشعار)</option>
+                         </select>
+                      </div>
+                      <input class="input-group" id="ann-title" placeholder="عنوان الإعلان" required>
+                      <textarea class="input-group" id="ann-content" rows="2" placeholder="نص وتفاصيل الإعلان..." required style="resize: vertical;"></textarea>
+                      <button class="pill" type="submit" style="width: fit-content;">نشر الإعلان 📢</button>
+                   </form>
+
+                   <div class="table-responsive">
+                      <table class="styled-table">
+                         <thead>
+                            <tr><th>العنوان</th><th>الفئة الموجه لها</th><th>النوع</th><th>التاريخ</th><th>حذف</th></tr>
+                         </thead>
+                         <tbody id="admin-announcements-table-body">
+                            <tr><td colspan="5" style="text-align:center;">جاري تحميل الإعلانات...</td></tr>
+                         </tbody>
+                      </table>
+                   </div>
+                </div>
+
+                <!-- أداة تنظيف وصيانة قاعدة البيانات -->
+                <div class="card liquid-glass" style="background:rgba(0,0,0,.4); grid-column: 1/-1; border-color: #f59e0b;">
+                   <h3 style="color: #fbbf24; font-size: 16px; margin-top:0; display:flex; align-items:center; gap:8px;">
+                     <span>🧹</span> أداة تنظيف وصيانة قاعدة البيانات (Database Maintenance)
+                   </h3>
+                   <p style="font-size:12px; color:var(--fg-faint); margin-bottom:12px;">فحص وكشف الحسابات الخاملة، المكررة بنفس رقم الهاتف، أو التي لم تبدأ نشاطاً لتوفير مساحة وحصص Firebase المجانية.</p>
+                   <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom: 14px;">
+                      <button class="pill" type="button" style="background: #f59e0b; color: #111;" onclick="scanInactiveAccounts()">🔍 بدء فحص الحسابات الخاملة والمكررة</button>
+                   </div>
+                   <div id="maintenance-scan-results" style="display: none;">
+                      <div class="table-responsive">
+                         <table class="styled-table">
+                            <thead>
+                               <tr><th>#</th><th>الطالب</th><th>الهاتف</th><th>تاريخ التسجيل</th><th>آخر ظهور</th><th>الملاحظة</th><th>إجراء</th></tr>
+                            </thead>
+                            <tbody id="maintenance-scan-table-body"></tbody>
+                         </table>
+                      </div>
+                   </div>
+                </div>
+
                 <div class="card liquid-glass" style="background:rgba(0,0,0,.4); grid-column: 1/-1;">
                    <h3 style="color: var(--danger); font-size: 16px; margin-top:0;">منطقة الخطر (إجراءات حساسة)</h3>
                    <div style="display:flex; gap:10px; flex-wrap:wrap;">
@@ -669,7 +1536,103 @@
     </main>
   </div>
 
-  <!-- نافذة الدخول -->
+  <!-- عارض ملفات PDF المدمج -->
+  <div id="pdf-viewer-overlay" class="overlay-bg" style="display: none;" onclick="closePdfViewer(event)">
+    <div class="modal-box liquid-glass" onclick="event.stopPropagation()" style="max-width: 95vw; width: 1050px; height: 90vh; max-height: 90vh; display: flex; flex-direction: column; padding: 14px 16px; border-radius: 16px; border: 1px solid rgba(255,255,255,.2); box-shadow: 0 20px 60px rgba(0,0,0,.6);">
+      <div class="z-content flex-between" style="padding-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,.1); margin-bottom: 10px; gap: 8px; flex-wrap: wrap;">
+        <div style="display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1;">
+          <span style="font-size: 20px;">📄</span>
+          <h3 id="pdf-viewer-title" style="margin: 0; font-size: 15px; font-weight: bold; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--fg);">معاينة الملف</h3>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
+          <a id="pdf-viewer-external-link" href="#" target="_blank" rel="noopener noreferrer" class="pill" style="height: 32px; font-size: 12px; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); color: var(--fg); text-decoration: none;">فتح خارجي ↗</a>
+          <button class="pill" style="height: 32px; font-size: 12px; background: var(--primary); color: #fff;" onclick="copyCurrentPdfLink()">نسخ الرابط 📋</button>
+          <button class="pill" style="height: 32px; font-size: 13px; background: rgba(239,68,68,.2); color: #f87171; border: 1px solid rgba(239,68,68,.4); padding: 0 12px;" onclick="closePdfViewer()">✕ إغلاق</button>
+        </div>
+      </div>
+      <div style="flex: 1; width: 100%; position: relative; border-radius: 10px; overflow: hidden; background: #18181b;">
+        <div id="pdf-loading-spinner" style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; color: var(--fg-soft); z-index: 1;">
+          <div style="font-size: 34px; animation: bounce 1.5s infinite;">⏳</div>
+          <div style="font-size: 14px; font-weight: bold;">جاري تحميل المستند للمعاينة...</div>
+          <div style="font-size: 12px; color: var(--fg-faint);">إذا استغرق التحميل وقتاً طويلاً يمكنك الضغط على "فتح خارجي"</div>
+        </div>
+        <iframe id="pdf-viewer-frame" src="" style="width: 100%; height: 100%; border: none; position: relative; z-index: 2;" allowfullscreen onload="const sp = document.getElementById('pdf-loading-spinner'); if(sp) sp.style.display='none';"></iframe>
+      </div>
+    </div>
+  </div>
+
+  <!-- نافذة بطاقة الإنجاز القابلة للمشاركة -->
+  <div id="achievement-overlay" class="overlay-bg" style="display: none;" onclick="closeModal(event, 'achievement-overlay')">
+    <div class="modal-box liquid-glass" onclick="event.stopPropagation()" style="max-width: 480px; text-align: center; padding: 22px 18px;">
+      <h3 class="z-content" style="color: var(--gold); margin: 0 0 14px; font-size: 19px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+        <span>🏆</span> بطاقة إنجازاتي في المنصة
+      </h3>
+      <div style="margin-bottom: 16px; display: flex; justify-content: center;">
+        <canvas id="achievement-canvas" width="600" height="750" style="width: 100%; max-width: 330px; height: auto; border-radius: 16px; border: 2px solid var(--gold); box-shadow: 0 20px 50px rgba(0,0,0,.7);"></canvas>
+      </div>
+      <div class="z-content" style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: center;">
+        <button class="pill" style="background: #10b981; flex: 1;" onclick="downloadAchievementCard()">📥 تحميل الصورة</button>
+        <button class="pill" style="background: var(--primary); flex: 1;" onclick="shareAchievementCard()">🔗 مشاركة البطاقة</button>
+        <button class="pill" style="background: rgba(255,255,255,.1); color: var(--fg);" onclick="closeModal(null, 'achievement-overlay')">إغلاق</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- نافذة مساهمة الطالب بملف أو تلخيص -->
+  <div id="contribution-overlay" class="overlay-bg" style="display: none;" onclick="closeModal(event, 'contribution-overlay')">
+    <div class="modal-box liquid-glass" onclick="event.stopPropagation()">
+      <h3 class="z-content" style="color: #10b981; margin: 0 0 16px; font-size: 18px; text-align: center;">
+        <span>✍️</span> شارك ملخصك مع زملائك في الدفعة
+      </h3>
+      <p class="z-content" style="font-size: 13px; color: var(--fg-soft); margin-bottom: 16px; line-height: 1.6;">
+        عندك تلخيص متميز أو تفريغ لمحاضرة؟ شاركه مع زملائك وسيتم مراجعته ونشره في صفحة المادة باسمك! ❤️
+      </p>
+      <form class="upload-form z-content" onsubmit="submitStudentContribution(event)">
+        <div class="input-group">
+          <label>المادة الدراسية</label>
+          <input type="text" id="contrib-subj-name" readonly style="opacity: .7;">
+        </div>
+        <div class="input-group">
+          <label>تصنيف الملف</label>
+          <select id="contrib-category" class="input-group">
+            <option value="محاضرات">محاضرة أو تلخيص نظري</option>
+            <option value="سكاشن">سكشن أو تطبيق عملي</option>
+            <option value="امتحانات">مراجعة أو حل امتحانات</option>
+          </select>
+        </div>
+        <div class="input-group">
+          <label>عنوان الملف / التلخيص</label>
+          <input type="text" id="contrib-title" placeholder="مثال: تلخيص المحاضرة 3 - د/محمد" required>
+        </div>
+        <div class="input-group">
+          <label>رابط الملف المباشر (Google Drive / Mediafire / OneDrive)</label>
+          <input type="url" id="contrib-link" placeholder="https://drive.google.com/..." required>
+        </div>
+        <div style="display: flex; gap: 8px; margin-top: 10px;">
+          <button class="pill" type="submit" style="background: #10b981; flex: 1;">إرسال للإدارة 🚀</button>
+          <button class="pill" type="button" style="background: rgba(255,255,255,.1); color: var(--fg);" onclick="closeModal(null, 'contribution-overlay')">إلغاء</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- نافذة مشغل الفيديو المدمج -->
+  <div id="video-player-overlay" class="overlay-bg" style="display: none;" onclick="closeVideoPlayer(event)">
+    <div class="modal-box liquid-glass" onclick="event.stopPropagation()" style="max-width: 900px; width: 95vw; padding: 16px; border-radius: 16px;">
+      <div class="z-content flex-between" style="margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,.1); padding-bottom: 10px;">
+        <h3 id="video-player-title" style="margin: 0; font-size: 16px; color: #ec4899; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">مشاهدة الشرح</h3>
+        <div style="display: flex; gap: 8px;">
+          <a id="video-player-ext-link" href="#" target="_blank" rel="noopener" class="pill" style="height: 30px; font-size: 12px; background: rgba(255,255,255,.1);">يوتيوب ↗</a>
+          <button class="pill" style="height: 30px; font-size: 12px; background: rgba(239,68,68,.2); color: #f87171;" onclick="closeVideoPlayer()">✕ إغلاق</button>
+        </div>
+      </div>
+      <div style="position: relative; width: 100%; padding-bottom: 56.25%; height: 0; border-radius: 10px; overflow: hidden; background: #000;">
+        <iframe id="video-player-frame" src="" style="position: absolute; top:0; left:0; width: 100%; height: 100%; border: none;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+      </div>
+    </div>
+  </div>
+
+<!-- نافذة الدخول -->
   <div id="auth-overlay" class="overlay-bg" style="display: none;">
     <div class="modal-box liquid-glass">
       <h2 id="auth-title" class="z-content" style="text-align: center; margin-top:0; color: var(--primary); font-size: 20px;">تسجيل دخول الطالب</h2>
@@ -696,7 +1659,8 @@
     <div class="modal-box liquid-glass" onclick="event.stopPropagation()">
       <h2 class="z-content" style="text-align: center; color: var(--primary); margin-top: 0; margin-bottom: 20px;">الملف الشخصي 👤</h2>
       <div id="profile-content" class="z-content"></div>
-      <button class="pill z-content" style="width: 100%; background: rgba(100,100,100,.2); margin-top: 10px; color: var(--fg);" onclick="closeModal(null, 'profile-overlay')">إغلاق</button>
+      <button class="pill z-content" style="width: 100%; background: linear-gradient(135deg, #f59e0b, #d97706); color: #111; margin-top: 14px; font-weight: 800; font-size: 14px;" onclick="openAchievementCardModal()">🏆 بطاقة إنجازاتي (عرض ومشاركة كصورة)</button>
+      <button class="pill z-content" style="width: 100%; background: rgba(100,100,100,.2); margin-top: 8px; color: var(--fg);" onclick="closeModal(null, 'profile-overlay')">إغلاق</button>
     </div>
   </div>
 
@@ -723,13 +1687,14 @@
     let feedbackCfg = { enabled: true, number: '' };
     const firebaseConfig = { apiKey: "AIzaSyB6FXWiprXlv6eoLhRIDrwyzKmR9cf3F8Y", authDomain: "university-platform-f51a1.firebaseapp.com", databaseURL: "https://university-platform-f51a1-default-rtdb.firebaseio.com", projectId: "university-platform-f51a1", storageBucket: "university-platform-f51a1.firebasestorage.app", messagingSenderId: "160054277275", appId: "1:160054277275:web:79482938bc46e33c52c23e" };
 
-    /* ===== كل المتغيرات معرّفة في الأعلى قبل أي استخدام (يمنع خطأ before initialization) ===== */
+    /* ===== كل المتغيرات معرّفة في الأعلى قبل أي استخدام ===== */
     let currentUser = null, currentStudentData = null, isRegisterMode = false, activeLevel = 1, allUsersList = [], onlineUsersMap = {};
     let adminLogsListening = false, isMaintenanceActive = false, privateAlertListening = false;
     let db = [], currentSubjectId = null, userDataRef = null, searchTimeout = null;
     let researchTopics = [], researchSearchTimeout = null, researchListening = false;
     let researchRequests = [], myRequest = null, adminResearchOn = false;
     let presenceInitialized = false, heartbeatInterval = null;
+    let currentViewingPdfUrl = '';
 
     /* ===== تهيئة Firebase بأمان ===== */
     const FB_OK = !!(window.firebase && window.firebase.auth && window.firebase.database);
@@ -739,7 +1704,7 @@
     const auth = FB_OK ? FB.auth() : makeStub();
     const database = FB_OK ? FB.database() : makeStub();
 
-    /* ===== توفير اتصالات Firebase: فصل الاتصال تلقائيًا للطالب الخامل (حد الخطة المجانية 100 اتصال متزامن) ===== */
+    /* ===== توفير اتصالات Firebase: فصل الاتصال تلقائيًا للطالب الخامل ===== */
     var __offline = false, __idleT = null, __lastWake = 0, IDLE_MS = 20000, HIDDEN_MS = 8000;
     function __isAdmin() { try { return !!(currentStudentData && currentStudentData.isAdmin === true); } catch (e) { return false; } }
     function __goOffline() { if (__offline || __isAdmin() || isRegistering) return; try { database.goOffline(); __offline = true; } catch (e) {} }
@@ -805,7 +1770,7 @@
       }
       if (m[c]) return m[c];
       if (/permission_denied/i.test((err && err.message) || '')) return m['PERMISSION_DENIED'];
-      return 'حصل خطأ غير متوقع' + (c ? ' (' + c + ')' : '') + '. ' + ((err && err.message) ? '' : '');
+      return 'حصل خطأ غير متوقع' + (c ? ' (' + c + ')' : '') + '.';
     }
     function togglePassVisibility() {
       const i = document.getElementById('auth-pass'), a = document.getElementById('pass-eye');
@@ -838,6 +1803,7 @@
         const body = document.body; const themeBtn = document.getElementById('theme-toggle-btn');
         if (body.classList.contains('light-mode')) { body.classList.remove('light-mode'); themeBtn.innerText = '🌞'; try { localStorage.setItem('theme', 'dark'); } catch (e) {} }
         else { body.classList.add('light-mode'); themeBtn.innerText = '🌙'; try { localStorage.setItem('theme', 'light'); } catch (e) {} }
+        updateMobileToolsState();
     }
     function initTheme() {
         let saved = null; try { saved = localStorage.getItem('theme'); } catch (e) {}
@@ -862,7 +1828,6 @@
 
     function escapeHtml(str) { if (str === null || str === undefined) return ''; return String(str).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\r?\n/g, '\\n').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
     function escText(str) { if (str === null || str === undefined) return ''; return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
-    /* يمنع روابط javascript: */
     function safeUrl(u) { try { const x = new URL(u); return (x.protocol === 'https:' || x.protocol === 'http:') ? x.href : '#'; } catch (e) { return '#'; } }
 
     function getStudentShortId(uid, customId) { if (customId && customId.trim() !== '') return customId; return uid ? uid.substring(0,6).toUpperCase() : 'غير متوفر'; }
@@ -904,12 +1869,12 @@
 
     function startSession(user) {
       window._lastUid = user.uid; ensureOnline();
-      withTimeout(database.ref('users/' + user.uid).once('value'), 40000, 'السيرفر ما ردّش وإنت داخل. اتأكد من الإنترنت وحاول تاني.').then((snap) => {
+      withTimeout(database.ref('users/' + user.uid).once('value'), 40000, 'السيرفر اتأخر في الرد وإنت داخل. اتأكد من الإنترنت وحاول تاني.').then((snap) => {
         const val = snap.val(); window._ssRetry = 0;
         if (!val) { Swal.fire('حسابك غير مكتمل', 'الحساب اتعمل بس بياناته ماكتملتش (غالبًا النت قطع وقت التسجيل). اضغط "إنشاء حساب جديد" واكتب نفس الإيميل والباسورد وبياناتك وهيتكمل.', 'warning'); auth.signOut(); return; }
         if (val.isBanned) { Swal.fire('محظور!', `⚠️ تم حظرك!<br>السبب: ${escText(val.banReason)}`, 'error'); logoutStudent(); return; }
         currentUser = user; document.getElementById('auth-overlay').style.display = 'none';
-        if (!window._lvlSet) { window._lvlSet = true; switchLevel(val.level == 2 ? 2 : 1); }
+        if (!window._lvlSet) { window._lvlSet = true; switchLevel(val.level == 2 ? 2 : 1, false); }
         try { database.ref('settings/maintenanceMode').off(); listenToMaintenance(); } catch (e) {}
         loadStudentData(user.uid); listenToPrivateAlerts(user.uid);
       }).catch((err) => { if (err && err.code === 'timeout' && (window._ssRetry = (window._ssRetry || 0) + 1) <= 4) { setTimeout(() => { if (auth.currentUser) startSession(auth.currentUser); }, 3000 + Math.random() * 5000); return; } window._ssRetry = 0; Swal.fire('تعذّر تحميل حسابك', escText(authErrMsg(err)), 'error'); auth.signOut(); });
@@ -934,7 +1899,6 @@
         });
         privateAlertListening = true;
     }
-
 
     function setupPresence(uid, userData) {
       const myStatusRef = database.ref('online_users/' + uid); const userLastSeenRef = database.ref('users/' + uid + '/lastSeen');
@@ -1012,7 +1976,6 @@
         document.querySelectorAll('#students-table-body tr').forEach(row => { if (row.cells.length > 1) row.style.display = row.innerText.toLowerCase().includes(query) ? '' : 'none'; });
     }
 
-    /* ===== إدارة: إضافة/خصم نقاط لطالب معين (تظهر في لوحة الشرف) ===== */
     async function adminAddPoints(uid) {
       const u = allUsersList.find(x => x.uid === uid); if (!u) return;
       const cur = u.score || 0;
@@ -1086,7 +2049,6 @@
       const __isBad = e => /invalid-(login-)?credentials?|wrong-password|user-not-found/.test((e && e.code) || '') || /INVALID_LOGIN_CREDENTIALS|INVALID_PASSWORD|EMAIL_NOT_FOUND/.test(String((e && e.message) || ''));
       try { await auth.signInWithEmailAndPassword(email, pass); }
       catch (err) {
-        /* مسافة زيادة في أول/آخر الباسورد (كيبورد الموبايل) نجرب بدونها مرة واحدة */
         if (__isBad(err) && pass !== pass.trim() && pass.trim()) {
           try { await auth.signInWithEmailAndPassword(email, pass.trim()); return; } catch (e2) { err = e2; }
         }
@@ -1104,7 +2066,6 @@
         try { user = (await auth.createUserWithEmailAndPassword(email, pass)).user; isNew = true; }
         catch (err) {
           if (err.code !== 'auth/email-already-in-use') throw err;
-          /* الحساب موجود: لو الباسورد صح نكمّل بياناته الناقصة أو ندخّله */
           let cred; try { cred = await auth.signInWithEmailAndPassword(email, pass); } catch (e2) { return Swal.fire('الإيميل مسجل قبل كده', authErrMsg(err), 'info'); }
           user = cred.user;
           const ex = await withTimeout(database.ref('users/' + user.uid).once('value'), 15000);
@@ -1139,7 +2100,6 @@
       });
     }
 
-    /* تعيين الباسورد بلصق رابط الاستعادة (من غير صفحة Firebase الافتراضية) */
     async function resetWithPastedLink() {
       if (!FB_OK) return Swal.fire('خطأ', 'حدّث الصفحة وجرب تاني.', 'error');
       const { value: v } = await Swal.fire({
@@ -1175,12 +2135,11 @@
           if (currentStudentData.isBanned) { Swal.fire('محظور!', `⚠️ تم حظرك!<br>السبب: ${escText(currentStudentData.banReason)}`, 'error'); logoutStudent(); return; }
           document.getElementById('user-greeting').innerHTML = `👤 ${escText(currentStudentData.name)}`; setupPresence(uid, currentStudentData); syncLeaderboard(uid, currentStudentData);
           const adminBtn = document.getElementById('admin-toggle-btn');
-          if (currentStudentData.isAdmin === true) { adminBtn.style.display = 'inline-flex'; listenToAdminLogs(); if (!adminListenersOn) { adminListenersOn = true; listenToUsersData(); listenToOnlinePresence(); } listenToAdminResearch(); } else { adminBtn.style.display = 'none'; document.getElementById('admin-panel').style.display = 'none'; }
+          if (currentStudentData.isAdmin === true) { adminBtn.style.display = 'inline-flex'; listenToAdminLogs(); if (!adminListenersOn) { adminListenersOn = true; listenToUsersData(); listenToOnlinePresence(); } listenToAdminResearch(); listenToContributions(); updateAnalyticsSelect(); } else { adminBtn.style.display = 'none'; document.getElementById('admin-panel').style.display = 'none'; }
         }
         renderResearchHome();
       });
-      /* المستمعات العامة تُشغَّل مرة واحدة فقط (بدون تكرار بعد الخروج والدخول) */
-      if (!window._listenersReady) { window._listenersReady = true; listenToAlerts(); listenToSubjects(); listenToLeaderboard(); listenToResearchTopics(); __fetchFeedbackCfg(); }
+      if (!window._listenersReady) { window._listenersReady = true; listenToAlerts(); listenToAnnouncements(); listenToSubjects(); listenToLeaderboard(); listenToResearchTopics(); __fetchFeedbackCfg(); }
     }
 
     function logoutStudent() {
@@ -1207,12 +2166,355 @@
         <div class="profile-row z-content"><div class="profile-row-label">رقم الهاتف</div><div class="profile-row-value" style="direction:ltr;">${escText(currentStudentData.phone || '-')}</div></div>
         <div class="profile-row z-content"><div class="profile-row-label">البريد الإلكتروني</div><div class="profile-row-value" style="color:var(--primary); font-size:13px;">${escText(currentStudentData.email)}</div></div>
         <div class="profile-row z-content"><div class="profile-row-label">حالة الاتصال</div><div class="profile-row-value" style="font-size:13px;">${lastSeenText}</div></div>
-        <div class="profile-row z-content" style="border-color:var(--gold); background:rgba(255,215,0,.05);"><div class="profile-row-label">مجموع النقاط</div><div class="profile-row-value" style="color:var(--gold);">🏆 ${currentStudentData.score || 0} نقطة</div></div>`;
+        <div class="profile-row z-content" style="border-color:var(--gold); background:rgba(255,215,0,.05);"><div class="profile-row-label">مجموع النقاط</div><div class="profile-row-value" style="color:var(--gold);">🏆 ${currentStudentData.score || 0} نقطة</div></div>` + renderBadgesHtml(currentStudentData);
       document.getElementById('profile-overlay').style.display = 'flex';
     }
 
     function closeModal(e, id) { if (e && e.target.id !== id && e.target.tagName !== 'BUTTON') return; document.getElementById(id).style.display = 'none'; }
-    /* ===== إعدادات صندوق الملاحظات (إظهار/إخفاء + رقم التواصل) ===== */
+
+    
+    /* ===== المؤثرات الصوتية والاهتزاز الحي (Web Audio API & Haptics) ===== */
+    let audioCtx = null;
+    let soundEnabled = true;
+
+    function initAudio() {
+      if (!audioCtx) {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (AudioContext) audioCtx = new AudioContext();
+      }
+      if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    function toggleSound() {
+      soundEnabled = !soundEnabled;
+      try { localStorage.setItem('sound_enabled', soundEnabled ? '1' : '0'); } catch(e) {}
+      updateSoundBtn();
+      if (soundEnabled) {
+        playSound('correct');
+      }
+    }
+
+    function updateSoundBtn() {
+      const btn = document.getElementById('sound-toggle-btn');
+      if (btn) {
+        btn.innerHTML = soundEnabled ? '🔊' : '🔇';
+        btn.title = soundEnabled ? 'كتم المؤثرات الصوتية' : 'تشغيل المؤثرات الصوتية';
+      }
+      updateMobileToolsState();
+    }
+
+    function initSound() {
+      try {
+        const saved = localStorage.getItem('sound_enabled');
+        if (saved === '0') soundEnabled = false;
+      } catch(e) {}
+      updateSoundBtn();
+      document.addEventListener('click', () => initAudio(), { once: true });
+      document.addEventListener('touchstart', () => initAudio(), { once: true });
+    }
+
+    function playSound(type) {
+      if (!soundEnabled) return;
+      try {
+        initAudio();
+        if (!audioCtx) return;
+        const now = audioCtx.currentTime;
+
+        if (type === 'correct') {
+          // نغمة صاعدة مبهجة (C5 -> E5 -> G5 -> C6)
+          const notes = [523.25, 659.25, 783.99, 1046.50];
+          notes.forEach((freq, idx) => {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, now + idx * 0.07);
+            gain.gain.setValueAtTime(0.18, now + idx * 0.07);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.07 + 0.3);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(now + idx * 0.07);
+            osc.stop(now + idx * 0.07 + 0.3);
+          });
+        } else if (type === 'wrong') {
+          // نغمة هادئة منخفضة للخطأ (240Hz -> 150Hz)
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(240, now);
+          osc.frequency.exponentialRampToValueAtTime(150, now + 0.25);
+          gain.gain.setValueAtTime(0.16, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(now);
+          osc.stop(now + 0.25);
+        } else if (type === 'badge') {
+          // لحن احتفالي عند فتح وسام جديد (Fanfare)
+          const chord = [523.25, 659.25, 783.99, 1046.50, 1318.51];
+          chord.forEach((freq, idx) => {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(freq, now + idx * 0.08);
+            gain.gain.setValueAtTime(0.22, now + idx * 0.08);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.08 + 0.55);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(now + idx * 0.08);
+            osc.stop(now + idx * 0.08 + 0.55);
+          });
+        }
+      } catch (e) {
+        console.warn('Audio playback error:', e);
+      }
+    }
+
+    function triggerHaptic(type) {
+      if (!navigator.vibrate) return;
+      try {
+        if (type === 'correct') navigator.vibrate([40, 50, 60]);
+        else if (type === 'wrong') navigator.vibrate([120]);
+        else if (type === 'badge') navigator.vibrate([80, 40, 80, 40, 140]);
+      } catch (e) {}
+    }
+
+    /* ===== نظام الشارات والأوسمة التحفيزية (Gamification Badges) ===== */
+    const BADGES_LIST = [
+      { id: 'first_step', title: 'المستكشف الأول', icon: '🌱', desc: 'حل أول سؤال صحيح في المنصة', check: (u) => (u && (u.score || 0) >= 1) },
+      { id: 'quiz_10', title: 'صياد الإجابات', icon: '🎯', desc: 'الحصول على 10 نقاط في بنك الأسئلة', check: (u) => (u && (u.score || 0) >= 10) },
+      { id: 'quiz_30', title: 'مساح متفوق', icon: '📐', desc: 'الحصول على 30 نقطة في بنك الأسئلة', check: (u) => (u && (u.score || 0) >= 30) },
+      { id: 'surveyor_pro', title: 'مساح عبقري', icon: '🏅', desc: 'الوصول إلى 50 نقطة في بنك الأسئلة', check: (u) => (u && (u.score || 0) >= 50) },
+      { id: 'cohort_legend', title: 'أسطورة الدفعة', icon: '👑', desc: 'الوصول إلى 100 نقطة فما فوق', check: (u) => (u && (u.score || 0) >= 100) },
+      { id: 'researcher', title: 'الباحث الأكاديمي', icon: '🔬', desc: 'حجز بحث دراسي في قسم الأبحاث', check: (u) => !!(u && u.researchTopic) },
+      { id: 'accuracy_master', title: 'دقة الميزان', icon: '⚡', desc: 'تحقيق نسبة دقة 80% فأكثر (مع 10 أسئلة على الأقل)', check: (u) => {
+          const sq = (u && u.solvedQuizzes) || {};
+          const keys = Object.keys(sq);
+          if (keys.length < 10) return false;
+          const correct = keys.filter(k => sq[k] === true || (sq[k] && sq[k].status === 'correct')).length;
+          return (correct / keys.length) >= 0.8;
+        }
+      }
+    ];
+
+    function renderBadgesHtml(userData) {
+      if (!userData) return '';
+      const earned = userData.earnedBadges || {};
+      let count = 0;
+      const items = BADGES_LIST.map(b => {
+        const isUnlocked = !!earned[b.id] || b.check(userData);
+        if (isUnlocked) count++;
+        return `
+          <div style="background: ${isUnlocked ? 'rgba(255,215,0,.08)' : 'rgba(255,255,255,.02)'}; border: 1px solid ${isUnlocked ? 'rgba(255,215,0,.35)' : 'rgba(255,255,255,.07)'}; border-radius: 10px; padding: 10px 6px; text-align: center; transition: .2s; ${isUnlocked ? 'box-shadow: 0 4px 15px rgba(255,215,0,.1);' : 'opacity: .5;'}">
+            <div style="font-size: 26px; margin-bottom: 4px; ${isUnlocked ? '' : 'filter: grayscale(1);'}">${isUnlocked ? b.icon : '🔒'}</div>
+            <div style="font-size: 12px; font-weight: bold; color: ${isUnlocked ? 'var(--gold)' : 'var(--fg-faint)'}; margin-bottom: 2px;">${escText(b.title)}</div>
+            <div style="font-size: 10px; color: ${isUnlocked ? 'var(--fg-soft)' : 'var(--fg-faint)'}; line-height: 1.3;">${escText(b.desc)}</div>
+          </div>`;
+      }).join('');
+
+      return `
+        <div style="margin-top: 18px; border-top: 1px solid rgba(255,255,255,.1); padding-top: 14px;">
+          <div style="font-size: 14px; font-weight: bold; color: var(--gold); margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between;">
+            <span>🎖️ الأوسمة والشارات المكتسبة</span>
+            <span style="font-size: 11px; background: rgba(255,215,0,.15); color: var(--gold); padding: 2px 8px; border-radius: 10px;">${count} من ${BADGES_LIST.length}</span>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(115px, 1fr)); gap: 8px;">
+            ${items}
+          </div>
+        </div>`;
+    }
+
+    function checkAndAwardBadges(userObj) {
+      if (!currentUser || !userObj) return;
+      const earned = userObj.earnedBadges || {};
+      let newlyUnlocked = null;
+      BADGES_LIST.forEach(b => {
+        if (!earned[b.id] && b.check(userObj)) {
+          earned[b.id] = Date.now();
+          newlyUnlocked = b;
+        }
+      });
+      if (newlyUnlocked) {
+        database.ref('users/' + currentUser.uid + '/earnedBadges').set(earned);
+        userObj.earnedBadges = earned;
+        playSound('badge');
+        triggerHaptic('badge');
+        Swal.fire({
+          title: '🎉 وسام جديد!',
+          html: `<div style="font-size: 54px; margin: 10px 0; animation: bounce 1.5s infinite;">${newlyUnlocked.icon}</div>
+                 <h3 style="color: var(--gold); margin: 0 0 8px; font-size: 20px;">${escText(newlyUnlocked.title)}</h3>
+                 <p style="color: var(--fg-soft); font-size: 14px; margin-bottom: 4px;">${escText(newlyUnlocked.desc)}</p>
+                 <div style="font-size: 12px; color: #4ade80; font-weight: bold; margin-top: 10px;">تمت إضافة الوسام إلى ملفك الشخصي! 🎖️</div>`,
+          confirmButtonText: 'رائع جداً 🚀',
+          confirmButtonColor: '#3b82f6'
+        });
+      }
+    }
+
+    /* ===== عارض ملفات PDF المدمج (Embedded PDF Previewer) ===== */
+    function getEmbedUrl(rawUrl) {
+      if (!rawUrl) return '';
+      let url = rawUrl.trim();
+      // Google Drive /file/d/{id}
+      const driveMatch = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
+      if (driveMatch && driveMatch[1]) {
+        return `https://drive.google.com/file/d/${driveMatch[1]}/preview`;
+      }
+      // Google Drive open?id={id} or uc?id={id}
+      const idMatch = url.match(/drive\.google\.com\/(?:open|uc)\?(?:[^&]*&)*id=([a-zA-Z0-9_-]+)/);
+      if (idMatch && idMatch[1]) {
+        return `https://drive.google.com/file/d/${idMatch[1]}/preview`;
+      }
+      // Direct PDF or standard documents via Google Docs Viewer
+      return `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`;
+    }
+
+    function openPdfViewer(title, url) {
+      const overlay = document.getElementById('pdf-viewer-overlay');
+      const titleEl = document.getElementById('pdf-viewer-title');
+      const frame = document.getElementById('pdf-viewer-frame');
+      const extLink = document.getElementById('pdf-viewer-external-link');
+      const spinner = document.getElementById('pdf-loading-spinner');
+      if (!overlay || !frame) return;
+
+      currentViewingPdfUrl = url;
+      titleEl.innerText = title || 'معاينة الملف';
+      extLink.href = safeUrl(url);
+      if (spinner) spinner.style.display = 'flex';
+      frame.src = '';
+
+      const embedUrl = getEmbedUrl(url);
+      frame.src = embedUrl;
+      overlay.style.display = 'flex';
+    }
+
+    function closePdfViewer(e) {
+      if (e && e.target && e.target.id !== 'pdf-viewer-overlay' && e.target.tagName !== 'BUTTON') return;
+      const overlay = document.getElementById('pdf-viewer-overlay');
+      const frame = document.getElementById('pdf-viewer-frame');
+      if (frame) frame.src = '';
+      if (overlay) overlay.style.display = 'none';
+      currentViewingPdfUrl = '';
+    }
+
+    function copyCurrentPdfLink() {
+      if (!currentViewingPdfUrl) return;
+      copyTextToClipboard(currentViewingPdfUrl, 'تم نسخ رابط الملف المباشر! 📋');
+    }
+
+    /* ===== التوجيه والمشاركة بروابط مباشرة (Deep Linking & Hash Routing) ===== */
+    let isHashNavigationInProgress = false;
+
+    function navigateTo(hash) {
+      if (window.location.hash === hash) {
+        handleRouting();
+      } else {
+        window.location.hash = hash;
+      }
+    }
+
+    function handleRouting() {
+      isHashNavigationInProgress = true;
+      try {
+        const rawHash = window.location.hash || '';
+        const cleanHash = rawHash.replace(/^#\/?/, '').trim();
+
+        if (cleanHash.startsWith('subject/')) {
+          const sId = cleanHash.replace('subject/', '').trim();
+          if (sId) {
+            if (db && db.length > 0) {
+              const subj = db.find(s => s.id === sId);
+              if (subj) {
+                if (subj.level && subj.level !== activeLevel) {
+                  activeLevel = subj.level;
+                  document.getElementById('tab-lvl-1').classList.toggle('active', activeLevel === 1);
+                  document.getElementById('tab-lvl-2').classList.toggle('active', activeLevel === 2);
+                  document.getElementById('current-level-heading').innerText = activeLevel === 1 ? "مواد المستوى الأول" : "مواد المستوى الثاني";
+                }
+                openSubject(sId, false);
+                return;
+              }
+            } else {
+              window._pendingRoute = rawHash;
+              return;
+            }
+          }
+        } else if (cleanHash === 'gpa' || cleanHash.startsWith('gpa')) {
+          showGpa(false);
+          return;
+        } else if (cleanHash.startsWith('research')) {
+          const parts = cleanHash.split('/');
+          const tab = parts[1] || 'pick';
+          showResearch(tab, false);
+          return;
+        } else if (cleanHash === 'lvl1' || cleanHash === 'level1') {
+          switchLevel(1, false);
+          showHome(false, false);
+          return;
+        } else if (cleanHash === 'lvl2' || cleanHash === 'level2') {
+          switchLevel(2, false);
+          showHome(false, false);
+          return;
+        }
+
+        // المسار الافتراضي: الرئيسية
+        showHome(true, false);
+      } finally {
+        isHashNavigationInProgress = false;
+      }
+    }
+
+    window.addEventListener('hashchange', () => {
+      handleRouting();
+    });
+
+    function copyTextToClipboard(text, successMsg) {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => {
+          Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'success',
+            title: successMsg || 'تم نسخ الرابط بنجاح! 📋',
+            showConfirmButton: false,
+            timer: 2500
+          });
+        }).catch(() => promptFallback(text));
+      } else {
+        promptFallback(text);
+      }
+    }
+
+    function promptFallback(url) {
+      Swal.fire({
+        title: 'رابط المشاركة المباشر',
+        html: `<input type="text" value="${escText(url)}" class="swal2-input" readonly style="direction:ltr; text-align:center;" onclick="this.select()">`,
+        confirmButtonText: 'حسناً'
+      });
+    }
+
+    function shareDirectLink(hash, title) {
+      const fullUrl = window.location.origin + window.location.pathname + (window.location.search || '') + hash;
+      if (navigator.share) {
+        navigator.share({
+          title: (title ? title + ' - ' : '') + 'منصة الدفعة التعليمية',
+          text: title ? `تفضل بالاطلاع على ${title} عبر منصة الدفعة التعليمية:` : 'رابط المنصة التعليمية:',
+          url: fullUrl
+        }).catch(() => {});
+      } else {
+        copyTextToClipboard(fullUrl, `تم نسخ رابط ${title || ''} بنجاح! 📋`);
+      }
+    }
+
+    function shareCurrentSubject() {
+      if (!currentSubjectId) return;
+      const subj = db.find(s => s.id === currentSubjectId);
+      const name = subj ? subj.name : 'المادة';
+      shareDirectLink('#subject/' + currentSubjectId, 'مادة ' + name);
+    }
+
+    /* ===== إعدادات صندوق الملاحظات ===== */
     function normalizeWaNumber(x) {
       let d = normDigits(x).replace(/\D/g, '').replace(/^00/, '');
       if (/^01\d{9}$/.test(d)) d = '2' + d;
@@ -1247,9 +2549,48 @@
     function sendFeedbackToWhatsApp(e) { e.preventDefault(); const msg = document.getElementById('feedback-message').value.trim(); if (!msg) return; const text = `📌 *ملاحظة جديدة:*\n👤 *الطالب:* ${currentStudentData?.name}\n📞 *الهاتف:* ${currentStudentData?.phone}\n📝 *الملاحظة:* ${msg}`; window.open(`https://wa.me/${feedbackCfg.number || ADMIN_WHATSAPP_NUMBER}?text=${encodeURIComponent(text)}`, '_blank'); document.getElementById('feedback-message').value = ''; }
 
     function renderLeaderboard(board) {
-      const container = document.getElementById('leaderboard-container'); container.innerHTML = ''; let top = board.slice(0, 5);
-      if (top.length === 0) { container.innerHTML = '<div class="empty-state">لا توجد نتائج حتى الآن.</div>'; return; }
-      container.innerHTML = top.map((s, idx) => { const medal = idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : `${idx + 1}.`; return `<div class="rank-row z-content"><div class="rank-num">${medal}</div><div class="rank-name">${escText(s.name)}</div><div class="rank-score">${s.score || 0}</div></div>`; }).join('');
+      const container = document.getElementById('leaderboard-container');
+      if (!container) return;
+      container.innerHTML = '';
+      
+      let top = board.slice(0, 5);
+      if (top.length === 0) {
+        container.innerHTML = '<div class="empty-state">لا توجد نتائج حتى الآن.</div>';
+        return;
+      }
+
+      let html = '<div class="z-content" style="font-weight:bold; font-size:15px; margin-bottom:12px; color:var(--gold); display:flex; align-items:center; gap:6px;"><span>🏆</span> <span>أوائل الدفعة والمتفوقين</span></div>';
+      
+      html += top.map((s, idx) => {
+        const medal = idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : `${idx + 1}.`;
+        const isMe = currentStudentData && (s.uid === currentStudentData.uid || s.name === currentStudentData.name);
+        return `
+          <div class="rank-row z-content ${isMe ? 'my-rank-row' : ''}" style="${isMe ? 'border:1px solid #f59e0b; background:rgba(245,158,11,.1);' : ''}">
+            <div class="rank-num">${medal}</div>
+            <div class="rank-name">${escText(s.name)} ${isMe ? '<span style="font-size:11px; color:#f59e0b; font-weight:bold;">(أنت ⭐)</span>' : ''}</div>
+            <div class="rank-score">${s.score || 0}</div>
+          </div>`;
+      }).join('');
+
+      // إذا كان الطالب الحالي مسجلاً وغير متواجد في الـ Top 5، اعرض له بطاقة ترتيبه الشخصي
+      if (currentStudentData) {
+        const myIndex = board.findIndex(s => s.uid === currentStudentData.uid || s.name === currentStudentData.name);
+        if (myIndex >= 5) {
+          html += `
+            <div class="my-rank-pinned-card z-content">
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span style="font-size:18px;">🌟</span>
+                <div>
+                  <div style="font-size:13px; font-weight:bold; color:var(--fg);">ترتيبك الحالي: المركز #${myIndex + 1}</div>
+                  <div style="font-size:11px; color:var(--fg-soft);">حل أسئلة أكثر لتدخل قائمة المتفوقين!</div>
+                </div>
+              </div>
+              <div style="font-size:16px; font-weight:900; color:#f59e0b;">${currentStudentData.score || 0} نقطة</div>
+            </div>`;
+        }
+      }
+
+      container.innerHTML = html;
     }
 
     function renderStudentsTable() {
@@ -1305,7 +2646,7 @@
       });
       if (subjectsHtml === '') subjectsHtml = '<div class="empty-state">لا توجد اختبارات متاحة في المواد حالياً.</div>';
       let globalAccuracy = totalAnswered === 0 ? 0 : Math.round((totalCorrect / totalAnswered) * 100); let globalAccColor = globalAccuracy >= 80 ? '#22c55e' : (globalAccuracy >= 50 ? '#f59e0b' : '#ef4444'); let avatarChar = student.name ? escText(student.name.charAt(0)) : 'ش';
-      content.innerHTML = `<div style="display:flex; flex-direction:column; align-items:center; margin-bottom:24px; margin-top:10px;"><div class="track-avatar">${avatarChar}</div><h3 style="margin:12px 0 4px; color:var(--fg); font-size:20px;">${escText(student.name)}</h3><p style="margin:0; color:var(--fg-faint); font-size:13px; direction:ltr;">${escText(student.email)}</p></div><div class="track-stats-grid"><div class="track-stat-card"><div class="track-stat-title">إجمالي الإجابات</div><div class="track-stat-value" style="color:var(--fg);">${totalCorrect}/${totalAnswered}</div></div><div class="track-stat-card"><div class="track-stat-title">نسبة الدقة</div><div class="track-stat-value" style="color:${globalAccColor};">${globalAccuracy}%</div></div><div class="track-stat-card"><div class="track-stat-title">النقاط</div><div class="track-stat-value" style="color:var(--gold);">${student.score || 0} 🏆</div></div></div><div style="text-align:right; margin-bottom:12px; color:var(--primary); font-weight:bold; font-size:14px; display:flex; align-items:center; gap:6px;">📋 سجل النتائج حسب المادة</div><div style="display:flex; flex-direction:column;">${subjectsHtml}</div>`;
+      content.innerHTML = `<div style="display:flex; flex-direction:column; align-items:center; margin-bottom:24px; margin-top:10px;"><div class="track-avatar">${avatarChar}</div><h3 style="margin:12px 0 4px; color:var(--fg); font-size:20px;">${escText(student.name)}</h3><p style="margin:0; color:var(--fg-faint); font-size:13px; direction:ltr;">${escText(student.email)}</p></div><div class="track-stats-grid"><div class="track-stat-card"><div class="track-stat-title">إجمالي الإجابات</div><div class="track-stat-value" style="color:var(--fg);">${totalCorrect}/${totalAnswered}</div></div><div class="track-stat-card"><div class="track-stat-title">نسبة الدقة</div><div class="track-stat-value" style="color:${globalAccColor};">${globalAccuracy}%</div></div><div class="track-stat-card"><div class="track-stat-title">النقاط</div><div class="track-stat-value" style="color:var(--gold);">${student.score || 0} 🏆</div></div></div><div style="text-align:right; margin-bottom:12px; color:var(--primary); font-weight:bold; font-size:14px; display:flex; align-items:center; gap:6px;">📋 سجل النتائج حسب المادة</div><div style="display:flex; flex-direction:column;">${subjectsHtml}</div>` + renderBadgesHtml(student);
       document.getElementById('tracking-overlay').style.display = 'flex';
     }
 
@@ -1327,8 +2668,30 @@
     function listenToSubjects() {
       database.ref('subjects').on('value', (snap) => {
         const val = snap.val() || {};
-        db = Object.keys(val).map(id => { const s = val[id]; return { id, level: s.level, name: s.name, desc: s.desc, images: s.images ? Object.keys(s.images).map(k=>({key:k,...s.images[k]})) : [], files: s.files ? Object.keys(s.files).map(k=>({key:k,...s.files[k]})) : [], quizzes: s.quizzes ? Object.keys(s.quizzes).map(k=>({key:k,...s.quizzes[k]})) : [] }; });
-        if (!currentSubjectId) renderHome(); else { const exist = db.find(s=>s.id===currentSubjectId); if (exist) openSubject(currentSubjectId, true); else showHome(); }
+        db = Object.keys(val).map(id => {
+          const s = val[id];
+          return {
+            id,
+            level: s.level,
+            name: s.name,
+            desc: s.desc,
+            order: s.order !== undefined ? parseInt(s.order, 10) : 0,
+            images: s.images ? Object.keys(s.images).map(k=>({key:k,...s.images[k]})) : [],
+            files: s.files ? Object.keys(s.files).map(k=>({key:k,...s.files[k]})) : [],
+            videos: s.videos ? Object.keys(s.videos).map(k=>({key:k,...s.videos[k]})) : [],
+            quizzes: s.quizzes ? Object.keys(s.quizzes).map(k=>({key:k,...s.quizzes[k]})) : []
+          };
+        });
+        db.sort((a,b) => (a.order || 0) - (b.order || 0) || (a.name||'').localeCompare(b.name||'', 'ar'));
+        
+        if (window._pendingRoute) {
+          handleRouting();
+        } else if (!currentSubjectId) {
+          renderHome();
+        } else {
+          const exist = db.find(s=>s.id===currentSubjectId);
+          if (exist) openSubject(currentSubjectId, true); else showHome(true);
+        }
         updateAdminSelects(); updateDashboardStats();
       });
     }
@@ -1338,6 +2701,11 @@
       document.querySelectorAll('.admin-tab').forEach(el => el.classList.remove('active'));
       document.getElementById('tab-' + tabId).classList.add('active'); btnElement.classList.add('active');
       if (tabId === 'logs') listenToAdminLogs();
+      if (tabId === 'analytics') {
+        listenToContributions();
+        updateAnalyticsSelect();
+        renderHardestQuestionsTable();
+      }
     }
 
     function toggleAdminPanel() { if (!currentStudentData || currentStudentData.isAdmin !== true) { Swal.fire('تنبيه','غير مصرح لك.','warning'); return; } const p = document.getElementById("admin-panel"); const vis = p.style.display === "block"; p.style.display = vis ? "none" : "block"; if (!vis) { updateAdminSelects(); p.scrollIntoView({behavior:'smooth'}); } }
@@ -1345,7 +2713,7 @@
 
     function updateAdminSelects() {
         const opts = db.map(s => `<option value="${escText(s.id)}">[مستوى ${s.level}] ${escText(s.name)}</option>`).join('');
-        ['file-subj-select','quiz-subj-select','ai-quiz-subj-select','img-subj-select','delete-all-quiz-subj-select'].forEach(id => { const el = document.getElementById(id); if (el) { const prev = el.value; el.innerHTML = opts; if (prev) el.value = prev; } });
+        ['file-subj-select','video-subj-select','quiz-subj-select','ai-quiz-subj-select','img-subj-select','delete-all-quiz-subj-select'].forEach(id => { const el = document.getElementById(id); if (el) { const prev = el.value; el.innerHTML = opts; if (prev) el.value = prev; } });
     }
 
     function addSubject(e) { e.preventDefault(); const id = "subj-" + Date.now(); const n = document.getElementById("new-subj-name").value; database.ref('subjects/'+id).set({ level: parseInt(document.getElementById("new-subj-level").value, 10), name: n, desc: document.getElementById("new-subj-desc").value }).then(() => { e.target.reset(); logAdminAction('إضافة مادة جديدة', `المادة: ${n}`); Swal.fire('تم', "تمت إضافة المادة!", 'success'); }); }
@@ -1374,9 +2742,9 @@
             });
             if (!added) throw new Error("لا توجد أسئلة صالحة (تأكد أن ans رقم من 1 إلى 4)");
             base.update(up).then(() => {
-                        logAdminAction('الرفع الذكي للأسئلة', `تم رفع ${added} سؤال | للمادة: ${subj?subj.name:''}`);
-            Swal.fire('تم يا بطل!', `تم إضافة ${added} سؤال بنجاح.${skipped ? ' (تم تجاهل ' + skipped + ' سؤال ناقص/غير صحيح)' : ''}`, 'success');
-            document.getElementById("ai-quiz-data").value = '';
+                logAdminAction('الرفع الذكي للأسئلة', `تم رفع ${added} سؤال | للمادة: ${subj?subj.name:''}`);
+                Swal.fire('تم يا بطل!', `تم إضافة ${added} سؤال بنجاح.${skipped ? ' (تم تجاهل ' + skipped + ' سؤال ناقص/غير صحيح)' : ''}`, 'success');
+                document.getElementById("ai-quiz-data").value = '';
             });
         } catch (error) {
             Swal.fire({ title: 'خطأ في الكود', html: 'تأكد إنك نسخت الكود زي ما الذكاء الاصطناعي عمله بالظبط بدون أي نقص.<br><br><span style="font-size:12px; color:#ef4444;">تفاصيل الخطأ: ' + escText(error.message) + '</span>', icon: 'error' });
@@ -1407,7 +2775,7 @@
         const v = snap.val() || {}; researchRequests = Object.keys(v).map(k => ({ uid: k, ...v[k] })); renderAdminRequests();
       }, err => { console.error('research_requests:', err); const b = document.getElementById('research-requests-list'); if (b) b.innerHTML = '<div style="color:#f87171; font-size:13px;">مش قادر أقرأ الطلبات: ' + escText(err.message) + ' — راجع قواعد Firebase.</div>'; });
     }
-    /* ===== REST بدل الاتصال الحي: لا يُحسب ضمن حد الـ100 اتصال متزامن ===== */
+
     var __DB = firebaseConfig.databaseURL, __pollT = null;
     function __applyTopics(val) {
       val = val || {};
@@ -1430,18 +2798,6 @@
       if (document.hidden || !currentUser || myResearch() || __isAdmin()) { next(); return; }
       __fetchTopics().then(next, next);
     }
-    async function __restClaim(id) {
-      const t = await currentUser.getIdToken(), url = __DB + '/research_topics/' + id + '/claimedBy.json?auth=' + encodeURIComponent(t);
-      const g = await fetch(url, { headers: { 'X-Firebase-ETag': 'true' }, cache: 'no-store' });
-      const etag = g.headers.get('ETag'); if (!g.ok) throw new Error('HTTP ' + g.status);
-      if (!etag) return 'fallback';
-      if ((await g.json()) !== null) return false;
-      const r = await fetch(url, { method: 'PUT', headers: { 'if-match': etag, 'Content-Type': 'application/json' }, body: JSON.stringify(currentUser.uid) });
-      if (r.status === 412) return false;
-      if (!r.ok) throw new Error('HTTP ' + r.status);
-      return true;
-    }
-    /* لو فيه بيانات حجز قديمة عند الطالب (لبحث اتمسح/اتحرر)، ننضفها عشان يقدر يحجز */
     async function __healStaleTopic() {
       try {
         const uid = currentUser.uid, t = encodeURIComponent(await currentUser.getIdToken());
@@ -1463,8 +2819,6 @@
       if (!r.ok) throw new Error('HTTP ' + r.status);
     }
 
-
-    /* ===================== طلبات الأبحاث الجديدة ===================== */
     async function __fetchMyRequest(tok) {
       if (!currentUser || (currentStudentData && currentStudentData.isAdmin === true)) return;
       try {
@@ -1528,7 +2882,6 @@
       } catch (err) { Swal.fire('خطأ', escText(err.message), 'error'); }
     }
 
-    /* ----- الأدمن ----- */
     function renderAdminRequests() {
       const box = document.getElementById('research-requests-list'); if (!box) return;
       const pending = researchRequests.filter(r => r.status === 'pending').sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
@@ -1569,7 +2922,6 @@
 
     function myResearch() { if (!currentStudentData) return null; return (currentStudentData.researchTopic && researchTopics.find(r => r.key === currentStudentData.researchTopic)) || (currentUser && researchTopics.find(r => r.claimedBy === currentUser.uid)) || null; }
 
-    /* صندوق "بحثي": مقبول / قيد المراجعة / مرفوض */
     function renderMyResearchBox() {
       const box = document.getElementById('my-research-box'), home = document.getElementById('home-research-status');
       if (!box && !home) return;
@@ -1604,7 +2956,7 @@
         else if (myRequest && myRequest.status === 'rejected') lbHtml = `<div style="font-size:12px; color:#f87171; font-weight:700; margin-bottom:4px;">❌ طلبك اترفض</div><div style="font-size:15px; font-weight:800; word-break:break-word;">${escText(myRequest.title)}</div>`;
         else lbHtml = `<div style="font-size:12px; color:var(--fg-faint); font-weight:700; margin-bottom:4px;">📌 بحثك</div><div style="font-size:14px; color:var(--fg-soft);">لسه ما اخترتش بحث</div>`;
         lbBox.style.display = '';
-        lbBox.innerHTML = `<div class="card liquid-glass" style="border-color:${color}; cursor:pointer;" onclick="showResearch()"><div class="z-content">${lbHtml}</div></div>`;
+        lbBox.innerHTML = `<div class="card liquid-glass" style="border-color:${color}; cursor:pointer;" onclick="navigateTo('#research')"><div class="z-content">${lbHtml}</div></div>`;
       }
     }
 
@@ -1657,7 +3009,7 @@
           currentStudentData.researchTopic = id; currentStudentData.researchTopicName = name;
           const tp = researchTopics.find(r => r.key === id); if (tp) { tp.claimedBy = currentUser.uid; tp.claimedByName = currentStudentData.name; }
           renderResearchHome();
-          Swal.fire('تم الحجز! 🎉', `اتسجل بحث \"${name}\" باسمك.`, 'success');
+          checkAndAwardBadges(currentStudentData); Swal.fire('تم الحجز! 🎉', `اتسجل بحث \"${name}\" باسمك.`, 'success');
         } catch (err) { Swal.fire('خطأ', escText(err.message), 'error'); }
       });
     }
@@ -1729,7 +3081,6 @@
       const tbody = document.getElementById('research-table-body'); if (!tbody) return;
       if (researchTopics.length === 0) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">لا توجد أبحاث مضافة بعد.</td></tr>'; return; }
       const __cnt = {}; researchTopics.forEach(r => { const k = normName(r.name); __cnt[k] = (__cnt[k] || 0) + 1; });
-      /* المحجوز يطلع فوق (الأقدم حجزًا الأول)، وبعده المتاح بالترتيب الأبجدي */
       const __claimTime = r => { if (typeof r.claimedAt === 'number') return r.claimedAt; const u = allUsersList.find(x => x.researchTopic === r.key); return (u && typeof u.researchTopicAt === 'number') ? u.researchTopicAt : Number.MAX_SAFE_INTEGER; };
       const __sorted = researchTopics.slice().sort((a, b) => { const ta = !!a.claimedBy, tb = !!b.claimedBy; if (ta !== tb) return ta ? -1 : 1; if (ta) return __claimTime(a) - __claimTime(b); return 0; });
       tbody.innerHTML = __sorted.map((r, i) => {
@@ -1782,7 +3133,7 @@
       const wb = new ExcelJS.Workbook(); wb.creator = 'منصة الدفعة'; wb.created = new Date();
       const now = __fmtTime(Date.now()).slice(0, 19);
 
-      /* ===== الشيت الأول: الأبحاث ===== */
+      /* الشيت الأول: الأبحاث */
       const ws = wb.addWorksheet('الأبحاث', { views: [{ rightToLeft: true, state: 'frozen', ySplit: 4 }], properties: { tabColor: { argb: C.teal } } });
       ws.columns = [{ width: 6 }, { width: 44 }, { width: 13 }, { width: 28 }, { width: 16 }, { width: 32 }, { width: 27 }, { width: 22 }];
       ws.mergeCells('A1:H1'); Object.assign(ws.getCell('A1'), { value: '🔬 تقرير حجز الأبحاث', fill: fill(C.teal), font: { size: 20, bold: true, color: { argb: 'FFFFFFFF' } }, alignment: mid }); ws.getRow(1).height = 40;
@@ -1804,7 +3155,7 @@
       ws.autoFilter = { from: 'A4', to: 'H' + (4 + total) };
       ws.pageSetup = { orientation: 'landscape', fitToPage: true, fitToWidth: 1, fitToHeight: 0 };
 
-      /* ===== الشيت الثاني: التعارضات ===== */
+      /* الشيت الثاني: التعارضات */
       const wc = wb.addWorksheet('التعارضات', { views: [{ rightToLeft: true, state: 'frozen', ySplit: 3 }], properties: { tabColor: { argb: conflicts ? C.redD : 'FF16A34A' } } });
       wc.columns = [{ width: 40 }, { width: 14 }, { width: 28 }, { width: 28 }, { width: 30 }, { width: 16 }, { width: 30 }];
       wc.mergeCells('A1:G1'); Object.assign(wc.getCell('A1'), { value: '⚠ تقرير التعارضات في الحجز', fill: fill(conflicts ? 'FFB91C1C' : 'FF16A34A'), font: { size: 18, bold: true, color: { argb: 'FFFFFFFF' } }, alignment: mid }); wc.getRow(1).height = 38;
@@ -1846,38 +3197,139 @@
     function deleteQuiz(s, q, qName) { Swal.fire({title: "حذف السؤال؟", showCancelButton: true, confirmButtonColor: '#ef4444'}).then((r)=>{ if(r.isConfirmed) { database.ref('subjects/'+s+'/quizzes/'+q).remove(); logAdminAction('حذف سؤال', `السؤال: ${qName}`); }}); }
     function deleteSubject(s, n) { Swal.fire({title: `حذف المادة ${n} نهائياً؟`, icon:'warning', showCancelButton: true, confirmButtonColor: '#ef4444'}).then((r)=>{ if(r.isConfirmed) { database.ref('subjects/'+s).remove().then(()=>{ logAdminAction('حذف مادة', `المادة: ${n}`); if(currentSubjectId===s) showHome(); }); }}); }
 
-    function showHome(noScroll) { document.getElementById('view-home').style.display = 'block'; document.getElementById('view-subject').style.display = 'none'; document.getElementById('view-research').style.display = 'none'; document.getElementById('search-box').value = ''; currentSubjectId = null; renderHome(); updateAdminSelects(); if (!noScroll) window.scrollTo({ top: document.getElementById('main-site').offsetTop, behavior: 'smooth' }); }
-    function showResearch(tab) {
+    function showHome(noScroll, updateHash = true) {
+      document.getElementById('view-home').style.display = 'block';
+      document.getElementById('view-subject').style.display = 'none';
+      document.getElementById('view-research').style.display = 'none';
+      const vg = document.getElementById('view-gpa'); if (vg) vg.style.display = 'none';
+      document.getElementById('search-box').value = '';
+      currentSubjectId = null;
+      if (updateHash && !isHashNavigationInProgress) {
+        history.replaceState(null, '', window.location.pathname + (window.location.search || '') + '#home');
+      }
+      renderHome();
+      updateAdminSelects();
+      updateDashboardHub();
+      if (!noScroll) {
+        const mainSite = document.getElementById('main-site');
+        if (mainSite) window.scrollTo({ top: mainSite.offsetTop, behavior: 'smooth' });
+      }
+    }
+
+    function showResearch(tab, updateHash = true) {
       document.getElementById('view-home').style.display = 'none';
       document.getElementById('view-subject').style.display = 'none';
       document.getElementById('view-research').style.display = 'block';
+      const vg = document.getElementById('view-gpa'); if (vg) vg.style.display = 'none';
       currentSubjectId = null;
-      switchResearchTab(tab || 'pick');
-      renderResearchHome(); renderMyRequest();
-      window.scrollTo({ top: document.getElementById('main-site').offsetTop, behavior: 'smooth' });
+      switchResearchTab(tab || 'pick', false);
+      renderResearchHome();
+      renderMyRequest();
+      if (updateHash && !isHashNavigationInProgress) {
+        const hash = '#research' + (tab ? '/' + tab : '');
+        if (window.location.hash !== hash) {
+          history.pushState(null, '', window.location.pathname + (window.location.search || '') + hash);
+        }
+      }
+      const mainSite = document.getElementById('main-site');
+      if (mainSite) window.scrollTo({ top: mainSite.offsetTop, behavior: 'smooth' });
     }
-    function switchResearchTab(tab) {
+
+    function switchResearchTab(tab, updateHash = false) {
       const pick = tab !== 'new';
       document.getElementById('tab-res-pick').classList.toggle('active', pick);
       document.getElementById('tab-res-new').classList.toggle('active', !pick);
       document.getElementById('research-pane-pick').style.display = pick ? 'block' : 'none';
       document.getElementById('research-pane-new').style.display = pick ? 'none' : 'block';
+      if (updateHash && !isHashNavigationInProgress) {
+        const h = '#research/' + (pick ? 'pick' : 'new');
+        if (window.location.hash !== h) {
+          history.replaceState(null, '', window.location.pathname + (window.location.search || '') + h);
+        }
+      }
     }
-    function switchLevel(lvl) { activeLevel = lvl; document.getElementById('tab-lvl-1').classList.toggle('active', lvl===1); document.getElementById('tab-lvl-2').classList.toggle('active', lvl===2); document.getElementById('current-level-heading').innerText = lvl===1 ? "مواد المستوى الأول" : "مواد المستوى الثاني"; document.getElementById('search-box').value = ''; renderHome(); }
+
+    function switchLevel(lvl, updateHash = true) {
+      activeLevel = lvl;
+      document.getElementById('tab-lvl-1').classList.toggle('active', lvl===1);
+      document.getElementById('tab-lvl-2').classList.toggle('active', lvl===2);
+      document.getElementById('current-level-heading').innerText = lvl===1 ? "مواد المستوى الأول" : "مواد المستوى الثاني";
+      renderAnnouncementsBoard();
+      document.getElementById('search-box').value = '';
+      if (updateHash && !isHashNavigationInProgress && !currentSubjectId && document.getElementById('view-home').style.display !== 'none') {
+        history.replaceState(null, '', window.location.pathname + (window.location.search || '') + (lvl === 2 ? '#lvl2' : '#lvl1'));
+      }
+      renderHome();
+    }
 
     function filterSubjects() { clearTimeout(searchTimeout); searchTimeout = setTimeout(() => { renderHome(document.getElementById('search-box').value.toLowerCase()); }, 300); }
 
     function renderHome(searchQuery = '') {
-      const grid = document.getElementById('subjects-grid'); let filtered = db.filter(s => s.level === activeLevel); if (searchQuery) filtered = filtered.filter(s => (s.name || '').toLowerCase().includes(searchQuery));
-      if (filtered.length === 0) { grid.innerHTML = `<div class="empty-state z-content" style="grid-column:1/-1;">لا توجد مواد مطابقة.</div>`; return; }
+      const grid = document.getElementById('subjects-grid');
+      let filtered = db.filter(s => s.level === activeLevel);
+      if (searchQuery) filtered = filtered.filter(s => (s.name || '').toLowerCase().includes(searchQuery));
+      
+      // تحديث عداد المواد في العنوان
+      const heading = document.getElementById('current-level-heading');
+      if (heading) {
+        const lvlName = activeLevel === 1 ? "مواد المستوى الأول" : "مواد المستوى الثاني";
+        heading.innerHTML = `${lvlName} <span style="font-size:13px; color:var(--fg-soft); font-weight:normal;">(${filtered.length} مواد متوفرة)</span>`;
+      }
+
+      if (filtered.length === 0) {
+        grid.innerHTML = `<div class="empty-state z-content" style="grid-column:1/-1;">لا توجد مواد مطابقة للبحث حالياً.</div>`;
+        return;
+      }
+
       const isAdmin = currentStudentData && currentStudentData.isAdmin === true;
-      grid.innerHTML = filtered.map(subj => `<div class="card liquid-glass"><div class="z-content" style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px;"><h3 style="margin:0 0 8px; font-size:17px; cursor:pointer;" onclick="openSubject('${subj.id}')">📚 ${escText(subj.name)}</h3>${isAdmin ? `<button class="btn-sm btn-ban" onclick="event.stopPropagation(); deleteSubject('${subj.id}','${escapeHtml(subj.name)}')">🗑️ حذف</button>` : ''}</div><p class="z-content" style="font-size:13px; color:var(--fg-soft); margin:0 0 16px; line-height:1.5; cursor:pointer;" onclick="openSubject('${subj.id}')">${escText(subj.desc)}</p><button class="pill z-content" style="width:100%; height:38px;" onclick="openSubject('${subj.id}')">تصفح المادة</button></div>`).join('');
+      grid.innerHTML = filtered.map(subj => {
+        const filesCount = subj.files ? subj.files.length : 0;
+        const videosCount = subj.videos ? subj.videos.length : 0;
+        const quizzesCount = subj.quizzes ? subj.quizzes.length : 0;
+
+        return `
+          <div class="subject-card liquid-glass">
+            <div>
+              <div class="z-content" style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
+                <h3 style="margin:0 0 6px; font-size:16px; font-weight:bold; cursor:pointer; color:var(--fg);" onclick="openSubject('${subj.id}')">📚 ${escText(subj.name)}</h3>
+                <div style="display:flex; gap:4px; align-items:center; flex-wrap:wrap;">
+                  <button class="btn-sm" style="background:rgba(255,255,255,.08); color:var(--fg-soft);" title="مشاركة رابط المادة" onclick="event.stopPropagation(); shareDirectLink('#subject/${subj.id}', 'مادة ${escapeHtml(subj.name)}')">🔗</button>
+                  ${isAdmin ? `
+                    <button class="btn-sm btn-track" style="font-size:10px;" title="ترتيب المادة" onclick="event.stopPropagation(); reorderSubject('${subj.id}', ${subj.order || 0})">📌 ${subj.order || 0}</button>
+                    <button class="btn-sm btn-edit" title="تعديل المادة" onclick="event.stopPropagation(); editSubjectInfo('${subj.id}')">✏️</button>
+                    <button class="btn-sm btn-ban" onclick="event.stopPropagation(); deleteSubject('${subj.id}','${escapeHtml(subj.name)}')">🗑️</button>` : ''}
+                </div>
+              </div>
+              <p class="z-content" style="font-size:13px; color:var(--fg-soft); margin:0 0 10px; line-height:1.5; cursor:pointer;" onclick="openSubject('${subj.id}')">${escText(subj.desc)}</p>
+              
+              <div class="subject-badges-row z-content">
+                <span class="subj-badge">📄 ${filesCount} ملفات</span>
+                <span class="subj-badge" style="color:#f472b6; border-color:rgba(244,114,182,.25); background:rgba(244,114,182,.08);">🎥 ${videosCount} فيديو</span>
+                <span class="subj-badge" style="color:#60a5fa; border-color:rgba(96,165,250,.25); background:rgba(96,165,250,.08);">🧠 ${quizzesCount} سؤال</span>
+              </div>
+            </div>
+            
+            <button class="pill z-content" style="width:100%; height:38px; margin-top:8px; font-size:13px; justify-content:center;" onclick="openSubject('${subj.id}')">تصفح محتوى المادة ⭠</button>
+          </div>`;
+      }).join('');
     }
 
     function renderFilesCategory(filesList, categoryName, icon, isAdmin, subjId) {
       const filtered = filesList.filter(f => (f.category || 'محاضرات') === categoryName); if (filtered.length === 0) return '';
       let html = `<div class="file-category-header z-content">${icon} ${escText(categoryName)}</div>`;
-      html += filtered.map(f => `<div class="card liquid-glass" style="flex-direction:row; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px; padding: 12px 16px;"><h4 class="z-content" style="margin:0; font-size:14px; min-width:0; word-break:break-word;">${escText(f.title)}</h4><div class="z-content" style="display:flex; gap:8px; flex-shrink:0;"><a href="${escText(safeUrl(f.link))}" target="_blank" rel="noopener noreferrer" class="pill" style="height:32px; font-size:12px;">فتح الملف ↗</a>${isAdmin ? `<button class="btn-sm btn-ban" onclick="deleteFile('${subjId}','${f.key}','${escapeHtml(f.title)}')">🗑️</button>` : ''}</div></div>`).join('');
+      html += filtered.map(f => {
+        const fileUrl = safeUrl(f.link);
+        return `<div class="card liquid-glass" style="flex-direction:row; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px; padding: 12px 16px;">
+          <h4 class="z-content" style="margin:0; font-size:14px; min-width:0; word-break:break-word;">${escText(f.title)}</h4>
+          <div class="z-content" style="display:flex; gap:6px; flex-shrink:0; align-items:center; flex-wrap:wrap;">
+            <button class="pill" style="height:32px; font-size:12px; background:var(--primary);" onclick="openPdfViewer('${escapeHtml(f.title)}', '${escapeHtml(fileUrl)}')">معاينة 👁️</button>
+            <a href="${escText(fileUrl)}" target="_blank" rel="noopener noreferrer" class="pill" style="height:32px; font-size:12px; background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.2); color:var(--fg);">فتح ↗</a>
+            ${isAdmin ? `
+            <button class="btn-sm btn-edit" onclick="editFile('${subjId}','${f.key}','${escapeHtml(f.title)}','${escapeHtml(fileUrl)}','${escapeHtml(f.category || 'محاضرات')}')">✏️</button>
+            <button class="btn-sm btn-ban" onclick="deleteFile('${subjId}','${f.key}','${escapeHtml(f.title)}')">🗑️</button>` : ''}
+          </div>
+        </div>`;
+      }).join('');
       return html;
     }
 
@@ -1898,7 +3350,29 @@
 
     function openSubject(id, silent) {
       currentSubjectId = id; const subj = db.find(s => s.id === id); if (!subj) return showHome();
-      document.getElementById('view-home').style.display = 'none'; document.getElementById('view-research').style.display = 'none'; document.getElementById('view-subject').style.display = 'block'; document.getElementById('subject-title').innerText = "📚 " + subj.name; document.getElementById('subject-desc').innerText = subj.desc;
+      document.getElementById('view-home').style.display = 'none';
+      document.getElementById('view-research').style.display = 'none';
+      document.getElementById('view-subject').style.display = 'block';
+      const vg = document.getElementById('view-gpa'); if (vg) vg.style.display = 'none';
+      document.getElementById('subject-title').innerText = "📚 " + subj.name;
+      document.getElementById('subject-desc').innerText = subj.desc;
+      
+      // تحديث عدادات التبويبات الداخلية في المادة
+      const bFiles = document.getElementById('sec-badge-files');
+      const bVideos = document.getElementById('sec-badge-videos');
+      const bQuizzes = document.getElementById('sec-badge-quizzes');
+      if (bFiles) bFiles.innerText = subj.files ? subj.files.length : 0;
+      if (bVideos) bVideos.innerText = subj.videos ? subj.videos.length : 0;
+      if (bQuizzes) bQuizzes.innerText = subj.quizzes ? subj.quizzes.length : 0;
+      switchSubjectTab('all');
+
+      if (!silent && !isHashNavigationInProgress) {
+        const hash = '#subject/' + id;
+        if (window.location.hash !== hash) {
+          history.pushState(null, '', window.location.pathname + (window.location.search || '') + hash);
+        }
+      }
+
       const isAdmin = currentStudentData && currentStudentData.isAdmin === true; const solvedQuizzes = (currentStudentData && currentStudentData.solvedQuizzes) ? currentStudentData.solvedQuizzes : {};
 
       if (subj.images && subj.images.length > 0) {
@@ -1912,35 +3386,119 @@
       if (subj.files.length === 0) document.getElementById('subject-files').innerHTML = '<div class="empty-state z-content">لا توجد ملفات.</div>';
       else { let filesHtml = renderFilesCategory(subj.files, 'محاضرات', '📖', isAdmin, subj.id) + renderFilesCategory(subj.files, 'سكاشن', '🔬', isAdmin, subj.id) + renderFilesCategory(subj.files, 'امتحانات', '📝', isAdmin, subj.id); document.getElementById('subject-files').innerHTML = filesHtml || '<div class="empty-state z-content">لا توجد ملفات مصنفة.</div>'; }
 
-      if (!silent || !quizOrder[id]) quizOrder[id] = shuffleArray(subj.quizzes.map(q => q.key));
-      let shuffledQuizzes = quizOrder[id].map(k => subj.quizzes.find(q => q.key === k)).filter(Boolean).concat(subj.quizzes.filter(q => !quizOrder[id].includes(q.key)));
+      // عرض شروحات الفيديو والسكاشن المسجلة
+      const videosContainer = document.getElementById('subject-videos');
+      const vCountEl = document.getElementById('subject-videos-count');
+      const videosList = subj.videos || [];
+      if (vCountEl) vCountEl.innerText = videosList.length ? `(${videosList.length} فيديو)` : '';
+      if (videosContainer) {
+        if (videosList.length === 0) {
+          videosContainer.innerHTML = '<div class="empty-state z-content" style="grid-column: 1/-1;">لا توجد شروحات فيديو مضافة لهذه المادة بعد.</div>';
+        } else {
+          videosContainer.innerHTML = videosList.map(v => {
+            return `
+              <div class="card liquid-glass" style="border-color: rgba(236,72,153,.3); background: rgba(236,72,153,.04);">
+                 <div class="z-content flex-between" style="margin-bottom:8px; flex-wrap:wrap; gap:6px;">
+                    <span style="font-size:11px; background:rgba(236,72,153,.2); color:#f472b6; padding:2px 8px; border-radius:6px; font-weight:bold;">${escText(v.category || 'شرح')}</span>
+                    ${isAdmin ? `<div style="display:flex; gap:4px;">
+                       <button class="btn-sm btn-edit" onclick="editSubjectVideo('${subj.id}','${v.key}','${escapeHtml(v.title)}','${escapeHtml(v.url)}','${escapeHtml(v.category||'شروحات نظري')}')">✏️</button>
+                       <button class="btn-sm btn-ban" onclick="deleteSubjectVideo('${subj.id}','${v.key}','${escapeHtml(v.title)}')">🗑️</button>
+                    </div>` : ''}
+                 </div>
+                 <h4 class="z-content" style="margin:0 0 12px; font-size:14px; font-weight:bold; color:var(--fg); line-height:1.5;">🎬 ${escText(v.title)}</h4>
+                 <div class="z-content" style="display:flex; gap:8px; margin-top:auto;">
+                    <button class="pill" style="height:34px; font-size:12px; background:#ec4899; flex:1;" onclick="openVideoPlayer('${escapeHtml(v.title)}', '${escapeHtml(v.url)}')">مشاهدة 🎬</button>
+                    <a href="${escText(safeUrl(v.url))}" target="_blank" rel="noopener" class="pill" style="height:34px; font-size:12px; background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.2); color:var(--fg);">يوتيوب ↗</a>
+                 </div>
+              </div>`;
+          }).join('');
+        }
+      }
 
-      document.getElementById('subject-quizzes').innerHTML = shuffledQuizzes.length === 0 ? '<div class="empty-state z-content">بنك الأسئلة فارغ حالياً.</div>' : shuffledQuizzes.map((q, idx) => {
+      // حساب الأسئلة غير المتقنة (الأخطاء)
+      const wrongCount = (subj.quizzes || []).filter(q => {
+        const sq = solvedQuizzes[q.key];
+        return sq && (sq.status === 'wrong' || sq === false);
+      }).length;
+      const mistakesBadge = document.getElementById('quiz-mistakes-badge');
+      if (mistakesBadge) mistakesBadge.innerText = wrongCount > 0 ? `(${wrongCount})` : '';
+
+      if (!silent || !quizOrder[id]) quizOrder[id] = shuffleArray(subj.quizzes.map(q => q.key));
+      let allQuizzes = quizOrder[id].map(k => subj.quizzes.find(q => q.key === k)).filter(Boolean).concat(subj.quizzes.filter(q => !quizOrder[id].includes(q.key)));
+
+      // تطبيق فلتر الأسئلة (الكل / أخطائي / غير محلول)
+      let filteredQuizzes = allQuizzes;
+      if (quizActiveFilter === 'mistakes') {
+        filteredQuizzes = allQuizzes.filter(q => {
+          const sq = solvedQuizzes[q.key];
+          return sq && (sq.status === 'wrong' || sq === false);
+        });
+      } else if (quizActiveFilter === 'unsolved') {
+        filteredQuizzes = allQuizzes.filter(q => !solvedQuizzes[q.key]);
+      }
+
+      let emptyMsg = 'بنك الأسئلة فارغ حالياً.';
+      if (quizActiveFilter === 'mistakes' && wrongCount === 0) {
+        emptyMsg = '🎉 ممتاز جداً! ليس لديك أي أخطاء في هذه المادة حالياً.';
+      } else if (quizActiveFilter === 'unsolved' && filteredQuizzes.length === 0) {
+        emptyMsg = '🏆 رائع! لقد انتهيت من حل جميع أسئلة هذه المادة.';
+      }
+
+      document.getElementById('subject-quizzes').innerHTML = filteredQuizzes.length === 0 ? `<div class="empty-state z-content">${emptyMsg}</div>` : filteredQuizzes.map((q, idx) => {
         const sq = solvedQuizzes[q.key]; const isSolved = !!sq; const status = sq ? (sq.status || (sq === true ? 'correct' : null)) : null; const selectedOpt = sq ? sq.selected : null;
         const getBtnStyle = (optNum) => { if (!isSolved) return ''; if (status === 'correct' && q.ans == optNum) return 'background: #15803d; border-color: #22c55e; opacity: 1;'; if (status === 'wrong' && q.ans == optNum) return 'background: #15803d; border-color: #22c55e; opacity: 1;'; if (status === 'wrong' && selectedOpt == optNum) return 'background: #b91c1c; border-color: #ef4444; opacity: 1;'; return 'opacity: .5; cursor: not-allowed;'; };
         const badgeHtml = isSolved ? (status === 'correct' ? `<div class="z-content quiz-solved-badge" style="background:rgba(34,197,94,.2); color:#4ade80; border:1px solid #22c55e;">✔️ إجابة صحيحة</div>` : `<div class="z-content quiz-solved-badge" style="background:rgba(239,68,68,.2); color:#f87171; border:1px solid #ef4444;">❌ إجابة خاطئة</div>`) : '';
         let options = [ { text: q.opt1, num: '1' }, { text: q.opt2, num: '2' }, { text: q.opt3, num: '3' }, { text: q.opt4, num: '4' } ];
         if (!isSolved) options = shuffleArray(options);
         const optionsHtml = options.map(opt => `<button class="quiz-btn" ${isSolved ? 'disabled' : ''} style="${getBtnStyle(opt.num)}" onclick="checkAnswer(this,'${opt.num}','${q.ans}','${q.key}')">${escText(opt.text)}</button>`).join('');
-        return `<div class="card liquid-glass" style="padding:20px; border: ${isSolved ? (status==='correct' ? '1px solid #15803d' : '1px solid #b91c1c') : 'none'};"><div class="z-content" style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px;"><p style="font-weight:700; font-size:16px; margin:0 0 12px; display:flex; align-items:center; gap:6px;">س${idx+1}: ${escText(q.q)}</p>${isAdmin ? `<button class="btn-sm btn-ban" onclick="deleteQuiz('${subj.id}','${q.key}','${escapeHtml(q.q)}')">🗑️</button>` : ''}</div>
+        return `<div class="card liquid-glass" style="padding:20px; border: ${isSolved ? (status==='correct' ? '1px solid #15803d' : '1px solid #b91c1c') : 'none'};"><div class="z-content" style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px;"><p style="font-weight:700; font-size:16px; margin:0 0 12px; display:flex; align-items:center; gap:6px;">س${idx+1}: ${escText(q.q)}</p>${isAdmin ? `
+          <button class="btn-sm btn-edit" onclick="editQuiz('${subj.id}','${q.key}')">✏️</button>
+          <button class="btn-sm btn-ban" onclick="deleteQuiz('${subj.id}','${q.key}','${escapeHtml(q.q)}')">🗑️</button>` : ''}</div>
         <div style="display:flex; justify-content:space-between; align-items:center;">${badgeHtml}</div>
         <div class="quiz-options z-content" style="margin-top:16px;">${optionsHtml}</div></div>`;
       }).join('');
-      if (!silent) window.scrollTo({ top: document.getElementById('main-site').offsetTop, behavior: 'smooth' });
+      if (!silent) {
+        const mainSite = document.getElementById('main-site');
+        if (mainSite) window.scrollTo({ top: mainSite.offsetTop, behavior: 'smooth' });
+      }
     }
 
     function checkAnswer(btn, selected, correct, quizKey) {
       let buttons = btn.parentElement.querySelectorAll('button'); buttons.forEach(b => { b.disabled = true; b.style.cursor = "not-allowed"; });
-      const isAlreadySolved = currentStudentData && currentStudentData.solvedQuizzes && currentStudentData.solvedQuizzes[quizKey];
-      const isCorrect = (selected === correct); const solveData = { status: isCorrect ? 'correct' : 'wrong', selected: selected, timestamp: Date.now() };
+      const prevSolve = currentStudentData && currentStudentData.solvedQuizzes && currentStudentData.solvedQuizzes[quizKey];
+      const wasWrong = prevSolve && (prevSolve.status === 'wrong' || prevSolve === false);
+      const isCorrect = (selected === correct);
+      const solveData = { status: isCorrect ? 'correct' : 'wrong', selected: selected, timestamp: Date.now() };
       if (isCorrect) {
+        playSound('correct');
+        triggerHaptic('correct');
         btn.style.background = "#15803d"; btn.style.borderColor = "#22c55e"; btn.style.opacity = "1"; btn.innerHTML += " ✔️";
         buttons.forEach(b => { if (b !== btn) b.style.opacity = ".5"; });
-        if (currentUser && !isAlreadySolved) {
-            const uu = 'users/'+currentUser.uid, already = !!(currentStudentData && currentStudentData.scoredQuizzes && currentStudentData.scoredQuizzes[quizKey]); const up = {}; up[uu+'/solvedQuizzes/'+quizKey] = solveData; if (!already) { up[uu+'/scoredQuizzes/'+quizKey] = true; up[uu+'/score'] = FB.database.ServerValue.increment(1); up['leaderboard/'+currentUser.uid+'/score'] = FB.database.ServerValue.increment(1); } database.ref().update(up);
-            Swal.fire({title: 'إجابة صحيحة!', text: (already ? 'صحيح! (نقطة هذا السؤال احتُسبت لك سابقاً)' : 'تمت إضافة نقطة لرصيدك 🏆'), icon: 'success', timer: 1500, showConfirmButton: false});
+        if (currentUser && (!prevSolve || wasWrong)) {
+            const uu = 'users/'+currentUser.uid, already = !!(currentStudentData && currentStudentData.scoredQuizzes && currentStudentData.scoredQuizzes[quizKey]);
+            const up = {};
+            up[uu+'/solvedQuizzes/'+quizKey] = solveData;
+            if (!already) {
+               up[uu+'/scoredQuizzes/'+quizKey] = true;
+               up[uu+'/score'] = FB.database.ServerValue.increment(1);
+               up['leaderboard/'+currentUser.uid+'/score'] = FB.database.ServerValue.increment(1);
+            }
+            database.ref().update(up).then(() => {
+               if (currentStudentData) {
+                  if (!currentStudentData.solvedQuizzes) currentStudentData.solvedQuizzes = {};
+                  currentStudentData.solvedQuizzes[quizKey] = solveData;
+                  if (!already) {
+                     currentStudentData.score = (currentStudentData.score || 0) + 1;
+                     checkAndAwardBadges(currentStudentData);
+                  }
+               }
+            });
+            const msg = wasWrong ? 'رائع! صححت إجابتك وأصبحت إجابة صحيحة 🎯' : (already ? 'صحيح! (نقطة هذا السؤال احتُسبت لك سابقاً)' : 'تمت إضافة نقطة لرصيدك 🏆');
+            Swal.fire({title: 'إجابة صحيحة!', text: msg, icon: 'success', timer: 1600, showConfirmButton: false});
         }
       } else {
+        playSound('wrong');
+        triggerHaptic('wrong');
         btn.style.background = "#b91c1c"; btn.style.borderColor = "#ef4444"; btn.style.opacity = "1"; btn.innerHTML += " ❌";
         buttons.forEach(b => {
             if (b.getAttribute('onclick').includes(`,'${correct}',`)) { b.style.background = "#15803d"; b.style.borderColor = "#22c55e"; b.style.opacity = "1"; }
@@ -1950,7 +3508,6 @@
       }
     }
 
-    /* ===== صفحة إعادة تعيين الباسورد داخل الموقع (بدل صفحة Firebase الافتراضية) ===== */
     function __resetErrMsg(e) {
       const c = (e && e.code) || '';
       if (c === 'auth/expired-action-code') return 'الرابط انتهت صلاحيته (ساعة واحدة). اطلب رابط جديد واستخدمه فورًا.';
@@ -1976,13 +3533,1440 @@
       }).then(r => { if (r.isConfirmed) Swal.fire('تم ✅', 'اتغيرت كلمة المرور. سجّل دخول بيها دلوقتي.', 'success'); });
     }
 
+
+    
+    /* ===== وضع توفير باقة الإنترنت والشبكات الضعيفة (Data Saver / Lite Mode) ===== */
+    let dataSaverEnabled = false;
+
+    function toggleDataSaver() {
+      dataSaverEnabled = !dataSaverEnabled;
+      try { localStorage.setItem('data_saver', dataSaverEnabled ? '1' : '0'); } catch(e) {}
+      applyDataSaver();
+      playSound(dataSaverEnabled ? 'correct' : 'wrong');
+      triggerHaptic(dataSaverEnabled ? 'correct' : 'wrong');
+      Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: dataSaverEnabled ? 'info' : 'success',
+        title: dataSaverEnabled ? 'تم تفعيل وضع توفير البيانات 📶 (تم إيقاف الفيديو والتأثيرات الثقيلة)' : 'تم إيقاف وضع توفير البيانات 🎬',
+        showConfirmButton: false,
+        timer: 2500
+      });
+    }
+
+    function applyDataSaver() {
+      const body = document.body;
+      const btn = document.getElementById('data-saver-btn');
+      const video = document.querySelector('.cinematic-video');
+      if (dataSaverEnabled) {
+        body.classList.add('data-saver');
+        if (btn) {
+          btn.style.borderColor = '#22c55e';
+          btn.style.color = '#4ade80';
+          btn.style.background = 'rgba(34,197,94,.2)';
+          btn.title = 'وضع توفير البيانات: مفعّل 🟢 (اضغط للتعطيل)';
+        }
+        if (video) {
+          try { video.pause(); } catch(e) {}
+        }
+      } else {
+        body.classList.remove('data-saver');
+        if (btn) {
+          btn.style.borderColor = '';
+          btn.style.color = '';
+          btn.style.background = '';
+          btn.title = 'وضع توفير البيانات: معطل ⚪ (اضغط للتفعيل)';
+        }
+        if (video) {
+          try { video.play().catch(() => {}); } catch(e) {}
+        }
+      }
+      updateMobileToolsState();
+    }
+
+    function initDataSaver() {
+      try {
+        const saved = localStorage.getItem('data_saver');
+        if (saved === '1') dataSaverEnabled = true;
+        if (navigator.connection && navigator.connection.saveData) {
+          dataSaverEnabled = true;
+        }
+      } catch(e) {}
+      applyDataSaver();
+    }
+
+    /* ===== حاسبة المعدل التراكمي والفصلي طبقاً للائحة الرسمية 2025-2026 ===== */
+    const OFFICIAL_GRADES_SCALE = [
+      { letter: 'A+', points: 4.00, minPct: 97, maxPct: 100, label: 'ممتاز مرتفع' },
+      { letter: 'A',  points: 4.00, minPct: 93, maxPct: 96.99, label: 'ممتاز' },
+      { letter: 'A-', points: 3.70, minPct: 89, maxPct: 92.99, label: 'ممتاز منخفض' },
+      { letter: 'B+', points: 3.30, minPct: 84, maxPct: 88.99, label: 'جيد جداً مرتفع' },
+      { letter: 'B',  points: 3.00, minPct: 80, maxPct: 83.99, label: 'جيد جداً' },
+      { letter: 'B-', points: 2.70, minPct: 76, maxPct: 79.99, label: 'جيد جداً منخفض' },
+      { letter: 'C+', points: 2.30, minPct: 73, maxPct: 75.99, label: 'جيد مرتفع' },
+      { letter: 'C',  points: 2.00, minPct: 70, maxPct: 72.99, label: 'جيد' },
+      { letter: 'C-', points: 1.70, minPct: 67, maxPct: 69.99, label: 'مقبول مرتفع' },
+      { letter: 'D+', points: 1.30, minPct: 64, maxPct: 66.99, label: 'مقبول متوسط' },
+      { letter: 'D',  points: 1.00, minPct: 60, maxPct: 63.99, label: 'مقبول (حد النجاح)' },
+      { letter: 'F',  points: 0.00, minPct: 0,  maxPct: 59.99, label: 'راسب' },
+      { letter: 'P',  points: null, minPct: null, maxPct: null, label: 'ناجح (P/F بدون نقاط)' },
+      { letter: 'W',  points: null, minPct: null, maxPct: null, label: 'انسحاب (W)' },
+      { letter: 'IC', points: null, minPct: null, maxPct: null, label: 'غير مكتمل (IC)' }
+    ];
+
+    const GRADE_POINTS_MAP = {};
+    OFFICIAL_GRADES_SCALE.forEach(g => {
+      GRADE_POINTS_MAP[g.letter] = g.points;
+    });
+
+    function getGradeFromPercentage(pct) {
+      if (pct === null || pct === undefined || isNaN(pct) || pct < 0) return 'F';
+      for (const g of OFFICIAL_GRADES_SCALE) {
+        if (g.minPct !== null && pct >= g.minPct) return g.letter;
+      }
+      return 'F';
+    }
+
+    function getGpaGradeLabel(gpa) {
+      if (gpa >= 3.70) return 'ممتاز (Excellent) 🌟';
+      if (gpa >= 3.00) return 'جيد جداً (Very Good) 🏅';
+      if (gpa >= 2.30) return 'جيد مرتفع (Good+) 👍';
+      if (gpa >= 2.00) return 'جيد (Good - مؤهل للتخرج) ✨';
+      if (gpa >= 1.50) return 'مقبول (ملاحظة أكاديمية)';
+      if (gpa >= 1.00) return 'إنذار أكاديمي (تحت الملاحظة) ⚠️';
+      if (gpa > 0) return 'راسب / خطر الفصل ⛔';
+      return '-';
+    }
+
+    function toggleGpaScaleTable() {
+      const box = document.getElementById('gpa-official-scale-box');
+      if (box) {
+        box.style.display = box.style.display === 'none' ? 'block' : 'none';
+        if (box.style.display === 'block') {
+          box.scrollIntoView({ behavior: 'smooth' });
+        }
+      }
+    }
+
+    function showGpa(updateHash = true) {
+      document.getElementById('view-home').style.display = 'none';
+      document.getElementById('view-subject').style.display = 'none';
+      document.getElementById('view-research').style.display = 'none';
+      document.getElementById('view-gpa').style.display = 'block';
+      currentSubjectId = null;
+
+      if (updateHash && !isHashNavigationInProgress) {
+        const hash = '#gpa';
+        if (window.location.hash !== hash) {
+          history.pushState(null, '', window.location.pathname + (window.location.search || '') + hash);
+        }
+      }
+
+      const tbody = document.getElementById('gpa-courses-table-body');
+      if (tbody && !tbody.children.length) {
+        importCurrentLevelSubjectsToGPA();
+      }
+
+      const mainSite = document.getElementById('main-site');
+      if (mainSite) window.scrollTo({ top: mainSite.offsetTop, behavior: 'smooth' });
+    }
+
+    function addGpaCourseRow(name = '', hours = 3, grade = 'A', pct = '') {
+      const tbody = document.getElementById('gpa-courses-table-body');
+      if (!tbody) return;
+
+      const rowId = 'gpa-row-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
+      const gradeOpts = OFFICIAL_GRADES_SCALE.map(g => {
+        const ptsTxt = g.points !== null ? ` (${g.points.toFixed(2)} نقطة)` : ' (بدون نقاط)';
+        return `<option value="${g.letter}" ${g.letter === grade ? 'selected' : ''}>${g.letter}${ptsTxt} • ${g.label}</option>`;
+      }).join('');
+
+      const tr = document.createElement('tr');
+      tr.id = rowId;
+      tr.innerHTML = `
+        <td><input type="text" class="input-group gpa-course-name" value="${escText(name)}" placeholder="اسم المقرر" style="margin:0; padding:8px 10px; font-size:13px;" oninput="saveGpaState()"></td>
+        <td><input type="number" class="input-group gpa-course-hours" value="${hours}" min="1" max="12" step="1" style="margin:0; padding:8px 10px; font-size:13px; text-align:center;" oninput="calculateGPA()"></td>
+        <td>
+           <select class="input-group gpa-course-grade" style="margin:0; padding:8px 10px; font-size:13px;" onchange="onGradeSelectChange('${rowId}')">
+              ${gradeOpts}
+           </select>
+        </td>
+        <td><input type="number" class="input-group gpa-course-pct" value="${pct}" min="0" max="100" placeholder="%" style="margin:0; padding:8px 8px; font-size:13px; text-align:center;" oninput="onPercentageInputChange('${rowId}')"></td>
+        <td><button class="btn-sm btn-ban" style="padding:6px 10px;" onclick="removeGpaCourseRow('${rowId}')">✕</button></td>
+      `;
+      tbody.appendChild(tr);
+      calculateGPA();
+    }
+
+    function onGradeSelectChange(rowId) {
+      const row = document.getElementById(rowId);
+      if (!row) return;
+      const gr = row.querySelector('.gpa-course-grade').value;
+      const pctInput = row.querySelector('.gpa-course-pct');
+      const item = OFFICIAL_GRADES_SCALE.find(x => x.letter === gr);
+      if (item && item.minPct !== null) {
+        pctInput.value = item.minPct;
+      } else {
+        pctInput.value = '';
+      }
+      calculateGPA();
+    }
+
+    function onPercentageInputChange(rowId) {
+      const row = document.getElementById(rowId);
+      if (!row) return;
+      const pctVal = parseFloat(row.querySelector('.gpa-course-pct').value);
+      if (!isNaN(pctVal)) {
+        const letter = getGradeFromPercentage(pctVal);
+        row.querySelector('.gpa-course-grade').value = letter;
+      }
+      calculateGPA();
+    }
+
+    function removeGpaCourseRow(rowId) {
+      const el = document.getElementById(rowId);
+      if (el) el.remove();
+      calculateGPA();
+    }
+
+    function resetGpaForm() {
+      const tbody = document.getElementById('gpa-courses-table-body');
+      if (tbody) tbody.innerHTML = '';
+      const prevGpa = document.getElementById('gpa-prev-gpa');
+      const prevHrs = document.getElementById('gpa-prev-hours');
+      if (prevGpa) prevGpa.value = '';
+      if (prevHrs) prevHrs.value = '';
+      calculateGPA();
+      saveGpaState();
+    }
+
+    function importCurrentLevelSubjectsToGPA() {
+      const tbody = document.getElementById('gpa-courses-table-body');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+
+      const currentLvlSubjs = db.filter(s => s.level === activeLevel);
+      if (currentLvlSubjs.length > 0) {
+        currentLvlSubjs.forEach(s => {
+          addGpaCourseRow(s.name, 3, 'A');
+        });
+      } else {
+        // إذا لم تكن المواد محملة بعد، نضع 5 مواد افتراضية
+        for (let i = 1; i <= 5; i++) {
+          addGpaCourseRow(`مادة ${i}`, 3, 'A');
+        }
+      }
+      calculateGPA();
+    }
+
+    function calculateGPA() {
+      const tbody = document.getElementById('gpa-courses-table-body');
+      if (!tbody) return;
+
+      const rows = tbody.querySelectorAll('tr');
+      let gpaHours = 0;       // الساعات التي تدخل في حساب المعدل
+      let earnedSemHours = 0; // الساعات المكتسبة بالنجاح (تضاف للرصيد)
+      let totalSemPoints = 0;
+
+      rows.forEach(r => {
+        const hrsInput = r.querySelector('.gpa-course-hours');
+        const grSelect = r.querySelector('.gpa-course-grade');
+        if (hrsInput && grSelect) {
+          const hrs = parseFloat(hrsInput.value) || 0;
+          const gradeKey = grSelect.value;
+          const pts = GRADE_POINTS_MAP[gradeKey];
+
+          if (hrs > 0) {
+            if (pts !== null && pts !== undefined) {
+              // مقرر يدخل في حساب الـ GPA
+              gpaHours += hrs;
+              totalSemPoints += (hrs * pts);
+              if (pts >= 1.00) {
+                // ناجح (D أو أعلى)
+                earnedSemHours += hrs;
+              }
+            } else if (gradeKey === 'P') {
+              // تدريب ميداني / مشروع تخرج (ناجح Pass بدون نقاط GPA)
+              earnedSemHours += hrs;
+            }
+          }
+        }
+      });
+
+      const semGPA = gpaHours > 0 ? (totalSemPoints / gpaHours) : 0;
+      document.getElementById('gpa-semester-val').innerText = semGPA.toFixed(2);
+      document.getElementById('gpa-semester-grade').innerText = gpaHours > 0 ? getGpaGradeLabel(semGPA) : '-';
+
+      // قراءة الساعات والمعدل السابق
+      const prevGpaVal = parseFloat(document.getElementById('gpa-prev-gpa')?.value) || 0;
+      const prevHrsVal = parseFloat(document.getElementById('gpa-prev-hours')?.value) || 0;
+
+      let cumGPA = semGPA;
+      let totalEarnedHours = earnedSemHours;
+
+      if (prevHrsVal > 0) {
+        const prevQualityPoints = prevGpaVal * prevHrsVal;
+        const totalGpaHours = prevHrsVal + gpaHours;
+        cumGPA = totalGpaHours > 0 ? ((prevQualityPoints + totalSemPoints) / totalGpaHours) : 0;
+        totalEarnedHours = prevHrsVal + earnedSemHours;
+      }
+
+      document.getElementById('gpa-cumulative-val').innerText = cumGPA.toFixed(2);
+      document.getElementById('gpa-cumulative-grade').innerText = (gpaHours > 0 || prevHrsVal > 0) ? getGpaGradeLabel(cumGPA) : '-';
+      document.getElementById('gpa-hours-val').innerText = totalEarnedHours;
+
+      // تحديد المستوى الأكاديمي بناءً على ساعات اللائحة (36, 72, 108, 144)
+      let lvlTxt = 'المستوى الأول (1)';
+      if (totalEarnedHours >= 144) lvlTxt = 'مستوفٍ لساعات التخرج (144 ساعة) 🎓';
+      else if (totalEarnedHours >= 108) lvlTxt = 'المستوى الرابع (4)';
+      else if (totalEarnedHours >= 72) lvlTxt = 'المستوى الثالث (3)';
+      else if (totalEarnedHours >= 36) lvlTxt = 'المستوى الثاني (2)';
+
+      const progEl = document.getElementById('gpa-progress-text');
+      if (progEl) {
+        const remaining = Math.max(0, 144 - totalEarnedHours);
+        progEl.innerText = `${lvlTxt} | متبقي للتخرج: ${remaining} ساعة`;
+      }
+
+      // تحديد العبء الدراسي المسموح به للتسجيل بالترم التالي (صفحة 3 باللائحة)
+      updateAcademicStandingUI(cumGPA);
+      saveGpaState();
+    }
+
+    function updateAcademicStandingUI(cumGPA) {
+      const card = document.getElementById('gpa-standing-card');
+      const icon = document.getElementById('gpa-standing-icon');
+      const title = document.getElementById('gpa-standing-title');
+      const desc = document.getElementById('gpa-standing-desc');
+      const badge = document.getElementById('gpa-standing-badge');
+      if (!card || !badge) return;
+
+      if (cumGPA >= 2.00) {
+        card.style.borderColor = '#10b981';
+        card.style.background = 'rgba(16,185,129,.07)';
+        icon.innerText = '🟢';
+        title.innerText = 'وضع أكاديمي متميز (مؤهل للتخرج وللتسجيل الكامل)';
+        title.style.color = '#4ade80';
+        desc.innerText = 'معدلك 2.00 فأكثر: يحق لك تسجيل الحد الأقصى للمقررات (حتى 18 ساعة معتمدة) في الفصل الدراسي التالي.';
+        badge.innerText = 'الحد الأقصى: 18 ساعة معتمدة';
+        badge.style.background = 'rgba(34,197,94,.2)';
+        badge.style.borderColor = '#22c55e';
+        badge.style.color = '#4ade80';
+      } else if (cumGPA >= 1.50) {
+        card.style.borderColor = '#f59e0b';
+        card.style.background = 'rgba(245,158,11,.07)';
+        icon.innerText = '🟡';
+        title.innerText = 'ملاحظة أكاديمية (عبء دراسي متوسط)';
+        title.style.color = '#fbbf24';
+        desc.innerText = 'معدلك بين 1.50 و 1.99: طبقاً للائحة لا يُسمح لك بالتسجيل في مقررات تزيد ساعاتها عن 15 ساعة معتمدة.';
+        badge.innerText = 'الحد الأقصى: 15 ساعة معتمدة';
+        badge.style.background = 'rgba(245,158,11,.2)';
+        badge.style.borderColor = '#f59e0b';
+        badge.style.color = '#fbbf24';
+      } else if (cumGPA > 0) {
+        card.style.borderColor = '#ef4444';
+        card.style.background = 'rgba(239,68,68,.08)';
+        icon.innerText = '⚠️';
+        title.innerText = 'إنذار أكاديمي (تحت الملاحظة الشديدة)';
+        title.style.color = '#f87171';
+        desc.innerText = 'معدلك أقل من 1.50: طبقاً للائحة لا يُسمح لك بالتسجيل في مقررات تزيد عن 12 ساعة معتمدة مع ضرورة رفع المعدل.';
+        badge.innerText = 'الحد الأقصى: 12 ساعة فقط';
+        badge.style.background = 'rgba(239,68,68,.2)';
+        badge.style.borderColor = '#ef4444';
+        badge.style.color = '#f87171';
+      } else {
+        card.style.borderColor = 'rgba(255,255,255,.1)';
+        card.style.background = 'rgba(255,255,255,.03)';
+        icon.innerText = '🎓';
+        title.innerText = 'الوضع الأكاديمي والعبء الدراسي للترم القادم';
+        title.style.color = 'var(--fg)';
+        desc.innerText = 'أدخل تقديراتك ومعدلك السابق لمعرفة الساعات المسموح لك بتسجيلها وفق اللائحة.';
+        badge.innerText = 'في انتظار إدخال الدرجات';
+        badge.style.background = 'rgba(255,255,255,.1)';
+        badge.style.borderColor = 'rgba(255,255,255,.2)';
+        badge.style.color = 'var(--fg-soft)';
+      }
+    }
+
+    function saveGpaState() {
+      try {
+        const prevGpa = document.getElementById('gpa-prev-gpa')?.value || '';
+        const prevHrs = document.getElementById('gpa-prev-hours')?.value || '';
+        const tbody = document.getElementById('gpa-courses-table-body');
+        const rows = [];
+        if (tbody) {
+          tbody.querySelectorAll('tr').forEach(r => {
+            const name = r.querySelector('.gpa-course-name')?.value || '';
+            const hours = r.querySelector('.gpa-course-hours')?.value || '3';
+            const grade = r.querySelector('.gpa-course-grade')?.value || 'A';
+            const pct = r.querySelector('.gpa-course-pct')?.value || '';
+            rows.push({ name, hours, grade, pct });
+          });
+        }
+        localStorage.setItem('gpa_saved_state_v2', JSON.stringify({ prevGpa, prevHrs, rows }));
+      } catch(e) {}
+    }
+
+    function restoreGpaState() {
+      try {
+        const raw = localStorage.getItem('gpa_saved_state_v2');
+        if (!raw) return false;
+        const data = JSON.parse(raw);
+        if (data.prevGpa) document.getElementById('gpa-prev-gpa').value = data.prevGpa;
+        if (data.prevHrs) document.getElementById('gpa-prev-hours').value = data.prevHrs;
+        if (Array.isArray(data.rows) && data.rows.length > 0) {
+          const tbody = document.getElementById('gpa-courses-table-body');
+          if (tbody) tbody.innerHTML = '';
+          data.rows.forEach(r => addGpaCourseRow(r.name, r.hours, r.grade, r.pct));
+          return true;
+        }
+      } catch(e) {}
+      return false;
+    }
+
+    /* ===== 1. بنك الأخطاء والمراجعة الذكية (Review Mistakes) ===== */
+    let quizActiveFilter = 'all';
+
+    function setQuizFilter(filterName) {
+      quizActiveFilter = filterName;
+      ['all', 'mistakes', 'unsolved'].forEach(f => {
+        const el = document.getElementById('quiz-filter-' + f);
+        if (el) el.classList.toggle('active', f === filterName);
+      });
+      if (currentSubjectId) {
+        openSubject(currentSubjectId, true);
+      }
+    }
+
+    /* ===== 2. مساهمات الطلاب وتفريغ المحاضرات (Crowdsourced Summaries) ===== */
+    let contributionsList = [];
+    let contributionsListening = false;
+
+    function openContributionModal() {
+      if (!currentUser || !currentStudentData) return Swal.fire('تنبيه', 'يجب تسجيل الدخول أولاً للمساهمة.', 'warning');
+      const subj = db.find(s => s.id === currentSubjectId);
+      if (!subj) return;
+      document.getElementById('contrib-subj-name').value = subj.name;
+      document.getElementById('contrib-title').value = '';
+      document.getElementById('contrib-link').value = '';
+      document.getElementById('contribution-overlay').style.display = 'flex';
+    }
+
+    function submitStudentContribution(e) {
+      e.preventDefault();
+      if (!currentUser || !currentSubjectId) return;
+      const subj = db.find(s => s.id === currentSubjectId);
+      const title = document.getElementById('contrib-title').value.trim();
+      const link = document.getElementById('contrib-link').value.trim();
+      const category = document.getElementById('contrib-category').value;
+      if (!title || !link) return;
+
+      const contribData = {
+        subjId: currentSubjectId,
+        subjName: subj ? subj.name : '',
+        title: title,
+        link: link,
+        category: category,
+        studentUid: currentUser.uid,
+        studentName: currentStudentData.name || '',
+        studentEmail: currentStudentData.email || '',
+        status: 'pending',
+        timestamp: FB.database.ServerValue.TIMESTAMP
+      };
+
+      database.ref('contributions').push(contribData).then(() => {
+        closeModal(null, 'contribution-overlay');
+        playSound('correct');
+        triggerHaptic('correct');
+        Swal.fire({
+          title: 'شكراً لمساهمتك! ❤️',
+          text: 'تم إرسال التلخيص للإدارة لمراجعته واعتماده ليظهر لجميع زملائك في المادة.',
+          icon: 'success',
+          confirmButtonText: 'حسناً'
+        });
+      }).catch(err => {
+        Swal.fire('خطأ', escText(err.message), 'error');
+      });
+    }
+
+    function listenToContributions() {
+      if (contributionsListening) return;
+      contributionsListening = true;
+      database.ref('contributions').on('value', snap => {
+        const val = snap.val() || {};
+        contributionsList = Object.keys(val).map(k => ({ key: k, ...val[k] }));
+        renderAdminContributions();
+      });
+    }
+
+    function renderAdminContributions() {
+      const container = document.getElementById('admin-contributions-list');
+      const badge = document.getElementById('admin-contrib-count');
+      if (!container) return;
+
+      const pending = contributionsList.filter(c => c.status === 'pending').sort((a,b) => (b.timestamp||0) - (a.timestamp||0));
+      if (badge) {
+        badge.innerText = pending.length;
+        badge.className = 'status-badge ' + (pending.length ? 'status-online' : 'status-offline');
+      }
+
+      if (pending.length === 0) {
+        container.innerHTML = '<div class="empty-state">لا توجد مساهمات معلقة حالياً.</div>';
+        return;
+      }
+
+      container.innerHTML = pending.map(c => {
+        const dateStr = c.timestamp ? new Date(c.timestamp).toLocaleString('ar-EG') : '';
+        return `
+          <div class="card liquid-glass" style="margin-bottom: 12px; background: rgba(0,0,0,.35); border-color: #10b981;">
+             <div class="z-content flex-between" style="flex-wrap:wrap; gap:8px; margin-bottom:8px;">
+                <div>
+                   <h4 style="margin:0 0 4px; font-size:15px; color:#10b981;">📄 ${escText(c.title)}</h4>
+                   <div style="font-size:12px; color:var(--fg-soft);">
+                      المادة: <b>${escText(c.subjName)}</b> | التصنيف: <b>${escText(c.category)}</b> | الطالب: <b>${escText(c.studentName)}</b>
+                   </div>
+                   <div style="font-size:11px; color:var(--fg-faint); margin-top:2px;">🕒 ${dateStr}</div>
+                </div>
+                <div class="action-group">
+                   <button class="pill" style="height:32px; font-size:12px; background:var(--primary);" onclick="openPdfViewer('${escapeHtml(c.title)}', '${escapeHtml(c.link)}')">معاينة 👁️</button>
+                   <a href="${escText(safeUrl(c.link))}" target="_blank" rel="noopener" class="pill" style="height:32px; font-size:12px; background:rgba(255,255,255,.1);">فتح ↗</a>
+                   <button class="pill" style="height:32px; font-size:12px; background:#10b981;" onclick="approveContribution('${c.key}')">✅ اعتماد ونشر</button>
+                   <button class="btn-sm btn-ban" style="height:32px;" onclick="rejectContribution('${c.key}')">❌ رفض</button>
+                </div>
+             </div>
+          </div>`;
+      }).join('');
+    }
+
+    function approveContribution(key) {
+      const c = contributionsList.find(x => x.key === key);
+      if (!c) return;
+      Swal.fire({
+        title: 'اعتماد ونشر الملف؟',
+        text: `سيتم نشر "${c.title}" في مادة "${c.subjName}" ويتاح لجميع الطلاب فوراً.`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'نعم، انشر الملف',
+        confirmButtonColor: '#10b981'
+      }).then(res => {
+        if (res.isConfirmed) {
+          const fileTitle = c.title + ' (مساهمة: ' + (c.studentName || 'طالب') + ')';
+          database.ref('subjects/' + c.subjId + '/files').push({
+            title: fileTitle,
+            link: c.link,
+            category: c.category || 'محاضرات'
+          }).then(() => {
+            database.ref('contributions/' + key).update({ status: 'approved' });
+            logAdminAction('اعتماد مساهمة طالب', `تم نشر ملف "${c.title}" بمادة ${c.subjName}`);
+            Swal.fire('تم النشر! 🎉', 'تمت إضافة الملف إلى المادة بنجاح.', 'success');
+          }).catch(err => Swal.fire('خطأ', escText(err.message), 'error'));
+        }
+      });
+    }
+
+    function rejectContribution(key) {
+      Swal.fire({
+        title: 'رفض المساهمة؟',
+        showCancelButton: true,
+        confirmButtonText: 'رفض',
+        confirmButtonColor: '#ef4444'
+      }).then(res => {
+        if (res.isConfirmed) {
+          database.ref('contributions/' + key).update({ status: 'rejected' });
+          logAdminAction('رفض مساهمة طالب', `مفتاح المساهمة: ${key}`);
+          Swal.fire('تم', 'تم رفض المساهمة.', 'info');
+        }
+      });
+    }
+
+    /* ===== 3. بطاقة الإنجاز القابلة للمشاركة (Shareable Achievement Card) ===== */
+    function openAchievementCardModal() {
+      if (!currentStudentData) return;
+      document.getElementById('achievement-overlay').style.display = 'flex';
+      setTimeout(() => drawAchievementCard(), 100);
+    }
+
+    function drawAchievementCard() {
+      const canvas = document.getElementById('achievement-canvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const w = canvas.width;
+      const h = canvas.height;
+
+      // خلفية فخمة بتدرج شعاعي داكن
+      const bg = ctx.createLinearGradient(0, 0, w, h);
+      bg.addColorStop(0, '#090d16');
+      bg.addColorStop(0.5, '#0e1626');
+      bg.addColorStop(1, '#070a10');
+      ctx.fillStyle = bg;
+      ctx.fillRect(0, 0, w, h);
+
+      // إطار ذهبي خارجي وأنيق
+      ctx.strokeStyle = '#ffd700';
+      ctx.lineWidth = 4;
+      ctx.strokeRect(16, 16, w - 32, h - 32);
+
+      ctx.strokeStyle = 'rgba(59, 130, 246, 0.4)';
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(24, 24, w - 48, h - 48);
+
+      // رأس البطاقة
+      ctx.fillStyle = '#60a5fa';
+      ctx.font = 'bold 16px Cairo, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.direction = 'rtl';
+      ctx.fillText('منصة الدفعة التعليمية ✦ قسم المساحة ونظم المعلومات', w / 2, 60);
+
+      // خط فاصل زخرفي
+      const lineGrd = ctx.createLinearGradient(80, 0, w - 80, 0);
+      lineGrd.addColorStop(0, 'transparent');
+      lineGrd.addColorStop(0.5, '#ffd700');
+      lineGrd.addColorStop(1, 'transparent');
+      ctx.strokeStyle = lineGrd;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(80, 80);
+      ctx.lineTo(w - 80, 80);
+      ctx.stroke();
+
+      // دائرة الكأس / الشعار
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(w / 2, 160, 52, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(255, 215, 0, 0.12)';
+      ctx.fill();
+      ctx.strokeStyle = '#ffd700';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+      ctx.restore();
+
+      ctx.font = '52px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('🏆', w / 2, 160);
+
+      // اسم الطالب
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '900 28px Cairo, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'alphabetic';
+      ctx.fillText(currentStudentData.name || 'طالب متميز', w / 2, 255);
+
+      // كود الطالب والمستوى
+      const studentId = getStudentShortId(currentUser ? currentUser.uid : '', currentStudentData.studentId);
+      const levelText = currentStudentData.level == 2 ? 'المستوى الثاني' : 'المستوى الأول';
+
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
+      ctx.fillRect(w / 2 - 130, 275, 260, 36);
+      ctx.strokeStyle = 'rgba(255, 215, 0, 0.3)';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(w / 2 - 130, 275, 260, 36);
+
+      ctx.fillStyle = '#ffd700';
+      ctx.font = 'bold 15px Cairo, sans-serif';
+      ctx.fillText(`ID: ${studentId}  |  ${levelText}`, w / 2, 299);
+
+      // بطاقات الإحصائيات الثلاث
+      const score = currentStudentData.score || 0;
+      const solvedQuizzes = currentStudentData.solvedQuizzes || {};
+      const sqKeys = Object.keys(solvedQuizzes);
+      const correctCount = sqKeys.filter(k => solvedQuizzes[k] === true || (solvedQuizzes[k] && solvedQuizzes[k].status === 'correct')).length;
+      const accuracy = sqKeys.length > 0 ? Math.round((correctCount / sqKeys.length) * 100) : 0;
+
+      const earned = currentStudentData.earnedBadges || {};
+      const badgesCount = BADGES_LIST.filter(b => !!earned[b.id] || b.check(currentStudentData)).length;
+
+      function drawStat(x, y, wB, hB, val, label, col) {
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.04)';
+        ctx.fillRect(x, y, wB, hB);
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+        ctx.strokeRect(x, y, wB, hB);
+
+        ctx.fillStyle = col;
+        ctx.font = '900 24px Cairo, sans-serif';
+        ctx.fillText(val, x + wB / 2, y + 36);
+
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+        ctx.font = '600 12px Cairo, sans-serif';
+        ctx.fillText(label, x + wB / 2, y + 60);
+      }
+
+      const cardW = 160;
+      drawStat(50, 340, cardW, 76, `${score} 🏆`, 'مجموع النقاط', '#ffd700');
+      drawStat(220, 340, cardW, 76, `${accuracy}% ⚡`, 'نسبة الدقة', '#4ade80');
+      drawStat(390, 340, cardW, 76, `${badgesCount} 🎖️`, 'الأوسمة المكتسبة', '#60a5fa');
+
+      // رسم الأوسمة المكتسبة
+      ctx.fillStyle = '#ffd700';
+      ctx.font = 'bold 15px Cairo, sans-serif';
+      ctx.fillText('أبرز الأوسمة المحققة 🎖️', w / 2, 455);
+
+      const unlockedBadges = BADGES_LIST.filter(b => !!earned[b.id] || b.check(currentStudentData));
+      if (unlockedBadges.length > 0) {
+        const displayBadges = unlockedBadges.slice(0, 4);
+        const bW = 120;
+        const startX = (w - (displayBadges.length * bW + (displayBadges.length - 1) * 10)) / 2;
+        displayBadges.forEach((b, idx) => {
+          const bx = startX + idx * (bW + 10);
+          ctx.fillStyle = 'rgba(255, 215, 0, 0.07)';
+          ctx.fillRect(bx, 480, bW, 85);
+          ctx.strokeStyle = 'rgba(255, 215, 0, 0.35)';
+          ctx.strokeRect(bx, 480, bW, 85);
+
+          ctx.font = '28px sans-serif';
+          ctx.fillText(b.icon, bx + bW / 2, 514);
+
+          ctx.fillStyle = '#ffffff';
+          ctx.font = 'bold 11px Cairo, sans-serif';
+          ctx.fillText(b.title, bx + bW / 2, 545);
+        });
+      } else {
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+        ctx.font = '13px Cairo, sans-serif';
+        ctx.fillText('حل المزيد من الأسئلة في بنك الأسئلة لفتح الأوسمة!', w / 2, 510);
+      }
+
+      // رسالة تشجيعية في الأسفل
+      ctx.fillStyle = '#38bdf8';
+      ctx.font = 'bold 14px Cairo, sans-serif';
+      ctx.fillText('متفوق في قسم المساحة ونظم المعلومات الجغرافية 🚀', w / 2, 630);
+
+      // تذييل ورابط الموقع
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+      ctx.font = '12px sans-serif';
+      ctx.fillText('dafa3edu.vercel.app', w / 2, 700);
+    }
+
+    function downloadAchievementCard() {
+      const canvas = document.getElementById('achievement-canvas');
+      if (!canvas) return;
+      const link = document.createElement('a');
+      link.download = `إنجاز_${(currentStudentData?.name || 'طالب').replace(/\s+/g, '_')}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+      playSound('correct');
+      triggerHaptic('correct');
+    }
+
+    async function shareAchievementCard() {
+      const canvas = document.getElementById('achievement-canvas');
+      if (!canvas) return;
+      canvas.toBlob(async (blob) => {
+        if (!blob) return;
+        const file = new File([blob], 'achievement.png', { type: 'image/png' });
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          try {
+            await navigator.share({
+              title: 'إنجازي على منصة الدفعة 🏆',
+              text: `شوف إنجازي على منصة الدفعة التعليمية! مجموع نقاطي ${currentStudentData?.score || 0} نقطة 🚀`,
+              files: [file]
+            });
+            return;
+          } catch(e) {}
+        }
+        downloadAchievementCard();
+      });
+    }
+
+    /* ===== 4. تحليل الأسئلة الأكثر صعوبة (Hardest Questions Analytics) ===== */
+    function updateAnalyticsSelect() {
+      const el = document.getElementById('analytics-subj-select');
+      if (!el) return;
+      const opts = '<option value="all">-- جميع المواد الدراسية --</option>' + db.map(s => `<option value="${escText(s.id)}">[مستوى ${s.level}] ${escText(s.name)}</option>`).join('');
+      el.innerHTML = opts;
+    }
+
+    function renderHardestQuestionsTable() {
+      const tbody = document.getElementById('hardest-questions-body');
+      if (!tbody) return;
+
+      const selSubjId = document.getElementById('analytics-subj-select')?.value || 'all';
+      let targetSubjects = db;
+      if (selSubjId !== 'all') {
+        targetSubjects = db.filter(s => s.id === selSubjId);
+      }
+
+      // حساب إحصائيات كل سؤال
+      const questionStats = [];
+      targetSubjects.forEach(s => {
+        (s.quizzes || []).forEach(q => {
+          let attempts = 0;
+          let wrongCount = 0;
+          let correctCount = 0;
+
+          allUsersList.forEach(u => {
+            const sq = (u.solvedQuizzes && u.solvedQuizzes[q.key]) || null;
+            if (sq) {
+              attempts++;
+              if (sq.status === 'wrong' || sq === false) {
+                wrongCount++;
+              } else if (sq.status === 'correct' || sq === true) {
+                correctCount++;
+              }
+            }
+          });
+
+          if (attempts > 0) {
+            const wrongRate = Math.round((wrongCount / attempts) * 100);
+            questionStats.push({
+              key: q.key,
+              subjId: s.id,
+              subjName: s.name,
+              qText: q.q,
+              attempts: attempts,
+              wrongCount: wrongCount,
+              correctCount: correctCount,
+              wrongRate: wrongRate
+            });
+          }
+        });
+      });
+
+      // ترتيب تنازلي حسب نسبة الخطأ
+      questionStats.sort((a, b) => b.wrongRate - a.wrongRate || b.attempts - a.attempts);
+
+      if (questionStats.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">لا توجد إجابات مسجلة بعد في بنك الأسئلة للتحليل.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = questionStats.map((item, idx) => {
+        let badgeColor = '#22c55e';
+        let badgeText = 'سهل ومتقن 🟢';
+        let rowBg = '';
+
+        if (item.wrongRate >= 60) {
+          badgeColor = '#ef4444';
+          badgeText = 'صعب جداً 🔴';
+          rowBg = 'style="background: rgba(239,68,68,.08);"';
+        } else if (item.wrongRate >= 40) {
+          badgeColor = '#f59e0b';
+          badgeText = 'متوسط الصعوبة 🟡';
+        }
+
+        return `
+          <tr ${rowBg}>
+             <td>${idx + 1}</td>
+             <td><span style="color:var(--primary); font-weight:bold;">📚 ${escText(item.subjName)}</span></td>
+             <td style="max-width:320px; word-break:break-word;">${escText(item.qText)}</td>
+             <td><b>${item.attempts}</b> طالب (${item.wrongCount} أخطأوا)</td>
+             <td><strong style="color:${badgeColor}; font-size:15px;">${item.wrongRate}%</strong></td>
+             <td><span class="status-badge" style="border:1px solid ${badgeColor}; color:${badgeColor};">${badgeText}</span></td>
+          </tr>`;
+      }).join('');
+    }
+
+
+
+    /* ===== أ) تعديل وترتيب المواد والأولويات ===== */
+    function reorderSubject(sId, currentOrder) {
+      const subj = db.find(s => s.id === sId);
+      if (!subj) return;
+      Swal.fire({
+        title: `ترتيب وأولوية: ${subj.name}`,
+        html: `<p style="font-size:13px; color:var(--fg-soft);">الرقم الأصغر يظهر أولاً في قائمة المواد (مثلاً: 1 يظهر في البداية ليلة الامتحان).</p>
+               <input id="swal-order-input" type="number" class="swal2-input" value="${currentOrder}" placeholder="رقم الترتيب">`,
+        showCancelButton: true,
+        confirmButtonText: 'حفظ الترتيب',
+        cancelButtonText: 'إلغاء',
+        preConfirm: () => {
+          const val = parseInt(document.getElementById('swal-order-input').value, 10);
+          return isNaN(val) ? 0 : val;
+        }
+      }).then(res => {
+        if (res.isConfirmed) {
+          database.ref('subjects/' + sId + '/order').set(res.value).then(() => {
+            logAdminAction('تعديل ترتيب مادة', `${subj.name} -> ترتيب ${res.value}`);
+            Swal.fire('تم', 'تم تحديث ترتيب ظهور المادة بنجاح', 'success');
+          });
+        }
+      });
+    }
+
+    function editSubjectInfo(sId) {
+      const subj = db.find(s => s.id === sId);
+      if (!subj) return;
+      Swal.fire({
+        title: 'تعديل بيانات المادة',
+        html: `
+          <div style="text-align:right; font-size:12px; margin-bottom:4px;">اسم المادة:</div>
+          <input id="edit-subj-name" class="swal2-input" value="${escText(subj.name)}" style="margin-top:0;">
+          <div style="text-align:right; font-size:12px; margin:8px 0 4px;">وصف المادة:</div>
+          <input id="edit-subj-desc" class="swal2-input" value="${escText(subj.desc)}" style="margin-top:0;">
+          <div style="text-align:right; font-size:12px; margin:8px 0 4px;">المستوى الدراسي:</div>
+          <select id="edit-subj-lvl" class="swal2-input" style="margin-top:0;">
+             <option value="1" ${subj.level == 1 ? 'selected' : ''}>المستوى الأول</option>
+             <option value="2" ${subj.level == 2 ? 'selected' : ''}>المستوى الثاني</option>
+          </select>`,
+        showCancelButton: true,
+        confirmButtonText: 'حفظ التعديلات',
+        cancelButtonText: 'إلغاء',
+        preConfirm: () => {
+          return {
+            name: document.getElementById('edit-subj-name').value.trim(),
+            desc: document.getElementById('edit-subj-desc').value.trim(),
+            level: parseInt(document.getElementById('edit-subj-lvl').value, 10) || 1
+          };
+        }
+      }).then(res => {
+        if (res.isConfirmed && res.value.name) {
+          database.ref('subjects/' + sId).update(res.value).then(() => {
+            logAdminAction('تعديل بيانات مادة', `${res.value.name}`);
+            Swal.fire('تم', 'تم حفظ التعديلات بنجاح', 'success');
+          });
+        }
+      });
+    }
+
+    /* ===== ب) تعديل الملفات والأسئلة دون حذفها للأدمن ===== */
+    function editFile(sId, fKey, currentTitle, currentLink, currentCategory) {
+      Swal.fire({
+        title: 'تعديل الملف / المحاضرة',
+        html: `
+          <div style="text-align:right; font-size:12px; margin-bottom:4px;">عنوان الملف:</div>
+          <input id="edit-file-title" class="swal2-input" value="${escText(currentTitle)}" style="margin-top:0;">
+          <div style="text-align:right; font-size:12px; margin:8px 0 4px;">رابط الملف (Google Drive / etc):</div>
+          <input id="edit-file-link" type="url" class="swal2-input" value="${escText(currentLink)}" style="margin-top:0;">
+          <div style="text-align:right; font-size:12px; margin:8px 0 4px;">التصنيف:</div>
+          <select id="edit-file-category" class="swal2-input" style="margin-top:0;">
+             <option value="محاضرات" ${currentCategory === 'محاضرات' ? 'selected' : ''}>محاضرات نظري</option>
+             <option value="سكاشن" ${currentCategory === 'سكاشن' ? 'selected' : ''}>سكاشن وتطبيقات</option>
+             <option value="امتحانات" ${currentCategory === 'امتحانات' ? 'selected' : ''}>امتحانات سابقة</option>
+          </select>`,
+        showCancelButton: true,
+        confirmButtonText: 'حفظ التعديل',
+        cancelButtonText: 'إلغاء',
+        preConfirm: () => {
+          const title = document.getElementById('edit-file-title').value.trim();
+          const link = document.getElementById('edit-file-link').value.trim();
+          const category = document.getElementById('edit-file-category').value;
+          if (!title || !link) {
+            Swal.showValidationMessage('اكتب عنوان ورابط الملف');
+            return false;
+          }
+          return { title, link, category };
+        }
+      }).then(res => {
+        if (res.isConfirmed) {
+          database.ref('subjects/' + sId + '/files/' + fKey).update(res.value).then(() => {
+            logAdminAction('تعديل ملف', `العنوان: ${res.value.title}`);
+            Swal.fire('تم', 'تم تحديث بيانات الملف بنجاح', 'success');
+          });
+        }
+      });
+    }
+
+    function editQuiz(sId, qKey) {
+      const subj = db.find(s => s.id === sId);
+      if (!subj || !subj.quizzes) return;
+      const q = subj.quizzes.find(x => x.key === qKey);
+      if (!q) return;
+
+      Swal.fire({
+        title: 'تعديل سؤال MCQ',
+        html: `
+          <div style="text-align:right; font-size:12px; margin-bottom:4px;">نص السؤال:</div>
+          <input id="edit-quiz-q" class="swal2-input" value="${escText(q.q)}" style="margin-top:0;">
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; margin:8px 0;">
+             <input id="edit-quiz-opt1" class="swal2-input" placeholder="اختيار 1" value="${escText(q.opt1)}" style="margin:0;">
+             <input id="edit-quiz-opt2" class="swal2-input" placeholder="اختيار 2" value="${escText(q.opt2)}" style="margin:0;">
+             <input id="edit-quiz-opt3" class="swal2-input" placeholder="اختيار 3" value="${escText(q.opt3)}" style="margin:0;">
+             <input id="edit-quiz-opt4" class="swal2-input" placeholder="اختيار 4" value="${escText(q.opt4)}" style="margin:0;">
+          </div>
+          <div style="text-align:right; font-size:12px; margin:8px 0 4px;">الإجابة الصحيحة:</div>
+          <select id="edit-quiz-ans" class="swal2-input" style="margin-top:0;">
+             <option value="1" ${String(q.ans) === '1' ? 'selected' : ''}>الاختيار الأول</option>
+             <option value="2" ${String(q.ans) === '2' ? 'selected' : ''}>الاختيار الثاني</option>
+             <option value="3" ${String(q.ans) === '3' ? 'selected' : ''}>الاختيار الثالث</option>
+             <option value="4" ${String(q.ans) === '4' ? 'selected' : ''}>الاختيار الرابع</option>
+          </select>`,
+        showCancelButton: true,
+        confirmButtonText: 'حفظ السؤال',
+        cancelButtonText: 'إلغاء',
+        preConfirm: () => {
+          const qText = document.getElementById('edit-quiz-q').value.trim();
+          const opt1 = document.getElementById('edit-quiz-opt1').value.trim();
+          const opt2 = document.getElementById('edit-quiz-opt2').value.trim();
+          const opt3 = document.getElementById('edit-quiz-opt3').value.trim();
+          const opt4 = document.getElementById('edit-quiz-opt4').value.trim();
+          const ans = document.getElementById('edit-quiz-ans').value;
+          if (!qText || !opt1 || !opt2 || !opt3 || !opt4) {
+            Swal.showValidationMessage('املأ نص السؤال وجميع الاختيارات الأربعة');
+            return false;
+          }
+          return { q: qText, opt1, opt2, opt3, opt4, ans };
+        }
+      }).then(res => {
+        if (res.isConfirmed) {
+          database.ref('subjects/' + sId + '/quizzes/' + qKey).update(res.value).then(() => {
+            logAdminAction('تعديل سؤال MCQ', `السؤال: ${res.value.q}`);
+            Swal.fire('تم', 'تم تحديث السؤال بنجاح', 'success');
+          });
+        }
+      });
+    }
+
+    /* ===== ج) شروحات الفيديو والسكاشن المسجلة (Video Hub) ===== */
+    function getYoutubeEmbedUrl(rawUrl) {
+      if (!rawUrl) return '';
+      let url = rawUrl.trim();
+
+      // Playlist
+      const plMatch = url.match(/[?&]list=([a-zA-Z0-9_-]+)/);
+      if (plMatch && plMatch[1]) {
+        return `https://www.youtube-nocookie.com/embed/videoseries?list=${plMatch[1]}`;
+      }
+
+      // Video ID from youtu.be
+      const shortMatch = url.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/);
+      if (shortMatch && shortMatch[1]) {
+        return `https://www.youtube-nocookie.com/embed/${shortMatch[1]}`;
+      }
+
+      // Video ID from youtube.com/watch?v=...
+      const longMatch = url.match(/[?&]v=([a-zA-Z0-9_-]{11})/);
+      if (longMatch && longMatch[1]) {
+        return `https://www.youtube-nocookie.com/embed/${longMatch[1]}`;
+      }
+
+      // Video ID from embed URL
+      const embedMatch = url.match(/\/embed\/([a-zA-Z0-9_-]{11})/);
+      if (embedMatch && embedMatch[1]) {
+        return `https://www.youtube-nocookie.com/embed/${embedMatch[1]}`;
+      }
+
+      return url;
+    }
+
+    function addSubjectVideo(e) {
+      e.preventDefault();
+      const sId = document.getElementById('video-subj-select').value;
+      const title = document.getElementById('video-title').value.trim();
+      const link = document.getElementById('video-link').value.trim();
+      const category = document.getElementById('video-category').value;
+      const subj = db.find(s => s.id === sId);
+
+      if (!sId || !title || !link) return;
+
+      database.ref('subjects/' + sId + '/videos').push({
+        title: title,
+        url: link,
+        category: category,
+        createdAt: Date.now()
+      }).then(() => {
+        e.target.reset();
+        logAdminAction('إضافة فيديو شرح', `العنوان: ${title} | المادة: ${subj ? subj.name : ''}`);
+        Swal.fire('تم!', 'تم نشر الفيديو في المادة بنجاح 🎬', 'success');
+      });
+    }
+
+    function deleteSubjectVideo(sId, vKey, title) {
+      Swal.fire({
+        title: 'حذف الفيديو؟',
+        text: `سيتم حذف "${title}" نهائياً من المادة.`,
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        confirmButtonText: 'نعم، احذف'
+      }).then(res => {
+        if (res.isConfirmed) {
+          database.ref('subjects/' + sId + '/videos/' + vKey).remove().then(() => {
+            logAdminAction('حذف فيديو', `الفيديو: ${title}`);
+            Swal.fire('تم', 'تم حذف الفيديو.', 'success');
+          });
+        }
+      });
+    }
+
+    function editSubjectVideo(sId, vKey, currentTitle, currentUrl, currentCategory) {
+      Swal.fire({
+        title: 'تعديل فيديو الشرح',
+        html: `
+          <div style="text-align:right; font-size:12px; margin-bottom:4px;">عنوان الفيديو:</div>
+          <input id="edit-video-title" class="swal2-input" value="${escText(currentTitle)}" style="margin-top:0;">
+          <div style="text-align:right; font-size:12px; margin:8px 0 4px;">رابط يوتيوب:</div>
+          <input id="edit-video-url" class="swal2-input" value="${escText(currentUrl)}" style="margin-top:0;">
+          <div style="text-align:right; font-size:12px; margin:8px 0 4px;">التصنيف:</div>
+          <select id="edit-video-cat" class="swal2-input" style="margin-top:0;">
+             <option value="شروحات نظري" ${currentCategory === 'شروحات نظري' ? 'selected' : ''}>شروحات نظري</option>
+             <option value="سكاشن وتطبيقات عملية" ${currentCategory === 'سكاشن وتطبيقات عملية' ? 'selected' : ''}>سكاشن وتطبيقات عملية</option>
+             <option value="مراجعات وحل امتحانات" ${currentCategory === 'مراجعات وحل امتحانات' ? 'selected' : ''}>مراجعات وحل امتحانات</option>
+          </select>`,
+        showCancelButton: true,
+        confirmButtonText: 'حفظ التعديل',
+        cancelButtonText: 'إلغاء',
+        preConfirm: () => {
+          const title = document.getElementById('edit-video-title').value.trim();
+          const url = document.getElementById('edit-video-url').value.trim();
+          const category = document.getElementById('edit-video-cat').value;
+          return { title, url, category };
+        }
+      }).then(res => {
+        if (res.isConfirmed && res.value.title && res.value.url) {
+          database.ref('subjects/' + sId + '/videos/' + vKey).update(res.value).then(() => {
+            logAdminAction('تعديل فيديو', res.value.title);
+            Swal.fire('تم', 'تم حفظ تعديلات الفيديو بنجاح', 'success');
+          });
+        }
+      });
+    }
+
+    function openVideoPlayer(title, rawUrl) {
+      const overlay = document.getElementById('video-player-overlay');
+      const titleEl = document.getElementById('video-player-title');
+      const frame = document.getElementById('video-player-frame');
+      const extLink = document.getElementById('video-player-ext-link');
+      if (!overlay || !frame) return;
+
+      titleEl.innerText = title || 'مشاهدة الشرح';
+      extLink.href = safeUrl(rawUrl);
+      frame.src = getYoutubeEmbedUrl(rawUrl);
+      overlay.style.display = 'flex';
+    }
+
+    function closeVideoPlayer(e) {
+      if (e && e.target && e.target.id !== 'video-player-overlay' && e.target.tagName !== 'BUTTON') return;
+      const overlay = document.getElementById('video-player-overlay');
+      const frame = document.getElementById('video-player-frame');
+      if (frame) frame.src = '';
+      if (overlay) overlay.style.display = 'none';
+    }
+
+    /* ===== د) مركز الإعلانات والتنبيهات الموجهة حسب المستوى ===== */
+    let announcementsList = [];
+    let announcementsListening = false;
+
+    function listenToAnnouncements() {
+      if (announcementsListening) return;
+      announcementsListening = true;
+      database.ref('settings/announcements').on('value', snap => {
+        const val = snap.val() || {};
+        announcementsList = Object.keys(val).map(k => ({ key: k, ...val[k] }));
+        announcementsList.sort((a,b) => (b.createdAt || 0) - (a.createdAt || 0));
+        renderAnnouncementsBoard();
+        renderAdminAnnouncementsTable();
+      });
+    }
+
+    function renderAnnouncementsBoard() {
+      const container = document.getElementById('announcements-board');
+      if (!container) return;
+
+      // فلترة الإعلانات بحسب المستوى النشط (الكل أو المستوى المعروض حالياً)
+      const matching = announcementsList.filter(a => a.targetLevel === 'all' || String(a.targetLevel) === String(activeLevel));
+      if (matching.length === 0) {
+        container.style.display = 'none';
+        container.innerHTML = '';
+        return;
+      }
+
+      container.style.display = 'block';
+      container.innerHTML = matching.map(a => {
+        const isUrgent = a.priority === 'urgent';
+        const lvlBadge = a.targetLevel === 'all'
+          ? '<span style="background:rgba(59,130,246,.2); color:#60a5fa; padding:2px 8px; border-radius:6px; font-size:11px;">📢 لكل الدفعة</span>'
+          : (a.targetLevel === '1'
+             ? '<span style="background:rgba(16,185,129,.2); color:#4ade80; padding:2px 8px; border-radius:6px; font-size:11px;">🎓 المستوى الأول</span>'
+             : '<span style="background:rgba(168,85,247,.2); color:#c084fc; padding:2px 8px; border-radius:6px; font-size:11px;">🚀 المستوى الثاني</span>');
+
+        const urgentTag = isUrgent
+          ? '<span style="background:rgba(239,68,68,.25); color:#f87171; border:1px solid #ef4444; padding:2px 8px; border-radius:6px; font-size:11px; font-weight:bold; animation:pulseAlert 2s infinite;">🚨 تنبيه عاجل</span>'
+          : '';
+
+        const dateStr = a.createdAt ? new Date(a.createdAt).toLocaleDateString('ar-EG') : '';
+
+        return `
+          <div class="card liquid-glass" style="margin-bottom: 10px; padding: 14px 18px; border-right: 4px solid ${isUrgent ? '#ef4444' : 'var(--primary)'}; background: ${isUrgent ? 'rgba(239,68,68,.05)' : 'rgba(255,255,255,.03)'};">
+             <div class="z-content flex-between" style="flex-wrap:wrap; gap:8px; margin-bottom:6px;">
+                <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                   ${urgentTag}
+                   ${lvlBadge}
+                   <h4 style="margin:0; font-size:15px; font-weight:bold; color:var(--fg);">${escText(a.title)}</h4>
+                </div>
+                <span style="font-size:11px; color:var(--fg-faint);">🕒 ${dateStr}</span>
+             </div>
+             <p class="z-content" style="margin:0; font-size:13px; color:var(--fg-soft); line-height:1.6; word-break:break-word;">${escText(a.content)}</p>
+          </div>`;
+      }).join('');
+    }
+
+    function renderAdminAnnouncementsTable() {
+      const tbody = document.getElementById('admin-announcements-table-body');
+      if (!tbody) return;
+
+      if (announcementsList.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">لا توجد إعلانات منشورة حالياً.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = announcementsList.map((a, idx) => {
+        const lvlTxt = a.targetLevel === 'all' ? 'الكل' : `مستوى ${a.targetLevel}`;
+        const typeTxt = a.priority === 'urgent' ? '<span style="color:#f87171; font-weight:bold;">عاجل 🚨</span>' : 'عادي 📢';
+        const dateStr = a.createdAt ? new Date(a.createdAt).toLocaleDateString('ar-EG') : '';
+
+        return `
+          <tr>
+             <td><b>${escText(a.title)}</b></td>
+             <td>${lvlTxt}</td>
+             <td>${typeTxt}</td>
+             <td>${dateStr}</td>
+             <td><button class="btn-sm btn-ban" onclick="deleteAnnouncement('${a.key}')">🗑️</button></td>
+          </tr>`;
+      }).join('');
+    }
+
+    function postTargetedAnnouncement(e) {
+      e.preventDefault();
+      const targetLevel = document.getElementById('ann-target-level').value;
+      const priority = document.getElementById('ann-priority').value;
+      const title = document.getElementById('ann-title').value.trim();
+      const content = document.getElementById('ann-content').value.trim();
+
+      if (!title || !content) return;
+
+      database.ref('settings/announcements').push({
+        title,
+        content,
+        targetLevel,
+        priority,
+        createdAt: Date.now(),
+        author: currentStudentData ? currentStudentData.name : 'الإدارة'
+      }).then(() => {
+        e.target.reset();
+        logAdminAction('نشر إعلان موجه', `العنوان: ${title} | الفئة: ${targetLevel}`);
+        Swal.fire('تم!', 'تم نشر الإعلان ليظهر لطلاب المستوى المحدد بنجاح 📢', 'success');
+      });
+    }
+
+    function deleteAnnouncement(key) {
+      Swal.fire({
+        title: 'حذف الإعلان؟',
+        showCancelButton: true,
+        confirmButtonText: 'حذف',
+        confirmButtonColor: '#ef4444'
+      }).then(res => {
+        if (res.isConfirmed) {
+          database.ref('settings/announcements/' + key).remove().then(() => {
+            logAdminAction('حذف إعلان', key);
+            Swal.fire('تم', 'تم حذف الإعلان.', 'success');
+          });
+        }
+      });
+    }
+
+    /* ===== هـ) أداة تنظيف وصيانة قاعدة البيانات (Database Maintenance Tool) ===== */
+    function scanInactiveAccounts() {
+      const container = document.getElementById('maintenance-scan-results');
+      const tbody = document.getElementById('maintenance-scan-table-body');
+      if (!container || !tbody) return;
+
+      container.style.display = 'block';
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">جاري الفحص والتحليل...</td></tr>';
+
+      // فحص أرقام الهواتف المكررة
+      const phoneCount = {};
+      allUsersList.forEach(u => {
+        const p = normDigits(u.phone || '').replace(/\D/g, '');
+        if (p && p.length >= 10) {
+          phoneCount[p] = (phoneCount[p] || 0) + 1;
+        }
+      });
+
+      const flaggedAccounts = [];
+      const now = Date.now();
+      const ninetyDays = 90 * 24 * 60 * 60 * 1000;
+
+      allUsersList.forEach(u => {
+        const p = normDigits(u.phone || '').replace(/\D/g, '');
+        const isDupPhone = p && phoneCount[p] > 1;
+        const lastSeenTime = u.lastSeen || u.createdAt || 0;
+        const isOldInactive = (u.score || 0) === 0 && (!u.solvedQuizzes || Object.keys(u.solvedQuizzes).length === 0) && (now - lastSeenTime > ninetyDays);
+
+        if (isDupPhone || isOldInactive) {
+          flaggedAccounts.push({
+            user: u,
+            isDupPhone,
+            isOldInactive,
+            note: isDupPhone && isOldInactive ? 'مكرر وخامل تماماً' : (isDupPhone ? 'رقم هاتف مكرر بالحسابات' : 'خامل وبلا نقاط منذ أكثر من 90 يوم')
+          });
+        }
+      });
+
+      if (flaggedAccounts.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:#4ade80;">✅ قاعدة البيانات نظيفة تماماً! لا توجد حسابات خاملة أو هواتف مكررة.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = flaggedAccounts.map((item, idx) => {
+        const u = item.user;
+        const createdStr = u.createdAt ? new Date(u.createdAt).toLocaleDateString('ar-EG') : '-';
+        const lastSeenStr = formatLastSeen(u.lastSeen || u.createdAt);
+        const tagColor = item.isDupPhone ? '#ef4444' : '#f59e0b';
+
+        return `
+          <tr>
+             <td>${idx + 1}</td>
+             <td><b>${escText(u.name)}</b><div style="font-size:11px; color:var(--fg-faint);">${escText(u.email)}</div></td>
+             <td style="direction:ltr;">${escText(u.phone || '-')}</td>
+             <td>${createdStr}</td>
+             <td>${lastSeenStr}</td>
+             <td><span class="status-badge" style="border:1px solid ${tagColor}; color:${tagColor};">${item.note}</span></td>
+             <td><button class="btn-sm btn-ban" onclick="adminDeleteUserSafe('${u.uid}','${escapeHtml(u.name)}')">حذف الحساب 🗑️</button></td>
+          </tr>`;
+      }).join('');
+    }
+
+    function adminDeleteUserSafe(uid, name) {
+      Swal.fire({
+        title: `حذف حساب ${name} نهائياً؟`,
+        text: 'سيتم مسح بيانات الطالب من قاعدة البيانات ولوحة الشرف فوراً لتوفير مساحة في Firebase.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        confirmButtonText: 'نعم، احذف الحساب',
+        cancelButtonText: 'إلغاء'
+      }).then(res => {
+        if (res.isConfirmed) {
+          const up = {};
+          up['users/' + uid] = null;
+          up['leaderboard/' + uid] = null;
+          const uTarget = allUsersList.find(x => x.uid === uid);
+          if (uTarget && uTarget.phone) {
+            const p = normDigits(uTarget.phone).replace(/\D/g, '');
+            if (p) up['phones/' + p] = null;
+          }
+
+          database.ref().update(up).then(() => {
+            logAdminAction('تنظيف قاعدة البيانات', `تم حذف الحساب: ${name} (${uid})`);
+            Swal.fire('تم الحذف', 'تم حذف الحساب وتنظيف البيانات.', 'success');
+            scanInactiveAccounts();
+          }).catch(err => Swal.fire('خطأ', escText(err.message), 'error'));
+        }
+      });
+    }
+
+
+
+    /* ===== إدارة القائمة المنسدلة للأدوات على الموبايل ===== */
+    function toggleMobileToolsMenu(e) {
+      if (e) e.stopPropagation();
+      const dropdown = document.getElementById('mobile-tools-dropdown');
+      if (!dropdown) return;
+      const isHidden = dropdown.style.display === 'none' || !dropdown.style.display;
+      dropdown.style.display = isHidden ? 'block' : 'none';
+      if (isHidden) {
+        updateMobileToolsState();
+      }
+    }
+
+    function closeMobileToolsMenu() {
+      const dropdown = document.getElementById('mobile-tools-dropdown');
+      if (dropdown) dropdown.style.display = 'none';
+    }
+
+    function updateMobileToolsState() {
+      const themeStatus = document.getElementById('mti-theme-status');
+      const themeIcon = document.getElementById('mti-theme-icon');
+      const soundStatus = document.getElementById('mti-sound-status');
+      const soundIcon = document.getElementById('mti-sound-icon');
+      const dataStatus = document.getElementById('mti-data-status');
+      const dataIcon = document.getElementById('mti-data-icon');
+
+      const isLight = document.body.classList.contains('light-mode');
+      if (themeStatus) themeStatus.innerText = isLight ? 'الوضع الفاتح ☀️' : 'الوضع الداكن 🌙';
+      if (themeIcon) themeIcon.innerText = isLight ? '🌙' : '🌞';
+
+      if (soundStatus) soundStatus.innerText = soundEnabled ? 'مفعّلة 🔔' : 'صامت 🔕';
+      if (soundIcon) soundIcon.innerText = soundEnabled ? '🔊' : '🔇';
+
+      if (dataStatus) dataStatus.innerText = dataSaverEnabled ? 'مفعّل 🟢' : 'معطّل ⚪';
+      if (dataIcon) dataIcon.innerText = '📶';
+    }
+
+    // إغلاق القائمة المنسدلة عند النقر في أي مكان خارجها
+    window.addEventListener('click', function(e) {
+      const dropdown = document.getElementById('mobile-tools-dropdown');
+      const btn = document.getElementById('mobile-tools-btn');
+      if (dropdown && dropdown.style.display !== 'none') {
+        if (!dropdown.contains(e.target) && !btn.contains(e.target)) {
+          dropdown.style.display = 'none';
+        }
+      }
+    });
+
+
+
+    /* ===== البحث السريع مع زر المسح والعداد ===== */
+    function onSearchBoxInput() {
+      const input = document.getElementById('search-box');
+      const clearBtn = document.getElementById('search-clear-btn');
+      if (clearBtn) clearBtn.style.display = input.value.trim() ? 'block' : 'none';
+      filterSubjects();
+    }
+
+    function clearSearchBox() {
+      const input = document.getElementById('search-box');
+      const clearBtn = document.getElementById('search-clear-btn');
+      if (input) input.value = '';
+      if (clearBtn) clearBtn.style.display = 'none';
+      filterSubjects();
+    }
+
+    /* ===== تبديل أقسام المادة (Subject Section Tabs) ===== */
+    let currentSubjectActiveTab = 'all';
+    function switchSubjectTab(tab) {
+      currentSubjectActiveTab = tab;
+      const tabs = ['all', 'files', 'videos', 'quizzes'];
+      tabs.forEach(t => {
+        const btn = document.getElementById('sec-tab-' + t);
+        if (btn) btn.classList.toggle('active', t === tab);
+      });
+
+      const secFiles = document.getElementById('sec-container-files');
+      const secVideos = document.getElementById('sec-container-videos');
+      const secQuizzes = document.getElementById('sec-container-quizzes');
+
+      if (tab === 'all') {
+        if (secFiles) secFiles.style.display = 'block';
+        if (secVideos) secVideos.style.display = 'block';
+        if (secQuizzes) secQuizzes.style.display = 'block';
+      } else {
+        if (secFiles) secFiles.style.display = tab === 'files' ? 'block' : 'none';
+        if (secVideos) secVideos.style.display = tab === 'videos' ? 'block' : 'none';
+        if (secQuizzes) secQuizzes.style.display = tab === 'quizzes' ? 'block' : 'none';
+      }
+    }
+
+    /* ===== تحديث لوحة التحكم والمعلومات السريعة في بطاقة الترحيب ===== */
+    function updateDashboardHub() {
+      if (!currentStudentData) return;
+      const greetingEl = document.getElementById('dashboard-student-greeting');
+      if (greetingEl) {
+        const lvlStr = currentStudentData.level == 2 ? 'المستوى الثاني 🚀' : 'المستوى الأول 🎓';
+        const score = currentStudentData.score || 0;
+        greetingEl.innerHTML = `مرحباً بك يا <b>${escText(currentStudentData.name)}</b> 👋 | أنت مسجل بـ <b>${lvlStr}</b> • رصيدك: <b>${score} نقطة 🏆</b>`;
+      }
+
+      const hubResStatus = document.getElementById('hub-research-status');
+      if (hubResStatus) {
+        if (currentStudentData.researchTopic) {
+          hubResStatus.innerHTML = `<span style="color:#10b981; font-weight:bold;">✅ حجزت: ${escText(currentStudentData.researchTopic)}</span>`;
+        } else {
+          hubResStatus.innerText = 'حجز وتنسيق موضوعات الأبحاث';
+        }
+      }
+    }
+
+
     window.onload = () => {
       try { handleAuthActionLink(); } catch (e) {}
       document.getElementById('name-group').style.display = 'none';
       document.getElementById('phone-group').style.display = 'none';
       document.getElementById('level-group').style.display = 'none';
       initTheme();
-      showHome(true);
+      initSound();
+      initDataSaver();
+      restoreGpaState();
+      handleRouting();
       document.querySelectorAll('a[href="#"][target="_blank"]').forEach(a => a.style.display = 'none');
     };
   </script>
