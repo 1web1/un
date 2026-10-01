@@ -6,7 +6,7 @@
 <title>منصة الدفعة التعليمية | قسم المساحة ونظم المعلومات</title>
 <meta name="description" content="منصة الدفعة التعليمية - قسم المساحة ونظم المعلومات: ملخصات وبنك أسئلة ولوحة شرف">
 <meta name="theme-color" content="#0a0908">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Ctext y=%27.9em%27 font-size=%2790%27%3E%F0%9F%8E%93%3C/text%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='28' fill='%23f59e0b'/%3E%3Cpath d='M50 10 C50 32 32 50 10 50 C32 50 50 68 50 90 C50 68 68 50 90 50 C68 50 50 32 50 10 Z' fill='%230f172a'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com">
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
@@ -765,6 +765,96 @@
     display: none;
   }
 
+
+  /* ===== الشعار الجديد (Logo) وبطاقة الديسكورد (Discord Card) ===== */
+  .mark {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+    text-decoration: none;
+  }
+  .mark-logo-box {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    border-radius: 9px;
+    background: linear-gradient(135deg, #fcd34d 0%, #f59e0b 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 3px 12px rgba(245, 158, 11, 0.4);
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s;
+    flex-shrink: 0;
+  }
+  .mark:hover .mark-logo-box {
+    transform: scale(1.06) rotate(3deg);
+    box-shadow: 0 4px 16px rgba(245, 158, 11, 0.6);
+  }
+  .mark-logo-star {
+    width: 16px;
+    height: 16px;
+    display: block;
+  }
+  .mark-text {
+    font-weight: 900;
+    font-size: 17px;
+    letter-spacing: -0.3px;
+    color: var(--fg);
+  }
+
+  .discord-community-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    border-radius: 12px;
+    background: rgba(88, 101, 242, 0.08);
+    border: 1px solid rgba(99, 102, 241, 0.35);
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    text-decoration: none;
+    box-sizing: border-box;
+  }
+  .discord-community-card:hover {
+    background: rgba(88, 101, 242, 0.15);
+    border-color: rgba(99, 102, 241, 0.6);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.2);
+  }
+  .discord-community-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 700;
+    color: var(--fg);
+    font-size: 14px;
+  }
+  .discord-badge-soon {
+    background: rgba(99, 102, 241, 0.22);
+    border: 1px solid rgba(99, 102, 241, 0.45);
+    color: #a5b4fc;
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.2px;
+  }
+  body.light-mode .discord-community-card {
+    background: rgba(88, 101, 242, 0.05);
+    border-color: rgba(99, 102, 241, 0.25);
+  }
+  body.light-mode .discord-community-title {
+    color: #1e1b4b;
+  }
+  body.light-mode .discord-badge-soon {
+    background: rgba(99, 102, 241, 0.12);
+    border-color: rgba(99, 102, 241, 0.3);
+    color: #4f46e5;
+  }
+
 </style>
 </head>
 <body>
@@ -789,7 +879,14 @@
 
   <div id="main-site">
     <header class="chrome liquid-glass">
-      <div class="mark z-content" onclick="navigateTo('#home')"><span class="mark-star">✦</span><span class="mark-text">منصة الدفعة</span></div>
+      <div class="mark z-content" onclick="navigateTo('#home')">
+        <div class="mark-logo-box">
+          <svg viewBox="0 0 24 24" class="mark-logo-star" width="16" height="16">
+            <path d="M12 2C12 7.5 7.5 12 2 12C7.5 12 12 16.5 12 22C12 16.5 16.5 12 22 12C16.5 12 12 7.5 12 2Z" fill="#0c0d12"/>
+          </svg>
+        </div>
+        <span class="mark-text">منصة الدفعة</span>
+      </div>
       <nav class="nav z-content">
         <button class="pill theme-btn nav-desktop-only" id="theme-toggle-btn" onclick="toggleTheme()" title="تبديل الوضع">🌞</button>
         <button class="pill theme-btn nav-desktop-only" id="sound-toggle-btn" onclick="toggleSound()" title="كتم/تشغيل المؤثرات الصوتية">🔊</button>
@@ -970,10 +1067,13 @@
                   <span>جروب مادة GIS1</span>
                   <span style="color: var(--online-green);">🟢 انضمام</span>
                 </a>
-                <a href="#" target="_blank" rel="noopener" class="quiz-btn" style="text-align: right; display: flex; justify-content: space-between; align-items: center; text-decoration: none; border-color: #5865F2;">
-                  <span>سيرفر الديسكورد للمذاكرة الجماعية</span>
-                  <span style="color: #5865F2;">🟣 انضمام</span>
-                </a>
+                <div class="discord-community-card z-content" onclick="openDiscordInfo()">
+                  <div class="discord-community-title">
+                    <span>سيرفر الديسكورد للمذاكرة الجماعية</span>
+                    <span style="font-size: 16px;">🎧</span>
+                  </div>
+                  <span class="discord-badge-soon">قريباً</span>
+                </div>
               </div>
             </div>
           </div>
@@ -4954,6 +5054,38 @@
           hubResStatus.innerText = 'حجز وتنسيق موضوعات الأبحاث';
         }
       }
+    }
+
+
+
+    function openDiscordInfo() {
+      database.ref('settings/discordUrl').once('value').then(snap => {
+        const url = snap.val();
+        if (url && typeof url === 'string' && url.trim().startsWith('http')) {
+          window.open(url.trim(), '_blank');
+        } else {
+          Swal.fire({
+            title: 'سيرفر الديسكورد 🎧',
+            html: `
+              <div style="font-size:14px; color:var(--fg-soft); line-height:1.6; margin-top:8px;">
+                جاري الآن إعداد وتجهيز <b>سيرفر الديسكورد الرسمي</b> الخاص بالدفعة للمذاكرة الجماعية وغرف الشروحات الصوتية.
+                <br><br>
+                <span class="status-badge" style="border:1px solid #818cf8; color:#a5b4fc; background:rgba(99,102,241,.15); padding:6px 14px; font-size:13px;">
+                  🚀 سيتم إطلاقه ومشاركة رابط الانضمام قريباً جداً!
+                </span>
+              </div>`,
+            icon: 'info',
+            confirmButtonText: 'تمام، في الانتظار 👍'
+          });
+        }
+      }).catch(() => {
+        Swal.fire({
+          title: 'سيرفر الديسكورد 🎧',
+          text: 'جاري إعداد وتجهيز سيرفر الديسكورد للمذاكرة الجماعية وسيتم تفعيله قريباً جداً!',
+          icon: 'info',
+          confirmButtonText: 'حسناً'
+        });
+      });
     }
 
 
