@@ -7,7 +7,11 @@
 <meta name="description" content="منصة الدفعة التعليمية - قسم المساحة ونظم المعلومات: ملخصات وبنك أسئلة ولوحة شرف">
 <meta name="theme-color" content="#0a0908">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='28' fill='%23f59e0b'/%3E%3Cpath d='M50 10 C50 32 32 50 10 50 C32 50 50 68 50 90 C50 68 68 50 90 50 C68 50 50 32 50 10 Z' fill='%230f172a'/%3E%3C/svg%3E">
-<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="manifest" href="manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="منصة الدفعة">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com">
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -892,6 +896,7 @@
         <button class="pill theme-btn nav-desktop-only" id="sound-toggle-btn" onclick="toggleSound()" title="كتم/تشغيل المؤثرات الصوتية">🔊</button>
         <button class="pill theme-btn nav-desktop-only" id="data-saver-btn" onclick="toggleDataSaver()" title="وضع توفير البيانات (إيقاف الفيديو والتأثيرات)">📶</button>
         <button class="pill nav-desktop-only" id="gpa-nav-btn" onclick="navigateTo('#gpa')" title="حاسبة المعدل التراكمي GPA" style="background:#8b5cf6;"><span>🧮</span><span class="btn-txt">حاسبة GPA</span></button>
+        <button class="pill nav-desktop-only" id="bookmarks-nav-btn" onclick="openBookmarksModal()" title="المحفوظات والمفضلة" style="background:#f59e0b; color:#111;"><span>⭐</span><span class="btn-txt">المفضلة</span><span id="nav-bookmarks-badge" class="badge" style="background:#000; color:#ffd700; margin-right:4px; display:none;">0</span></button>
         <div class="user-greeting-btn" onclick="showProfile()" id="user-greeting" title="الملف الشخصي"></div>
         <button class="pill research-nav-btn" id="research-nav-btn" onclick="navigateTo('#research')" title="قسم الأبحاث"><span>🔬</span><span class="btn-txt">الأبحاث</span></button>
         <button class="pill admin-btn" id="admin-toggle-btn" onclick="toggleAdminPanel()" style="display:none;"><span>⚙️</span><span class="btn-txt">الإدارة</span></button>
@@ -940,6 +945,24 @@
               <span class="mti-status" style="color:#a855f7;">حساب تقديرات وتراكمي</span>
             </div>
             <span class="mti-arrow">↗</span>
+          </button>
+
+          <button type="button" class="mobile-tool-item" onclick="closeMobileToolsMenu(); openBookmarksModal();">
+            <span class="mti-icon" style="color:#f59e0b;">⭐</span>
+            <div class="mti-info">
+              <span class="mti-title">المحفوظات والمفضلة</span>
+              <span class="mti-status" id="mti-bookmarks-count">الملفات والأسئلة المحفوظة</span>
+            </div>
+            <span class="mti-arrow">↗</span>
+          </button>
+
+          <button type="button" class="mobile-tool-item" onclick="closeMobileToolsMenu(); installPWAApp();">
+            <span class="mti-icon" style="color:#10b981;">📲</span>
+            <div class="mti-info">
+              <span class="mti-title">تثبيت التطبيق على الهاتف</span>
+              <span class="mti-status">تشغيل المنصة كتطبيق رسمي</span>
+            </div>
+            <span class="mti-arrow">⬇</span>
           </button>
 
           <button type="button" class="mobile-tool-item" onclick="closeMobileToolsMenu(); showProfile();">
@@ -994,8 +1017,8 @@
           <div class="quick-card" onclick="navigateTo('#gpa')" style="--card-accent:#8b5cf6; --icon-bg:rgba(139,92,246,.15);">
             <div class="quick-card-icon">🧮</div>
             <div class="quick-card-info">
-              <div class="quick-card-title">حاسبة المعدل GPA</div>
-              <div class="quick-card-desc">حساب التقدير والمعدل التراكمي</div>
+              <div class="quick-card-title">حاسبة المعدل وهدف الفاينال</div>
+              <div class="quick-card-desc">حساب التراكمي وأعمال السنة (60/40)</div>
             </div>
           </div>
 
@@ -1007,6 +1030,12 @@
             </div>
           </div>
         </div>
+
+        <!-- قسم العداد التنازلي للامتحانات -->
+        <div id="exam-countdown-container" class="z-content" style="display:none; margin-bottom: 20px;"></div>
+
+        <!-- قسم استطلاعات الرأي والتصويت للطلاب -->
+        <div id="active-poll-container" class="z-content" style="display:none; margin-bottom: 20px;"></div>
 
         <div id="subjects-section-anchor"></div>
         <div class="home-layout">
@@ -1118,6 +1147,12 @@
              <button class="pill" style="background:#8b5cf6; font-size:12px; height:32px;" onclick="shareDirectLink('#gpa', 'حاسبة المعدل التراكمي GPA')">🔗 مشاركة الحاسبة</button>
           </div>
         </div>
+        <div class="level-tabs liquid-glass z-content" style="margin-bottom: 24px; padding: 4px; max-width: 600px;">
+          <button type="button" class="level-tab-btn active" id="gpa-tab-gpa" onclick="switchGpaSubTab('gpa')">🧮 حاسبة المعدل التراكمي (GPA)</button>
+          <button type="button" class="level-tab-btn" id="gpa-tab-target" onclick="switchGpaSubTab('target')">🎯 حاسبة أعمال السنة وهدف الفاينال (60/40)</button>
+        </div>
+
+        <div id="gpa-main-calculator-pane">
         <h2 class="section-title z-content" style="color: #c084fc;">🧮 حاسبة المعدل التراكمي والفصلي (لائحة الساعات المعتمدة الرسمية)</h2>
         <p class="z-content" style="font-size: 14px; color: var(--fg-soft); margin-bottom: 20px; line-height: 1.6;">
           حساب دقيق لمعدلك الفصلي والتراكمي طبقاً للائحة الساعات المعتمدة للكلية (سلم النقاط من 4.00 مع حساب العبء الدراسي المسموح به للتسجيل).
@@ -1252,6 +1287,81 @@
         </div>
       </div>
 
+        </div> <!-- نهاية gpa-main-calculator-pane -->
+
+        <!-- قسم حاسبة أعمال السنة وهدف الفاينال طبقاً للائحة الكلية الرسمية 2025-2026 -->
+        <div id="gpa-target-calculator-pane" class="z-content" style="display: none;">
+          <h2 class="section-title" style="color: #f59e0b; display:flex; align-items:center; gap:8px;">
+            <span>🎯</span> <span>حاسبة أعمال السنة وهدف الفاينال (لائحة الكلية 2025-2026)</span>
+          </h2>
+          <p style="font-size: 14px; color: var(--fg-soft); margin-bottom: 20px; line-height: 1.6;">
+            تنص لائحة الكلية الرسمية (صفحة 10 و 11) على أن <b>درجة المقرر = 100 درجة</b> مقسمة إلى: <b>60 درجة أعمال سنة</b> + <b>40 درجة للامتحان التحريري النهائي</b>، مع <b>شرط إلزامي</b> ألا تقل درجة الفاينال عن <b>20 من 40 (50%)</b> للنجاح.
+          </p>
+
+          <!-- كارت الإدخال والحساب -->
+          <div class="card liquid-glass" style="border-color: #f59e0b; background: rgba(245,158,11,.04); margin-bottom: 24px;">
+             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; align-items: flex-end;">
+                <div>
+                   <label style="font-size: 13px; font-weight: bold; color: var(--fg); display: block; margin-bottom: 6px;">
+                     درجة أعمال السنة الإجمالية (من 60 درجة):
+                   </label>
+                   <input type="number" id="target-cw-input" class="search-box" min="0" max="60" step="0.5" placeholder="أدخل درجتك مثلاً: 48" style="margin-bottom:0;" oninput="onTargetCwInput()">
+                   <span style="font-size: 11px; color: var(--fg-faint); margin-top: 4px; display: block;">تشمل: الميدترم + العملي + التكليفات والحضور</span>
+                </div>
+                <div>
+                   <label style="font-size: 13px; font-weight: bold; color: var(--fg); display: block; margin-bottom: 6px;">
+                     التقدير المستهدف الذي تطمح إليه:
+                   </label>
+                   <select id="target-grade-select" class="input-group" style="margin-bottom:0; height:46px;" onchange="onTargetCwInput()">
+                      <option value="A+">امتياز مرتفع (A+) - 97%</option>
+                      <option value="A" selected>امتياز (A) - 93%</option>
+                      <option value="A-">امتياز منخفض (A-) - 89%</option>
+                      <option value="B+">جيد جداً مرتفع (B+) - 84%</option>
+                      <option value="B">جيد جداً (B) - 80%</option>
+                      <option value="B-">جيد جداً منخفض (B-) - 76%</option>
+                      <option value="C+">جيد مرتفع (C+) - 73%</option>
+                      <option value="C">جيد (C) - 70%</option>
+                      <option value="D">مقبول - حد النجاح (D) - 60%</option>
+                   </select>
+                </div>
+             </div>
+
+             <!-- بطاقة النتيجة الحية -->
+             <div id="target-result-card" style="margin-top: 20px; padding: 16px; border-radius: 12px; background: rgba(0,0,0,.35); border: 1px solid rgba(255,255,255,.1);">
+                <div style="font-size: 13px; color: var(--fg-soft);">أدخل درجة أعمال السنة أعلاه لحساب كم تحتاج في ورقة الفاينال بالضبط.</div>
+             </div>
+          </div>
+
+          <!-- جدول التحليل الشامل لجميع التقديرات -->
+          <div class="card liquid-glass" style="background: rgba(0,0,0,.35);">
+             <h3 style="color: var(--primary); font-size: 16px; margin: 0 0 12px; display:flex; align-items:center; gap:8px;">
+               <span>📊</span> <span>جدول جميع التقديرات المتاحة ودرجة الفاينال المطلوبة لكل تقدير</span>
+             </h3>
+             <div class="table-responsive">
+                <table class="styled-table" style="font-size: 13px;">
+                   <thead>
+                      <tr><th>التقدير</th><th>النقاط</th><th>النسبة المطلوبة</th><th>المطلوب بالفاينال (من 40)</th><th>الحالة وفق اللائحة</th></tr>
+                   </thead>
+                   <tbody id="target-all-grades-tbody">
+                      <tr><td colspan="5" style="text-align:center;">يرجى إدخال درجة أعمال السنة (من 60) لعرض التحليل الكامل.</td></tr>
+                   </tbody>
+                </table>
+             </div>
+          </div>
+
+          <!-- تنبيهات بنود اللائحة المعتمدة -->
+          <div class="card liquid-glass" style="margin-top: 20px; border-color: #3b82f6; background: rgba(59,130,246,.04);">
+             <h4 style="color: #60a5fa; margin: 0 0 8px; font-size: 15px;">📜 قواعد هامة من لائحة الكلية يجب معرفتها:</h4>
+             <ul style="font-size: 13px; color: var(--fg-soft); line-height: 1.8; margin: 0; padding-right: 20px;">
+                <li><b>شرط الفاينال الإلزامي (صفحة 11):</b> يشترط لنجاح الطالب في أي مقرر حصوله على <b>50% على الأقل في الامتحان التحريري النهائي (أي 20 درجة من 40)</b>، وإلا يُعد راسباً في المقرر حتى لو جمع 60 درجة مع أعمال السنة.</li>
+                <li><b>حد النجاح الأدنى (صفحة 11):</b> يُعد الطالب ناجحاً إذا حصل على تقدير <b>D (60%)</b> على الأقل.</li>
+                <li><b>الحد الأدنى لمتوسط التخرج (صفحة 8):</b> يشترط للحصول على الليسانس متوسط تراكمي (GPA) لا يقل عن <b>2.00 (تقدير C)</b> وإتمام 144 ساعة معتمدة.</li>
+                <li><b>حق التحسين (صفحة 5):</b> يحق للطالب إعادة دراسة مقرر سبق نجاحه فيه لرفع المعدل التراكمي بحد أقصى 5 مقررات خلال سنوات دراسته (باستثناء طلاب المستوى الرابع).</li>
+             </ul>
+          </div>
+        </div>
+      </div>
+
       <!-- صفحة المادة -->
       <div id="view-subject" style="display: none;">
         <div class="z-content flex-between mb-4" style="flex-wrap: wrap; gap: 8px;">
@@ -1312,11 +1422,13 @@
         <div class="admin-dashboard-container">
           <div class="admin-header">
             <h2 style="color: var(--primary); margin: 0; font-size: 24px; display:flex; align-items:center; gap:8px;"><span>👑</span> لوحة تحكم الإدارة</h2>
-            <div class="admin-stats-grid">
+            <div class="admin-stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));">
               <div class="admin-stat-box"><div class="admin-stat-num" id="stat-students">0</div><div class="admin-stat-label">إجمالي الطلاب</div></div>
+              <div class="admin-stat-box" style="border-color: rgba(96,165,250,.3);"><div class="admin-stat-num" style="color:#60a5fa;" id="stat-lvl1">0</div><div class="admin-stat-label">المستوى الأول 🎓</div></div>
+              <div class="admin-stat-box" style="border-color: rgba(192,132,252,.3);"><div class="admin-stat-num" style="color:#c084fc;" id="stat-lvl2">0</div><div class="admin-stat-label">المستوى الثاني 🚀</div></div>
               <div class="admin-stat-box"><div class="admin-stat-num" style="color:#4ade80;" id="stat-online">0</div><div class="admin-stat-label">متصل الآن</div></div>
               <div class="admin-stat-box"><div class="admin-stat-num" style="color:#fbbf24;" id="stat-subjects">0</div><div class="admin-stat-label">المواد الدراسية</div></div>
-              <div class="admin-stat-box"><div class="admin-stat-num" style="color:#c084fc;" id="stat-questions">0</div><div class="admin-stat-label">بنك الأسئلة</div></div>
+              <div class="admin-stat-box"><div class="admin-stat-num" style="color:#f472b6;" id="stat-questions">0</div><div class="admin-stat-label">بنك الأسئلة</div></div>
             </div>
           </div>
 
@@ -1329,12 +1441,24 @@
           </div>
 
           <div id="tab-students" class="admin-tab-content active">
-             <div class="flex-between mb-4">
-                <h3 style="color: var(--gold); margin: 0; font-size: 16px;">قاعدة بيانات الطلاب</h3>
+             <div class="flex-between mb-4" style="flex-wrap: wrap; gap: 8px;">
+                <h3 style="color: var(--gold); margin: 0; font-size: 16px; display:flex; align-items:center; gap:6px;">
+                  <span>👥</span> <span>قاعدة بيانات الطلاب</span>
+                  <span id="admin-students-filter-count" style="font-size:12px; color:var(--fg-soft); font-weight:normal;"></span>
+                </h3>
                 <button class="pill" style="background: #10b981; font-size: 12px;" onclick="exportStudentsCSV()">📥 تصدير Excel</button>
              </div>
-             <div style="margin-bottom: 12px;">
-                 <input type="text" id="admin-search-student" class="search-box" style="margin-bottom:0; background: rgba(0,0,0,.4);" placeholder="🔍 ابحث عن طالب بالاسم، الهاتف، أو الـ ID..." oninput="filterAdminStudents()">
+
+             <!-- أزرار فلتر المستوى الدراسي -->
+             <div class="z-content flex-between" style="flex-wrap: wrap; gap: 10px; margin-bottom: 12px;">
+                <div class="level-tabs" style="margin-bottom: 0; padding: 3px; background: rgba(0,0,0,.35); flex: 1; max-width: 480px;">
+                   <button type="button" class="level-tab-btn active" id="admin-filter-all" style="padding: 6px 12px; font-size: 13px;" onclick="setAdminLevelFilter('all')">الكل (<span id="count-pill-all">0</span>)</button>
+                   <button type="button" class="level-tab-btn" id="admin-filter-1" style="padding: 6px 12px; font-size: 13px;" onclick="setAdminLevelFilter(1)">المستوى الأول 🎓 (<span id="count-pill-1">0</span>)</button>
+                   <button type="button" class="level-tab-btn" id="admin-filter-2" style="padding: 6px 12px; font-size: 13px;" onclick="setAdminLevelFilter(2)">المستوى الثاني 🚀 (<span id="count-pill-2">0</span>)</button>
+                </div>
+                <div style="flex: 1; min-width: 240px;">
+                   <input type="text" id="admin-search-student" class="search-box" style="margin-bottom:0; background: rgba(0,0,0,.4); width: 100%; box-sizing: border-box;" placeholder="🔍 ابحث بالاسم، الهاتف، أو ID..." oninput="filterAdminStudents()">
+                </div>
              </div>
              <div class="table-responsive">
                 <table class="styled-table">
@@ -1600,6 +1724,50 @@
                    </div>
                 </div>
 
+                <!-- إدارة جدول الامتحانات والعداد التنازلي -->
+                <div class="card liquid-glass" style="background:rgba(0,0,0,.4); grid-column: 1/-1; border-color: #f59e0b;">
+                   <div class="z-content flex-between" style="margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+                     <h3 style="color: #f59e0b; font-size: 16px; margin:0; display:flex; align-items:center; gap:8px;">
+                       <span>📅</span> جدول الامتحانات والعداد التنازلي (Exam Countdown)
+                     </h3>
+                     <button class="pill" type="button" style="background:#f59e0b; color:#0f172a; height:32px; font-size:12px;" onclick="openAddExamModal()">➕ إضافة موعد امتحان جديد</button>
+                   </div>
+                   <p style="font-size:12px; color:var(--fg-faint); margin-bottom:14px;">يظهر الامتحان القادم تلقائياً في الصفحة الرئيسية أمام الطلاب مع عداد تنازلي حي بالثواني، بالإضافة لجدول كامل لجميع المواد.</p>
+
+                   <div class="table-responsive">
+                      <table class="styled-table">
+                         <thead>
+                            <tr><th>المادة</th><th>نوع الامتحان</th><th>التاريخ والوقت</th><th>المكان / القاعة</th><th>المستوى</th><th>إجراءات</th></tr>
+                         </thead>
+                         <tbody id="admin-exams-table-body">
+                            <tr><td colspan="6" style="text-align:center;">جاري تحميل جدول الامتحانات...</td></tr>
+                         </tbody>
+                      </table>
+                   </div>
+                </div>
+
+                <!-- استطلاعات الرأي والتصويت للطلاب (Student Polls) -->
+                <div class="card liquid-glass" style="background:rgba(0,0,0,.4); grid-column: 1/-1; border-color: #3b82f6;">
+                   <div class="z-content flex-between" style="margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+                     <h3 style="color: #60a5fa; font-size: 16px; margin:0; display:flex; align-items:center; gap:8px;">
+                       <span>📊</span> استطلاعات الرأي والتصويت للطلاب (Student Polls)
+                     </h3>
+                     <button class="pill" type="button" style="background:#3b82f6; color:#fff; height:32px; font-size:12px;" onclick="openCreatePollModal()">➕ إنشاء استطلاع رأي جديد</button>
+                   </div>
+                   <p style="font-size:12px; color:var(--fg-faint); margin-bottom:14px;">نشر تصويت تفاعلي في الصفحة الرئيسية لمعرفة آراء الطلاب حول مواعيد الكويزات أو صعوبة الامتحانات مع إحصائيات بيانية حية.</p>
+
+                   <div class="table-responsive">
+                      <table class="styled-table">
+                         <thead>
+                            <tr><th>سؤال الاستطلاع</th><th>الفئة الموجه لها</th><th>عدد الأصوات</th><th>الحالة</th><th>إجراءات</th></tr>
+                         </thead>
+                         <tbody id="admin-polls-table-body">
+                            <tr><td colspan="5" style="text-align:center;">جاري تحميل الاستطلاعات...</td></tr>
+                         </tbody>
+                      </table>
+                   </div>
+                </div>
+
                 <!-- أداة تنظيف وصيانة قاعدة البيانات -->
                 <div class="card liquid-glass" style="background:rgba(0,0,0,.4); grid-column: 1/-1; border-color: #f59e0b;">
                    <h3 style="color: #fbbf24; font-size: 16px; margin-top:0; display:flex; align-items:center; gap:8px;">
@@ -1623,7 +1791,10 @@
 
                 <div class="card liquid-glass" style="background:rgba(0,0,0,.4); grid-column: 1/-1;">
                    <h3 style="color: var(--danger); font-size: 16px; margin-top:0;">منطقة الخطر (إجراءات حساسة)</h3>
-                   <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                   <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom: 12px;">
+                       <button class="pill" style="background: #10b981; color:#0f172a; font-weight:bold;" onclick="exportFullDatabaseJSON()">💾 تحميل نسخة احتياطية كاملة (JSON Backup)</button>
+                     </div>
+                     <div style="display:flex; gap:10px; flex-wrap:wrap;">
                        <button class="pill" style="background: transparent; border: 1px solid var(--danger); color:var(--danger);" onclick="resetAllScores()">🔄 تصفير نقاط كل الطلاب</button>
                        <button class="pill" style="background: transparent; border: 1px solid var(--primary); color:var(--primary);" onclick="syncAllLeaderboard()">🔁 مزامنة لوحة الشرف والأرقام (مرة واحدة بعد التحديث)</button>
                        <button class="pill" style="background: transparent; border: 1px solid var(--warning); color:var(--warning);" onclick="clearAdminLogs()">🗑️ مسح سجل النشاط بالكامل</button>
@@ -2001,13 +2172,220 @@
       }
     });
 
+    /* =========================================================================
+       نظام الرسائل والتنبيهات الإدارية المخصصة (Direct Admin Messages)
+       لكل نوع رسالة تصميم وبطاقة بصرية وألوان وأزرار مخصصة ومختلفة كلياً
+       ========================================================================= */
+
+    function getPrivateAlertTheme(type) {
+      const t = String(type || '');
+      if (t.includes('تنبيه') || t.includes('عاجل') || t.includes('إنذار')) {
+        return {
+          headerTitle: '⚠️ تنبيه إداري رسمي عاجل',
+          badgeText: '🚨 إنذار رسمي مشدد',
+          badgeBg: '#ef4444',
+          badgeColor: '#ffffff',
+          swalIcon: 'warning',
+          cardBorder: '2px solid #ef4444',
+          cardBg: 'linear-gradient(135deg, rgba(239, 68, 68, 0.18), rgba(127, 29, 29, 0.32))',
+          cardShadow: '0 0 35px rgba(239, 68, 68, 0.35)',
+          bodyBorderRight: '5px solid #ef4444',
+          bannerBg: 'rgba(239, 68, 68, 0.12)',
+          bannerBorder: '1px solid rgba(239, 68, 68, 0.3)',
+          bannerColor: '#fca5a5',
+          bannerIcon: '⚠️',
+          bannerText: 'تنبيه رسمي من إدارة شؤون الطلاب وقسم المساحة: يرجى قراءة التعليمات والالتزام التام بما ورد فيها.',
+          textColor: '#ffffff',
+          bodyBg: 'rgba(0, 0, 0, 0.55)',
+          textAlign: 'right',
+          btnColor: '#dc2626',
+          btnText: 'علمت بالتنبيه وسألتزم فوراً ✓'
+        };
+      }
+      
+      if (t.includes('بحث') || t.includes('التخرج')) {
+        return {
+          headerTitle: '🔬 لجنة أبحاث ومشاريع التخرج والـ GIS',
+          badgeText: '📍 مشروع التخرج - المستوى الرابع',
+          badgeBg: 'linear-gradient(90deg, #0891b2, #0d9488)',
+          badgeColor: '#ffffff',
+          swalIcon: 'info',
+          cardBorder: '2px solid #06b6d4',
+          cardBg: 'linear-gradient(135deg, rgba(6, 182, 212, 0.18), rgba(13, 148, 136, 0.28))',
+          cardShadow: '0 0 35px rgba(6, 182, 212, 0.35)',
+          bodyBorderRight: '5px solid #06b6d4',
+          bannerBg: 'rgba(6, 182, 212, 0.12)',
+          bannerBorder: '1px solid rgba(6, 182, 212, 0.3)',
+          bannerColor: '#a5f3fc',
+          bannerIcon: '🗺️',
+          bannerText: 'ملاحظة وتوجيه أكاديمي من المشرف ولجنة الأبحاث بخصوص خطة البحث أو البيانات المكانية والتحليل.',
+          textColor: '#ecfeff',
+          bodyBg: 'rgba(0, 0, 0, 0.55)',
+          textAlign: 'right',
+          btnColor: '#0891b2',
+          btnText: 'تم استلام الملاحظة وجاري مراجعة البحث ✓'
+        };
+      }
+      
+      if (t.includes('توجيه') || t.includes('أكاديمي') || t.includes('مقررات')) {
+        return {
+          headerTitle: '🎓 إشعار الإرشاد الأكاديمي والتسجيل',
+          badgeText: '📚 المرشد الأكاديمي ولائحة الساعات',
+          badgeBg: 'linear-gradient(90deg, #2563eb, #4f46e5)',
+          badgeColor: '#ffffff',
+          swalIcon: 'info',
+          cardBorder: '2px solid #3b82f6',
+          cardBg: 'linear-gradient(135deg, rgba(59, 130, 246, 0.18), rgba(30, 58, 138, 0.28))',
+          cardShadow: '0 0 35px rgba(59, 130, 246, 0.35)',
+          bodyBorderRight: '5px solid #3b82f6',
+          bannerBg: 'rgba(59, 130, 246, 0.12)',
+          bannerBorder: '1px solid rgba(59, 130, 246, 0.3)',
+          bannerColor: '#bfdbfe',
+          bannerIcon: '📘',
+          bannerText: 'إشعار توجيه أكاديمي رسمي متعلق بمقرراتك الدراسية، تسجيل الساعات، أو جدول الامتحانات باللائحة.',
+          textColor: '#eff6ff',
+          bodyBg: 'rgba(0, 0, 0, 0.55)',
+          textAlign: 'right',
+          btnColor: '#2563eb',
+          btnText: 'تم الاطلاع على التوجيه الأكاديمي ✓'
+        };
+      }
+      
+      if (t.includes('شكر') || t.includes('تقدير') || t.includes('المتفوقين')) {
+        return {
+          headerTitle: '🏆 شهادة شكر وتقدير وتفوق أكاديمي',
+          badgeText: '🌟 لوحة الشرف والتميز العلمي',
+          badgeBg: 'linear-gradient(90deg, #f59e0b, #eab308)',
+          badgeColor: '#000000',
+          swalIcon: 'success',
+          cardBorder: '2px solid #f59e0b',
+          cardBg: 'linear-gradient(135deg, rgba(245, 158, 11, 0.22), rgba(180, 83, 9, 0.35))',
+          cardShadow: '0 0 45px rgba(245, 158, 11, 0.45)',
+          bodyBorderRight: '2px dashed rgba(245, 158, 11, 0.7)',
+          bannerBg: 'rgba(245, 158, 11, 0.15)',
+          bannerBorder: '1px solid rgba(245, 158, 11, 0.4)',
+          bannerColor: '#fde68a',
+          bannerIcon: '✨',
+          bannerText: 'تهنئة رسمية من مجلس قسم المساحة وGIS تقديراً لتفوقك الدراسي وحصولك على معدل متميز.',
+          textColor: '#fef3c7',
+          bodyBg: 'rgba(0, 0, 0, 0.6)',
+          textAlign: 'center',
+          btnColor: '#d97706',
+          btnText: 'شكراً جزيلاً لإدارة القسم! ✨'
+        };
+      }
+
+      // النمط الافتراضي للرسائل العامة
+      return {
+        headerTitle: '📩 رسالة إدارية خاصة من القسم',
+        badgeText: '📩 إشعار إداري',
+        badgeBg: '#8b5cf6',
+        badgeColor: '#ffffff',
+        swalIcon: 'info',
+        cardBorder: '2px solid #8b5cf6',
+        cardBg: 'linear-gradient(135deg, rgba(139, 92, 246, 0.18), rgba(91, 33, 182, 0.28))',
+        cardShadow: '0 0 35px rgba(139, 92, 246, 0.35)',
+        bodyBorderRight: '5px solid #8b5cf6',
+        bannerBg: 'rgba(139, 92, 246, 0.12)',
+        bannerBorder: '1px solid rgba(139, 92, 246, 0.3)',
+        bannerColor: '#ddd6fe',
+        bannerIcon: '📌',
+        bannerText: 'رسالة إدارية موجهة مباشرة إلى حسابك من إدارة منصة قسم المساحة ونظم المعلومات.',
+        textColor: '#ffffff',
+        bodyBg: 'rgba(0, 0, 0, 0.55)',
+        textAlign: 'right',
+        btnColor: '#7c3aed',
+        btnText: 'فهمت وعلمت بما في الرسالة ✓'
+      };
+    }
+
     function listenToPrivateAlerts(uid) {
-        if (privateAlertListening) return;
-        database.ref('users/' + uid + '/privateAlert').on('value', snap => {
-            const msg = snap.val();
-            if (msg) { Swal.fire({ title: '📩 رسالة إدارية هامة', text: msg, icon: 'info', confirmButtonText: 'حسناً، فهمت', allowOutsideClick: false, allowEscapeKey: false }).then(() => { database.ref('users/' + uid + '/privateAlert').remove(); }); }
+      if (privateAlertListening) return;
+      database.ref('users/' + uid + '/privateAlert').on('value', snap => {
+        const raw = snap.val();
+        if (!raw) return;
+
+        let alertType = '⚠️ تنبيه إداري عاجل';
+        let alertTitle = 'رسالة إدارية هامة';
+        let alertBody = '';
+        let timestamp = Date.now();
+        let sender = 'إدارة قسم المساحة وGIS';
+
+        if (typeof raw === 'object') {
+          alertType = raw.type || alertType;
+          alertTitle = raw.title || alertTitle;
+          alertBody = raw.body || raw.text || '';
+          timestamp = raw.timestamp || timestamp;
+          sender = raw.sender || sender;
+        } else if (typeof raw === 'string') {
+          if (raw.startsWith('[') && raw.includes(']')) {
+            const endBracket = raw.indexOf(']');
+            alertType = raw.substring(1, endBracket).trim();
+            const rest = raw.substring(endBracket + 1).trim();
+            if (rest.includes(':')) {
+              const colonIdx = rest.indexOf(':');
+              alertTitle = rest.substring(0, colonIdx).trim();
+              alertBody = rest.substring(colonIdx + 1).trim();
+            } else {
+              alertTitle = alertType;
+              alertBody = rest;
+            }
+          } else {
+            alertBody = raw;
+            alertTitle = 'رسالة إدارية خاصة';
+          }
+        }
+
+        const theme = getPrivateAlertTheme(alertType);
+        const dateStr = new Date(timestamp).toLocaleDateString('ar-EG', {
+          weekday: 'long', year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
         });
-        privateAlertListening = true;
+
+        const alertHtml = `
+          <div style="text-align:right; font-family:inherit; direction:rtl; margin-top:4px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:8px;">
+               <span style="background:${theme.badgeBg}; color:${theme.badgeColor}; font-weight:bold; padding:4px 12px; border-radius:6px; font-size:12px; display:inline-flex; align-items:center; gap:6px;">
+                 ${escText(theme.badgeText)}
+               </span>
+               <span style="font-size:11px; color:rgba(255,255,255,0.65);">🕒 ${dateStr}</span>
+            </div>
+
+            <div style="background:${theme.bannerBg}; border:${theme.bannerBorder}; border-radius:8px; padding:10px 14px; font-size:12px; color:${theme.bannerColor}; margin-bottom:14px; display:flex; align-items:center; gap:8px; line-height:1.6;">
+               <span style="font-size:16px;">${theme.bannerIcon}</span>
+               <span>${theme.bannerText}</span>
+            </div>
+
+            <div style="background:${theme.cardBg}; border:${theme.cardBorder}; box-shadow:${theme.cardShadow}; border-radius:14px; padding:16px; position:relative; overflow:hidden;">
+               <h4 style="margin:0 0 12px; font-size:16px; font-weight:900; color:#ffffff; display:flex; align-items:center; gap:8px;">
+                 <span>📌 ${escText(alertTitle)}</span>
+               </h4>
+               <div style="background:${theme.bodyBg}; border-right:${theme.bodyBorderRight}; border-radius:8px; padding:14px 16px; color:${theme.textColor}; font-size:14px; line-height:1.8; word-break:break-word; white-space:pre-wrap; text-align:${theme.textAlign};">
+${escText(alertBody)}
+               </div>
+               
+               <div style="display:flex; justify-content:space-between; align-items:center; margin-top:14px; font-size:11px; color:rgba(255,255,255,0.6); border-top:1px solid rgba(255,255,255,0.1); padding-top:10px;">
+                  <span>الجهة المرسلة: <b style="color:#fff;">${escText(sender)}</b></span>
+                  <span>قسم المساحة ونظم المعلومات الجغرافية</span>
+               </div>
+            </div>
+          </div>`;
+
+        Swal.fire({
+          title: theme.headerTitle,
+          html: alertHtml,
+          icon: theme.swalIcon,
+          confirmButtonText: theme.btnText,
+          confirmButtonColor: theme.btnColor,
+          background: '#18181b',
+          color: '#ffffff',
+          width: '560px',
+          allowOutsideClick: false,
+          allowEscapeKey: false
+        }).then(() => {
+          database.ref('users/' + uid + '/privateAlert').remove();
+        });
+      });
+      privateAlertListening = true;
     }
 
     function setupPresence(uid, userData) {
@@ -2026,9 +2404,46 @@
       window.addEventListener('pagehide', _seenNow);
     }
 
+    let currentAdminLevelFilter = 'all';
+
+    function setAdminLevelFilter(lvl) {
+      currentAdminLevelFilter = lvl;
+      ['all', 1, 2].forEach(k => {
+        const btn = document.getElementById('admin-filter-' + k);
+        if (btn) btn.classList.toggle('active', String(k) === String(lvl));
+      });
+      filterAdminStudents();
+    }
+
     function updateDashboardStats() {
-       document.getElementById('stat-students').innerText = allUsersList.length; document.getElementById('stat-online').innerText = Object.keys(onlineUsersMap).length;
-       document.getElementById('stat-subjects').innerText = db.length; let qCount = 0; db.forEach(s => qCount += s.quizzes.length); document.getElementById('stat-questions').innerText = qCount;
+       const totalStudents = allUsersList.length;
+       const lvl1Count = allUsersList.filter(u => !u.level || u.level == 1).length;
+       const lvl2Count = allUsersList.filter(u => u.level == 2).length;
+
+       const elTotal = document.getElementById('stat-students');
+       const elLvl1 = document.getElementById('stat-lvl1');
+       const elLvl2 = document.getElementById('stat-lvl2');
+       const elOnline = document.getElementById('stat-online');
+       const elSubj = document.getElementById('stat-subjects');
+       const elQ = document.getElementById('stat-questions');
+
+       if (elTotal) elTotal.innerText = totalStudents;
+       if (elLvl1) elLvl1.innerText = lvl1Count;
+       if (elLvl2) elLvl2.innerText = lvl2Count;
+       if (elOnline) elOnline.innerText = Object.keys(onlineUsersMap).length;
+       if (elSubj) elSubj.innerText = db.length;
+
+       let qCount = 0;
+       db.forEach(s => qCount += s.quizzes ? s.quizzes.length : 0);
+       if (elQ) elQ.innerText = qCount;
+
+       // تحديث أرقام الشارات في أزرار الفلتر
+       const pillAll = document.getElementById('count-pill-all');
+       const pill1 = document.getElementById('count-pill-1');
+       const pill2 = document.getElementById('count-pill-2');
+       if (pillAll) pillAll.innerText = totalStudents;
+       if (pill1) pill1.innerText = lvl1Count;
+       if (pill2) pill2.innerText = lvl2Count;
     }
 
     function listenToOnlinePresence() { database.ref('online_users').on('value', (snap) => { onlineUsersMap = snap.val() || {}; updateDashboardStats(); renderStudentsTable(); }); }
@@ -2082,8 +2497,26 @@
     }
 
     function filterAdminStudents() {
-        const query = document.getElementById('admin-search-student').value.toLowerCase();
-        document.querySelectorAll('#students-table-body tr').forEach(row => { if (row.cells.length > 1) row.style.display = row.innerText.toLowerCase().includes(query) ? '' : 'none'; });
+        const query = (document.getElementById('admin-search-student')?.value || '').toLowerCase();
+        let visibleCount = 0;
+        document.querySelectorAll('#students-table-body tr').forEach(row => {
+          if (row.cells.length <= 1) return;
+          const userLevel = row.getAttribute('data-level') || '1';
+          const matchesLevel = (currentAdminLevelFilter === 'all') || (String(userLevel) === String(currentAdminLevelFilter));
+          const matchesQuery = !query || row.innerText.toLowerCase().includes(query);
+          
+          if (matchesLevel && matchesQuery) {
+            row.style.display = '';
+            visibleCount++;
+          } else {
+            row.style.display = 'none';
+          }
+        });
+
+        const filterCountEl = document.getElementById('admin-students-filter-count');
+        if (filterCountEl) {
+          filterCountEl.innerText = `(المعروض: ${visibleCount} طالب)`;
+        }
     }
 
     async function adminAddPoints(uid) {
@@ -2249,7 +2682,7 @@
         }
         renderResearchHome();
       });
-      if (!window._listenersReady) { window._listenersReady = true; listenToAlerts(); listenToAnnouncements(); listenToSubjects(); listenToLeaderboard(); listenToResearchTopics(); listenToCommunityLinks(); __fetchFeedbackCfg(); }
+      if (!window._listenersReady) { window._listenersReady = true; listenToAlerts(); listenToAnnouncements(); listenToSubjects(); listenToLeaderboard(); listenToResearchTopics(); listenToCommunityLinks(); listenToExams(); listenToPolls(); updateBookmarksBadge(); __fetchFeedbackCfg(); }
     }
 
     function logoutStudent() {
@@ -2717,7 +3150,7 @@
         const levelBadge = u.level == 2
             ? `<span style="background: rgba(168,85,247,.15); color: #c084fc; padding: 2px 6px; border-radius: 4px; font-size: 10px; margin-right: 6px;">Lvl 2</span>`
             : `<span style="background: rgba(59,130,246,.15); color: #60a5fa; padding: 2px 6px; border-radius: 4px; font-size: 10px; margin-right: 6px;">Lvl 1</span>`;
-        html += `<tr><td>${i+1}</td>
+        html += `<tr data-level="${u.level == 2 ? 2 : 1}"><td>${i+1}</td>
         <td><div style="font-weight:bold; color:var(--fg); margin-bottom:4px; display:flex; align-items:center; flex-wrap:wrap;">${escText(u.name)} ${levelBadge}</div>${statusHtml}</td>
         <td>
             <div style="direction:ltr; font-size:13px; color:var(--fg-soft);">${escText(u.phone||'لا يوجد هاتف')}</div>
@@ -2730,7 +3163,7 @@
              <button class="btn-sm btn-msg" onclick="sendPrivateAlert('${u.uid}','${escapeHtml(u.name)}')">📩 رسالة</button>
              <button class="btn-sm btn-track" style="background: rgba(168,85,247,.15); color:#c084fc; border-color:#a855f7;" onclick="adminSendPasswordReset('${escapeHtml(u.email||'')}','${escapeHtml(u.name)}')">🔑 استعادة الباسورد</button>
              <button class="btn-sm btn-track" style="background: rgba(255,215,0,.15); color:var(--gold); border-color:var(--gold);" onclick="adminAddPoints('${u.uid}')">⭐ نقاط</button>
-             <button class="btn-sm btn-edit" onclick="editStudentProfile('${u.uid}','${escapeHtml(u.name)}','${escapeHtml(u.phone||'')}','${escapeHtml(u.studentId||'')}')">✏️ تعديل</button>
+             <button class="btn-sm btn-edit" onclick="editStudentProfile('${u.uid}')">✏️ تعديل</button>
              ${banBtn}
         </div></td></tr>`;
       });
@@ -2739,8 +3172,66 @@
     }
 
     async function sendPrivateAlert(uid, name) {
-      const { value: text } = await Swal.fire({ title: `إرسال تنبيه لـ ${name}`, input: 'textarea', inputPlaceholder: 'اكتب رسالتك الخاصة هنا...', showCancelButton: true, confirmButtonText: 'إرسال' });
-      if (text) { database.ref('users/' + uid + '/privateAlert').set(text); logAdminAction('إرسال رسالة خاصة', `للطالب: ${name} | النص: ${text}`); Swal.fire('تم', 'تم إرسال الرسالة وسوف تظهر للطالب فوراً', 'success'); }
+      const { value: formValues } = await Swal.fire({
+        title: `إرسال رسالة خاصة لـ: ${name}`,
+        html: `
+          <div style="text-align:right; font-size:13px; font-weight:bold; margin-bottom:6px; color:#ffffff;">نوع الرسالة (يحدد شكل وتصميم البطاقة لدى الطالب):</div>
+          <select id="swal-msg-type" class="swal2-input" style="margin-top:0; font-size:14px;">
+             <option value="⚠️ تنبيه إداري عاجل">⚠️ تنبيه إداري عاجل (بطاقة حمراء تحذيرية)</option>
+             <option value="🔬 ملاحظة بخصوص بحث التخرج">🔬 ملاحظة بخصوص بحث التخرج (بطاقة فيروزية علمية)</option>
+             <option value="🎓 توجيه أكاديمي ومقررات">🎓 توجيه أكاديمي ومقررات (بطاقة زرقاء ملكية)</option>
+             <option value="🏆 رسالة شكر وتقدير للمتفوقين">🏆 رسالة شكر وتقدير للمتفوقين (بطاقة ذهبية تكريمية)</option>
+             <option value="📩 إشعار عام من القسم">📩 إشعار عام من القسم (بطاقة بنفسجية رسمية)</option>
+          </select>
+          <div style="text-align:right; font-size:13px; font-weight:bold; margin:12px 0 6px; color:#ffffff;">عنوان الرسالة:</div>
+          <input id="swal-msg-title" class="swal2-input" placeholder="مثال: يرجى الحضور لتعديل منطقة دراسة بحث التخرج" style="margin-top:0; font-size:14px;">
+          <div style="text-align:right; font-size:13px; font-weight:bold; margin:12px 0 6px; color:#ffffff;">محتوى وتفاصيل الرسالة:</div>
+          <textarea id="swal-msg-body" class="swal2-textarea" placeholder="اكتب تفاصيل الرسالة الموجهة للطالب هنا بالكامل..." style="margin-top:0; height:120px; resize:vertical; font-size:14px; line-height:1.6;"></textarea>
+        `,
+        focusConfirm: false,
+        showCancelButton: true,
+        confirmButtonText: 'إرسال الرسالة فوراً 📨',
+        cancelButtonText: 'إلغاء',
+        confirmButtonColor: '#2563eb',
+        background: '#18181b',
+        color: '#ffffff',
+        preConfirm: () => {
+          const type = document.getElementById('swal-msg-type').value;
+          const title = document.getElementById('swal-msg-title').value.trim();
+          const body = document.getElementById('swal-msg-body').value.trim();
+          if (!body) {
+            Swal.showValidationMessage('يرجى كتابة نص الرسالة');
+            return false;
+          }
+          return { type, title: title || type, body };
+        }
+      });
+
+      if (formValues) {
+        const alertPayload = {
+          type: formValues.type,
+          title: formValues.title,
+          body: formValues.body,
+          sender: 'إدارة قسم المساحة وGIS',
+          timestamp: Date.now()
+        };
+
+        try {
+          await database.ref('users/' + uid + '/privateAlert').set(alertPayload);
+          logAdminAction('إرسال رسالة خاصة', `للطالب: ${name} | النوع: ${formValues.type} | العنوان: ${formValues.title}`);
+          Swal.fire({
+            title: 'تم الإرسال بنجاح! 📨',
+            text: `تم إرسال الرسالة إلى (${name})، وسوف تظهر له بتصميم (${formValues.type}) فوراً.`,
+            icon: 'success',
+            confirmButtonText: 'تم',
+            confirmButtonColor: '#16a34a'
+          });
+        } catch (err) {
+          const plainMsg = `[${formValues.type}] ${formValues.title}: ${formValues.body}`;
+          await database.ref('users/' + uid + '/privateAlert').set(plainMsg);
+          Swal.fire('تم الإرسال!', 'تم إرسال الرسالة بنجاح.', 'success');
+        }
+      }
     }
 
     function trackStudent(uid) {
@@ -3365,6 +3856,8 @@
       document.getElementById('tab-lvl-2').classList.toggle('active', lvl===2);
       document.getElementById('current-level-heading').innerText = lvl===1 ? "مواد المستوى الأول" : "مواد المستوى الثاني";
       renderAnnouncementsBoard();
+      renderExamCountdown();
+      renderActivePoll();
       document.getElementById('search-box').value = '';
       if (updateHash && !isHashNavigationInProgress && !currentSubjectId && document.getElementById('view-home').style.display !== 'none') {
         history.replaceState(null, '', window.location.pathname + (window.location.search || '') + (lvl === 2 ? '#lvl2' : '#lvl1'));
@@ -5350,6 +5843,867 @@
       }).catch(err => Swal.fire('خطأ', escText(err.message), 'error'));
     }
 
+
+
+    /* =========================================================================
+       1. تعديل بيانات الطالب والمستوى الدراسي والبريد من الإدارة
+       ========================================================================= */
+    async function editStudentProfile(uid) {
+      const u = allUsersList.find(x => x.uid === uid);
+      if (!u) return;
+
+      const { value: formValues } = await Swal.fire({
+        title: 'تعديل بيانات ومستوى الطالب',
+        html: `
+          <div style="text-align:right; font-size:12px; margin-bottom:4px;">الاسم الكامل:</div>
+          <input id="swal-edit-name" class="swal2-input" value="${escText(u.name || '')}" placeholder="الاسم الكامل" style="margin-top:0;">
+          
+          <div style="text-align:right; font-size:12px; margin:8px 0 4px;">البريد الإلكتروني:</div>
+          <input id="swal-edit-email" type="email" class="swal2-input" value="${escText(u.email || '')}" placeholder="student@example.com" style="margin-top:0;">
+          
+          <div style="text-align:right; font-size:12px; margin:8px 0 4px;">رقم الهاتف:</div>
+          <input id="swal-edit-phone" type="tel" class="swal2-input" value="${escText(u.phone || '')}" placeholder="01xxxxxxxxx" style="margin-top:0;">
+          
+          <div style="text-align:right; font-size:12px; margin:8px 0 4px;">المستوى الدراسي (هام لمن اختار خطأ):</div>
+          <select id="swal-edit-level" class="swal2-input" style="margin-top:0;">
+            <option value="1" ${(!u.level || u.level == 1) ? 'selected' : ''}>المستوى الأول 🎓</option>
+            <option value="2" ${u.level == 2 ? 'selected' : ''}>المستوى الثاني 🚀</option>
+          </select>
+          
+          <div style="text-align:right; font-size:12px; margin:8px 0 4px;">كود الطالب (ID):</div>
+          <input id="swal-edit-id" class="swal2-input" value="${escText(u.studentId && u.studentId !== 'undefined' ? u.studentId : '')}" placeholder="كود الطالب الجامعي" style="margin-top:0;">
+        `,
+        focusConfirm: false,
+        showCancelButton: true,
+        confirmButtonText: 'حفظ التعديلات 💾',
+        cancelButtonText: 'إلغاء',
+        preConfirm: () => {
+          const name = document.getElementById('swal-edit-name').value.trim();
+          const email = document.getElementById('swal-edit-email').value.trim();
+          const phone = document.getElementById('swal-edit-phone').value.trim();
+          const level = parseInt(document.getElementById('swal-edit-level').value, 10) || 1;
+          const studentId = document.getElementById('swal-edit-id').value.trim();
+          if (!name) {
+            Swal.showValidationMessage('الاسم الكامل مطلوب');
+            return false;
+          }
+          return { name, email, phone, level, studentId };
+        }
+      });
+
+      if (formValues) {
+        const up = {};
+        up['users/' + uid + '/name'] = formValues.name;
+        up['users/' + uid + '/email'] = formValues.email;
+        up['users/' + uid + '/phone'] = formValues.phone;
+        up['users/' + uid + '/level'] = formValues.level;
+        up['users/' + uid + '/studentId'] = formValues.studentId;
+        up['leaderboard/' + uid + '/name'] = formValues.name;
+        up['leaderboard/' + uid + '/level'] = formValues.level;
+
+        database.ref().update(up).then(() => {
+          Object.assign(u, formValues);
+          logAdminAction('تعديل طالب', `تم تحديث بيانات ومستوى: ${formValues.name} (المستوى ${formValues.level})`);
+          updateDashboardStats();
+          renderStudentsTable();
+          Swal.fire('تم الحفظ!', `تم تحديث بيانات ومستوى الطالب إلى (المستوى ${formValues.level}) بنجاح.`, 'success');
+        }).catch(err => Swal.fire('خطأ', escText(err.message), 'error'));
+      }
+    }
+
+    /* =========================================================================
+       2. جدول الامتحانات التفاعلي مع عداد تنازلي (Exam Countdown)
+       ========================================================================= */
+    let examsList = [];
+    let examCountdownTimer = null;
+
+    function listenToExams() {
+      database.ref('settings/exams').on('value', snap => {
+        const val = snap.val() || {};
+        examsList = Object.keys(val).map(k => ({ id: k, ...val[k] }));
+        examsList.sort((a,b) => new Date(a.date + 'T' + (a.time || '00:00')) - new Date(b.date + 'T' + (b.time || '00:00')));
+        renderExamCountdown();
+        renderAdminExamsTable();
+      });
+    }
+
+    function renderExamCountdown() {
+      const container = document.getElementById('exam-countdown-container');
+      if (!container) return;
+
+      const now = new Date();
+      // فلترة الامتحانات القادمة الخاصة بمستوى الطالب المعروض حالياً
+      const upcoming = examsList.filter(e => {
+        const examDate = new Date(e.date + 'T' + (e.time || '09:00'));
+        const matchesLevel = (e.level === 'all') || (String(e.level) === String(activeLevel));
+        return matchesLevel && (examDate > now);
+      });
+
+      if (upcoming.length === 0) {
+        container.style.display = 'none';
+        container.innerHTML = '';
+        if (examCountdownTimer) clearInterval(examCountdownTimer);
+        return;
+      }
+
+      container.style.display = 'block';
+      const nearest = upcoming[0];
+      const targetTime = new Date(nearest.date + 'T' + (nearest.time || '09:00')).getTime();
+
+      container.innerHTML = `
+        <div class="card liquid-glass" style="border-color:#f59e0b; background:linear-gradient(135deg, rgba(245,158,11,.08) 0%, rgba(217,119,6,.15) 100%); padding: 18px 22px;">
+           <div class="z-content flex-between" style="flex-wrap:wrap; gap:14px;">
+              <div style="display:flex; align-items:center; gap:12px;">
+                 <div style="width:48px; height:48px; border-radius:14px; background:rgba(245,158,11,.2); border:1px solid #f59e0b; display:flex; align-items:center; justify-content:center; font-size:24px;">⏳</div>
+                 <div>
+                    <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                       <span class="status-badge" style="background:#f59e0b; color:#0f172a; font-weight:900; font-size:11px;">الامتحان القادم</span>
+                       <span style="font-size:12px; color:var(--fg-soft);">المستوى ${nearest.level === 'all' ? 'الأول والثاني' : (nearest.level == 1 ? 'الأول 🎓' : 'الثاني 🚀')}</span>
+                    </div>
+                    <h3 style="margin:4px 0 2px; font-size:17px; font-weight:bold; color:var(--fg);">امتحان: ${escText(nearest.subjectName)} <span style="font-size:13px; color:#f59e0b; font-weight:normal;">(${escText(nearest.examType || 'تحريري')})</span></h3>
+                    <div style="font-size:12px; color:var(--fg-soft);">📍 المكان: <b>${escText(nearest.hall || 'المدرج الرئيسي')}</b> | 🗓️ ${nearest.date} الساعة ${nearest.time || '09:00'}</div>
+                 </div>
+              </div>
+
+              <!-- العداد الحي -->
+              <div style="display:flex; flex-direction:column; align-items:center; gap:4px;">
+                 <div id="live-exam-timer" style="display:flex; gap:6px; direction:ltr; font-family:monospace; font-weight:900;"></div>
+                 <button class="pill" style="height:32px; font-size:11px; background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.2); color:var(--fg); margin-top:4px;" onclick="openExamTimetableModal()">📅 عرض جدول الامتحانات كاملاً</button>
+              </div>
+           </div>
+        </div>`;
+
+      function updateTimer() {
+        const diff = targetTime - Date.now();
+        const timerEl = document.getElementById('live-exam-timer');
+        if (!timerEl) return;
+
+        if (diff <= 0) {
+          timerEl.innerHTML = '<span style="color:#ef4444; font-size:14px; font-weight:bold;">الامتحان جاري الآن أو انتهى ⏰</span>';
+          return;
+        }
+
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+        timerEl.innerHTML = `
+          <div style="background:rgba(0,0,0,.45); padding:6px 10px; border-radius:8px; border:1px solid rgba(245,158,11,.3); text-align:center;"><div style="font-size:18px; color:#f59e0b;">${days}</div><div style="font-size:9px; color:var(--fg-faint);">يوم</div></div>
+          <div style="font-size:20px; color:#f59e0b; align-self:center;">:</div>
+          <div style="background:rgba(0,0,0,.45); padding:6px 10px; border-radius:8px; border:1px solid rgba(245,158,11,.3); text-align:center;"><div style="font-size:18px; color:#f59e0b;">${hours.toString().padStart(2,'0')}</div><div style="font-size:9px; color:var(--fg-faint);">ساعة</div></div>
+          <div style="font-size:20px; color:#f59e0b; align-self:center;">:</div>
+          <div style="background:rgba(0,0,0,.45); padding:6px 10px; border-radius:8px; border:1px solid rgba(245,158,11,.3); text-align:center;"><div style="font-size:18px; color:#f59e0b;">${minutes.toString().padStart(2,'0')}</div><div style="font-size:9px; color:var(--fg-faint);">دقيقة</div></div>
+          <div style="font-size:20px; color:#f59e0b; align-self:center;">:</div>
+          <div style="background:rgba(0,0,0,.45); padding:6px 10px; border-radius:8px; border:1px solid rgba(245,158,11,.3); text-align:center;"><div style="font-size:18px; color:#f59e0b;">${seconds.toString().padStart(2,'0')}</div><div style="font-size:9px; color:var(--fg-faint);">ثانية</div></div>`;
+      }
+
+      if (examCountdownTimer) clearInterval(examCountdownTimer);
+      updateTimer();
+      examCountdownTimer = setInterval(updateTimer, 1000);
+    }
+
+    function openExamTimetableModal() {
+      const filtered = examsList.filter(e => (e.level === 'all') || (String(e.level) === String(activeLevel)));
+      if (filtered.length === 0) {
+        Swal.fire('جدول الامتحانات', 'لم يتم نشر جدول امتحانات لهذا المستوى بعد.', 'info');
+        return;
+      }
+
+      let rows = filtered.map((e, idx) => {
+        const isPast = new Date(e.date + 'T' + (e.time || '09:00')) < new Date();
+        return `
+          <tr style="${isPast ? 'opacity: 0.5;' : ''}">
+            <td>${idx + 1}</td>
+            <td><b>${escText(e.subjectName)}</b></td>
+            <td>${escText(e.examType || 'تحريري')}</td>
+            <td>${e.date} (${e.time || '09:00'})</td>
+            <td>${escText(e.hall || '-')}</td>
+            <td>${isPast ? '<span style="color:#94a3b8;">انتهى ✓</span>' : '<span style="color:#f59e0b; font-weight:bold;">قادم ⏳</span>'}</td>
+          </tr>`;
+      }).join('');
+
+      Swal.fire({
+        title: `📅 جدول امتحانات (${activeLevel === 1 ? 'المستوى الأول' : 'المستوى الثاني'})`,
+        html: `
+          <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+             <table class="styled-table">
+                <thead><tr><th>#</th><th>المادة</th><th>النوع</th><th>الموعد</th><th>المكان</th><th>الحالة</th></tr></thead>
+                <tbody>${rows}</tbody>
+             </table>
+          </div>`,
+        width: '750px',
+        confirmButtonText: 'إغلاق'
+      });
+    }
+
+    function renderAdminExamsTable() {
+      const tbody = document.getElementById('admin-exams-table-body');
+      if (!tbody) return;
+      if (examsList.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">لا توجد مواعيد امتحانات مسجلة. اضغط "إضافة موعد امتحان جديد" بالأعلى.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = examsList.map((e, idx) => {
+        const lvlStr = e.level === 'all' ? 'الكل' : `مستوى ${e.level}`;
+        return `
+          <tr>
+            <td><b>${escText(e.subjectName)}</b></td>
+            <td>${escText(e.examType || 'تحريري')}</td>
+            <td>${e.date} (${e.time || '09:00'})</td>
+            <td>${escText(e.hall || '-')}</td>
+            <td>${lvlStr}</td>
+            <td>
+              <div style="display:flex; gap:4px; justify-content:center;">
+                <button class="btn-sm btn-ban" onclick="deleteExam('${e.id}','${escapeHtml(e.subjectName)}')">🗑️ حذف</button>
+              </div>
+            </td>
+          </tr>`;
+      }).join('');
+    }
+
+    function openAddExamModal() {
+      Swal.fire({
+        title: 'إضافة موعد امتحان جديد',
+        html: `
+          <div style="text-align:right; font-size:12px; margin-bottom:4px;">اسم المادة:</div>
+          <input id="swal-exam-subj" class="swal2-input" placeholder="مثال: جيومورفولوجيا" style="margin-top:0;">
+          
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:8px;">
+            <div>
+              <div style="text-align:right; font-size:12px; margin-bottom:4px;">تاريخ الامتحان:</div>
+              <input id="swal-exam-date" type="date" class="swal2-input" style="margin-top:0;">
+            </div>
+            <div>
+              <div style="text-align:right; font-size:12px; margin-bottom:4px;">وقت الامتحان:</div>
+              <input id="swal-exam-time" type="time" class="swal2-input" value="09:00" style="margin-top:0;">
+            </div>
+          </div>
+
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:8px;">
+            <div>
+              <div style="text-align:right; font-size:12px; margin-bottom:4px;">نوع الامتحان:</div>
+              <select id="swal-exam-type" class="swal2-input" style="margin-top:0;">
+                <option value="فاينال تحريري">فاينال تحريري 📝</option>
+                <option value="ميدترم">ميدترم 📋</option>
+                <option value="عملي معملي">عملي معملي 🔬</option>
+                <option value="شفوي">شفوي 🗣️</option>
+              </select>
+            </div>
+            <div>
+              <div style="text-align:right; font-size:12px; margin-bottom:4px;">المستوى:</div>
+              <select id="swal-exam-level" class="swal2-input" style="margin-top:0;">
+                <option value="1">المستوى الأول 🎓</option>
+                <option value="2">المستوى الثاني 🚀</option>
+                <option value="all">كلا المستويين 📢</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="text-align:right; font-size:12px; margin:8px 0 4px;">المكان أو القاعة:</div>
+          <input id="swal-exam-hall" class="swal2-input" placeholder="مثال: مدرج 1 / الدور الثاني" style="margin-top:0;">
+        `,
+        showCancelButton: true,
+        confirmButtonText: 'إضافة ونشر الموعد 📅',
+        cancelButtonText: 'إلغاء',
+        preConfirm: () => {
+          const subjectName = document.getElementById('swal-exam-subj').value.trim();
+          const date = document.getElementById('swal-exam-date').value;
+          const time = document.getElementById('swal-exam-time').value;
+          const examType = document.getElementById('swal-exam-type').value;
+          const level = document.getElementById('swal-exam-level').value;
+          const hall = document.getElementById('swal-exam-hall').value.trim();
+
+          if (!subjectName || !date) {
+            Swal.showValidationMessage('يرجى كتابة اسم المادة وتحديد تاريخ الامتحان');
+            return false;
+          }
+          return { subjectName, date, time, examType, level, hall, createdAt: Date.now() };
+        }
+      }).then(res => {
+        if (res.isConfirmed) {
+          database.ref('settings/exams').push(res.value).then(() => {
+            logAdminAction('إضافة امتحان', `${res.value.subjectName} (${res.value.date})`);
+            Swal.fire('تمت الإضافة', 'تم نشر موعد الامتحان وسيظهر في العداد التنازلي للطلاب.', 'success');
+          }).catch(err => Swal.fire('خطأ', escText(err.message), 'error'));
+        }
+      });
+    }
+
+    function deleteExam(id, title) {
+      Swal.fire({
+        title: 'حذف موعد الامتحان؟',
+        text: `سيتم حذف امتحان "${title}" من الجدول والعداد التنازلي.`,
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        confirmButtonText: 'نعم، احذف',
+        cancelButtonText: 'إلغاء'
+      }).then(res => {
+        if (res.isConfirmed) {
+          database.ref('settings/exams/' + id).remove().then(() => {
+            logAdminAction('حذف امتحان', title);
+            Swal.fire('تم الحذف', 'تم حذف الموعد.', 'success');
+          });
+        }
+      });
+    }
+
+    /* =========================================================================
+       3. حفظ الأسئلة والمحاضرات في المفضلة (Starred / Bookmarks)
+       ========================================================================= */
+    function getStudentBookmarks() {
+      try {
+        const data = localStorage.getItem('student_bookmarks');
+        return data ? JSON.parse(data) : { files: {}, quizzes: {} };
+      } catch(e) {
+        return { files: {}, quizzes: {} };
+      }
+    }
+
+    function saveStudentBookmarks(bm) {
+      try {
+        localStorage.setItem('student_bookmarks', JSON.stringify(bm));
+        updateBookmarksBadge();
+      } catch(e) {}
+    }
+
+    function isItemBookmarked(type, key) {
+      const bm = getStudentBookmarks();
+      return !!(bm[type] && bm[type][key]);
+    }
+
+    function toggleFileBookmark(subjId, fileKey, title, link, category) {
+      const bm = getStudentBookmarks();
+      if (!bm.files) bm.files = {};
+      const subj = db.find(s => s.id === subjId);
+      const subjName = subj ? subj.name : 'مادة دراسية';
+
+      if (bm.files[fileKey]) {
+        delete bm.files[fileKey];
+        Swal.fire({ toast:true, position:'top-end', icon:'info', title:'تم الحذف من المفضلة ☆', showConfirmButton:false, timer:1500 });
+      } else {
+        bm.files[fileKey] = { key: fileKey, title, link, category, subjId, subjName, savedAt: Date.now() };
+        Swal.fire({ toast:true, position:'top-end', icon:'success', title:'تم الحفظ في المفضلة ⭐', showConfirmButton:false, timer:1500 });
+      }
+      saveStudentBookmarks(bm);
+      if (currentSubjectId) openSubject(currentSubjectId, true);
+    }
+
+    function toggleQuizBookmark(subjId, quizKey) {
+      const bm = getStudentBookmarks();
+      if (!bm.quizzes) bm.quizzes = {};
+      const subj = db.find(s => s.id === subjId);
+      const q = subj && subj.quizzes ? subj.quizzes.find(x => x.key === quizKey) : null;
+      if (!q) return;
+
+      if (bm.quizzes[quizKey]) {
+        delete bm.quizzes[quizKey];
+        Swal.fire({ toast:true, position:'top-end', icon:'info', title:'تمت إزالة السؤال من المفضلة ☆', showConfirmButton:false, timer:1500 });
+      } else {
+        bm.quizzes[quizKey] = {
+          key: quizKey,
+          q: q.q, opt1: q.opt1, opt2: q.opt2, opt3: q.opt3, opt4: q.opt4, ans: q.ans,
+          subjId, subjName: subj.name, savedAt: Date.now()
+        };
+        Swal.fire({ toast:true, position:'top-end', icon:'success', title:'تم حفظ السؤال لمراجعته لاحقاً ⭐', showConfirmButton:false, timer:1500 });
+      }
+      saveStudentBookmarks(bm);
+      if (currentSubjectId) openSubject(currentSubjectId, true);
+    }
+
+    function updateBookmarksBadge() {
+      const bm = getStudentBookmarks();
+      const filesCount = Object.keys(bm.files || {}).length;
+      const quizCount = Object.keys(bm.quizzes || {}).length;
+      const total = filesCount + quizCount;
+
+      const badge = document.getElementById('nav-bookmarks-badge');
+      if (badge) {
+        badge.innerText = total;
+        badge.style.display = total > 0 ? 'inline-block' : 'none';
+      }
+      const mtiCount = document.getElementById('mti-bookmarks-count');
+      if (mtiCount) {
+        mtiCount.innerText = total > 0 ? `(${total} عناصر محفوظة)` : 'لا توجد عناصر محفوظة بعد';
+      }
+    }
+
+    function openBookmarksModal() {
+      const bm = getStudentBookmarks();
+      const files = Object.values(bm.files || {});
+      const quizzes = Object.values(bm.quizzes || {});
+
+      let filesHtml = files.length === 0 ? '<div class="empty-state">لا توجد ملفات أو محاضرات محفوظة. اضغط على رمز النجمة ⭐ بجانب أي ملف لحفظه هنا.</div>' : files.map(f => `
+        <div class="card liquid-glass" style="margin-bottom:8px; padding:12px 14px; display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap;">
+           <div>
+              <span class="subj-badge" style="font-size:10px;">${escText(f.subjName)}</span>
+              <div style="font-weight:bold; font-size:14px; margin-top:4px;">📄 ${escText(f.title)}</div>
+           </div>
+           <div style="display:flex; gap:6px;">
+              <button class="pill" style="height:30px; font-size:11px;" onclick="openPdfViewer('${escapeHtml(f.title)}','${escapeHtml(safeUrl(f.link))}')">معاينة 👁️</button>
+              <a href="${escText(safeUrl(f.link))}" target="_blank" rel="noopener" class="pill" style="height:30px; font-size:11px; background:var(--primary);">تحميل ⬇️</a>
+              <button class="btn-sm btn-ban" title="إزالة" onclick="toggleFileBookmark('${f.subjId}','${f.key}','${escapeHtml(f.title)}','${escapeHtml(f.link)}',''); openBookmarksModal();">✕</button>
+           </div>
+        </div>`).join('');
+
+      let quizzesHtml = quizzes.length === 0 ? '<div class="empty-state">لا توجد أسئلة مهمة محفوظة. اضغط على رمز النجمة ⭐ بجانب أي سؤال صعب لحفظه هنا للمراجعة.</div>' : quizzes.map((q, idx) => `
+        <div class="card liquid-glass" style="margin-bottom:10px; padding:12px 14px; border-color:rgba(245,158,11,.3);">
+           <div class="flex-between" style="margin-bottom:6px;">
+              <span class="subj-badge" style="font-size:10px; color:#f59e0b;">${escText(q.subjName)}</span>
+              <button class="btn-sm btn-ban" title="إزالة" onclick="toggleQuizBookmark('${q.subjId}','${q.key}'); openBookmarksModal();">إزالة من المفضلة ✕</button>
+           </div>
+           <div style="font-weight:bold; font-size:14px; margin-bottom:8px;">${idx + 1}. ${escText(q.q)}</div>
+           <div style="font-size:12px; color:var(--online-green); background:rgba(34,197,94,.1); padding:6px 10px; border-radius:6px; font-weight:bold;">
+              الإجابة الصحيحة: الاختيار رقم (${q.ans})
+           </div>
+        </div>`).join('');
+
+      Swal.fire({
+        title: '⭐ المحفوظات والمفضلة',
+        html: `
+          <div class="level-tabs" style="padding:3px; background:rgba(0,0,0,.35); margin-bottom:14px;">
+             <button id="bm-tab-btn-files" class="level-tab-btn active" onclick="switchBookmarksTab('files')">📖 المحاضرات (${files.length})</button>
+             <button id="bm-tab-btn-quizzes" class="level-tab-btn" onclick="switchBookmarksTab('quizzes')">🧠 الأسئلة المهمة (${quizzes.length})</button>
+          </div>
+          <div id="bm-content-files" style="max-height:380px; overflow-y:auto; text-align:right;">${filesHtml}</div>
+          <div id="bm-content-quizzes" style="display:none; max-height:380px; overflow-y:auto; text-align:right;">${quizzesHtml}</div>
+        `,
+        width: '680px',
+        confirmButtonText: 'إغلاق'
+      });
+    }
+
+    function switchBookmarksTab(tab) {
+      document.getElementById('bm-tab-btn-files').classList.toggle('active', tab === 'files');
+      document.getElementById('bm-tab-btn-quizzes').classList.toggle('active', tab === 'quizzes');
+      document.getElementById('bm-content-files').style.display = tab === 'files' ? 'block' : 'none';
+      document.getElementById('bm-content-quizzes').style.display = tab === 'quizzes' ? 'block' : 'none';
+    }
+
+    /* =========================================================================
+       4. تحويل المنصة إلى تطبيق موبايل (PWA - Progressive Web App)
+       ========================================================================= */
+    let deferredPwaPrompt = null;
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPwaPrompt = e;
+      console.log('PWA install prompt ready');
+    });
+
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').then(reg => {
+          console.log('Service Worker registered successfully:', reg.scope);
+        }).catch(err => {
+          console.log('Service Worker registration note:', err);
+        });
+      });
+    }
+
+    function installPWAApp() {
+      if (deferredPwaPrompt) {
+        deferredPwaPrompt.prompt();
+        deferredPwaPrompt.userChoice.then((choiceResult) => {
+          if (choiceResult.outcome === 'accepted') {
+            Swal.fire('أهلاً بك!', 'تم تثبيت المنصة على هاتفك بنجاح كتطبيق رسمي 📲', 'success');
+          }
+          deferredPwaPrompt = null;
+        });
+      } else {
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        if (isIOS) {
+          Swal.fire({
+            title: 'تثبيت المنصة على آيفون 📲',
+            html: `
+              <div style="font-size:14px; text-align:right; line-height:1.7; color:var(--fg-soft);">
+                لتثبيت المنصة كتطبيق يعمل بدون متصفح على شاشة هاتفك:
+                <br><br>
+                1. اضغط على زر المشاركة <b>(Share ⎋)</b> في أسفل المتصفح.
+                <br>
+                2. اختر <b>"إضافة إلى الشاشة الرئيسية" (Add to Home Screen ➕)</b>.
+                <br>
+                3. اضغط <b>"إضافة" (Add)</b> في الأعلى.
+              </div>`,
+            icon: 'info',
+            confirmButtonText: 'فهمت 👍'
+          });
+        } else {
+          Swal.fire({
+            title: 'تثبيت التطبيق على هاتفك 📲',
+            html: `
+              <div style="font-size:14px; text-align:right; line-height:1.7; color:var(--fg-soft);">
+                يمكنك تشغيل المنصة كتطبيق سريع ومستقل:
+                <br><br>
+                اضغط على قائمة خيارات المتصفح (الثلاث نقاط ⋮ بأعلى الشاشة)، ثم اختر <b>"تثبيت التطبيق" (Install App)</b> أو <b>"إضافة إلى الشاشة الرئيسية"</b>.
+              </div>`,
+            icon: 'info',
+            confirmButtonText: 'حسناً 👍'
+          });
+        }
+      }
+    }
+
+    /* =========================================================================
+       5. استطلاعات الرأي والتصويت للطلاب (Student Polls)
+       ========================================================================= */
+    let pollsList = [];
+
+    function listenToPolls() {
+      database.ref('settings/polls').on('value', snap => {
+        const val = snap.val() || {};
+        pollsList = Object.keys(val).map(k => ({ id: k, ...val[k] }));
+        pollsList.sort((a,b) => (b.createdAt || 0) - (a.createdAt || 0));
+        renderActivePoll();
+        renderAdminPollsTable();
+      });
+    }
+
+    function renderActivePoll() {
+      const container = document.getElementById('active-poll-container');
+      if (!container) return;
+
+      const activePolls = pollsList.filter(p => p.active !== false && (p.targetLevel === 'all' || String(p.targetLevel) === String(activeLevel)));
+      if (activePolls.length === 0) {
+        container.style.display = 'none';
+        container.innerHTML = '';
+        return;
+      }
+
+      const p = activePolls[0];
+      const votes = p.votes || {};
+      const totalVotes = Object.keys(votes).length;
+      const myVote = (currentStudentData && currentStudentData.uid && votes[currentStudentData.uid] !== undefined)
+        ? votes[currentStudentData.uid] : null;
+
+      container.style.display = 'block';
+
+      // خيارات الاستطلاع
+      const optionsHtml = (p.options || []).map((opt, idx) => {
+        // حساب عدد الأصوات لهذا الخيار
+        const optVotes = Object.values(votes).filter(v => Number(v) === idx).length;
+        const pct = totalVotes > 0 ? Math.round((optVotes / totalVotes) * 100) : 0;
+        const isMyChoice = myVote === idx;
+
+        if (myVote !== null) {
+          // عرض النتائج المباشرة
+          return `
+            <div style="margin-bottom:8px;">
+               <div style="display:flex; justify-content:space-between; font-size:13px; font-weight:bold; margin-bottom:3px;">
+                  <span>${isMyChoice ? '🟢 ' : ''}${escText(opt)} ${isMyChoice ? '<span style="font-size:11px; color:#4ade80;">(صوتك)</span>' : ''}</span>
+                  <span>${pct}% (${optVotes})</span>
+               </div>
+               <div style="height:10px; border-radius:5px; background:rgba(255,255,255,.08); overflow:hidden;">
+                  <div style="width:${pct}%; height:100%; background:${isMyChoice ? '#10b981' : 'var(--primary)'}; border-radius:5px; transition:width 0.5s;"></div>
+               </div>
+            </div>`;
+        } else {
+          // لم يصوت بعد
+          return `
+            <label style="display:flex; align-items:center; gap:8px; padding:8px 12px; background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08); border-radius:8px; cursor:pointer; font-size:14px; margin-bottom:6px;">
+               <input type="radio" name="poll-opt-choice" value="${idx}" style="cursor:pointer;">
+               <span>${escText(opt)}</span>
+            </label>`;
+        }
+      }).join('');
+
+      container.innerHTML = `
+        <div class="card liquid-glass" style="border-color:#3b82f6; background:rgba(59,130,246,.04); padding: 18px 22px;">
+           <div class="z-content flex-between" style="margin-bottom:10px; flex-wrap:wrap; gap:6px;">
+              <span class="status-badge" style="background:rgba(59,130,246,.2); color:#60a5fa; border:1px solid rgba(59,130,246,.4);">📊 استطلاع رأي الدفعة</span>
+              <span style="font-size:12px; color:var(--fg-soft);">إجمالي المشاركين: <b>${totalVotes} طالب</b></span>
+           </div>
+           <h4 class="z-content" style="margin:0 0 14px; font-size:16px; font-weight:bold; color:var(--fg);">${escText(p.question)}</h4>
+           <div class="z-content">${optionsHtml}</div>
+           ${myVote === null ? `<button class="pill z-content" style="margin-top:10px; width:100%; height:38px; justify-content:center;" onclick="submitPollVote('${p.id}')">🗳️ إرسال تصويتي</button>` : ''}
+        </div>`;
+    }
+
+    function submitPollVote(pollId) {
+      if (!currentUser) return Swal.fire('تنبيه', 'يجب تسجيل الدخول للمشاركة في التصويت', 'info');
+      const selected = document.querySelector('input[name="poll-opt-choice"]:checked');
+      if (!selected) return Swal.fire('تنبيه', 'يرجى اختيار أحد الخيارات للتصويت', 'warning');
+
+      const optIdx = parseInt(selected.value, 10);
+      database.ref('settings/polls/' + pollId + '/votes/' + currentUser.uid).set(optIdx).then(() => {
+        Swal.fire({ toast:true, position:'top-end', icon:'success', title:'تم تسجيل تصويتك بنجاح 🗳️', showConfirmButton:false, timer:2000 });
+      }).catch(() => {
+        // احتياطي في حال قيود الأذونات
+        database.ref('users/' + currentUser.uid + '/pollVotes/' + pollId).set(optIdx);
+        Swal.fire({ toast:true, position:'top-end', icon:'success', title:'تم تسجيل تصويتك 🗳️', showConfirmButton:false, timer:2000 });
+      });
+    }
+
+    function renderAdminPollsTable() {
+      const tbody = document.getElementById('admin-polls-table-body');
+      if (!tbody) return;
+      if (pollsList.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">لا توجد استطلاعات رأي منشورة حالياً.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = pollsList.map(p => {
+        const votesCount = p.votes ? Object.keys(p.votes).length : 0;
+        const lvlStr = p.targetLevel === 'all' ? 'الكل' : `مستوى ${p.targetLevel}`;
+        const statusStr = p.active !== false ? '<span style="color:#4ade80;">نشط 🟢</span>' : '<span style="color:#94a3b8;">مغلق ⚪</span>';
+
+        return `
+          <tr>
+             <td><b>${escText(p.question)}</b></td>
+             <td>${lvlStr}</td>
+             <td>${votesCount} طالب</td>
+             <td>${statusStr}</td>
+             <td>
+               <div style="display:flex; gap:4px; justify-content:center;">
+                  <button class="btn-sm btn-ban" onclick="deletePoll('${p.id}')">🗑️ حذف</button>
+               </div>
+             </td>
+          </tr>`;
+      }).join('');
+    }
+
+    function openCreatePollModal() {
+      Swal.fire({
+        title: 'إنشاء استطلاع رأي وتصويت جديد للطلاب',
+        html: `
+          <div style="text-align:right; font-size:12px; margin-bottom:4px;">سؤال الاستطلاع:</div>
+          <input id="swal-poll-q" class="swal2-input" placeholder="مثال: ما هو موعد كويز مادة الجيومورفولوجيا الأنسب؟" style="margin-top:0;">
+          
+          <div style="text-align:right; font-size:12px; margin:8px 0 4px;">الفئة الموجه لها:</div>
+          <select id="swal-poll-level" class="swal2-input" style="margin-top:0;">
+             <option value="all">📢 لجميع المستويات (لكل الدفعة)</option>
+             <option value="1">🎓 لطلاب المستوى الأول فقط</option>
+             <option value="2">🚀 لطلاب المستوى الثاني فقط</option>
+          </select>
+
+          <div style="text-align:right; font-size:12px; margin:8px 0 4px;">خيارات التصويت (اكتب خيارين على الأقل):</div>
+          <input id="swal-poll-opt1" class="swal2-input" placeholder="الخيار الأول (مثال: الأحد القادم)" style="margin:4px 0;">
+          <input id="swal-poll-opt2" class="swal2-input" placeholder="الخيار الثاني (مثال: الثلاثاء القادم)" style="margin:4px 0;">
+          <input id="swal-poll-opt3" class="swal2-input" placeholder="الخيار الثالث (اختياري)" style="margin:4px 0;">
+          <input id="swal-poll-opt4" class="swal2-input" placeholder="الخيار الرابع (اختياري)" style="margin:4px 0;">
+        `,
+        showCancelButton: true,
+        confirmButtonText: 'نشر الاستطلاع 📊',
+        cancelButtonText: 'إلغاء',
+        preConfirm: () => {
+          const q = document.getElementById('swal-poll-q').value.trim();
+          const targetLevel = document.getElementById('swal-poll-level').value;
+          const opt1 = document.getElementById('swal-poll-opt1').value.trim();
+          const opt2 = document.getElementById('swal-poll-opt2').value.trim();
+          const opt3 = document.getElementById('swal-poll-opt3').value.trim();
+          const opt4 = document.getElementById('swal-poll-opt4').value.trim();
+
+          const options = [opt1, opt2, opt3, opt4].filter(Boolean);
+          if (!q || options.length < 2) {
+            Swal.showValidationMessage('يرجى كتابة السؤال وخيارين على الأقل');
+            return false;
+          }
+          return { question: q, options, targetLevel, active: true, createdAt: Date.now() };
+        }
+      }).then(res => {
+        if (res.isConfirmed) {
+          database.ref('settings/polls').push(res.value).then(() => {
+            logAdminAction('إنشاء استطلاع رأي', res.value.question);
+            Swal.fire('تم النشر!', 'تم نشر الاستطلاع وسيظهر في الصفحة الرئيسية للطلاب المحددين.', 'success');
+          }).catch(err => Swal.fire('خطأ', escText(err.message), 'error'));
+        }
+      });
+    }
+
+    function deletePoll(pollId) {
+      Swal.fire({
+        title: 'حذف استطلاع الرأي؟',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        confirmButtonText: 'حذف',
+        cancelButtonText: 'إلغاء'
+      }).then(res => {
+        if (res.isConfirmed) {
+          database.ref('settings/polls/' + pollId).remove().then(() => {
+            logAdminAction('حذف استطلاع رأي', pollId);
+            Swal.fire('تم الحذف', 'تم حذف الاستطلاع.', 'success');
+          });
+        }
+      });
+    }
+
+    /* =========================================================================
+       6. نسخ احتياطي لقاعدة البيانات بضغطة زر (Backup System)
+       ========================================================================= */
+    function exportFullDatabaseJSON() {
+      Swal.fire({
+        title: 'جاري إنشاء النسخة الاحتياطية...',
+        text: 'يتم جلب بيانات الطلاب، المواد، الأسئلة، والأبحاث...',
+        allowOutsideClick: false,
+        didOpen: () => { Swal.showLoading(); }
+      });
+
+      function saveBackupFile(fullDb) {
+        const jsonStr = JSON.stringify(fullDb, null, 2);
+        const blob = new Blob([jsonStr], { type: 'application/json;charset=utf-8;' });
+        const link = document.createElement('a');
+        const now = new Date();
+        const dateStr = now.toISOString().slice(0,10);
+        link.href = URL.createObjectURL(blob);
+        link.download = `backup_monasa_${dateStr}.json`;
+        link.click();
+
+        logAdminAction('نسخ احتياطي', `تم تحميل نسخة احتياطية كاملة (${dateStr})`);
+        Swal.fire('تم التحميل بنجاح!', 'تم حفظ النسخة الاحتياطية بصيغة JSON على جهازك للحفاظ على بيانات المنصة دائماً.', 'success');
+      }
+
+      // محاولة القراءة من الـ root مباشرة، وإذا لم تكن مصرحة يتم جلب جميع العقد المصرحة بالتوازي
+      database.ref().once('value').then(snap => {
+        saveBackupFile(snap.val() || {});
+      }).catch(() => {
+        const nodes = ['users', 'subjects', 'leaderboard', 'settings', 'admin_logs', 'research_topics', 'research_requests', 'contributions', 'alert', 'online_users', 'phones'];
+        const promises = nodes.map(n => database.ref(n).once('value').then(s => ({ key: n, val: s.val() })).catch(() => ({ key: n, val: null })));
+        
+        Promise.all(promises).then(results => {
+          const fullDb = {};
+          results.forEach(r => {
+            if (r.val !== null) fullDb[r.key] = r.val;
+          });
+          saveBackupFile(fullDb);
+        }).catch(err => {
+          Swal.fire('خطأ أثناء النسخ الاحتياطي', escText(err.message), 'error');
+        });
+      });
+    }
+
+
+
+    /* =========================================================================
+       تبديل تبويبات حاسبة GPA وحاسبة هدف الفاينال
+       ========================================================================= */
+    function switchGpaSubTab(tab) {
+      const isGpa = tab === 'gpa';
+      document.getElementById('gpa-tab-gpa').classList.toggle('active', isGpa);
+      document.getElementById('gpa-tab-target').classList.toggle('active', !isGpa);
+      document.getElementById('gpa-main-calculator-pane').style.display = isGpa ? 'block' : 'none';
+      document.getElementById('gpa-target-calculator-pane').style.display = isGpa ? 'none' : 'block';
+    }
+
+    /* =========================================================================
+       حاسبة أعمال السنة وهدف الفاينال (Target Grade Calculator) طبقاً للائحة
+       ========================================================================= */
+    const COLLEGE_GRADE_SCALE = [
+      { grade: 'A+', points: 4.00, minPct: 97, name: 'امتياز مرتفع' },
+      { grade: 'A',  points: 4.00, minPct: 93, name: 'امتياز' },
+      { grade: 'A-', points: 3.70, minPct: 89, name: 'امتياز منخفض' },
+      { grade: 'B+', points: 3.30, minPct: 84, name: 'جيد جداً مرتفع' },
+      { grade: 'B',  points: 3.00, minPct: 80, name: 'جيد جداً' },
+      { grade: 'B-', points: 2.70, minPct: 76, name: 'جيد جداً منخفض' },
+      { grade: 'C+', points: 2.30, minPct: 73, name: 'جيد مرتفع' },
+      { grade: 'C',  points: 2.00, minPct: 70, name: 'جيد (حد التخرج)' },
+      { grade: 'C-', points: 1.70, minPct: 67, name: 'جيد منخفض' },
+      { grade: 'D+', points: 1.30, minPct: 64, name: 'مقبول مرتفع' },
+      { grade: 'D',  points: 1.00, minPct: 60, name: 'مقبول (حد النجاح الأدنى)' }
+    ];
+
+    function onTargetCwInput() {
+      const cwInput = document.getElementById('target-cw-input');
+      const targetGrade = document.getElementById('target-grade-select').value;
+      const resultCard = document.getElementById('target-result-card');
+      const tbody = document.getElementById('target-all-grades-tbody');
+
+      const cw = parseFloat(cwInput.value);
+      if (isNaN(cw) || cw < 0) {
+        resultCard.innerHTML = '<div style="font-size: 13px; color: var(--fg-soft);">أدخل درجة أعمال السنة (من 60) لحساب المطلوب في الفاينال.</div>';
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">أدخل درجة أعمال السنة أعلاه.</td></tr>';
+        return;
+      }
+
+      if (cw > 60) {
+        resultCard.innerHTML = '<div style="color: #ef4444; font-weight: bold;">درجة أعمال السنة لا يمكن أن تتجاوز 60 درجة بحسب اللائحة!</div>';
+        return;
+      }
+
+      // حساب التقدير المستهدف المختار
+      const chosenItem = COLLEGE_GRADE_SCALE.find(x => x.grade === targetGrade);
+      if (chosenItem) {
+        const neededRaw = chosenItem.minPct - cw;
+        let cardHtml = '';
+
+        if (neededRaw > 40) {
+          const maxAchievableTotal = cw + 40;
+          const bestGrade = COLLEGE_GRADE_SCALE.find(x => maxAchievableTotal >= x.minPct) || { grade: 'F', name: 'راسب' };
+          cardHtml = `
+            <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+               <div style="font-size:32px;">⚠️</div>
+               <div>
+                  <div style="font-size:16px; font-weight:bold; color:#ef4444;">
+                     تقدير (${chosenItem.grade} - ${chosenItem.name}) غير متاح حسابياً
+                  </div>
+                  <div style="font-size:13px; color:var(--fg-soft); margin-top:4px;">
+                     يتطلب ${neededRaw.toFixed(1)} درجة في الفاينال، وأقصى درجة لورقة الامتحان هي <b>40 درجة</b>.
+                     <br>
+                     أقصى تقدير يمكنك تحقيقه بافتراض حصولك على 40/40 هو: <b style="color:#ffd700;">${bestGrade.grade} (${bestGrade.name})</b>.
+                  </div>
+               </div>
+            </div>`;
+        } else {
+          // اللائحة تشترط 20 من 40 على الأقل للنجاح
+          const actualRequired = Math.max(neededRaw, 20);
+          const pctOfFinal = Math.round((actualRequired / 40) * 100);
+          const isConditionApplied = neededRaw < 20;
+
+          cardHtml = `
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+               <div>
+                  <span class="status-badge" style="background:rgba(34,197,94,.2); color:#4ade80; border:1px solid rgba(34,197,94,.4);">الهدف: ${chosenItem.grade} (${chosenItem.name})</span>
+                  <h3 style="margin:8px 0 4px; font-size:20px; color:var(--fg);">
+                     المطلوب في ورقة الفاينال: <b style="color:#ffd700; font-size:24px;">${actualRequired.toFixed(1)} من 40</b>
+                  </h3>
+                  <div style="font-size:13px; color:var(--fg-soft);">
+                     ${isConditionApplied 
+                       ? '<span style="color:#fbbf24;">⚠️ تنبيه اللائحة: مع أن مجموعك الرياضي يحتاج درجات أقل، إلا أن اللائحة تشترط إجبارياً <b>20/40 على الأقل</b> في التحريري للنجاح.</span>' 
+                       : `يعادل تحصيل نسبة <b>${pctOfFinal}%</b> من ورقة امتحان الفاينال.`}
+                  </div>
+               </div>
+               <div style="text-align:center; padding:10px 16px; border-radius:10px; background:rgba(245,158,11,.15); border:1px solid #f59e0b;">
+                  <div style="font-size:12px; color:var(--fg-soft);">المجموع الكلي المتوقع</div>
+                  <div style="font-size:22px; font-weight:900; color:#f59e0b;">${(cw + actualRequired).toFixed(1)} / 100</div>
+                  <div style="font-size:11px; color:#4ade80; font-weight:bold;">${chosenItem.points.toFixed(2)} نقاط</div>
+               </div>
+            </div>`;
+        }
+        resultCard.innerHTML = cardHtml;
+      }
+
+      // جدول جميع التقديرات
+      tbody.innerHTML = COLLEGE_GRADE_SCALE.map(item => {
+        const needed = item.minPct - cw;
+        let finalNeededStr = '';
+        let statusBadge = '';
+
+        if (needed > 40) {
+          finalNeededStr = '<span style="color:#ef4444; font-weight:bold;">يتجاوز 40 ❌</span>';
+          statusBadge = '<span class="status-badge" style="background:rgba(239,68,68,.15); color:#f87171; border:1px solid rgba(239,68,68,.3);">غير متاح</span>';
+        } else if (needed < 20) {
+          finalNeededStr = '<b style="color:#4ade80;">20 من 40</b> <span style="font-size:10px; color:#fbbf24;">(شرط الفاينال)</span>';
+          statusBadge = '<span class="status-badge" style="background:rgba(34,197,94,.15); color:#4ade80; border:1px solid rgba(34,197,94,.3);">متاح وسهل 🟢</span>';
+        } else {
+          const color = needed <= 28 ? '#60a5fa' : (needed <= 35 ? '#f59e0b' : '#ec4899');
+          finalNeededStr = `<b style="color:${color}; font-size:15px;">${needed.toFixed(1)} من 40</b>`;
+          statusBadge = needed <= 28
+            ? '<span class="status-badge" style="background:rgba(59,130,246,.15); color:#60a5fa; border:1px solid rgba(59,130,246,.3);">متاح في المتناول 📘</span>'
+            : (needed <= 35
+               ? '<span class="status-badge" style="background:rgba(245,158,11,.15); color:#fbbf24; border:1px solid rgba(245,158,11,.3);">يحتاج مجهود متوسط 📙</span>'
+               : '<span class="status-badge" style="background:rgba(236,72,153,.15); color:#f472b6; border:1px solid rgba(236,72,153,.3);">يحتاج تركيز عالي 📕</span>');
+        }
+
+        return `
+          <tr>
+             <td><b style="color:var(--fg);">${item.grade}</b> (${item.name})</td>
+             <td>${item.points.toFixed(2)}</td>
+             <td>${item.minPct}% فأعلى</td>
+             <td>${finalNeededStr}</td>
+             <td>${statusBadge}</td>
+          </tr>`;
+      }).join('');
+    }
 
     window.onload = () => {
       try { handleAuthActionLink(); } catch (e) {}
