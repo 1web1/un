@@ -1039,41 +1039,14 @@
             </div>
 
             <div class="card liquid-glass" style="margin-top: 24px; border-color: var(--primary);">
-              <h3 class="z-content" style="color: var(--primary); margin: 0 0 16px; font-size: 18px; display: flex; align-items: center; gap: 8px;">
-                <span>🔗</span> روابط جروبات الدفعة والمواد
-              </h3>
-              <div class="z-content" style="display: flex; flex-direction: column; gap: 10px;">
-                <a href="https://chat.whatsapp.com/CxHsQ5woXkxJLi4grJXHac?s=sw&p=a&mlu=4&ilr=4" target="_blank" rel="noopener" class="quiz-btn" style="text-align: right; display: flex; justify-content: space-between; align-items: center; text-decoration: none;">
-                  <span>جروب مادة جيومورفولوجيا</span>
-                  <span style="color: var(--online-green);">🟢 انضمام</span>
-                </a>
-                <a href="https://chat.whatsapp.com/LluDZ5Ymajo6fXCQ46MNDy?s=cl&p=i&mlu=4&ilr=4" target="_blank" rel="noopener" class="quiz-btn" style="text-align: right; display: flex; justify-content: space-between; align-items: center; text-decoration: none;">
-                  <span>جروب مادة التنمية البشرية</span>
-                  <span style="color: var(--online-green);">🟢 انضمام</span>
-                </a>
-                <a href="https://chat.whatsapp.com/E7eaZkd5ubN4F3jp3X4lcS?s=cl&p=i&mlu=4&ilr=4" target="_blank" rel="noopener" class="quiz-btn" style="text-align: right; display: flex; justify-content: space-between; align-items: center; text-decoration: none;">
-                  <span>جروب مادة اوراسيا</span>
-                  <span style="color: var(--online-green);">🟢 انضمام</span>
-                </a>
-                <a href="https://chat.whatsapp.com/DyNRIR2xCTUIX1E29iuhIT?s=cl&p=i&mlu=4&ilr=4" target="_blank" rel="noopener" class="quiz-btn" style="text-align: right; display: flex; justify-content: space-between; align-items: center; text-decoration: none;">
-                  <span>جروب مادة افريقيا وحوض النيل</span>
-                  <span style="color: var(--online-green);">🟢 انضمام</span>
-                </a>
-                <a href="https://chat.whatsapp.com/BEXUTeVSrvK5UMpcWCPDlR?s=cl&p=a&mlu=4&ilr=4" target="_blank" rel="noopener" class="quiz-btn" style="text-align: right; display: flex; justify-content: space-between; align-items: center; text-decoration: none;">
-                  <span>جروب مادة تصميم واخراج الخرائط</span>
-                  <span style="color: var(--online-green);">🟢 انضمام</span>
-                </a>
-                <a href="https://chat.whatsapp.com/B5nR9QBBR9nH9HPkSTrMUG?s=cl&p=i&mlu=4&ilr=4" target="_blank" rel="noopener" class="quiz-btn" style="text-align: right; display: flex; justify-content: space-between; align-items: center; text-decoration: none;">
-                  <span>جروب مادة GIS1</span>
-                  <span style="color: var(--online-green);">🟢 انضمام</span>
-                </a>
-                <div class="discord-community-card z-content" onclick="openDiscordInfo()">
-                  <div class="discord-community-title">
-                    <span>سيرفر الديسكورد للمذاكرة الجماعية</span>
-                    <span style="font-size: 16px;">🎧</span>
-                  </div>
-                  <span class="discord-badge-soon">قريباً</span>
-                </div>
+              <div class="z-content flex-between" style="margin-bottom: 16px;">
+                <h3 style="color: var(--primary); margin: 0; font-size: 18px; display: flex; align-items: center; gap: 8px;">
+                  <span>🔗</span> روابط جروبات الدفعة والمواد
+                </h3>
+              </div>
+              <div class="z-content" id="community-links-list" style="display: flex; flex-direction: column; gap: 10px;">
+                <!-- يتم التحميل ديناميكياً من فايربيس -->
+                <div class="empty-state">جاري تحميل الروابط...</div>
               </div>
             </div>
           </div>
@@ -1553,6 +1526,43 @@
                          <button class="pill" type="button" style="background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); flex: 1;" onclick="clearGlobalAlert()">إلغاء من الكل 🗑️</button>
                       </div>
                    </form>
+                </div>
+
+                <!-- إدارة روابط جروبات الدفعة والمواد وسيرفر الديسكورد -->
+                <div class="card liquid-glass" style="background:rgba(0,0,0,.4); grid-column: 1/-1; border-color: #10b981;">
+                   <div class="z-content flex-between" style="margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+                     <h3 style="color: #10b981; font-size: 16px; margin:0; display:flex; align-items:center; gap:8px;">
+                       <span>🔗</span> إدارة روابط جروبات الدفعة والمواد وسيرفر الديسكورد
+                     </h3>
+                     <button class="pill" type="button" style="background:#10b981; color:#0f172a; height:32px; font-size:12px;" onclick="openAddGroupLinkModal()">➕ إضافة رابط مادة / جروب جديد</button>
+                   </div>
+                   <p style="font-size:12px; color:var(--fg-faint); margin-bottom:14px;">يمكنك هنا إضافة، تعديل، أو حذف روابط جروبات الواتساب لكل مادة وتحديث رابط سيرفر الديسكورد ليظهر للطلاب فوراً.</p>
+
+                   <!-- إعداد رابط سيرفر الديسكورد -->
+                   <div style="background:rgba(99,102,241,.08); border:1px solid rgba(99,102,241,.3); border-radius:12px; padding:12px 14px; margin-bottom:16px;">
+                      <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; margin-bottom:8px;">
+                         <span style="font-size:13px; font-weight:bold; color:#c7d2fe; display:flex; align-items:center; gap:6px;">
+                           <span>🎧</span> رابط سيرفر الديسكورد الرسمي (اختياري)
+                         </span>
+                         <span id="admin-discord-status" class="status-badge" style="background:rgba(99,102,241,.2); color:#a5b4fc; border:1px solid rgba(99,102,241,.4);">حالة: قريباً</span>
+                      </div>
+                      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                         <input type="url" id="admin-discord-url" class="input-group" placeholder="https://discord.gg/xxxxxx (اتركه فارغاً ليظهر شارة 'قريباً')" style="margin-bottom:0; flex:1;">
+                         <button class="pill" type="button" style="background:#6366f1; color:#fff;" onclick="saveAdminDiscordUrl()">💾 حفظ رابط الديسكورد</button>
+                      </div>
+                   </div>
+
+                   <!-- جدول روابط جروبات المواد -->
+                   <div class="table-responsive">
+                      <table class="styled-table">
+                         <thead>
+                            <tr><th>#</th><th>اسم الجروب / المادة</th><th>النوع والمنصة</th><th>الرابط</th><th>الترتيب</th><th>إجراءات</th></tr>
+                         </thead>
+                         <tbody id="admin-group-links-table-body">
+                            <tr><td colspan="6" style="text-align:center;">جاري تحميل الروابط...</td></tr>
+                         </tbody>
+                      </table>
+                   </div>
                 </div>
 
                 <!-- إدارة الإعلانات الموجهة -->
@@ -2239,7 +2249,7 @@
         }
         renderResearchHome();
       });
-      if (!window._listenersReady) { window._listenersReady = true; listenToAlerts(); listenToAnnouncements(); listenToSubjects(); listenToLeaderboard(); listenToResearchTopics(); __fetchFeedbackCfg(); }
+      if (!window._listenersReady) { window._listenersReady = true; listenToAlerts(); listenToAnnouncements(); listenToSubjects(); listenToLeaderboard(); listenToResearchTopics(); listenToCommunityLinks(); __fetchFeedbackCfg(); }
     }
 
     function logoutStudent() {
@@ -5086,6 +5096,258 @@
           confirmButtonText: 'حسناً'
         });
       });
+    }
+
+
+
+    /* ===== إدارة روابط جروبات الدفعة والمواد وسيرفر الديسكورد ===== */
+    const DEFAULT_COMMUNITY_LINKS = [
+      { id: 'geo', title: 'جروب مادة جيومورفولوجيا', url: 'https://chat.whatsapp.com/CxHsQ5woXkxJLi4grJXHac?s=sw&p=a&mlu=4&ilr=4', platform: 'whatsapp', order: 1 },
+      { id: 'hd', title: 'جروب مادة التنمية البشرية', url: 'https://chat.whatsapp.com/LluDZ5Ymajo6fXCQ46MNDy?s=cl&p=i&mlu=4&ilr=4', platform: 'whatsapp', order: 2 },
+      { id: 'eur', title: 'جروب مادة اوراسيا', url: 'https://chat.whatsapp.com/E7eaZkd5ubN4F3jp3X4lcS?s=cl&p=i&mlu=4&ilr=4', platform: 'whatsapp', order: 3 },
+      { id: 'afr', title: 'جروب مادة افريقيا وحوض النيل', url: 'https://chat.whatsapp.com/DyNRIR2xCTUIX1E29iuhIT?s=cl&p=i&mlu=4&ilr=4', platform: 'whatsapp', order: 4 },
+      { id: 'carto', title: 'جروب مادة تصميم واخراج الخرائط', url: 'https://chat.whatsapp.com/BEXUTeVSrvK5UMpcWCPDlR?s=cl&p=a&mlu=4&ilr=4', platform: 'whatsapp', order: 5 },
+      { id: 'gis1', title: 'جروب مادة GIS1', url: 'https://chat.whatsapp.com/B5nR9QBBR9nH9HPkSTrMUG?s=cl&p=i&mlu=4&ilr=4', platform: 'whatsapp', order: 6 }
+    ];
+
+    let communityLinksList = [];
+    let communityDiscordUrl = '';
+    let communityLinksListening = false;
+
+    function listenToCommunityLinks() {
+      if (communityLinksListening) return;
+      communityLinksListening = true;
+
+      // الاستماع للروابط المخصصة في settings/communityLinks
+      database.ref('settings/communityLinks').on('value', snap => {
+        const val = snap.val();
+        if (!val || Object.keys(val).length === 0) {
+          // إذا لم تكن موجودة بعد في قاعدة البيانات، نستخدم الروابط الافتراضية
+          communityLinksList = [...DEFAULT_COMMUNITY_LINKS];
+        } else {
+          communityLinksList = Object.keys(val).map(k => ({ id: k, ...val[k] }));
+        }
+        communityLinksList.sort((a,b) => (a.order || 0) - (b.order || 0));
+        renderCommunityLinks();
+        renderAdminGroupLinksTable();
+      });
+
+      // الاستماع لرابط الديسكورد في settings/discordUrl
+      database.ref('settings/discordUrl').on('value', snap => {
+        communityDiscordUrl = (snap.val() || '').trim();
+        const adminInput = document.getElementById('admin-discord-url');
+        const adminStatus = document.getElementById('admin-discord-status');
+        if (adminInput && document.activeElement !== adminInput) adminInput.value = communityDiscordUrl;
+        if (adminStatus) {
+          if (communityDiscordUrl.startsWith('http')) {
+            adminStatus.innerText = 'حالة: مفعل ونشط 🟢';
+            adminStatus.style.background = 'rgba(34,197,94,.2)';
+            adminStatus.style.color = '#4ade80';
+            adminStatus.style.borderColor = 'rgba(34,197,94,.4)';
+          } else {
+            adminStatus.innerText = 'حالة: قريباً ⏳';
+            adminStatus.style.background = 'rgba(99,102,241,.2)';
+            adminStatus.style.color = '#a5b4fc';
+            adminStatus.style.borderColor = 'rgba(99,102,241,.4)';
+          }
+        }
+        renderCommunityLinks();
+      });
+    }
+
+    function renderCommunityLinks() {
+      const container = document.getElementById('community-links-list');
+      if (!container) return;
+
+      const isAdmin = currentStudentData && currentStudentData.isAdmin === true;
+
+      let html = communityLinksList.map((item, idx) => {
+        const platformIcon = item.platform === 'telegram' ? '✈️' : '🟢';
+        const platformAction = item.platform === 'telegram' ? 'تليجرام' : 'انضمام';
+        const safeLink = safeUrl(item.url);
+
+        return `
+          <div style="display:flex; gap:6px; align-items:center;">
+            <a href="${escText(safeLink)}" target="_blank" rel="noopener" class="quiz-btn" style="flex:1; text-align: right; display: flex; justify-content: space-between; align-items: center; text-decoration: none;">
+              <span>${escText(item.title)}</span>
+              <span style="color: var(--online-green); font-size:12px; font-weight:bold;">${platformIcon} ${platformAction}</span>
+            </a>
+            ${isAdmin ? `
+              <button class="btn-sm btn-edit" title="تعديل الرابط" onclick="openEditGroupLinkModal('${item.id}')">✏️</button>
+              <button class="btn-sm btn-ban" title="حذف الرابط" onclick="deleteGroupLink('${item.id}','${escapeHtml(item.title)}')">🗑️</button>
+            ` : ''}
+          </div>`;
+      }).join('');
+
+      // إضافة بطاقة الديسكورد في نهاية القائمة
+      const hasActiveDiscord = communityDiscordUrl.startsWith('http');
+      const discordBadge = hasActiveDiscord 
+        ? '<span style="background:rgba(34,197,94,.2); border:1px solid rgba(34,197,94,.45); color:#4ade80; padding:4px 14px; border-radius:20px; font-size:12px; font-weight:bold;">انضمام 🟣</span>'
+        : '<span class="discord-badge-soon">قريباً</span>';
+
+      html += `
+        <div class="discord-community-card z-content" onclick="openDiscordInfo()">
+          <div class="discord-community-title">
+            <span>سيرفر الديسكورد للمذاكرة الجماعية</span>
+            <span style="font-size: 16px;">🎧</span>
+          </div>
+          ${discordBadge}
+        </div>`;
+
+      container.innerHTML = html;
+    }
+
+    function renderAdminGroupLinksTable() {
+      const tbody = document.getElementById('admin-group-links-table-body');
+      if (!tbody) return;
+
+      if (communityLinksList.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">لا توجد روابط مضافة حالياً. اضغط "إضافة رابط جديد" بالأعلى.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = communityLinksList.map((item, idx) => {
+        const platformName = item.platform === 'telegram' ? 'تليجرام ✈️' : 'واتساب 🟢';
+        return `
+          <tr>
+            <td>${idx + 1}</td>
+            <td><b>${escText(item.title)}</b></td>
+            <td>${platformName}</td>
+            <td style="direction:ltr; max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+              <a href="${escText(safeUrl(item.url))}" target="_blank" rel="noopener" style="color:#60a5fa;">${escText(item.url)}</a>
+            </td>
+            <td>${item.order || (idx + 1)}</td>
+            <td>
+              <div style="display:flex; gap:4px; justify-content:center;">
+                <button class="btn-sm btn-edit" onclick="openEditGroupLinkModal('${item.id}')">✏️ تعديل</button>
+                <button class="btn-sm btn-ban" onclick="deleteGroupLink('${item.id}','${escapeHtml(item.title)}')">🗑️ حذف</button>
+              </div>
+            </td>
+          </tr>`;
+      }).join('');
+    }
+
+    function openAddGroupLinkModal() {
+      Swal.fire({
+        title: 'إضافة رابط مادة أو جروب جديد',
+        html: `
+          <div style="text-align:right; font-size:12px; margin-bottom:4px;">اسم الجروب أو المادة:</div>
+          <input id="swal-group-title" class="swal2-input" placeholder="مثال: جروب مادة المساحة الجيوديسية" style="margin-top:0;">
+          <div style="text-align:right; font-size:12px; margin:8px 0 4px;">رابط الانضمام (واتساب أو تليجرام):</div>
+          <input id="swal-group-url" type="url" class="swal2-input" placeholder="https://chat.whatsapp.com/..." style="margin-top:0;">
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:8px;">
+            <div>
+              <div style="text-align:right; font-size:12px; margin-bottom:4px;">المنصة:</div>
+              <select id="swal-group-platform" class="swal2-input" style="margin-top:0;">
+                <option value="whatsapp">واتساب (WhatsApp)</option>
+                <option value="telegram">تليجرام (Telegram)</option>
+              </select>
+            </div>
+            <div>
+              <div style="text-align:right; font-size:12px; margin-bottom:4px;">الترتيب:</div>
+              <input id="swal-group-order" type="number" class="swal2-input" value="${communityLinksList.length + 1}" style="margin-top:0;">
+            </div>
+          </div>`,
+        showCancelButton: true,
+        confirmButtonText: 'إضافة ونشر الرابط 🔗',
+        cancelButtonText: 'إلغاء',
+        preConfirm: () => {
+          const title = document.getElementById('swal-group-title').value.trim();
+          const url = document.getElementById('swal-group-url').value.trim();
+          const platform = document.getElementById('swal-group-platform').value;
+          const order = parseInt(document.getElementById('swal-group-order').value, 10) || 1;
+          if (!title || !url) {
+            Swal.showValidationMessage('يرجى إدخال اسم الجروب ورابط الانضمام');
+            return false;
+          }
+          return { title, url, platform, order };
+        }
+      }).then(res => {
+        if (res.isConfirmed) {
+          database.ref('settings/communityLinks').push(res.value).then(() => {
+            logAdminAction('إضافة رابط جروب', res.value.title);
+            Swal.fire('تمت الإضافة!', 'تم نشر الرابط وسيظهر لجميع الطلاب فوراً.', 'success');
+          }).catch(err => Swal.fire('خطأ', escText(err.message), 'error'));
+        }
+      });
+    }
+
+    function openEditGroupLinkModal(id) {
+      const item = communityLinksList.find(x => x.id === id);
+      if (!item) return;
+
+      Swal.fire({
+        title: 'تعديل رابط الجروب / المادة',
+        html: `
+          <div style="text-align:right; font-size:12px; margin-bottom:4px;">اسم الجروب أو المادة:</div>
+          <input id="swal-edit-group-title" class="swal2-input" value="${escText(item.title)}" style="margin-top:0;">
+          <div style="text-align:right; font-size:12px; margin:8px 0 4px;">رابط الانضمام:</div>
+          <input id="swal-edit-group-url" type="url" class="swal2-input" value="${escText(item.url)}" style="margin-top:0;">
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:8px;">
+            <div>
+              <div style="text-align:right; font-size:12px; margin-bottom:4px;">المنصة:</div>
+              <select id="swal-edit-group-platform" class="swal2-input" style="margin-top:0;">
+                <option value="whatsapp" ${item.platform === 'whatsapp' ? 'selected' : ''}>واتساب</option>
+                <option value="telegram" ${item.platform === 'telegram' ? 'selected' : ''}>تليجرام</option>
+              </select>
+            </div>
+            <div>
+              <div style="text-align:right; font-size:12px; margin-bottom:4px;">الترتيب:</div>
+              <input id="swal-edit-group-order" type="number" class="swal2-input" value="${item.order || 1}" style="margin-top:0;">
+            </div>
+          </div>`,
+        showCancelButton: true,
+        confirmButtonText: 'حفظ التعديلات 💾',
+        cancelButtonText: 'إلغاء',
+        preConfirm: () => {
+          const title = document.getElementById('swal-edit-group-title').value.trim();
+          const url = document.getElementById('swal-edit-group-url').value.trim();
+          const platform = document.getElementById('swal-edit-group-platform').value;
+          const order = parseInt(document.getElementById('swal-edit-group-order').value, 10) || 1;
+          if (!title || !url) {
+            Swal.showValidationMessage('يرجى ملء الاسم والرابط');
+            return false;
+          }
+          return { title, url, platform, order };
+        }
+      }).then(res => {
+        if (res.isConfirmed) {
+          database.ref('settings/communityLinks/' + id).update(res.value).then(() => {
+            logAdminAction('تعديل رابط جروب', res.value.title);
+            Swal.fire('تم الحفظ', 'تم تحديث بيانات الرابط بنجاح.', 'success');
+          }).catch(err => Swal.fire('خطأ', escText(err.message), 'error'));
+        }
+      });
+    }
+
+    function deleteGroupLink(id, title) {
+      Swal.fire({
+        title: 'حذف الرابط؟',
+        text: `هل تريد بالتأكيد حذف "${title}" من قائمة الروابط المعروضة للطلاب؟`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        confirmButtonText: 'نعم، احذف',
+        cancelButtonText: 'إلغاء'
+      }).then(res => {
+        if (res.isConfirmed) {
+          database.ref('settings/communityLinks/' + id).remove().then(() => {
+            logAdminAction('حذف رابط جروب', title);
+            Swal.fire('تم الحذف', 'تم حذف الرابط بنجاح.', 'success');
+          }).catch(err => Swal.fire('خطأ', escText(err.message), 'error'));
+        }
+      });
+    }
+
+    function saveAdminDiscordUrl() {
+      const input = document.getElementById('admin-discord-url');
+      if (!input) return;
+      const url = input.value.trim();
+
+      database.ref('settings/discordUrl').set(url).then(() => {
+        logAdminAction('تحديث رابط ديسكورد', url || 'تعطيل الرابط (قريباً)');
+        Swal.fire('تم الحفظ!', url ? 'تم تفعيل رابط سيرفر الديسكورد للطلاب بنجاح 🎧' : 'تم تعيين حالة الديسكورد إلى "قريباً" ⏳', 'success');
+      }).catch(err => Swal.fire('خطأ', escText(err.message), 'error'));
     }
 
 
