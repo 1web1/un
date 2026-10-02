@@ -2175,15 +2175,32 @@
 
       <!-- فوتر المنصة وتوقيع المؤسس والمطور الرسمي -->
       <footer class="liquid-glass z-content" style="margin-top: 50px; margin-bottom: 24px; padding: 28px 20px; text-align: center; border: 1px solid rgba(255,215,0,0.25); background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(0,0,0,0.65) 100%); border-radius: 20px;">
-        <div style="display:flex; justify-content:center; align-items:center; gap:8px; margin-bottom:10px; flex-wrap:wrap;">
-           <span style="background: linear-gradient(90deg, #ffd700, #f59e0b); color: #000; font-weight: 900; font-size: 11px; padding: 3px 12px; border-radius: 20px; box-shadow: 0 2px 8px rgba(245,158,11,0.4);">👑 فكرة وتطوير المنصة</span>
-           <span style="font-weight: 800; font-size: 16px; color: var(--fg);">إشراف وبرمجة: <b id="footer-founder-name" style="color: #ffd700;">م/ مؤسس المنصة</b></span>
+        <div id="footer-leadership-box" style="display:flex; flex-direction:column; align-items:center; gap:8px; margin-bottom:14px;">
+           <!-- سطر Founder -->
+           <div style="display:flex; justify-content:center; align-items:center; gap:8px; flex-wrap:wrap;">
+              <span id="footer-founder-badge" style="background: linear-gradient(90deg, #ffd700, #f59e0b); color: #000; font-weight: 900; font-size: 11.5px; padding: 4px 14px; border-radius: 20px; box-shadow: 0 2px 10px rgba(245,158,11,0.4); display: inline-flex; align-items: center; gap: 5px; letter-spacing: 0.5px;">
+                 <span>👑</span>
+                 <span>Founder</span>
+              </span>
+              <span style="font-weight: 800; font-size: 16px; color: var(--fg);">
+                 <b id="footer-founder-name" style="color: #ffd700;">Ziad Sameh Leader (G3)</b>
+              </span>
+           </div>
+
+           <!-- سطر CEO / Co-CEOs -->
+           <div id="footer-ceos-row" style="display:flex; justify-content:center; align-items:center; gap:8px; flex-wrap:wrap; font-size: 13.5px;">
+              <span id="footer-ceos-badge" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.35); font-size: 11px; padding: 3px 10px; border-radius: 14px; font-weight: 900; display: inline-flex; align-items: center; gap: 4px; letter-spacing: 0.5px;">
+                 <span>🚀</span>
+                 <span id="footer-ceos-badge-txt">CEO</span>
+              </span>
+              <span id="footer-ceos-names" style="font-weight: 700; color: var(--fg); display:inline-flex; align-items:center; gap:6px; flex-wrap:wrap;"></span>
+           </div>
         </div>
         <p style="font-size: 13px; color: var(--fg-soft); margin: 0 auto 16px; max-width: 650px; line-height: 1.7;">
            منصة تعليمية متكاملة لطلاب قسم المساحة ونظم المعلومات الجغرافية والجيوماتكس ✦ صُممت لخدمة الطلاب وتيسير المحاضرات وأبحاث التخرج ولائحة الساعات المعتمدة.
         </p>
         <div style="display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;">
-           <button class="pill" style="background: linear-gradient(135deg, #f59e0b, #d97706); color: #000; font-weight: 900; font-size: 12px; height: 36px; padding: 0 18px;" onclick="openFounderCardModal()">👨‍💻 بطاقة المؤسس والمطوّر</button>
+           <button class="pill" style="background: linear-gradient(135deg, #f59e0b, #d97706); color: #000; font-weight: 900; font-size: 12px; height: 36px; padding: 0 18px;" onclick="openFounderCardModal()">👥 Leadership (Founder & CEO)</button>
            <button id="footer-linkedin-btn" class="pill" style="background: rgba(10,102,194,0.2); color: #38bdf8; border: 1px solid rgba(10,102,194,0.4); font-weight: bold; font-size: 12px; height: 36px; padding: 0 16px;" onclick="openFounderLinkedIn()">💼 بروفايل LinkedIn</button>
            <button id="footer-whatsapp-btn" class="pill" style="background: rgba(34,197,94,0.2); color: #4ade80; border: 1px solid rgba(34,197,94,0.4); font-weight: bold; font-size: 12px; height: 36px; padding: 0 16px;" onclick="openFounderWhatsApp()">💬 تواصل واتساب</button>
         </div>
@@ -2220,22 +2237,33 @@
   </div>
 
   <!-- نافذة صانع شهادات التقدير وبادجات LinkedIn الرسمية -->
-    <!-- نافذة بطاقة تعريف مؤسس ومطور المنصة -->
+    <!-- نافذة بطاقة تعريف مؤسس وإدارة المنصة (Founder & 2 CEOs) -->
   <div id="founder-overlay" class="overlay-bg" style="display: none;" onclick="closeModal(event, 'founder-overlay')">
-    <div class="modal-box liquid-glass" onclick="event.stopPropagation()" style="max-width: 520px; text-align: center; padding: 26px 20px; border: 2px solid #f59e0b; box-shadow: 0 0 50px rgba(245,158,11,0.3);">
-      <div style="font-size: 48px; margin-bottom: 6px; filter: drop-shadow(0 2px 10px rgba(245,158,11,0.5));">👑</div>
-      <span class="status-badge" style="background: linear-gradient(90deg, #ffd700, #f59e0b); color: #000; font-weight: 900; font-size: 12px; padding: 4px 14px; border-radius: 20px; margin-bottom: 12px; display: inline-block;">
-        مؤسس ومطور المنصة التقنية
+    <div class="modal-box liquid-glass" onclick="event.stopPropagation()" style="max-width: 580px; text-align: center; padding: 26px 20px; border: 2px solid #f59e0b; box-shadow: 0 0 50px rgba(245,158,11,0.3);">
+      
+      <!-- قسم Founder -->
+      <div style="font-size: 46px; margin-bottom: 4px; filter: drop-shadow(0 2px 10px rgba(245,158,11,0.5));">👑</div>
+      <span class="status-badge" style="background: linear-gradient(90deg, #ffd700, #f59e0b); color: #000; font-weight: 900; font-size: 12px; padding: 4px 14px; border-radius: 20px; margin-bottom: 10px; display: inline-block; letter-spacing: 0.5px;">
+        👑 Founder
       </span>
-      <h3 id="founder-modal-name" style="margin: 0 0 6px; font-size: 22px; font-weight: 900; color: #ffd700;">م/ مؤسس المنصة</h3>
-      <div id="founder-modal-title" style="font-size: 13px; color: #38bdf8; font-weight: bold; margin-bottom: 16px;">
-        GIS Developer & Platform Architect
+      <h3 id="founder-modal-name" style="margin: 0 0 6px; font-size: 22px; font-weight: 900; color: #ffd700;">Ziad Sameh Leader (G3)</h3>
+      <div id="founder-modal-title" style="font-size: 13px; color: #38bdf8; font-weight: bold; margin-bottom: 14px;">
+        Platform Architect & Lead Developer
       </div>
 
-      <div style="background: rgba(0,0,0,0.45); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; padding: 16px; margin-bottom: 18px; text-align: right; line-height: 1.8; font-size: 13px; color: var(--fg-soft);">
+      <div style="background: rgba(0,0,0,0.45); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; padding: 14px 16px; margin-bottom: 16px; text-align: right; line-height: 1.8; font-size: 12.5px; color: var(--fg-soft);">
         <p id="founder-modal-bio" style="margin: 0;">
-           تم تأسيس وتطوير هذه المنصة التعليمية بجهد ذاتي خالص بهدف رقمنة وخدمة طلاب قسم المساحة ونظم المعلومات الجغرافية، وتوفير كافة المحاضرات، أدوات العمل الميداني، بنك الأسئلة، وأبحاث التخرج مجاناً بالكامل.
+           تم تأسيس وتطوير هذه المنصة التعليمية بجهد ذاتي خالص بهدف رقمنة وخدمة طلاب قسم المساحة ونظم المعلومات الجغرافية، وتوفير كافة المحاضرات، بنك الأسئلة، وأبحاث التخرج مجاناً بالكامل.
         </p>
+      </div>
+
+      <!-- قسم CEO / Co-CEOs -->
+      <div id="modal-ceos-section" style="margin-bottom: 18px; border-top: 1px dashed rgba(255,255,255,0.12); padding-top: 14px;">
+         <div id="modal-ceos-header" style="font-size: 12px; font-weight: 800; color: #38bdf8; margin-bottom: 10px; display:flex; align-items:center; justify-content:center; gap:6px; letter-spacing: 0.5px;">
+            <span>🚀</span>
+            <span id="modal-ceos-header-txt">CEO</span>
+         </div>
+         <div id="modal-ceos-cards" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; text-align: right;"></div>
       </div>
 
       <!-- المهارات والتقنيات المستخدمة -->
@@ -8294,7 +8322,7 @@ ${escText(alertBody)}
       ctx.fillText('اعتماد وإشراف المؤسس التقني', w - 120, 675);
       ctx.fillStyle = titleColor;
       ctx.font = 'bold 16px Cairo, sans-serif';
-      ctx.fillText((founderInfo && founderInfo.name) ? founderInfo.name : 'مؤسس المنصة', w - 120, 705);
+      ctx.fillText((founderInfo && founderInfo.name) ? founderInfo.name : 'Ziad Sameh Leader (G3)', w - 120, 705);
       ctx.fillStyle = isLight ? '#64748b' : '#94a3af';
       ctx.font = '12px Cairo, sans-serif';
       ctx.fillText('قسم المساحة ونظم المعلومات الجغرافية (GIS)', w - 120, 730);
@@ -8501,9 +8529,13 @@ ${escText(alertBody)}
        نظام وهوية مؤسس ومطور المنصة (Founder Branding & Identity)
        ========================================================================= */
     let founderInfo = {
-      name: 'م/ مؤسس المنصة',
-      title: 'GIS Developer & Platform Architect',
-      bio: 'تم تأسيس وتطوير هذه المنصة التعليمية بجهد ذاتي خالص بهدف خدمة زملائي بقسم المساحة ونظم المعلومات الجغرافية، وتيسير المحاضرات، بنك الأسئلة، حسابات لائحة الساعات المعتمدة، ومشاريع التخرج.',
+      name: 'Ziad Sameh Leader (G3)',
+      title: 'Platform Architect & Lead Developer',
+      ceo1Name: 'م/ المدير التنفيذي',
+      ceo1Title: 'Chief Executive Officer (CEO)',
+      ceo2Name: '',
+      ceo2Title: 'Executive Director & Academic Coordinator',
+      bio: 'تم تأسيس وتطوير هذه المنصة التعليمية بجهد ذاتي خالص بهدف رقمنة وخدمة طلاب قسم المساحة ونظم المعلومات الجغرافية، وتوفير كافة المحاضرات، بنك الأسئلة، حسابات لائحة الساعات المعتمدة، ومشاريع التخرج.',
       linkedin: 'https://www.linkedin.com',
       whatsapp: ''
     };
@@ -8519,19 +8551,96 @@ ${escText(alertBody)}
     }
 
     function updateFounderUI() {
+      // 1. Founder in Footer
       const footerName = document.getElementById('footer-founder-name');
-      if (footerName) footerName.innerText = founderInfo.name || 'مؤسس المنصة';
+      if (footerName) footerName.innerText = founderInfo.name || 'Ziad Sameh Leader (G3)';
 
+      // 2. CEOs in Footer
+      const ceo1 = (founderInfo.ceo1Name || '').trim();
+      const ceo2 = (founderInfo.ceo2Name || '').trim();
+      const footerCeosRow = document.getElementById('footer-ceos-row');
+      const footerCeosBadgeTxt = document.getElementById('footer-ceos-badge-txt');
+      const footerCeosNames = document.getElementById('footer-ceos-names');
+
+      if (footerCeosRow && footerCeosNames) {
+        if (!ceo1 && !ceo2) {
+          footerCeosRow.style.display = 'none';
+          footerCeosNames.innerHTML = '';
+        } else {
+          footerCeosRow.style.display = 'flex';
+          if (ceo1 && ceo2) {
+            if (footerCeosBadgeTxt) footerCeosBadgeTxt.innerText = 'Co-CEOs';
+            footerCeosNames.innerHTML = `<span style="color: #67e8f9; font-weight:bold;">${escText(ceo1)}</span> <span style="color: var(--fg-faint); margin: 0 4px;">✦</span> <span style="color: #c084fc; font-weight:bold;">${escText(ceo2)}</span>`;
+          } else {
+            const singleCeo = ceo1 || ceo2;
+            if (footerCeosBadgeTxt) footerCeosBadgeTxt.innerText = 'CEO';
+            footerCeosNames.innerHTML = `<span style="color: #67e8f9; font-weight:bold;">${escText(singleCeo)}</span>`;
+          }
+        }
+      }
+
+      // 3. Modal Founder section
       const modalName = document.getElementById('founder-modal-name');
-      if (modalName) modalName.innerText = founderInfo.name || 'مؤسس المنصة';
+      if (modalName) modalName.innerText = founderInfo.name || 'Ziad Sameh Leader (G3)';
 
       const modalTitle = document.getElementById('founder-modal-title');
-      if (modalTitle) modalTitle.innerText = founderInfo.title || 'GIS Developer & Platform Architect';
+      if (modalTitle) modalTitle.innerText = founderInfo.title || 'Platform Architect & Lead Developer';
 
       const modalBio = document.getElementById('founder-modal-bio');
       if (modalBio) modalBio.innerText = founderInfo.bio;
 
-      // إظهار زر التعديل إذا كان المستخدم الحالي Admin
+      // 4. Modal CEOs section
+      const modalCeosSection = document.getElementById('modal-ceos-section');
+      const modalCeosHeaderTxt = document.getElementById('modal-ceos-header-txt');
+      const modalCeosCards = document.getElementById('modal-ceos-cards');
+
+      if (modalCeosSection && modalCeosCards) {
+        if (!ceo1 && !ceo2) {
+          modalCeosSection.style.display = 'none';
+          modalCeosCards.innerHTML = '';
+        } else {
+          modalCeosSection.style.display = 'block';
+          if (ceo1 && ceo2) {
+            if (modalCeosHeaderTxt) modalCeosHeaderTxt.innerText = 'Co-CEOs';
+            modalCeosCards.style.gridTemplateColumns = 'repeat(auto-fit, minmax(200px, 1fr))';
+            modalCeosCards.innerHTML = `
+              <div class="card liquid-glass" style="background: rgba(56, 189, 248, 0.05); border: 1px solid rgba(56, 189, 248, 0.25); padding: 12px 14px; margin: 0;">
+                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 4px;">
+                    <span style="font-size:18px;">💼</span>
+                    <span class="status-badge" style="background: rgba(56,189,248,.2); color: #38bdf8; border: 1px solid rgba(56,189,248,.4); font-size: 10px; padding: 1px 7px; font-weight:bold;">CEO</span>
+                 </div>
+                 <div style="font-weight: 800; font-size: 14px; color: var(--fg);">${escText(ceo1)}</div>
+                 <div style="font-size: 11.5px; color: var(--fg-soft); margin-top: 2px;">${escText(founderInfo.ceo1Title || 'Co-CEO & Operations Lead')}</div>
+              </div>
+              <div class="card liquid-glass" style="background: rgba(168, 85, 247, 0.05); border: 1px solid rgba(168, 85, 247, 0.25); padding: 12px 14px; margin: 0;">
+                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 4px;">
+                    <span style="font-size:18px;">💼</span>
+                    <span class="status-badge" style="background: rgba(168,85,247,.2); color: #c084fc; border: 1px solid rgba(168,85,247,.4); font-size: 10px; padding: 1px 7px; font-weight:bold;">CEO</span>
+                 </div>
+                 <div style="font-weight: 800; font-size: 14px; color: var(--fg);">${escText(ceo2)}</div>
+                 <div style="font-size: 11.5px; color: var(--fg-soft); margin-top: 2px;">${escText(founderInfo.ceo2Title || 'Co-CEO & Academic Coordinator')}</div>
+              </div>
+            `;
+          } else {
+            const singleCeo = ceo1 || ceo2;
+            const singleTitle = ceo1 ? (founderInfo.ceo1Title || 'Chief Executive Officer (CEO)') : (founderInfo.ceo2Title || 'Chief Executive Officer (CEO)');
+            if (modalCeosHeaderTxt) modalCeosHeaderTxt.innerText = 'CEO';
+            modalCeosCards.style.gridTemplateColumns = '1fr';
+            modalCeosCards.innerHTML = `
+              <div class="card liquid-glass" style="background: rgba(56, 189, 248, 0.06); border: 1px solid rgba(56, 189, 248, 0.3); padding: 14px 18px; margin: 0; max-width: 320px; margin: 0 auto; width: 100%;">
+                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px;">
+                    <span style="font-size:20px;">💼</span>
+                    <span class="status-badge" style="background: rgba(56,189,248,.2); color: #38bdf8; border: 1px solid rgba(56,189,248,.4); font-size: 11px; padding: 2px 8px; font-weight:bold;">CEO</span>
+                 </div>
+                 <div style="font-weight: 800; font-size: 15px; color: var(--fg);">${escText(singleCeo)}</div>
+                 <div style="font-size: 12px; color: var(--fg-soft); margin-top: 3px;">${escText(singleTitle)}</div>
+              </div>
+            `;
+          }
+        }
+      }
+
+      // 5. Edit Button for Admin
       const editBtn = document.getElementById('founder-edit-btn');
       if (editBtn) {
         editBtn.style.display = (currentStudentData && currentStudentData.isAdmin === true) ? 'block' : 'none';
@@ -8562,34 +8671,83 @@ ${escText(alertBody)}
 
     async function adminEditFounderInfo() {
       if (!currentStudentData || currentStudentData.isAdmin !== true) {
-        Swal.fire('غير مصرح به ⛔', 'عذراً، تعديل بيانات وهوية المؤسس محمي ومخصص لمالك المنصة والإدارة فقط.', 'error');
+        Swal.fire('غير مصرح به ⛔', 'عذراً، تعديل بيانات القيادة وهوية المؤسس محمي ومخصص لمالك المنصة والإدارة فقط.', 'error');
         return;
       }
+
+      const c1Val = (founderInfo.ceo1Name || '').trim();
+      const c2Val = (founderInfo.ceo2Name || '').trim();
+      const initMode = (c1Val && c2Val) ? '2' : ((c1Val || c2Val) ? '1' : '1');
+
       const { value: formValues } = await Swal.fire({
-        title: '👑 تعديل بيانات مؤسس ومطور المنصة',
+        title: '👑 تعديل بيانات Founder و CEO',
         html: `
-          <div style="text-align:right; font-size:12px; margin-bottom:4px;">اسم المؤسس / اللقب:</div>
-          <input id="swal-f-name" class="swal2-input" value="${escText(founderInfo.name)}" placeholder="مثال: م. صافي محمد" style="margin-top:0;">
-          <div style="text-align:right; font-size:12px; margin:8px 0 4px;">المسمى التقني:</div>
-          <input id="swal-f-title" class="swal2-input" value="${escText(founderInfo.title)}" placeholder="مثال: GIS Developer & Platform Architect" style="margin-top:0;">
-          <div style="text-align:right; font-size:12px; margin:8px 0 4px;">رابط بروفايلك على LinkedIn:</div>
-          <input id="swal-f-li" class="swal2-input" value="${escText(founderInfo.linkedin)}" placeholder="https://linkedin.com/in/yourname" style="margin-top:0;">
-          <div style="text-align:right; font-size:12px; margin:8px 0 4px;">رقم الواتساب مع كود الدولة:</div>
-          <input id="swal-f-wa" class="swal2-input" value="${escText(founderInfo.whatsapp)}" placeholder="مثال: 2010xxxxxxxx" style="margin-top:0;">
-          <div style="text-align:right; font-size:12px; margin:8px 0 4px;">النبذة والرسالة التعريفية:</div>
-          <textarea id="swal-f-bio" class="swal2-textarea" style="margin-top:0; height:80px;">${escText(founderInfo.bio)}</textarea>
+          <div style="text-align:right; font-size:12px; font-weight:bold; color:#ffd700; margin-bottom:4px;">👑 Founder:</div>
+          <input id="swal-f-name" class="swal2-input" value="${escText(founderInfo.name || 'Ziad Sameh Leader (G3)')}" placeholder="اسم الفاوندر" style="margin-top:0; margin-bottom:8px;">
+          <input id="swal-f-title" class="swal2-input" value="${escText(founderInfo.title || 'Platform Architect & Lead Developer')}" placeholder="المسمى التقني للفاوندر" style="margin-top:0; margin-bottom:14px;">
+
+          <div style="text-align:right; font-size:12px; font-weight:bold; color:#38bdf8; margin-bottom:4px;">عدد الـ CEOs (الرؤساء التنفيذيون):</div>
+          <select id="swal-ceo-mode" class="swal2-select" style="margin-top:0; margin-bottom:12px; width:100%; display:flex;" onchange="
+             const m = this.value;
+             const b1 = document.getElementById('swal-ceo1-box');
+             const b2 = document.getElementById('swal-ceo2-box');
+             if (m === 'none') { if (b1) b1.style.display='none'; if (b2) b2.style.display='none'; }
+             else if (m === '1') { if (b1) b1.style.display='block'; if (b2) b2.style.display='none'; }
+             else { if (b1) b1.style.display='block'; if (b2) b2.style.display='block'; }
+          ">
+             <option value="1" ${initMode === '1' ? 'selected' : ''}>شخص واحد فقط (1 CEO)</option>
+             <option value="2" ${initMode === '2' ? 'selected' : ''}>شخصين (2 CEOs / Co-CEOs)</option>
+             <option value="none" ${initMode === 'none' ? 'selected' : ''}>بدون CEO (عرض Founder فقط)</option>
+          </select>
+
+          <!-- CEO 1 -->
+          <div id="swal-ceo1-box" style="${initMode === 'none' ? 'display:none;' : 'display:block;'}">
+             <div style="text-align:right; font-size:12px; font-weight:bold; color:#38bdf8; margin-bottom:4px;">🚀 CEO 1:</div>
+             <input id="swal-ceo1-name" class="swal2-input" value="${escText(founderInfo.ceo1Name || '')}" placeholder="اسم الـ CEO الأول" style="margin-top:0; margin-bottom:8px;">
+             <input id="swal-ceo1-title" class="swal2-input" value="${escText(founderInfo.ceo1Title || 'Chief Executive Officer (CEO)')}" placeholder="مسمى الـ CEO الأول" style="margin-top:0; margin-bottom:12px;">
+          </div>
+
+          <!-- CEO 2 -->
+          <div id="swal-ceo2-box" style="${initMode === '2' ? 'display:block;' : 'display:none;'}">
+             <div style="text-align:right; font-size:12px; font-weight:bold; color:#c084fc; margin-bottom:4px;">🚀 CEO 2 (الشخص الثاني):</div>
+             <input id="swal-ceo2-name" class="swal2-input" value="${escText(founderInfo.ceo2Name || '')}" placeholder="اسم الـ CEO الثاني" style="margin-top:0; margin-bottom:8px;">
+             <input id="swal-ceo2-title" class="swal2-input" value="${escText(founderInfo.ceo2Title || 'Executive Director & Academic Coordinator')}" placeholder="مسمى الـ CEO الثاني" style="margin-top:0; margin-bottom:12px;">
+          </div>
+
+          <div style="text-align:right; font-size:12px; margin:4px 0 2px;">رابط بروفايل LinkedIn:</div>
+          <input id="swal-f-li" class="swal2-input" value="${escText(founderInfo.linkedin || '')}" placeholder="https://linkedin.com/in/yourname" style="margin-top:0; margin-bottom:8px;">
+          <div style="text-align:right; font-size:12px; margin:4px 0 2px;">رقم الواتساب:</div>
+          <input id="swal-f-wa" class="swal2-input" value="${escText(founderInfo.whatsapp || '')}" placeholder="مثال: 2010xxxxxxxx" style="margin-top:0; margin-bottom:8px;">
+          <div style="text-align:right; font-size:12px; margin:4px 0 2px;">النبذة التعريفية:</div>
+          <textarea id="swal-f-bio" class="swal2-textarea" style="margin-top:0; height:70px;">${escText(founderInfo.bio)}</textarea>
         `,
         focusConfirm: false,
         showCancelButton: true,
         confirmButtonText: 'حفظ واعتماد التعديلات ✓',
         cancelButtonText: 'إلغاء',
         preConfirm: () => {
+          const mode = document.getElementById('swal-ceo-mode').value;
+          let ceo1N = document.getElementById('swal-ceo1-name') ? document.getElementById('swal-ceo1-name').value.trim() : '';
+          let ceo1T = document.getElementById('swal-ceo1-title') ? document.getElementById('swal-ceo1-title').value.trim() : '';
+          let ceo2N = document.getElementById('swal-ceo2-name') ? document.getElementById('swal-ceo2-name').value.trim() : '';
+          let ceo2T = document.getElementById('swal-ceo2-title') ? document.getElementById('swal-ceo2-title').value.trim() : '';
+
+          if (mode === 'none') {
+            ceo1N = ''; ceo1T = ''; ceo2N = ''; ceo2T = '';
+          } else if (mode === '1') {
+            ceo2N = ''; ceo2T = '';
+          }
+
           return {
-            name: document.getElementById('swal-f-name').value.trim() || 'مؤسس المنصة',
-            title: document.getElementById('swal-f-title').value.trim() || 'GIS Developer',
+            name: document.getElementById('swal-f-name').value.trim() || 'Ziad Sameh Leader (G3)',
+            title: document.getElementById('swal-f-title').value.trim() || 'Platform Architect & Lead Developer',
+            ceo1Name: ceo1N,
+            ceo1Title: ceo1T || 'Chief Executive Officer (CEO)',
+            ceo2Name: ceo2N,
+            ceo2Title: ceo2T || 'Executive Director & Academic Coordinator',
             linkedin: document.getElementById('swal-f-li').value.trim(),
             whatsapp: document.getElementById('swal-f-wa').value.trim(),
-            bio: document.getElementById('swal-f-bio').value.trim()
+            bio: document.getElementById('swal-f-bio').value.trim() || founderInfo.bio
           };
         }
       });
@@ -8598,8 +8756,8 @@ ${escText(alertBody)}
         database.ref('settings/founderInfo').set(formValues).then(() => {
           founderInfo = Object.assign(founderInfo, formValues);
           updateFounderUI();
-          logAdminAction('تعديل هوية المؤسس', `الاسم: ${formValues.name}`);
-          Swal.fire('تم الحفظ!', 'تم تحديث هوية وبيانات المؤسس في المنصة بالكامل.', 'success');
+          logAdminAction('تعديل قيادة المنصة', `Founder: ${formValues.name} | CEO: ${formValues.ceo1Name} ${formValues.ceo2Name ? '& ' + formValues.ceo2Name : ''}`);
+          Swal.fire('تم الحفظ!', 'تم تحديث بيانات وعرض Founder و CEO في المنصة بنجاح.', 'success');
         });
       }
     }
