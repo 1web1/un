@@ -1121,6 +1121,13 @@
     color: #4f46e5;
   }
 
+
+  /* ===== تلوين الإجابات الصح/الغلط ===== */
+  .quiz-btn { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  .quiz-btn.qb-correct, .quiz-btn.qb-correct:disabled { background:#15803d !important; border-color:#22c55e !important; color:#fff !important; opacity:1 !important; box-shadow:0 0 0 2px rgba(34,197,94,.35); }
+  .quiz-btn.qb-wrong, .quiz-btn.qb-wrong:disabled { background:#b91c1c !important; border-color:#ef4444 !important; color:#fff !important; opacity:1 !important; box-shadow:0 0 0 2px rgba(239,68,68,.35); }
+  .quiz-btn.qb-dim, .quiz-btn.qb-dim:disabled { opacity:.45; cursor:not-allowed; }
+  .quiz-btn .qb-tag { flex-shrink:0; font-size:12px; font-weight:800; background:rgba(0,0,0,.28); padding:2px 8px; border-radius:999px; white-space:nowrap; }
 </style>
 </head>
 <body>
@@ -3978,7 +3985,7 @@ ${escText(alertBody)}
             if (!Array.isArray(questions)) throw new Error("الكود يجب أن يبدأ بـ [ وينتهي بـ ] (مصفوفة)");
             let added = 0, skipped = 0; const up = {}; const base = database.ref('subjects/' + sId + '/quizzes');
             questions.forEach(q => {
-                const ans = q && q.ans !== undefined ? String(q.ans).trim() : '';
+                const ans = q && q.ans !== undefined ? normDigits(String(q.ans).trim()) : '';
                 if (q && q.q && q.opt1 && q.opt2 && q.opt3 && q.opt4 && ['1','2','3','4'].includes(ans)) { up[base.push().key] = { q: String(q.q), opt1: String(q.opt1), opt2: String(q.opt2), opt3: String(q.opt3), opt4: String(q.opt4), ans }; added++; } else skipped++;
             });
             if (!added) throw new Error("لا توجد أسئلة صالحة (تأكد أن ans رقم من 1 إلى 4)");
@@ -5265,8 +5272,11 @@ ${escText(alertBody)}
 
       document.getElementById('subject-quizzes').innerHTML = filteredQuizzes.length === 0 ? `<div class="empty-state z-content">${emptyMsg}</div>` : quizzesNoticeHtml + filteredQuizzes.map((q, idx) => {
         const sq = solvedQuizzes[q.key]; const isSolved = !!sq; const status = sq ? (sq.status || (sq === true ? 'correct' : null)) : null; const selectedOpt = sq ? sq.selected : null;
-        const getBtnStyle = (optNum) => { if (!isSolved) return ''; if (status === 'correct' && q.ans == optNum) return 'background: #15803d; border-color: #22c55e; opacity: 1;'; if (status === 'wrong' && q.ans == optNum) return 'background: #15803d; border-color: #22c55e; opacity: 1;'; if (status === 'wrong' && selectedOpt == optNum) return 'background: #b91c1c; border-color: #ef4444; opacity: 1;'; return 'opacity: .5; cursor: not-allowed;'; };
-        const badgeHtml = isSolved ? (status === 'correct' ? `<div class="z-content quiz-solved-badge" style="background:rgba(34,197,94,.2); color:#4ade80; border:1px solid #22c55e;">✔️ إجابة صحيحة</div>` : `<div class="z-content quiz-solved-badge" style="background:rgba(239,68,68,.2); color:#f87171; border:1px solid #ef4444;">❌ إجابة خاطئة</div>`) : '';
+        const ansStr = String(q.ans).trim();
+        const correctText = q['opt' + ansStr] !== undefined ? q['opt' + ansStr] : '';
+        const optState = (optNum) => { if (!isSolved) return ''; if (String(optNum) === ansStr) return 'qb-correct'; if (status === 'wrong' && String(selectedOpt) === String(optNum)) return 'qb-wrong'; return 'qb-dim'; };
+        const optTag = (optNum) => { if (!isSolved) return ''; if (String(optNum) === ansStr) return '<span class="qb-tag">✔️ ' + (status === 'correct' ? 'إجابتك صحيحة' : 'الإجابة الصحيحة') + '</span>'; if (status === 'wrong' && String(selectedOpt) === String(optNum)) return '<span class="qb-tag">❌ إجابتك</span>'; return ''; };
+        const badgeHtml = isSolved ? (status === 'correct' ? `<div class="z-content quiz-solved-badge" style="background:rgba(34,197,94,.2); color:#4ade80; border:1px solid #22c55e;">✔️ إجابة صحيحة</div>` : `<div class="z-content quiz-solved-badge" style="background:rgba(239,68,68,.2); color:#f87171; border:1px solid #ef4444;">❌ إجابة خاطئة — الإجابة الصحيحة: ${escText(correctText)}</div>`) : '';
         let options = [ { text: q.opt1, num: '1' }, { text: q.opt2, num: '2' }, { text: q.opt3, num: '3' }, { text: q.opt4, num: '4' } ];
         if (!isSolved && !isRestrictedToLevel2) options = shuffleArray(options);
         
@@ -5278,13 +5288,13 @@ ${escText(alertBody)}
             </button>
           `).join('');
         } else {
-          optionsHtml = options.map(opt => `<button class="quiz-btn" ${isSolved ? 'disabled' : ''} style="${getBtnStyle(opt.num)}" onclick="checkAnswer(this,'${opt.num}','${q.ans}','${q.key}')">${escText(opt.text)}</button>`).join('');
+          optionsHtml = options.map(opt => `<button class="quiz-btn ${optState(opt.num)}" data-num="${opt.num}" ${isSolved ? 'disabled' : ''} onclick="checkAnswer(this,'${opt.num}','${ansStr}','${q.key}')"><span>${escText(opt.text)}</span>${optTag(opt.num)}</button>`).join('');
         }
 
         return `<div class="card liquid-glass" style="padding:20px; border: ${isSolved ? (status==='correct' ? '1px solid #15803d' : '1px solid #b91c1c') : (isRestrictedToLevel2 ? '1px dashed rgba(245,158,11,0.3)' : 'none')};"><div class="z-content" style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px;"><p style="font-weight:700; font-size:16px; margin:0 0 12px; display:flex; align-items:center; gap:6px;">س${idx+1}: ${escText(q.q)} ${isRestrictedToLevel2 ? '<span style="font-size:11px; background:rgba(245,158,11,.15); color:#fbbf24; border:1px solid rgba(245,158,11,.3); padding:1px 6px; border-radius:4px; margin-right:6px;">معاينة فقط</span>' : ''}</p>${isAdmin ? `
           <button class="btn-sm btn-edit" onclick="editQuiz('${subj.id}','${q.key}')">✏️</button>
           <button class="btn-sm btn-ban" onclick="deleteQuiz('${subj.id}','${q.key}','${escapeHtml(q.q)}')">🗑️</button>` : ''}</div>
-        <div style="display:flex; justify-content:space-between; align-items:center;">${badgeHtml}</div>
+        <div class="qb-badge-holder" style="display:flex; justify-content:space-between; align-items:center;">${badgeHtml}</div>
         <div class="quiz-options z-content" style="margin-top:16px;">${optionsHtml}</div></div>`;
       }).join('');
       if (!silent) {
@@ -5299,16 +5309,51 @@ ${escText(alertBody)}
         showLevel2RestrictionAlert('حل الكويزات');
         return;
       }
-      let buttons = btn.parentElement.querySelectorAll('button'); buttons.forEach(b => { b.disabled = true; b.style.cursor = "not-allowed"; });
+      if (btn.disabled) return;
+      selected = String(selected).trim(); correct = String(correct).trim();
+      const optsBox = btn.closest('.quiz-options') || btn.parentElement;
+      const buttons = optsBox.querySelectorAll('.quiz-btn');
+      buttons.forEach(b => { b.disabled = true; });
       const prevSolve = currentStudentData && currentStudentData.solvedQuizzes && currentStudentData.solvedQuizzes[quizKey];
       const wasWrong = prevSolve && (prevSolve.status === 'wrong' || prevSolve === false);
       const isCorrect = (selected === correct);
       const solveData = { status: isCorrect ? 'correct' : 'wrong', selected: selected, timestamp: Date.now() };
+
+      // تلوين الأزرار: الصح أخضر دائماً، والاختيار الغلط أحمر، والباقي باهت
+      let correctText = '';
+      buttons.forEach(b => {
+        const n = String(b.dataset.num);
+        if (n === correct) {
+          b.classList.add('qb-correct');
+          b.insertAdjacentHTML('beforeend', '<span class="qb-tag">✔️ ' + (isCorrect ? 'إجابتك صحيحة' : 'الإجابة الصحيحة') + '</span>');
+          const sp = b.querySelector('span:not(.qb-tag)'); if (sp) correctText = sp.textContent;
+        } else if (b === btn) {
+          b.classList.add('qb-wrong');
+          b.insertAdjacentHTML('beforeend', '<span class="qb-tag">❌ إجابتك</span>');
+        } else {
+          b.classList.add('qb-dim');
+        }
+      });
+      // الشارة وحدود الكارت
+      const card = btn.closest('.card');
+      if (card) {
+        card.style.border = isCorrect ? '1px solid #15803d' : '1px solid #b91c1c';
+        const holder = card.querySelector('.qb-badge-holder');
+        if (holder) holder.innerHTML = isCorrect
+          ? '<div class="z-content quiz-solved-badge" style="background:rgba(34,197,94,.2); color:#4ade80; border:1px solid #22c55e;">✔️ إجابة صحيحة</div>'
+          : '<div class="z-content quiz-solved-badge" style="background:rgba(239,68,68,.2); color:#f87171; border:1px solid #ef4444;">❌ إجابة خاطئة — الإجابة الصحيحة: ' + escText(correctText) + '</div>';
+      }
+
+      const saveLocal = () => {
+        if (currentStudentData) {
+          if (!currentStudentData.solvedQuizzes) currentStudentData.solvedQuizzes = {};
+          currentStudentData.solvedQuizzes[quizKey] = solveData;
+        }
+      };
+
       if (isCorrect) {
         playSound('correct');
         triggerHaptic('correct');
-        btn.style.background = "#15803d"; btn.style.borderColor = "#22c55e"; btn.style.opacity = "1"; btn.innerHTML += " ✔️";
-        buttons.forEach(b => { if (b !== btn) b.style.opacity = ".5"; });
         if (currentUser && (!prevSolve || wasWrong)) {
             const uu = 'users/'+currentUser.uid, already = !!(currentStudentData && currentStudentData.scoredQuizzes && currentStudentData.scoredQuizzes[quizKey]);
             const up = {};
@@ -5318,14 +5363,11 @@ ${escText(alertBody)}
                up[uu+'/score'] = FB.database.ServerValue.increment(1);
                up['leaderboard/'+currentUser.uid+'/score'] = FB.database.ServerValue.increment(1);
             }
+            saveLocal();
             database.ref().update(up).then(() => {
-               if (currentStudentData) {
-                  if (!currentStudentData.solvedQuizzes) currentStudentData.solvedQuizzes = {};
-                  currentStudentData.solvedQuizzes[quizKey] = solveData;
-                  if (!already) {
-                     currentStudentData.score = (currentStudentData.score || 0) + 1;
-                     checkAndAwardBadges(currentStudentData);
-                  }
+               if (currentStudentData && !already) {
+                  currentStudentData.score = (currentStudentData.score || 0) + 1;
+                  checkAndAwardBadges(currentStudentData);
                }
             });
             const msg = wasWrong ? 'رائع! صححت إجابتك وأصبحت إجابة صحيحة 🎯' : (already ? 'صحيح! (نقطة هذا السؤال احتُسبت لك سابقاً)' : 'تمت إضافة نقطة لرصيدك 🏆');
@@ -5334,12 +5376,10 @@ ${escText(alertBody)}
       } else {
         playSound('wrong');
         triggerHaptic('wrong');
-        btn.style.background = "#b91c1c"; btn.style.borderColor = "#ef4444"; btn.style.opacity = "1"; btn.innerHTML += " ❌";
-        buttons.forEach(b => {
-            if (b.getAttribute('onclick').includes(`,'${correct}',`)) { b.style.background = "#15803d"; b.style.borderColor = "#22c55e"; b.style.opacity = "1"; }
-            else if (b !== btn) { b.style.opacity = ".5"; }
-        });
-        if (currentUser && !isAlreadySolved) database.ref('users/'+currentUser.uid+'/solvedQuizzes/'+quizKey).set(solveData);
+        if (currentUser && !(prevSolve && !wasWrong)) {
+            saveLocal();
+            database.ref('users/'+currentUser.uid+'/solvedQuizzes/'+quizKey).set(solveData);
+        }
       }
     }
 
