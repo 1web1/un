@@ -1275,7 +1275,7 @@
             </div>
           </div>
 
-          <div class="quick-card" onclick="navigateTo('#research')" style="--card-accent:#14b8a6; --icon-bg:rgba(20,184,166,.15);">
+          <div class="quick-card" id="home-research-quick-card" onclick="navigateTo('#research')" style="--card-accent:#14b8a6; --icon-bg:rgba(20,184,166,.15);">
             <div class="quick-card-icon">🔬</div>
             <div class="quick-card-info">
               <div class="quick-card-title">قسم الأبحاث</div>
@@ -1358,7 +1358,7 @@
           </div>
         </div>
 
-        <div class="card liquid-glass research-entry" style="margin-top: 24px; border-color: #14b8a6; cursor:pointer;" onclick="navigateTo('#research')">
+        <div class="card liquid-glass research-entry" id="home-research-banner-card" style="margin-top: 24px; border-color: #14b8a6; cursor:pointer;" onclick="navigateTo('#research')">
           <div class="z-content flex-between" style="gap:12px; flex-wrap:wrap;">
             <div>
               <h3 style="color:#14b8a6; margin:0 0 6px; font-size:18px; display:flex; align-items:center; gap:8px;"><span>🔬</span> قسم الأبحاث</h3>
@@ -1641,6 +1641,7 @@
             <button class="pill" style="background:var(--primary); font-size:12px; height:34px;" onclick="shareCurrentSubject()">🔗 مشاركة المادة</button>
           </div>
         </div>
+        <div id="subject-level2-restriction-banner" style="display:none;"></div>
         <h2 class="section-title z-content" id="subject-title">اسم المادة</h2>
         <p id="subject-desc" class="z-content" style="color: var(--fg-soft); margin-bottom: 20px; font-size: 14px; line-height: 1.6;"></p>
         <div id="subject-images" class="z-content" style="margin-bottom: 20px;"></div>
@@ -1740,6 +1741,25 @@
 
           <div id="tab-content" class="admin-tab-content">
              <div class="admin-section-header"><span>1️⃣</span> إدارة المواد الدراسية</div>
+             <!-- بطاقة التحكم في قيود المستوى الثاني لطلاب المستوى الأول -->
+             <div class="card liquid-glass" style="background:rgba(0,0,0,.45); margin-bottom: 20px; border-color: rgba(245, 158, 11, 0.4); padding: 16px 20px;">
+                <div class="z-content flex-between" style="flex-wrap: wrap; gap: 12px;">
+                   <div style="display:flex; align-items:center; gap:12px;">
+                      <span style="font-size: 26px;">🎓</span>
+                      <div>
+                         <div style="font-weight: bold; font-size: 14.5px; display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                            <span>صلاحيات المستوى الثاني لطلاب المستوى الأول:</span>
+                            <span id="sec1-level2-restrictions-badge" class="status-badge" style="font-size:11.5px; padding:3px 10px;">جاري التحميل...</span>
+                         </div>
+                         <p style="font-size: 12px; color: var(--fg-soft); margin: 3px 0 0;">إلغاء القيود يسمح لطلاب المستوى الأول بفتح وتحميل الملفات ومشاهدة الشروحات وحل الكويزات بالمستوى الثاني بشكل طبيعي.</p>
+                      </div>
+                   </div>
+                   <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                      <button class="pill" onclick="setLevel2Restrictions(false)" style="background: #10b981; color:#fff; font-weight:bold; font-size:12.5px; padding:8px 16px;">🔓 إلغاء القيود (فتح للمستوى الأول)</button>
+                      <button class="pill" onclick="setLevel2Restrictions(true)" style="background: #ef4444; color:#fff; font-weight:bold; font-size:12.5px; padding:8px 16px;">🔒 تفعيل القيود (وضع المعاينة)</button>
+                   </div>
+                </div>
+             </div>
              <div class="card liquid-glass" style="background:rgba(0,0,0,.4); margin-bottom: 24px;">
                 <h3 style="color: #fbbf24; font-size: 16px; margin-top:0;">إضافة مادة جديدة</h3>
                 <form class="upload-form" onsubmit="addSubject(event)">
@@ -1833,6 +1853,51 @@
              </div>
 
              <div class="admin-section-header"><span>4️⃣</span> إدارة الأبحاث (حجز الطلاب)</div>
+             <!-- بطاقة التحكم في ظهور وإعدادات موسم الأبحاث حسب المستوى -->
+             <div class="card liquid-glass" style="background:rgba(0,0,0,.45); grid-column: 1 / -1; border-color: #14b8a6; margin-bottom: 20px; padding: 20px;">
+                <div class="z-content flex-between" style="flex-wrap: wrap; gap: 10px; margin-bottom: 14px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 10px;">
+                   <div style="display:flex; align-items:center; gap:10px;">
+                      <span style="font-size: 24px;">🎛️</span>
+                      <div>
+                         <h3 style="color: #14b8a6; font-size: 16px; margin: 0;">التحكم في ظهور قسم الأبحاث وإعدادات الموسم</h3>
+                         <p style="font-size: 12px; color: var(--fg-soft); margin: 2px 0 0;">يمكنك إخفاء قسم الأبحاث عند انتهاء الموسم، أو إظهاره وتحديده لمستوى دراسي محدد (المستوى الأول أو الثاني أو كلاهما).</p>
+                      </div>
+                   </div>
+                   <div id="admin-research-status-badge" class="status-badge" style="background: rgba(20,184,166,0.18); color: #2dd4bf; border: 1px solid #14b8a6; font-size: 12px; padding: 4px 12px;">
+                      جاري القراءة...
+                   </div>
+                </div>
+
+                <form class="upload-form z-content" onsubmit="adminSaveResearchSettings(event)">
+                   <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px;">
+                      <div>
+                         <label style="font-size: 12.5px; font-weight: bold; margin-bottom: 6px; display: block; color: var(--fg);">حالة ظهور القسم للطلاب:</label>
+                         <select class="input-group" id="admin-research-status-select" style="margin: 0;" onchange="adminOnResearchStatusChange()">
+                            <option value="enabled">🟢 مفعل وظاهر للطلاب (موسم الأبحاث نشط)</option>
+                            <option value="disabled">🔴 مغلق ومخفي تماماً (انتهاء موسم الأبحاث)</option>
+                         </select>
+                      </div>
+
+                      <div id="admin-research-level-group">
+                         <label style="font-size: 12.5px; font-weight: bold; margin-bottom: 6px; display: block; color: var(--fg);">المستوى والفئة المتاح لها القسم:</label>
+                         <select class="input-group" id="admin-research-level-select" style="margin: 0;">
+                            <option value="all">📢 متاح لجميع المستويات (المستوى الأول والثاني)</option>
+                            <option value="1">🎓 متاح لطلاب المستوى الأول فقط</option>
+                            <option value="2">🚀 متاح لطلاب المستوى الثاني فقط</option>
+                         </select>
+                      </div>
+                   </div>
+
+                   <div style="margin-top: 12px;">
+                      <label style="font-size: 12.5px; font-weight: bold; margin-bottom: 6px; display: block; color: var(--fg);">رسالة التنبيه المخصصة عند إغلاق أو تقييد القسم:</label>
+                      <input type="text" class="input-group" id="admin-research-closed-msg" placeholder="مثال: انتهت فترة حجز وتنسيق الأبحاث لهذا العام وتم إغلاق القسم." style="margin: 0;">
+                   </div>
+
+                   <div style="margin-top: 14px; display: flex; justify-content: flex-end; gap: 8px;">
+                      <button class="pill" type="submit" style="background: #14b8a6; font-weight: bold; padding: 8px 20px; font-size: 13px;">💾 حفظ وتطبيق الإعدادات فوراً</button>
+                   </div>
+                </form>
+             </div>
              <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); margin-bottom: 24px;">
                 <div class="card liquid-glass" style="background:rgba(0,0,0,.4); grid-column: 1 / -1; border-color: #8b5cf6;">
                    <h3 style="color:#8b5cf6; font-size:16px; margin-top:0;">📨 طلبات أبحاث جديدة من الطلاب <span id="research-req-count" class="status-badge status-offline" style="margin-right:8px;">0</span></h3>
@@ -1859,9 +1924,22 @@
                    <p style="font-size:12px; color:var(--fg-faint); margin-bottom:10px;">تحميل ملف Excel يوضح كل بحث وين أخده.</p>
                    <button class="pill" style="background: #10b981;" onclick="exportResearchCSV()">📥 تصدير Excel (.xlsx)</button>
                 </div>
+                <!-- بطاقة تصفير وإلغاء جميع الحجوزات التجريبية -->
+                <div class="card liquid-glass" style="background:rgba(0,0,0,.45); border-color: #ef4444;">
+                   <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:6px;">
+                      <h3 style="font-size: 16px; margin:0; color:#f87171;">تصفير وإلغاء جميع الحجوزات 🔄</h3>
+                      <span id="admin-claimed-count-badge" class="status-badge" style="background:rgba(239,68,68,0.18); color:#f87171; border:1px solid #ef4444; font-size:11px;">0 محجوز</span>
+                   </div>
+                   <p style="font-size:12px; color:var(--fg-faint); margin-bottom:12px;">إلغاء حجز جميع الأبحاث التي اختارها الطلاب في المرحلة التجريبية وتحويلها إلى "متاحة ⚪" بالكامل ومسح الحجوزات للبدء الفعلي من جديد.</p>
+                   <button class="pill" style="background: linear-gradient(135deg, #ef4444, #dc2626); color:#fff; font-weight:bold; box-shadow: 0 4px 14px rgba(239,68,68,0.35);" onclick="adminResetAllResearchBookings()">⚠️ إلغاء وتصفير كل الحجوزات</button>
+                </div>
              </div>
-             <div style="margin-bottom: 12px;">
-                <input type="text" id="admin-search-research" class="search-box" style="margin-bottom:0; background: rgba(0,0,0,.4);" placeholder="🔍 دوّر على بحث أو اسم طالب..." oninput="filterAdminResearch()">
+             <div style="margin-bottom: 12px; display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:space-between;">
+                <input type="text" id="admin-search-research" class="search-box" style="margin-bottom:0; flex:1; min-width:240px; background: rgba(0,0,0,.4);" placeholder="🔍 دوّر على بحث أو اسم طالب..." oninput="filterAdminResearch()">
+                <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                   <button class="pill" style="background: #10b981; font-size:12.5px; padding:8px 16px;" onclick="exportResearchCSV()">📥 تصدير Excel</button>
+                   <button class="pill" style="background: #ef4444; font-size:12.5px; padding:8px 16px; font-weight:bold;" onclick="adminResetAllResearchBookings()" title="إلغاء حجز جميع الأبحاث وتصفيرها للبدء من جديد">🔄 تصفير كل الحجوزات</button>
+                </div>
              </div>
              <div class="table-responsive">
                 <table class="styled-table">
@@ -1901,6 +1979,16 @@
                       <button class="pill" onclick="saveFeedbackSettings(false)" style="background: var(--danger); flex:1;">🙈 إخفاء الصندوق</button>
                    </div>
                 </div>
+                <div class="card liquid-glass" style="background:rgba(0,0,0,.4); border-color: #f59e0b;">
+                   <h3 style="color: #fbbf24; font-size: 16px; margin-top:0;">قيود المستوى الثاني لطلاب المستوى الأول 🎓 ➔ 🚀</h3>
+                   <p style="font-size:13px; color:var(--fg-faint); margin-bottom:12px;">يمكنك إلغاء القيود ليتمكن طلاب المستوى الأول من تصفح وتحميل ملفات وكويزات المستوى الثاني بشكل كامل، أو تفعيلها لإعادتهم لوضع المعاينة المقيد.</p>
+                   <div id="level2-restrictions-status-badge" style="text-align:center; padding:10px; margin-bottom:12px; border-radius:8px; font-weight:bold; font-size:14px; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1);">جاري التحقق من الحالة...</div>
+                   <div style="display:flex; gap:10px;">
+                      <button class="pill" id="btn-disable-level2-restrict" onclick="setLevel2Restrictions(false)" style="background: var(--online-green); flex:1; font-weight:bold;">إلغاء القيود (فتح) 🔓</button>
+                      <button class="pill" id="btn-enable-level2-restrict" onclick="setLevel2Restrictions(true)" style="background: var(--danger); flex:1; font-weight:bold;">تفعيل القيود (قفل) 🔒</button>
+                   </div>
+                </div>
+
                 <div class="card liquid-glass" style="background:rgba(0,0,0,.4);">
                    <h3 style="color: #c084fc; font-size: 16px; margin-top:0;">وضع الصيانة (الصيانة الشاملة)</h3>
                    <p style="font-size:13px; color:var(--fg-faint); margin-bottom:12px;">عند تفعيل هذا الوضع، سيتم إغلاق الموقع بالكامل أمام الطلاب، ولن يتمكن من الدخول سوى الإدارة.</p>
@@ -2465,7 +2553,7 @@
     }
     function _seenNow(e) { if (!currentUser) return; if (e && e.type === 'visibilitychange' && document.visibilityState !== 'hidden') return; database.ref('users/' + currentUser.uid + '/lastSeen').set(FB.database.ServerValue.TIMESTAMP); }
     function syncLeaderboard(uid, d) { if (!d || d.isBanned) return; const sig = d.name + '|' + (d.score || 0) + '|' + (d.level || 1); if (sig === leaderboardSynced) return; leaderboardSynced = sig; database.ref('leaderboard/' + uid).update({ name: d.name, score: d.score || 0, level: d.level || 1 }); }
-    function listenToLeaderboard() { lbQuery = database.ref('leaderboard').orderByChild('score').limitToLast(35); lbQuery.on('value', snap => { const a = []; snap.forEach(c => { if (c.val() && c.val().name) a.push({ uid: c.key, ...c.val() }); }); a.sort((x, y) => (y.score || 0) - (x.score || 0)); renderLeaderboard(a); }); }
+    function listenToLeaderboard() { lbQuery = database.ref('leaderboard').orderByChild('score').limitToLast(60); lbQuery.on('value', snap => { const a = []; snap.forEach(c => { if (c.val() && c.val().name) a.push({ uid: c.key, ...c.val() }); }); a.sort((x, y) => (y.score || 0) - (x.score || 0)); window._lastLeaderboardRaw = a; renderLeaderboard(a); }); }
     function syncAllLeaderboard() {
       const up = {};
       allUsersList.forEach(u => {
@@ -2568,6 +2656,7 @@
         currentUser = user; document.getElementById('auth-overlay').style.display = 'none';
         if (!window._lvlSet) { window._lvlSet = true; switchLevel(val.level == 2 ? 2 : 1, false); }
         try { database.ref('settings/maintenanceMode').off(); listenToMaintenance(); } catch (e) {}
+        try { listenToLevelRestrictions(); } catch (e) {}
         loadStudentData(user.uid); listenToPrivateAlerts(user.uid);
       }).catch((err) => { if (err && err.code === 'timeout' && (window._ssRetry = (window._ssRetry || 0) + 1) <= 4) { setTimeout(() => { if (auth.currentUser) startSession(auth.currentUser); }, 3000 + Math.random() * 5000); return; } window._ssRetry = 0; Swal.fire('تعذّر تحميل حسابك', escText(authErrMsg(err)), 'error'); auth.signOut(); });
     }
@@ -3089,8 +3178,9 @@ ${escText(alertBody)}
           if (currentStudentData.isBanned) { Swal.fire('محظور!', `⚠️ تم حظرك!<br>السبب: ${escText(currentStudentData.banReason)}`, 'error'); logoutStudent(); return; }
           document.getElementById('user-greeting').innerHTML = `👤 ${escText(currentStudentData.name)}`; setupPresence(uid, currentStudentData); syncLeaderboard(uid, currentStudentData);
           const adminBtn = document.getElementById('admin-toggle-btn');
-          if (currentStudentData.isAdmin === true) { adminBtn.style.display = 'inline-flex'; listenToAdminLogs(); if (!adminListenersOn) { adminListenersOn = true; listenToUsersData(); listenToOnlinePresence(); } listenToAdminResearch(); listenToContributions(); updateAnalyticsSelect(); } else { adminBtn.style.display = 'none'; document.getElementById('admin-panel').style.display = 'none'; }
+          if (currentStudentData.isAdmin === true) { adminBtn.style.display = 'inline-flex'; listenToAdminLogs(); if (!adminListenersOn) { adminListenersOn = true; listenToUsersData(); listenToOnlinePresence(); } listenToAdminResearch(); listenToContributions(); updateAnalyticsSelect(); renderAdminResearchSettingsForm(); } else { adminBtn.style.display = 'none'; document.getElementById('admin-panel').style.display = 'none'; }
         }
+        updateResearchVisibilityUI();
         renderResearchHome();
       });
       if (!window._listenersReady) { window._listenersReady = true; listenToAlerts(); listenToAnnouncements(); listenToSubjects(); listenToLeaderboard(); listenToResearchTopics(); listenToCommunityLinks(); listenToExams(); listenToPolls(); updateBookmarksBadge(); __fetchFeedbackCfg(); }
@@ -3326,6 +3416,11 @@ ${escText(alertBody)}
     }
 
     function openPdfViewer(title, url) {
+      const currSubj = db.find(s => s.id === currentSubjectId);
+      if (isRestrictedLevel2(currSubj)) {
+        showLevel2RestrictionAlert('معاينة الملفات والمحاضرات');
+        return;
+      }
       const overlay = document.getElementById('pdf-viewer-overlay');
       const titleEl = document.getElementById('pdf-viewer-title');
       const frame = document.getElementById('pdf-viewer-frame');
@@ -3399,6 +3494,11 @@ ${escText(alertBody)}
           showGpa(false);
           return;
         } else if (cleanHash.startsWith('research')) {
+          if (!isResearchAllowedForStudent()) {
+            showHome(true, true);
+            notifyResearchClosed();
+            return;
+          }
           const parts = cleanHash.split('/');
           const tab = parts[1] || 'pick';
           showResearch(tab, false);
@@ -3506,17 +3606,23 @@ ${escText(alertBody)}
     function renderLeaderboard(board) {
       const container = document.getElementById('leaderboard-container');
       if (!container) return;
+      if (board) window._lastLeaderboardRaw = board;
+      const rawBoard = window._lastLeaderboardRaw || board || [];
+
+      const currentLvl = activeLevel || 1;
+      const filtered = rawBoard.filter(u => (!u.level && currentLvl === 1) || String(u.level) === String(currentLvl));
+      let top = filtered.slice(0, 10);
+
       container.innerHTML = '';
       
-      let top = board.slice(0, 10);
       if (top.length === 0) {
-        container.innerHTML = '<div class="empty-state">لا توجد نتائج حتى الآن.</div>';
+        container.innerHTML = `<div class="empty-state z-content">لا توجد نتائج مسجلة لطلاب ${currentLvl === 1 ? 'المستوى الأول 🎓' : 'المستوى الثاني 🚀'} حتى الآن.</div>`;
         return;
       }
 
-      let html = '<div class="z-content" style="font-weight:bold; font-size:15px; margin-bottom:14px; color:var(--gold); display:flex; justify-content:space-between; align-items:center;">'
-               + '<div style="display:flex; align-items:center; gap:6px;"><span>🏆</span> <span>أوائل الدفعة والمتفوقين (Top 10)</span></div>'
-               + '<span style="font-size:11px; color:var(--fg-faint);">تحديث مباشر ⚡</span></div>';
+      let html = `<div class="z-content" style="font-weight:bold; font-size:15px; margin-bottom:14px; color:var(--gold); display:flex; justify-content:space-between; align-items:center;">`
+               + `<div style="display:flex; align-items:center; gap:6px;"><span>🏆</span> <span>أوائل ${currentLvl === 1 ? 'المستوى الأول 🎓' : 'المستوى الثاني 🚀'} (Top 10)</span></div>`
+               + `<span style="font-size:11px; color:var(--fg-faint);">تحديث مباشر ⚡</span></div>`;
 
       // =====================================================================
       // إذا كان لدينا 3 طلاب على الأقل: اعرض منصة التتويج الملكية للمراكز الثلاثة الأولى
@@ -3619,8 +3725,10 @@ ${escText(alertBody)}
 
       // إذا كان الطالب الحالي مسجلاً وغير متواجد في الـ Top 10، اعرض له بطاقة ترتيبه الشخصي
       if (currentStudentData) {
-        const myIndex = board.findIndex(s => s.uid === currentStudentData.uid || s.name === currentStudentData.name);
-        if (myIndex >= 10) {
+        const userLvl = currentStudentData.level || 1;
+        if (userLvl == currentLvl) {
+          const myIndex = filtered.findIndex(s => s.uid === currentStudentData.uid || s.name === currentStudentData.name);
+          if (myIndex >= 10) {
           html += `
             <div class="my-rank-pinned-card z-content" style="margin-top:14px;">
               <div style="display:flex; align-items:center; gap:8px;">
@@ -3632,6 +3740,7 @@ ${escText(alertBody)}
               </div>
               <div style="font-size:16px; font-weight:900; color:#f59e0b;">${currentStudentData.score || 0} نقطة</div>
             </div>`;
+          }
         }
       }
 
@@ -3812,7 +3921,7 @@ ${escText(alertBody)}
       }
     }
 
-    function toggleAdminPanel() { if (!currentStudentData || currentStudentData.isAdmin !== true) { Swal.fire('تنبيه','غير مصرح لك.','warning'); return; } const p = document.getElementById("admin-panel"); const vis = p.style.display === "block"; p.style.display = vis ? "none" : "block"; if (!vis) { updateAdminSelects(); p.scrollIntoView({behavior:'smooth'}); } }
+    function toggleAdminPanel() { if (!currentStudentData || currentStudentData.isAdmin !== true) { Swal.fire('تنبيه','غير مصرح لك.','warning'); return; } const p = document.getElementById("admin-panel"); const vis = p.style.display === "block"; p.style.display = vis ? "none" : "block"; if (!vis) { updateAdminSelects(); updateLevelRestrictionsUI(); p.scrollIntoView({behavior:'smooth'}); } }
     function updateAlert(e) { e.preventDefault(); let text = document.getElementById("alert-input").value; database.ref('alert').set(text); e.target.reset(); logAdminAction('نشر تنبيه للدفعة', text); Swal.fire('تم', 'تم نشر التنبيه بنجاح', 'success'); }
 
     function updateAdminSelects() {
@@ -3864,6 +3973,158 @@ ${escText(alertBody)}
                 database.ref('subjects/'+sId+'/quizzes').remove().then(() => { logAdminAction('مسح كل أسئلة المادة', `المادة: ${subj ? subj.name : ''}`); Swal.fire('تم المسح', 'تم مسح بنك الأسئلة بالكامل لهذه المادة بنجاح.', 'success'); }).catch((err) => { Swal.fire('خطأ', err.message, 'error'); });
             }
         });
+    }
+
+        /* =========================================================================
+       إدارة والتحكم في ظهور قسم الأبحاث وإعدادات الموسم حسب المستوى
+       (Research Section Visibility & Season Settings by Level)
+       ========================================================================= */
+    let researchSettings = {
+      enabled: true,
+      targetLevel: 'all',
+      closedMessage: 'انتهت فترة حجز وتنسيق الأبحاث لهذا العام وتم إغلاق القسم.'
+    };
+    let researchSettingsListening = false;
+
+    function listenToResearchSettings() {
+      if (researchSettingsListening) return;
+      researchSettingsListening = true;
+      database.ref('settings/researchSettings').on('value', snap => {
+        const val = snap.val();
+        if (val) {
+          researchSettings = Object.assign(researchSettings, val);
+        }
+        updateResearchVisibilityUI();
+        renderAdminResearchSettingsForm();
+      });
+    }
+
+    function isResearchAllowedForStudent() {
+      if (currentStudentData && currentStudentData.isAdmin === true) return true;
+      if (researchSettings.enabled === false) return false;
+
+      const target = researchSettings.targetLevel || 'all';
+      if (target === 'all') return true;
+
+      const studentLvl = (currentStudentData && currentStudentData.level) 
+        ? parseInt(currentStudentData.level, 10) 
+        : (activeLevel || 1);
+
+      return String(target) === String(studentLvl);
+    }
+
+    function notifyResearchClosed() {
+      let msg = '';
+      if (researchSettings.enabled === false) {
+        msg = researchSettings.closedMessage || 'تم إغلاق قسم الأبحاث لانتهاء فترة حجز وتنسيق الأبحاث لهذا العام.';
+      } else {
+        const lvlName = researchSettings.targetLevel === '1' ? 'المستوى الأول 🎓' : 'المستوى الثاني 🚀';
+        msg = `قسم الأبحاث متاح ومخصص حالياً لطلاب <b>${lvlName}</b> فقط، وغير متاح لمستواك الدراسي.`;
+      }
+
+      Swal.fire({
+        title: 'قسم الأبحاث غير متاح 🔒',
+        html: `
+          <div style="text-align: right; line-height: 1.7; font-size: 13.5px; color: var(--fg-soft);">
+            <p style="margin: 0 0 10px;">${escText(msg)}</p>
+            <p style="margin: 0; font-size: 12px; color: var(--fg-faint);">📌 لمزيد من المعلومات، يرجى متابعة التنبيهات الرسمية أو التواصل مع إدارة القسم.</p>
+          </div>`,
+        icon: 'info',
+        confirmButtonText: 'حسناً، فهمت ✓',
+        confirmButtonColor: '#14b8a6'
+      });
+    }
+
+    function updateResearchVisibilityUI() {
+      const allowed = isResearchAllowedForStudent();
+      const navBtn = document.getElementById('research-nav-btn');
+      const quickCard = document.getElementById('home-research-quick-card');
+      const bannerCard = document.getElementById('home-research-banner-card');
+      const lbMyResearch = document.getElementById('lb-my-research');
+
+      if (navBtn) navBtn.style.display = allowed ? 'inline-flex' : 'none';
+      if (quickCard) quickCard.style.display = allowed ? 'flex' : 'none';
+      if (bannerCard) bannerCard.style.display = allowed ? 'block' : 'none';
+      if (lbMyResearch && !allowed) lbMyResearch.style.display = 'none';
+
+      // إذا كان المستخدم غير الأدمن موجوداً حالياً داخل قسم الأبحاث وتم إغلاقه
+      const viewRes = document.getElementById('view-research');
+      if (viewRes && viewRes.style.display === 'block' && !allowed) {
+        showHome(true, true);
+        notifyResearchClosed();
+      }
+    }
+
+    function renderAdminResearchSettingsForm() {
+      const statusSel = document.getElementById('admin-research-status-select');
+      const levelSel = document.getElementById('admin-research-level-select');
+      const msgInput = document.getElementById('admin-research-closed-msg');
+      const badge = document.getElementById('admin-research-status-badge');
+
+      if (statusSel) statusSel.value = researchSettings.enabled === false ? 'disabled' : 'enabled';
+      if (levelSel) levelSel.value = researchSettings.targetLevel || 'all';
+      if (msgInput) msgInput.value = researchSettings.closedMessage || '';
+
+      if (badge) {
+        if (researchSettings.enabled === false) {
+          badge.innerHTML = 'الحالة الحالية: <span style="color:#ef4444; font-weight:bold;">مغلق ومخفي تماماً 🔴</span>';
+          badge.style.borderColor = '#ef4444';
+          badge.style.background = 'rgba(239,68,68,0.15)';
+          badge.style.color = '#fca5a5';
+        } else {
+          const lvlText = researchSettings.targetLevel === 'all' 
+            ? 'لجميع الطلاب 📢' 
+            : (researchSettings.targetLevel === '1' ? 'للمستوى الأول فقط 🎓' : 'للمستوى الثاني فقط 🚀');
+          badge.innerHTML = `الحالة الحالية: <span style="color:#2dd4bf; font-weight:bold;">مفعل (${lvlText}) 🟢</span>`;
+          badge.style.borderColor = '#14b8a6';
+          badge.style.background = 'rgba(20,184,166,0.15)';
+          badge.style.color = '#2dd4bf';
+        }
+      }
+      adminOnResearchStatusChange();
+    }
+
+    function adminOnResearchStatusChange() {
+      const statusSel = document.getElementById('admin-research-status-select');
+      const lvlGroup = document.getElementById('admin-research-level-group');
+      if (statusSel && lvlGroup) {
+        lvlGroup.style.opacity = statusSel.value === 'disabled' ? '0.4' : '1';
+      }
+    }
+
+    function adminSaveResearchSettings(e) {
+      e.preventDefault();
+      if (!currentStudentData || currentStudentData.isAdmin !== true) return;
+
+      const enabled = document.getElementById('admin-research-status-select').value === 'enabled';
+      const targetLevel = document.getElementById('admin-research-level-select').value;
+      const closedMessage = document.getElementById('admin-research-closed-msg').value.trim();
+
+      const payload = {
+        enabled,
+        targetLevel,
+        closedMessage: closedMessage || 'انتهت فترة حجز وتنسيق الأبحاث لهذا العام وتم إغلاق القسم.',
+        updatedAt: Date.now(),
+        updatedBy: currentStudentData.name || 'الإدارة'
+      };
+
+      database.ref('settings/researchSettings').set(payload).then(() => {
+        researchSettings = Object.assign(researchSettings, payload);
+        logAdminAction('تعديل إعدادات الأبحاث', `الحالة: ${enabled ? 'مفعل' : 'مغلق'} | المستوى: ${targetLevel}`);
+        Swal.fire({
+          title: 'تم حفظ الإعدادات بنجاح! 💾',
+          text: enabled 
+            ? `تم تفعيل قسم الأبحاث ليظهر لـ (${targetLevel === 'all' ? 'جميع المستويات' : 'المستوى ' + targetLevel}) فوراً.`
+            : 'تم إغلاق وإخفاء قسم الأبحاث عن الطلاب بنجاح.',
+          icon: 'success',
+          confirmButtonText: 'ممتاز',
+          confirmButtonColor: '#14b8a6'
+        });
+        updateResearchVisibilityUI();
+        renderAdminResearchSettingsForm();
+      }).catch(err => {
+        Swal.fire('خطأ في الحفظ', escText(err.message), 'error');
+      });
     }
 
     /* ===== الأبحاث ===== */
@@ -3951,6 +4212,7 @@ ${escText(alertBody)}
     }
 
     function requestNewResearch() {
+      if (!isResearchAllowedForStudent()) return notifyResearchClosed();
       if (!currentUser || !currentStudentData) return Swal.fire('', 'لازم تسجل دخول الأول.', 'warning');
       if (myResearch()) return Swal.fire('عندك بحث', 'إنت حاجز بحث بالفعل، الغي الحجز الأول لو عايز تطلب غيره.', 'warning');
       if (myRequest && myRequest.status === 'pending') return Swal.fire('', 'عندك طلب لسه مستني الرد.', 'info');
@@ -4084,6 +4346,7 @@ ${escText(alertBody)}
     function filterResearch() { clearTimeout(researchSearchTimeout); researchSearchTimeout = setTimeout(() => { renderResearchHome(document.getElementById('research-search').value.toLowerCase()); }, 300); }
 
     function claimResearch(id, name) {
+      if (!isResearchAllowedForStudent()) return notifyResearchClosed();
       if (!currentUser || !currentStudentData) return Swal.fire('تنبيه', 'سجّل دخول الأول.', 'warning');
       const existing = myResearch();
       if (existing) return Swal.fire('عندك بحث بالفعل', `انت حاجز بحث \"${existing.name}\" بالفعل، لازم تلغيه الأول لو عايز تغيّره.`, 'warning');
@@ -4162,6 +4425,188 @@ ${escText(alertBody)}
       base.update(up).then(() => { if (skipped) Swal.fire('تم', 'اتضاف ' + Object.keys(up).length + ' بحث، وتم تخطي ' + skipped + ' مكرر.', 'success'); logAdminAction('إضافة أبحاث بالجملة', `عدد ${lines.length} بحث`); Swal.fire('تم يا بطل!', `تمت إضافة ${lines.length} بحث بنجاح.`, 'success'); document.getElementById('bulk-research-data').value = ''; });
     }
 
+    async function adminResetAllResearchBookings() {
+      if (!currentUser || !currentStudentData || currentStudentData.isAdmin !== true) {
+        return Swal.fire('غير مصرح', 'هذا الإجراء متاح لمدير النظام فقط.', 'error');
+      }
+
+      const claimedTopics = researchTopics.filter(r => !!r.claimedBy);
+      const claimedStudents = allUsersList.filter(u => !!u.researchTopic);
+      const reqCount = (researchRequests || []).length;
+      const totalClaimed = claimedTopics.length;
+
+      const confirmRes = await Swal.fire({
+        title: 'تصفير وإلغاء جميع حجوزات الأبحاث؟',
+        html: `
+          <div style="text-align:right; font-size:13.5px; line-height:1.75; color:var(--fg);">
+            <div style="background:rgba(239,68,68,0.12); border:1px solid rgba(239,68,68,0.3); padding:10px 14px; border-radius:8px; margin-bottom:12px; color:#f87171; font-weight:bold;">
+              ⚠️ تحذير: هذا الإجراء مخصص لإنهاء المرحلة التجريبية وبدء الحجز الفعلي من الصفر.
+            </div>
+            <div style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); padding:12px; border-radius:8px; margin-bottom:12px;">
+              <div>📌 <b>الأبحاث المحجوزة حالياً:</b> <span style="color:#f87171; font-weight:bold;">${totalClaimed} بحث</span></div>
+              <div>👤 <b>الطلاب المسجل لهم بحث:</b> <span style="color:#f87171; font-weight:bold;">${claimedStudents.length} طالب</span></div>
+              <div>📨 <b>طلبات الأبحاث المسجلة:</b> <span style="color:#fbbf24; font-weight:bold;">${reqCount} طلب</span></div>
+            </div>
+            <div style="color:var(--fg-soft); font-size:12.5px;">
+              • <b>ما الذي سيحدث؟</b><br>
+              1. سيتم تحرير كافة الأبحاث المحجوزة وستصبح جميعها <b style="color:#22c55e;">"متاحة ⚪"</b> دون حذف أي عنوان بحث.<br>
+              2. سيتم مسح بيانات البحث المحجوز من حسابات جميع الطلاب ليتمكنوا من اختيار بحث جديد.<br>
+              3. سيتم تصفير طلبات الأبحاث السابقة للبدء بصفحة جديدة نظيفة.<br><br>
+              <span style="color:#10b981;">💡 نصيحة: يمكنك تصدير كشف الحجوزات التجريبية كملف Excel أولاً إذا أردت الاحتفاظ به كأرشيف.</span>
+            </div>
+          </div>
+        `,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: 'نعم، ألغِ كل الحجوزات وابدأ من جديد 🚀',
+        cancelButtonText: 'تراجع وإلغاء'
+      });
+
+      if (!confirmRes.isConfirmed) return;
+
+      Swal.fire({
+        title: 'جاري تصفير الحجوزات...',
+        html: '<div style="font-size:13px; color:var(--fg-soft);">يتم الآن تحرير الأبحاث وتحديث حسابات الطلاب في السيرفر...</div>',
+        allowOutsideClick: false,
+        didOpen: () => { Swal.showLoading(); }
+      });
+
+      try {
+        const up = {};
+        let clearedTopicsCount = 0;
+        let clearedUsersCount = 0;
+
+        // 1. Fetch current live snapshot of research_topics
+        try {
+          const snapT = await database.ref('research_topics').once('value');
+          const valT = snapT.val() || {};
+          for (const key in valT) {
+            const item = valT[key];
+            if (item && (item.claimedBy || item.claimedByName || item.claimedAt)) {
+              up['research_topics/' + key + '/claimedBy'] = null;
+              up['research_topics/' + key + '/claimedByName'] = null;
+              up['research_topics/' + key + '/claimedAt'] = null;
+              clearedTopicsCount++;
+            }
+          }
+        } catch (e) {
+          console.warn('Fallback reading researchTopics array:', e);
+          researchTopics.forEach(r => {
+            if (r.claimedBy || r.claimedByName || r.claimedAt) {
+              up['research_topics/' + r.key + '/claimedBy'] = null;
+              up['research_topics/' + r.key + '/claimedByName'] = null;
+              up['research_topics/' + r.key + '/claimedAt'] = null;
+              clearedTopicsCount++;
+            }
+          });
+        }
+
+        // 2. Fetch current live snapshot of users
+        try {
+          const snapU = await database.ref('users').once('value');
+          const valU = snapU.val() || {};
+          for (const uid in valU) {
+            const u = valU[uid];
+            if (u && (u.researchTopic || u.researchTopicName || u.researchTopicAt)) {
+              up['users/' + uid + '/researchTopic'] = null;
+              up['users/' + uid + '/researchTopicName'] = null;
+              up['users/' + uid + '/researchTopicAt'] = null;
+              clearedUsersCount++;
+            }
+          }
+        } catch (e) {
+          console.warn('Fallback reading allUsersList array:', e);
+          allUsersList.forEach(u => {
+            if (u.researchTopic || u.researchTopicName || u.researchTopicAt) {
+              up['users/' + u.uid + '/researchTopic'] = null;
+              up['users/' + u.uid + '/researchTopicName'] = null;
+              up['users/' + u.uid + '/researchTopicAt'] = null;
+              clearedUsersCount++;
+            }
+          });
+        }
+
+        // 3. Clear all research requests
+        up['research_requests'] = null;
+
+        // 4. Multi-path update in chunks
+        const updateKeys = Object.keys(up);
+        if (updateKeys.length > 0) {
+          const chunkSize = 350;
+          for (let i = 0; i < updateKeys.length; i += chunkSize) {
+            const sliceKeys = updateKeys.slice(i, i + chunkSize);
+            const chunk = {};
+            sliceKeys.forEach(k => { chunk[k] = up[k]; });
+            try {
+              await database.ref().update(chunk);
+            } catch (errUp) {
+              const token = await currentUser.getIdToken();
+              const r = await fetch(__DB + '/.json?auth=' + encodeURIComponent(token), {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(chunk)
+              });
+              if (!r.ok) throw new Error('HTTP ' + r.status + ' أثناء تحديث قاعدة البيانات');
+            }
+          }
+        }
+
+        // 5. Update local memory state
+        researchTopics.forEach(r => {
+          r.claimedBy = null;
+          r.claimedByName = null;
+          r.claimedAt = null;
+        });
+
+        allUsersList.forEach(u => {
+          u.researchTopic = null;
+          u.researchTopicName = null;
+          u.researchTopicAt = null;
+        });
+
+        if (currentStudentData) {
+          currentStudentData.researchTopic = null;
+          currentStudentData.researchTopicName = null;
+          currentStudentData.researchTopicAt = null;
+        }
+
+        researchRequests = [];
+        myRequest = null;
+
+        // 6. Refresh UIs
+        renderAdminResearchTable();
+        renderAdminRequests();
+        renderMyResearchBox();
+        renderMyRequest();
+        renderResearchHome();
+        if (typeof updateDashboardStats === 'function') updateDashboardStats();
+
+        // 7. Log admin action
+        logAdminAction('إلغاء جميع حجوزات الأبحاث', `تم تصفير ${clearedTopicsCount} بحث محجوز و ${clearedUsersCount} حساب طالب بنجاح لبدء الحجز الفعلي.`);
+
+        Swal.fire({
+          title: 'تم تصفير كل الحجوزات بنجاح! 🎉',
+          html: `
+            <div style="text-align:right; font-size:13.5px; line-height:1.75;">
+              ✅ تم تحرير <b>${clearedTopicsCount}</b> بحث وأصبحت جميعها <b>"متاحة ⚪"</b>.<br>
+              ✅ تم مسح بيانات الحجز من حسابات <b>${clearedUsersCount}</b> طالب.<br>
+              ✅ تم تصفير جميع طلبات الأبحاث التجريبية السابقة.<br><br>
+              <div style="background:rgba(34,197,94,0.12); border:1px solid rgba(34,197,94,0.3); padding:10px; border-radius:8px; color:#4ade80; font-weight:bold;">
+                🚀 المنصة جاهزة الآن لبدء الحجز الفعلي واختيار الطلاب من الصفر!
+              </div>
+            </div>
+          `,
+          icon: 'success',
+          confirmButtonText: 'تمام يا بطل'
+        });
+      } catch (err) {
+        console.error('adminResetAllResearchBookings error:', err);
+        Swal.fire('خطأ', escText(err.message || 'حدث خطأ أثناء تصفير الحجوزات.'), 'error');
+      }
+    }
+
     function adminFreeResearch(id, name) {
       Swal.fire({ title: `إلغاء حجز "${name}"؟`, text: 'هيبقى متاح لأي طالب تاني يحجزه.', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'نعم، إلغاء الحجز' }).then(result => {
         if (!result.isConfirmed) return;
@@ -4183,6 +4628,14 @@ ${escText(alertBody)}
 
     function renderAdminResearchTable() {
       const tbody = document.getElementById('research-table-body'); if (!tbody) return;
+      const claimedCount = researchTopics.filter(r => !!r.claimedBy).length;
+      const cBadge = document.getElementById('admin-claimed-count-badge');
+      if (cBadge) {
+        cBadge.textContent = claimedCount + ' محجوز';
+        cBadge.style.background = claimedCount > 0 ? 'rgba(239,68,68,0.18)' : 'rgba(16,185,129,0.18)';
+        cBadge.style.color = claimedCount > 0 ? '#f87171' : '#34d399';
+        cBadge.style.borderColor = claimedCount > 0 ? '#ef4444' : '#10b981';
+      }
       if (researchTopics.length === 0) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">لا توجد أبحاث مضافة بعد.</td></tr>'; return; }
       const __cnt = {}; researchTopics.forEach(r => { const k = normName(r.name); __cnt[k] = (__cnt[k] || 0) + 1; });
       const __claimTime = r => { if (typeof r.claimedAt === 'number') return r.claimedAt; const u = allUsersList.find(x => x.researchTopic === r.key); return (u && typeof u.researchTopicAt === 'number') ? u.researchTopicAt : Number.MAX_SAFE_INTEGER; };
@@ -4321,6 +4774,11 @@ ${escText(alertBody)}
     }
 
     function showResearch(tab, updateHash = true) {
+      if (!isResearchAllowedForStudent()) {
+        showHome(true, true);
+        notifyResearchClosed();
+        return;
+      }
       document.getElementById('view-home').style.display = 'none';
       document.getElementById('view-subject').style.display = 'none';
       document.getElementById('view-research').style.display = 'block';
@@ -4353,6 +4811,156 @@ ${escText(alertBody)}
       }
     }
 
+        /* =========================================================================
+       نظام قيود وحماية مواد المستوى الثاني لطلاب المستوى الأول
+       (Level 2 Preview & Restrictions System)
+       ========================================================================= */
+    function showLevel2RestrictionAlert(featureName) {
+      featureName = featureName || 'هذا القسم';
+      playSound('wrong');
+      triggerHaptic('wrong');
+      Swal.fire({
+        icon: 'warning',
+        title: '🔒 محتوى مخصص للمستوى الثاني',
+        html: `
+          <div style="text-align: right; line-height: 1.7; font-size: 13.5px; color: #e2e8f0;">
+            <p style="margin: 0 0 10px;">عذراً، استخدام أو فتح <b>${escText(featureName)}</b> مقتصر على طلاب <b>المستوى الثاني 🚀</b> فقط.</p>
+            <div style="background: rgba(245, 158, 11, 0.12); border-right: 4px solid #f59e0b; padding: 10px 14px; border-radius: 8px; margin-bottom: 12px;">
+              🎓 <b>نظام المستويات:</b> حسابك مسجل حالياً في <b>المستوى الأول</b>. يُسمح لك باستعراض عناوين وفهرس المقررات في وضع المعاينة فقط للتعرف على المنهج الدراسي المستقبلي.
+            </div>
+            <p style="font-size: 12px; color: #94a3b8; margin: 0;">📌 ستفتح لك كافة الصلاحيات (تحميل الملفات، تشغيل الشروحات، وحل الكويزات واحتساب النقاط) تلقائياً عند ترقية حسابك للمستوى الثاني.</p>
+          </div>
+        `,
+        confirmButtonColor: '#3b82f6',
+        confirmButtonText: 'حسناً، فهمت ✓'
+      });
+    }
+
+    // Default to false (unlocked) unless explicitly enabled in localStorage or Firebase
+    let isLevel2RestrictionActive = (localStorage.getItem('level2RestrictionsEnabled') === 'true');
+
+    function listenToLevelRestrictions() {
+      try {
+        database.ref('settings/level2RestrictionsEnabled').off();
+      } catch (e) {}
+      database.ref('settings/level2RestrictionsEnabled').on('value', snap => {
+        const val = snap.val();
+        if (val !== null && val !== undefined) {
+          isLevel2RestrictionActive = (val === true);
+          try { localStorage.setItem('level2RestrictionsEnabled', val === true ? 'true' : 'false'); } catch (e) {}
+        }
+        updateLevelRestrictionsUI();
+        renderHome();
+        if (currentSubjectId && document.getElementById('view-subject') && document.getElementById('view-subject').style.display !== 'none') {
+          const currSubj = db.find(s => s.id === currentSubjectId);
+          if (currSubj) openSubject(currentSubjectId, true);
+        }
+      }, err => {
+        console.warn('level2RestrictionsEnabled read error, fallback to local state:', err);
+      });
+    }
+    listenToLevelRestrictions();
+
+    function updateLevelRestrictionsUI() {
+      const badge = document.getElementById('level2-restrictions-status-badge');
+      const btnEnable = document.getElementById('btn-enable-level2-restrict');
+      const btnDisable = document.getElementById('btn-disable-level2-restrict');
+
+      if (badge && btnEnable && btnDisable) {
+        if (isLevel2RestrictionActive) {
+          badge.innerHTML = 'الحالة الحالية: <span style="color:#f59e0b;">مفعلة 🔒 (المستوى الثاني مقيد لطلاب المستوى الأول)</span>';
+          badge.style.borderColor = '#f59e0b';
+          badge.style.background = 'rgba(245,158,11,0.12)';
+          btnEnable.style.opacity = '1';
+          btnEnable.style.boxShadow = '0 0 10px rgba(239,68,68,0.5)';
+          btnDisable.style.opacity = '.4';
+          btnDisable.style.boxShadow = 'none';
+        } else {
+          badge.innerHTML = 'الحالة الحالية: <span style="color:#22c55e;">ملغاة 🟢 (المستوى الثاني مفتوح بالكامل لطلاب المستوى الأول)</span>';
+          badge.style.borderColor = '#22c55e';
+          badge.style.background = 'rgba(34,197,94,0.12)';
+          btnDisable.style.opacity = '1';
+          btnDisable.style.boxShadow = '0 0 10px rgba(34,197,94,0.5)';
+          btnEnable.style.opacity = '.4';
+          btnEnable.style.boxShadow = 'none';
+        }
+      }
+
+      const sec1Badge = document.getElementById('sec1-level2-restrictions-badge');
+      if (sec1Badge) {
+        if (isLevel2RestrictionActive) {
+          sec1Badge.textContent = '🔒 القيود مفعلة (وضع المعاينة)';
+          sec1Badge.style.background = 'rgba(245,158,11,0.2)';
+          sec1Badge.style.color = '#fbbf24';
+          sec1Badge.style.border = '1px solid #f59e0b';
+        } else {
+          sec1Badge.textContent = '🟢 القيود ملغاة (مفتوح بالكامل)';
+          sec1Badge.style.background = 'rgba(34,197,94,0.2)';
+          sec1Badge.style.color = '#4ade80';
+          sec1Badge.style.border = '1px solid #22c55e';
+        }
+      }
+    }
+
+    function setLevel2Restrictions(enable) {
+      if (!currentUser || !currentStudentData || currentStudentData.isAdmin !== true) {
+        return Swal.fire('غير مصرح', 'هذا الإجراء متاح لمدير النظام فقط.', 'error');
+      }
+
+      const title = enable ? 'تفعيل وإعادة قيود المستوى الثاني؟' : 'إلغاء قيود المستوى الثاني عن طلاب المستوى الأول؟';
+      const text = enable 
+        ? 'سيتم إعادة قفل مواد المستوى الثاني أمام طلاب المستوى الأول لتصبح في وضع المعاينة المقيد فقط، ومنع فتح أو تحميل الملفات ومشاهدة الشروحات وحل الكويزات.'
+        : 'سيتم إلغاء كافة القيود فوراً؛ سيتمكن طلاب المستوى الأول من فتح وتحميل ملفات المستوى الثاني، مشاهدة الشروحات، وحل الكويزات بشكل طبيعي.';
+      const confirmBtnText = enable ? 'نعم، فعّل القيود 🔒' : 'نعم، ألغِ القيود وافتح المحتوى 🔓';
+      const confirmColor = enable ? '#ef4444' : '#10b981';
+
+      Swal.fire({
+        title,
+        text,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: confirmColor,
+        cancelButtonColor: '#64748b',
+        confirmButtonText: confirmBtnText,
+        cancelButtonText: 'تراجع'
+      }).then(res => {
+        if (!res.isConfirmed) return;
+
+        // Apply immediately in local state so there is ZERO lag or delay
+        isLevel2RestrictionActive = !!enable;
+        try { localStorage.setItem('level2RestrictionsEnabled', enable ? 'true' : 'false'); } catch (e) {}
+        updateLevelRestrictionsUI();
+        renderHome();
+        if (currentSubjectId && document.getElementById('view-subject') && document.getElementById('view-subject').style.display !== 'none') {
+          const currSubj = db.find(s => s.id === currentSubjectId);
+          if (currSubj) openSubject(currentSubjectId, true);
+        }
+
+        // Sync to Firebase Realtime Database
+        database.ref('settings/level2RestrictionsEnabled').set(enable).then(() => {
+          logAdminAction('تعديل قيود المستويات', enable ? 'تفعيل قيود المستوى الثاني أمام طلاب المستوى الأول' : 'إلغاء قيود المستوى الثاني وفتح المحتوى لطلاب المستوى الأول');
+          Swal.fire('تم التحديث بنجاح', enable ? 'تم تفعيل القيود بنجاح؛ مواد المستوى الثاني الآن مقيدة لطلاب المستوى الأول.' : 'تم إلغاء القيود بنجاح؛ طلاب المستوى الأول يستطيعون الآن تصفح مواد المستوى الثاني بشكل طبيعي.', 'success');
+        }).catch(err => {
+          console.warn('Direct set failed, trying update:', err);
+          database.ref('settings').update({ level2RestrictionsEnabled: enable }).then(() => {
+            logAdminAction('تعديل قيود المستويات', enable ? 'تفعيل قيود المستوى الثاني' : 'إلغاء قيود المستوى الثاني');
+            Swal.fire('تم التحديث بنجاح', enable ? 'تم تفعيل القيود بنجاح.' : 'تم إلغاء القيود بنجاح.', 'success');
+          }).catch(err2 => {
+            console.error('Update also failed:', err2);
+            Swal.fire('تم التحديث محلياً', 'تم تطبيق التغيير محلياً بنجاح، ولكن تأكد من اتصال الإنترنت لمزامنة السيرفر.', 'info');
+          });
+        });
+      });
+    }
+
+    function isRestrictedLevel2(subj) {
+      if (!subj || parseInt(subj.level, 10) !== 2) return false;
+      if (!isLevel2RestrictionActive) return false;
+      if (currentStudentData && currentStudentData.isAdmin === true) return false;
+      const userLevel = (currentStudentData && currentStudentData.level) ? parseInt(currentStudentData.level, 10) : 1;
+      return userLevel === 1;
+    }
+
     function switchLevel(lvl, updateHash = true) {
       activeLevel = lvl;
       document.getElementById('tab-lvl-1').classList.toggle('active', lvl===1);
@@ -4361,6 +4969,8 @@ ${escText(alertBody)}
       renderAnnouncementsBoard();
       renderExamCountdown();
       renderActivePoll();
+      if (window._lastLeaderboardRaw) renderLeaderboard(window._lastLeaderboardRaw);
+      updateResearchVisibilityUI();
       document.getElementById('search-box').value = '';
       if (updateHash && !isHashNavigationInProgress && !currentSubjectId && document.getElementById('view-home').style.display !== 'none') {
         history.replaceState(null, '', window.location.pathname + (window.location.search || '') + (lvl === 2 ? '#lvl2' : '#lvl1'));
@@ -4388,14 +4998,21 @@ ${escText(alertBody)}
       }
 
       const isAdmin = currentStudentData && currentStudentData.isAdmin === true;
+      const isLevel1Student = !isAdmin && (!currentStudentData || (currentStudentData.level || 1) == 1);
+      const isLvl2Preview = (activeLevel === 2 && isLevel1Student && isLevel2RestrictionActive);
+
       grid.innerHTML = filtered.map(subj => {
         const filesCount = subj.files ? subj.files.length : 0;
         const videosCount = subj.videos ? subj.videos.length : 0;
         const quizzesCount = subj.quizzes ? subj.quizzes.length : 0;
 
         return `
-          <div class="subject-card liquid-glass">
+          <div class="subject-card liquid-glass" style="${isLvl2Preview ? 'border-color: rgba(245,158,11,0.35);' : ''}">
             <div>
+              ${isLvl2Preview ? `
+              <div class="z-content" style="margin-bottom: 6px; display: inline-flex; align-items: center; gap: 5px; background: rgba(245, 158, 11, 0.14); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.35); font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 6px;">
+                <span>🔒</span> <span>معاينة فقط (مقيد لطلاب المستوى الثاني)</span>
+              </div>` : ''}
               <div class="z-content" style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
                 <h3 style="margin:0 0 6px; font-size:16px; font-weight:bold; cursor:pointer; color:var(--fg);" onclick="openSubject('${subj.id}')">📚 ${escText(subj.name)}</h3>
                 <div style="display:flex; gap:4px; align-items:center; flex-wrap:wrap;">
@@ -4415,21 +5032,38 @@ ${escText(alertBody)}
               </div>
             </div>
             
-            <button class="pill z-content" style="width:100%; height:38px; margin-top:8px; font-size:13px; justify-content:center;" onclick="openSubject('${subj.id}')">تصفح محتوى المادة ⭠</button>
+            <button class="pill z-content" style="width:100%; height:38px; margin-top:8px; font-size:13px; justify-content:center; ${isLvl2Preview ? 'background:rgba(245,158,11,.15); border:1px solid rgba(245,158,11,.35); color:#fbbf24;' : ''}" onclick="openSubject('${subj.id}')">${isLvl2Preview ? 'معاينة محتوى المادة (مقيد) 🔒' : 'تصفح محتوى المادة ⭠'}</button>
           </div>`;
       }).join('');
     }
 
     function renderFilesCategory(filesList, categoryName, icon, isAdmin, subjId) {
       const filtered = filesList.filter(f => (f.category || 'محاضرات') === categoryName); if (filtered.length === 0) return '';
+      const subj = db.find(s => s.id === subjId);
+      const isRestricted = isRestrictedLevel2(subj);
+
       let html = `<div class="file-category-header z-content">${icon} ${escText(categoryName)}</div>`;
       html += filtered.map(f => {
         const fileUrl = safeUrl(f.link);
-        return `<div class="card liquid-glass" style="flex-direction:row; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px; padding: 12px 16px;">
-          <h4 class="z-content" style="margin:0; font-size:14px; min-width:0; word-break:break-word;">${escText(f.title)}</h4>
-          <div class="z-content" style="display:flex; gap:6px; flex-shrink:0; align-items:center; flex-wrap:wrap;">
+        const bmActive = isItemBookmarked('files', f.key);
+
+        let actionBtns = '';
+        if (isRestricted) {
+          actionBtns = `<button class="pill" style="height:32px; font-size:12px; background:rgba(239,68,68,.12); border:1px solid rgba(239,68,68,.3); color:#fca5a5; cursor:pointer;" onclick="showLevel2RestrictionAlert('الملفات والمحاضرات')">🔒 متاح للمستوى 2 فقط</button>`;
+        } else {
+          actionBtns = `
             <button class="pill" style="height:32px; font-size:12px; background:var(--primary);" onclick="openPdfViewer('${escapeHtml(f.title)}', '${escapeHtml(fileUrl)}')">معاينة 👁️</button>
             <a href="${escText(fileUrl)}" target="_blank" rel="noopener noreferrer" class="pill" style="height:32px; font-size:12px; background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.2); color:var(--fg);">فتح ↗</a>
+          `;
+        }
+
+        return `<div class="card liquid-glass" style="flex-direction:row; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px; padding: 12px 16px;">
+          <div class="z-content" style="display:flex; align-items:center; gap:8px; min-width:0;">
+            ${!isRestricted ? `<button class="bookmark-star-btn ${bmActive ? 'active' : ''}" title="${bmActive ? 'إزالة من المفضلة' : 'حفظ في المفضلة'}" onclick="toggleFileBookmark('${subjId}','${f.key}','${escapeHtml(f.title)}','${escapeHtml(fileUrl)}','${escapeHtml(f.category || 'محاضرات')}')">⭐</button>` : '<span title="المفضلة مقيدة" style="opacity:0.3; font-size:14px; cursor:not-allowed;">⭐</span>'}
+            <h4 style="margin:0; font-size:14px; min-width:0; word-break:break-word;">${escText(f.title)}</h4>
+          </div>
+          <div class="z-content" style="display:flex; gap:6px; flex-shrink:0; align-items:center; flex-wrap:wrap;">
+            ${actionBtns}
             ${isAdmin ? `
             <button class="btn-sm btn-edit" onclick="editFile('${subjId}','${f.key}','${escapeHtml(f.title)}','${escapeHtml(fileUrl)}','${escapeHtml(f.category || 'محاضرات')}')">✏️</button>
             <button class="btn-sm btn-ban" onclick="deleteFile('${subjId}','${f.key}','${escapeHtml(f.title)}')">🗑️</button>` : ''}
@@ -4441,6 +5075,11 @@ ${escText(alertBody)}
 
     function resetSubjectQuizzes() {
         if (!currentUser || !currentSubjectId) return;
+        const subj = db.find(s => s.id === currentSubjectId);
+        if (isRestrictedLevel2(subj)) {
+          showLevel2RestrictionAlert('إعادة امتحان المادة');
+          return;
+        }
         Swal.fire({ title: 'هل تريد إعادة امتحان المادة؟', text: "سيتم مسح إجاباتك السابقة في هذه المادة فقط (ولن يتم خصم أي نقاط من لوحة الشرف)، وسيتم خلط الأسئلة لتبدأ من جديد للتدريب.", icon: 'question', showCancelButton: true, confirmButtonColor: '#3b82f6', cancelButtonColor: '#ef4444', confirmButtonText: 'نعم، ابدأ من جديد', cancelButtonText: 'إلغاء' }).then((result) => {
             if (result.isConfirmed) {
                 const subj = db.find(s => s.id === currentSubjectId); if (!subj || !subj.quizzes) return;
@@ -4462,6 +5101,31 @@ ${escText(alertBody)}
       const vg = document.getElementById('view-gpa'); if (vg) vg.style.display = 'none';
       document.getElementById('subject-title').innerText = "📚 " + subj.name;
       document.getElementById('subject-desc').innerText = subj.desc;
+
+      const isRestrictedToLevel2 = isRestrictedLevel2(subj);
+      const bannerEl = document.getElementById('subject-level2-restriction-banner');
+      if (bannerEl) {
+        if (isRestrictedToLevel2) {
+          bannerEl.style.display = 'block';
+          bannerEl.innerHTML = `
+            <div class="card liquid-glass z-content" style="margin-bottom: 20px; padding: 16px 20px; border: 1.5px solid rgba(245, 158, 11, 0.45); background: linear-gradient(135deg, rgba(245, 158, 11, 0.14), rgba(180, 83, 9, 0.20)); border-radius: 14px; display: flex; align-items: center; gap: 16px;">
+              <div style="font-size: 32px; flex-shrink: 0; filter: drop-shadow(0 2px 8px rgba(245,158,11,0.5));">🔒</div>
+              <div style="flex: 1;">
+                <div style="font-weight: 800; font-size: 15px; color: #fbbf24; margin-bottom: 4px; display:flex; align-items:center; gap:8px;">
+                  <span>وضع المعاينة الاستطلاعي (المستوى الثاني 🚀)</span>
+                  <span style="font-size: 11px; padding: 2px 8px; border-radius: 6px; background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3);">كافة الإجراءات مقيدة</span>
+                </div>
+                <div style="font-size: 12.5px; color: var(--fg); line-height: 1.6;">
+                  بما أن حسابك مسجل في <strong>المستوى الأول 🎓</strong>، يمكنك تصفح عناوين المحاضرات والشروحات والأسئلة للتعرف على المنهج، ولكن <strong>تم قفل فتح وتحميل الملفات، تشغيل الفيديوهات، وحل الكويزات</strong>. ستفتح لك تلقائياً عند ترقيتك للمستوى الثاني.
+                </div>
+              </div>
+            </div>
+          `;
+        } else {
+          bannerEl.style.display = 'none';
+          bannerEl.innerHTML = '';
+        }
+      }
       
       // تحديث عدادات التبويبات الداخلية في المادة
       const bFiles = document.getElementById('sec-badge-files');
@@ -4502,6 +5166,16 @@ ${escText(alertBody)}
           videosContainer.innerHTML = '<div class="empty-state z-content" style="grid-column: 1/-1;">لا توجد شروحات فيديو مضافة لهذه المادة بعد.</div>';
         } else {
           videosContainer.innerHTML = videosList.map(v => {
+            let videoBtns = '';
+            if (isRestrictedToLevel2) {
+              videoBtns = `<button class="pill" style="height:34px; font-size:12px; background:rgba(239,68,68,.12); border:1px solid rgba(239,68,68,.3); color:#fca5a5; width:100%; cursor:pointer;" onclick="showLevel2RestrictionAlert('شروحات الفيديو')">🔒 المشاهدة مقيدة لطلاب المستوى الثاني</button>`;
+            } else {
+              videoBtns = `
+                <button class="pill" style="height:34px; font-size:12px; background:#ec4899; flex:1;" onclick="openVideoPlayer('${escapeHtml(v.title)}', '${escapeHtml(v.url)}')">مشاهدة 🎬</button>
+                <a href="${escText(safeUrl(v.url))}" target="_blank" rel="noopener" class="pill" style="height:34px; font-size:12px; background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.2); color:var(--fg);">يوتيوب ↗</a>
+              `;
+            }
+
             return `
               <div class="card liquid-glass" style="border-color: rgba(236,72,153,.3); background: rgba(236,72,153,.04);">
                  <div class="z-content flex-between" style="margin-bottom:8px; flex-wrap:wrap; gap:6px;">
@@ -4513,8 +5187,7 @@ ${escText(alertBody)}
                  </div>
                  <h4 class="z-content" style="margin:0 0 12px; font-size:14px; font-weight:bold; color:var(--fg); line-height:1.5;">🎬 ${escText(v.title)}</h4>
                  <div class="z-content" style="display:flex; gap:8px; margin-top:auto;">
-                    <button class="pill" style="height:34px; font-size:12px; background:#ec4899; flex:1;" onclick="openVideoPlayer('${escapeHtml(v.title)}', '${escapeHtml(v.url)}')">مشاهدة 🎬</button>
-                    <a href="${escText(safeUrl(v.url))}" target="_blank" rel="noopener" class="pill" style="height:34px; font-size:12px; background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.2); color:var(--fg);">يوتيوب ↗</a>
+                    ${videoBtns}
                  </div>
               </div>`;
           }).join('');
@@ -4550,14 +5223,37 @@ ${escText(alertBody)}
         emptyMsg = '🏆 رائع! لقد انتهيت من حل جميع أسئلة هذه المادة.';
       }
 
-      document.getElementById('subject-quizzes').innerHTML = filteredQuizzes.length === 0 ? `<div class="empty-state z-content">${emptyMsg}</div>` : filteredQuizzes.map((q, idx) => {
+      const resetBtn = document.getElementById('btn-reset-subject-quizzes');
+      if (resetBtn) resetBtn.style.display = isRestrictedToLevel2 ? 'none' : 'inline-flex';
+
+      const quizzesNoticeHtml = isRestrictedToLevel2 ? `
+        <div class="liquid-glass z-content" style="grid-column: 1/-1; padding: 12px 18px; margin-bottom: 12px; border: 1.5px solid rgba(245, 158, 11, 0.35); background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(180, 83, 9, 0.12)); color: #fde68a; border-radius: 10px; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 10px;">
+          <span style="font-size: 22px;">🔒</span>
+          <div>
+            <b>بنك الأسئلة للمعاينة فقط لطلاب المستوى الأول:</b>
+            <div style="font-size: 11.5px; color: var(--fg-soft); font-weight: normal; margin-top: 2px;">يمكنك قراءة الأسئلة والاطلاع على أفكار الاختبارات، ولكن لا يمكن حل الأسئلة أو احتساب درجات أو تسجيل نقاط إلا لطلاب المستوى الثاني 🚀.</div>
+          </div>
+        </div>` : '';
+
+      document.getElementById('subject-quizzes').innerHTML = filteredQuizzes.length === 0 ? `<div class="empty-state z-content">${emptyMsg}</div>` : quizzesNoticeHtml + filteredQuizzes.map((q, idx) => {
         const sq = solvedQuizzes[q.key]; const isSolved = !!sq; const status = sq ? (sq.status || (sq === true ? 'correct' : null)) : null; const selectedOpt = sq ? sq.selected : null;
         const getBtnStyle = (optNum) => { if (!isSolved) return ''; if (status === 'correct' && q.ans == optNum) return 'background: #15803d; border-color: #22c55e; opacity: 1;'; if (status === 'wrong' && q.ans == optNum) return 'background: #15803d; border-color: #22c55e; opacity: 1;'; if (status === 'wrong' && selectedOpt == optNum) return 'background: #b91c1c; border-color: #ef4444; opacity: 1;'; return 'opacity: .5; cursor: not-allowed;'; };
         const badgeHtml = isSolved ? (status === 'correct' ? `<div class="z-content quiz-solved-badge" style="background:rgba(34,197,94,.2); color:#4ade80; border:1px solid #22c55e;">✔️ إجابة صحيحة</div>` : `<div class="z-content quiz-solved-badge" style="background:rgba(239,68,68,.2); color:#f87171; border:1px solid #ef4444;">❌ إجابة خاطئة</div>`) : '';
         let options = [ { text: q.opt1, num: '1' }, { text: q.opt2, num: '2' }, { text: q.opt3, num: '3' }, { text: q.opt4, num: '4' } ];
-        if (!isSolved) options = shuffleArray(options);
-        const optionsHtml = options.map(opt => `<button class="quiz-btn" ${isSolved ? 'disabled' : ''} style="${getBtnStyle(opt.num)}" onclick="checkAnswer(this,'${opt.num}','${q.ans}','${q.key}')">${escText(opt.text)}</button>`).join('');
-        return `<div class="card liquid-glass" style="padding:20px; border: ${isSolved ? (status==='correct' ? '1px solid #15803d' : '1px solid #b91c1c') : 'none'};"><div class="z-content" style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px;"><p style="font-weight:700; font-size:16px; margin:0 0 12px; display:flex; align-items:center; gap:6px;">س${idx+1}: ${escText(q.q)}</p>${isAdmin ? `
+        if (!isSolved && !isRestrictedToLevel2) options = shuffleArray(options);
+        
+        let optionsHtml = '';
+        if (isRestrictedToLevel2) {
+          optionsHtml = options.map(opt => `
+            <button class="quiz-btn" style="cursor: not-allowed; opacity: 0.8; border-style: dashed; border-color: rgba(245,158,11,0.25);" onclick="showLevel2RestrictionAlert('حل الكويزات')">
+              <span>🔒 ${escText(opt.text)}</span>
+            </button>
+          `).join('');
+        } else {
+          optionsHtml = options.map(opt => `<button class="quiz-btn" ${isSolved ? 'disabled' : ''} style="${getBtnStyle(opt.num)}" onclick="checkAnswer(this,'${opt.num}','${q.ans}','${q.key}')">${escText(opt.text)}</button>`).join('');
+        }
+
+        return `<div class="card liquid-glass" style="padding:20px; border: ${isSolved ? (status==='correct' ? '1px solid #15803d' : '1px solid #b91c1c') : (isRestrictedToLevel2 ? '1px dashed rgba(245,158,11,0.3)' : 'none')};"><div class="z-content" style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px;"><p style="font-weight:700; font-size:16px; margin:0 0 12px; display:flex; align-items:center; gap:6px;">س${idx+1}: ${escText(q.q)} ${isRestrictedToLevel2 ? '<span style="font-size:11px; background:rgba(245,158,11,.15); color:#fbbf24; border:1px solid rgba(245,158,11,.3); padding:1px 6px; border-radius:4px; margin-right:6px;">معاينة فقط</span>' : ''}</p>${isAdmin ? `
           <button class="btn-sm btn-edit" onclick="editQuiz('${subj.id}','${q.key}')">✏️</button>
           <button class="btn-sm btn-ban" onclick="deleteQuiz('${subj.id}','${q.key}','${escapeHtml(q.q)}')">🗑️</button>` : ''}</div>
         <div style="display:flex; justify-content:space-between; align-items:center;">${badgeHtml}</div>
@@ -4570,6 +5266,11 @@ ${escText(alertBody)}
     }
 
     function checkAnswer(btn, selected, correct, quizKey) {
+      const currSubj = db.find(s => s.id === currentSubjectId);
+      if (isRestrictedLevel2(currSubj)) {
+        showLevel2RestrictionAlert('حل الكويزات');
+        return;
+      }
       let buttons = btn.parentElement.querySelectorAll('button'); buttons.forEach(b => { b.disabled = true; b.style.cursor = "not-allowed"; });
       const prevSolve = currentStudentData && currentStudentData.solvedQuizzes && currentStudentData.solvedQuizzes[quizKey];
       const wasWrong = prevSolve && (prevSolve.status === 'wrong' || prevSolve === false);
@@ -5052,6 +5753,10 @@ ${escText(alertBody)}
       if (!currentUser || !currentStudentData) return Swal.fire('تنبيه', 'يجب تسجيل الدخول أولاً للمساهمة.', 'warning');
       const subj = db.find(s => s.id === currentSubjectId);
       if (!subj) return;
+      if (isRestrictedLevel2(subj)) {
+        showLevel2RestrictionAlert('المساهمة ورفع الملفات لمواد المستوى الثاني');
+        return;
+      }
       document.getElementById('contrib-subj-name').value = subj.name;
       document.getElementById('contrib-title').value = '';
       document.getElementById('contrib-link').value = '';
@@ -5717,6 +6422,11 @@ ${escText(alertBody)}
     }
 
     function openVideoPlayer(title, rawUrl) {
+      const currSubj = db.find(s => s.id === currentSubjectId);
+      if (isRestrictedLevel2(currSubj)) {
+        showLevel2RestrictionAlert('مشاهدة شروحات الفيديو');
+        return;
+      }
       const overlay = document.getElementById('video-player-overlay');
       const titleEl = document.getElementById('video-player-title');
       const frame = document.getElementById('video-player-frame');
@@ -6677,9 +7387,13 @@ ${escText(alertBody)}
     }
 
     function toggleFileBookmark(subjId, fileKey, title, link, category) {
+      const subj = db.find(s => s.id === subjId);
+      if (isRestrictedLevel2(subj)) {
+        showLevel2RestrictionAlert('حفظ ملفات المستوى الثاني في المفضلة');
+        return;
+      }
       const bm = getStudentBookmarks();
       if (!bm.files) bm.files = {};
-      const subj = db.find(s => s.id === subjId);
       const subjName = subj ? subj.name : 'مادة دراسية';
 
       if (bm.files[fileKey]) {
@@ -6694,9 +7408,13 @@ ${escText(alertBody)}
     }
 
     function toggleQuizBookmark(subjId, quizKey) {
+      const subj = db.find(s => s.id === subjId);
+      if (isRestrictedLevel2(subj)) {
+        showLevel2RestrictionAlert('حفظ أسئلة المستوى الثاني في المفضلة');
+        return;
+      }
       const bm = getStudentBookmarks();
       if (!bm.quizzes) bm.quizzes = {};
-      const subj = db.find(s => s.id === subjId);
       const q = subj && subj.quizzes ? subj.quizzes.find(x => x.key === quizKey) : null;
       if (!q) return;
 
@@ -6919,12 +7637,23 @@ ${escText(alertBody)}
            </div>
            <h4 class="z-content" style="margin:0 0 14px; font-size:16px; font-weight:bold; color:var(--fg);">${escText(p.question)}</h4>
            <div class="z-content">${optionsHtml}</div>
-           ${myVote === null ? `<button class="pill z-content" style="margin-top:10px; width:100%; height:38px; justify-content:center;" onclick="submitPollVote('${p.id}')">🗳️ إرسال تصويتي</button>` : ''}
+           ${myVote === null ? (
+             (p.targetLevel === '2' && !isAdmin && ((currentStudentData && currentStudentData.level) ? currentStudentData.level : 1) == 1 && isLevel2RestrictionActive)
+             ? `<button class="pill z-content" style="margin-top:10px; width:100%; height:38px; justify-content:center; background:rgba(245,158,11,.15); border:1px solid rgba(245,158,11,.3); color:#fbbf24; cursor:pointer;" onclick="showLevel2RestrictionAlert('التصويت في استطلاعات المستوى الثاني')">🔒 التصويت مقيد لطلاب المستوى الثاني</button>`
+             : `<button class="pill z-content" style="margin-top:10px; width:100%; height:38px; justify-content:center;" onclick="submitPollVote('${p.id}')">🗳️ إرسال تصويتي</button>`
+           ) : ''}
         </div>`;
     }
 
     function submitPollVote(pollId) {
       if (!currentUser) return Swal.fire('تنبيه', 'يجب تسجيل الدخول للمشاركة في التصويت', 'info');
+      const p = pollsList.find(x => x.id === pollId);
+      const isAdmin = currentStudentData && currentStudentData.isAdmin === true;
+      const userLevel = (currentStudentData && currentStudentData.level) ? parseInt(currentStudentData.level, 10) : 1;
+      if (p && p.targetLevel === '2' && !isAdmin && userLevel === 1 && isLevel2RestrictionActive) {
+        showLevel2RestrictionAlert('التصويت في استطلاعات المستوى الثاني');
+        return;
+      }
       const selected = document.querySelector('input[name="poll-opt-choice"]:checked');
       if (!selected) return Swal.fire('تنبيه', 'يرجى اختيار أحد الخيارات للتصويت', 'warning');
 
@@ -7881,6 +8610,7 @@ ${escText(alertBody)}
       document.getElementById('phone-group').style.display = 'none';
       document.getElementById('level-group').style.display = 'none';
       listenToFounderInfo();
+      listenToResearchSettings(); listenToLevelRestrictions();
       initTheme();
       initSound();
       initDataSaver();
