@@ -372,6 +372,7 @@
   .z-content { position: relative; z-index: 2; }
   .research-nav-btn { background: #14b8a6; }
   .research-nav-btn:hover { background: #0d9488; }
+  .res-cancel-btn { margin-top: 10px; }
   .research-entry { transition: transform .2s var(--ease), box-shadow .2s var(--ease); }
   .research-entry:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(20,184,166,.25); }
   #research-tabs .level-tab-btn.active { background: #14b8a6; box-shadow: 0 4px 15px rgba(20,184,166,.4); }
@@ -536,6 +537,7 @@
     input, select, textarea, .swal2-input, .swal2-textarea { font-size: 16px !important; }
     .pill, .btn-sm { min-height: 40px; }
     .research-nav-btn { width: 36px; padding: 0 !important; }
+    .res-cancel-btn { width: 100%; justify-content: center; min-height: 42px; font-size: 13px; }
     #research-tabs { flex-direction: column; }
     #research-tabs .level-tab-btn { width: 100%; white-space: normal; line-height: 1.5; padding: 12px 10px; font-size: 14px; }
     #research-grid { grid-template-columns: 1fr !important; }
@@ -3074,22 +3076,6 @@ ${escText(alertBody)}
         Swal.fire('تم ✅', `${delta > 0 ? 'اتضافت' : 'اتخصمت'} ${Math.abs(delta)} نقطة ${delta > 0 ? 'لـ' : 'من'} ${escText(u.name)}.` + (u.isBanned ? ' (الطالب محظور فمش هيظهر في لوحة الشرف)' : ''), 'success');
       } catch (e) { Swal.fire('خطأ', 'معرفناش نحدّث النقاط: ' + (e && e.message ? e.message : ''), 'error'); }
     }
-    async function editStudentProfile(uid, currentName, currentPhone, currentStudentId) {
-      const { value: formValues } = await Swal.fire({
-        title: 'تعديل بيانات الطالب',
-        html: `<input id="swal-input1" class="swal2-input" value="${escText(currentName)}" placeholder="الاسم الكامل">` +
-              `<input id="swal-input2" class="swal2-input" value="${escText(currentPhone)}" placeholder="رقم الهاتف">` +
-              `<input id="swal-input3" class="swal2-input" value="${escText(currentStudentId && currentStudentId !== 'undefined' ? currentStudentId : '')}" placeholder="كود الطالب (ID)">`,
-        focusConfirm: false, showCancelButton: true, confirmButtonText: 'حفظ التعديل',
-        preConfirm: () => [document.getElementById('swal-input1').value, document.getElementById('swal-input2').value, document.getElementById('swal-input3').value]
-      });
-      if (formValues && formValues[0]) {
-        database.ref('users/' + uid).update({ name: formValues[0], phone: formValues[1], studentId: formValues[2] }); database.ref('leaderboard/' + uid + '/name').set(formValues[0]);
-        logAdminAction('تعديل طالب', `تم تعديل بيانات: ${formValues[0]}`);
-        Swal.fire('تم', 'تم تحديث بيانات الطالب بنجاح', 'success');
-      }
-    }
-
     function toggleAuthMode() {
       isRegisterMode = !isRegisterMode;
       document.getElementById('name-group').style.display = isRegisterMode ? 'flex' : 'none';
@@ -4389,11 +4375,11 @@ ${escText(alertBody)}
       const mine = myResearch();
       if (mine) {
         color = '#22c55e';
-        boxHtml = `<div class="z-content flex-between" style="gap:10px; flex-wrap:wrap;"><div><div style="font-size:12px; color:#4ade80; font-weight:700; margin-bottom:4px;">✅ بحثك (مقبول)</div><div style="font-size:16px; font-weight:800; word-break:break-word;">${escText(mine.name)}</div></div><button class="btn-sm btn-ban" onclick="cancelMyResearch('${mine.key}')">إلغاء الحجز</button></div>`;
+        boxHtml = `<div class="z-content flex-between" style="gap:10px; flex-wrap:wrap;"><div><div style="font-size:12px; color:#4ade80; font-weight:700; margin-bottom:4px;">✅ بحثك (مقبول)</div><div style="font-size:16px; font-weight:800; word-break:break-word;">${escText(mine.name)}</div></div><button class="btn-sm btn-ban res-cancel-btn" onclick="cancelMyResearch('${mine.key}')">❌ إلغاء الحجز</button></div>`;
         homeHtml = `<span style="color:#4ade80;">✅ بحثك: ${escText(mine.name)}</span>`;
       } else if (myRequest && myRequest.status === 'pending') {
         color = '#fbbf24';
-        boxHtml = `<div class="z-content flex-between" style="gap:10px; flex-wrap:wrap;"><div><div style="font-size:12px; color:#fbbf24; font-weight:700; margin-bottom:4px;">⏳ قيد المراجعة (مستني موافقة الإدارة)</div><div style="font-size:16px; font-weight:800; word-break:break-word;">${escText(myRequest.title)}</div></div><button class="btn-sm btn-ban" onclick="cancelResearchRequest()">إلغاء الطلب</button></div>`;
+        boxHtml = `<div class="z-content flex-between" style="gap:10px; flex-wrap:wrap;"><div><div style="font-size:12px; color:#fbbf24; font-weight:700; margin-bottom:4px;">⏳ قيد المراجعة (مستني موافقة الإدارة)</div><div style="font-size:16px; font-weight:800; word-break:break-word;">${escText(myRequest.title)}</div></div><button class="btn-sm btn-ban res-cancel-btn" onclick="cancelResearchRequest()">❌ إلغاء الطلب</button></div>`;
         homeHtml = `<span style="color:#fbbf24;">⏳ طلبك قيد المراجعة: ${escText(myRequest.title)}</span>`;
       } else if (myRequest && myRequest.status === 'rejected') {
         color = '#f87171';
@@ -4408,8 +4394,8 @@ ${escText(alertBody)}
       const lbBox = document.getElementById('lb-my-research');
       if (lbBox) {
         let lbHtml;
-        if (mine) lbHtml = `<div style="font-size:12px; color:#4ade80; font-weight:700; margin-bottom:4px;">✅ بحثك (مقبول)</div><div style="font-size:15px; font-weight:800; word-break:break-word;">${escText(mine.name)}</div>`;
-        else if (myRequest && myRequest.status === 'pending') lbHtml = `<div style="font-size:12px; color:#fbbf24; font-weight:700; margin-bottom:4px;">⏳ قيد المراجعة</div><div style="font-size:15px; font-weight:800; word-break:break-word;">${escText(myRequest.title)}</div>`;
+        if (mine) lbHtml = `<div style="font-size:12px; color:#4ade80; font-weight:700; margin-bottom:4px;">✅ بحثك (مقبول)</div><div style="font-size:15px; font-weight:800; word-break:break-word;">${escText(mine.name)}</div><button class="btn-sm btn-ban res-cancel-btn" onclick="event.stopPropagation(); cancelMyResearch('${mine.key}')">❌ إلغاء الحجز</button>`;
+        else if (myRequest && myRequest.status === 'pending') lbHtml = `<div style="font-size:12px; color:#fbbf24; font-weight:700; margin-bottom:4px;">⏳ قيد المراجعة (مستني موافقة الإدارة)</div><div style="font-size:15px; font-weight:800; word-break:break-word;">${escText(myRequest.title)}</div><button class="btn-sm btn-ban res-cancel-btn" onclick="event.stopPropagation(); cancelResearchRequest()">❌ إلغاء الطلب</button>`;
         else if (myRequest && myRequest.status === 'rejected') lbHtml = `<div style="font-size:12px; color:#f87171; font-weight:700; margin-bottom:4px;">❌ طلبك اترفض</div><div style="font-size:15px; font-weight:800; word-break:break-word;">${escText(myRequest.title)}</div>`;
         else lbHtml = `<div style="font-size:12px; color:var(--fg-faint); font-weight:700; margin-bottom:4px;">📌 بحثك</div><div style="font-size:14px; color:var(--fg-soft);">لسه ما اخترتش بحث</div>`;
         lbBox.style.display = '';
@@ -5177,7 +5163,7 @@ ${escText(alertBody)}
                 const quizKeys = subj.quizzes.map(q => q.key);
                 database.ref('users/' + currentUser.uid + '/solvedQuizzes').once('value').then(snap => {
                     let currentSolved = snap.val() || {}; let updates = {};
-                    quizKeys.forEach(k => { if (currentSolved[k]) updates[k] = null; });
+                    quizKeys.forEach(k => { if (currentSolved[k]) updates[k] = null; if (currentStudentData && currentStudentData.solvedQuizzes) delete currentStudentData.solvedQuizzes[k]; __scoring[k] = false; });
                     Promise.resolve(Object.keys(updates).length ? database.ref('users/' + currentUser.uid + '/solvedQuizzes').update(updates) : null).then(() => { delete quizOrder[currentSubjectId]; Swal.fire('تم!', 'تم تجهيز الامتحان من جديد وبترتيب مختلف.', 'success').then(() => { openSubject(currentSubjectId); }); });
                 });
             }
@@ -5327,9 +5313,10 @@ ${escText(alertBody)}
         </div>` : '';
 
       document.getElementById('subject-quizzes').innerHTML = filteredQuizzes.length === 0 ? `<div class="empty-state z-content">${emptyMsg}</div>` : quizzesNoticeHtml + filteredQuizzes.map((q, idx) => {
-        const sq = solvedQuizzes[q.key]; const isSolved = !!sq; const status = sq ? (sq.status || (sq === true ? 'correct' : null)) : null; const selectedOpt = sq ? sq.selected : null;
-        const getBtnStyle = (optNum) => { if (!isSolved) return ''; if (status === 'correct' && q.ans == optNum) return 'background: #15803d; border-color: #22c55e; opacity: 1;'; if (status === 'wrong' && q.ans == optNum) return 'background: #15803d; border-color: #22c55e; opacity: 1;'; if (status === 'wrong' && selectedOpt == optNum) return 'background: #b91c1c; border-color: #ef4444; opacity: 1;'; return 'opacity: .5; cursor: not-allowed;'; };
-        const badgeHtml = isSolved ? (status === 'correct' ? `<div class="z-content quiz-solved-badge" style="background:rgba(34,197,94,.2); color:#4ade80; border:1px solid #22c55e;">✔️ إجابة صحيحة</div>` : `<div class="z-content quiz-solved-badge" style="background:rgba(239,68,68,.2); color:#f87171; border:1px solid #ef4444;">❌ إجابة خاطئة</div>`) : '';
+        const sq = solvedQuizzes[q.key]; const qAns = normAns(q.ans); const isSolved = !!sq; const status = sq ? (sq.status || (sq === true ? 'correct' : null)) : null; const selectedOpt = sq ? sq.selected : null;
+        const getBtnStyle = (optNum) => { if (!isSolved) return ''; if (status === 'correct' && qAns === optNum) return 'background: #15803d; border-color: #22c55e; opacity: 1;'; if (status === 'wrong' && selectedOpt == optNum) return 'background: #b91c1c; border-color: #ef4444; opacity: 1;'; if (status === 'wrong' && qAns === optNum) return 'background: #15803d; border-color: #22c55e; opacity: 1;'; if (false) return 'background: #b91c1c; border-color: #ef4444; opacity: 1;'; return 'opacity: .5; cursor: not-allowed;'; };
+        const badAnsHtml = (isAdmin && !qAns) ? `<div class="z-content quiz-solved-badge" style="background:rgba(245,158,11,.2); color:#fbbf24; border:1px solid #f59e0b;">⚠️ الإجابة الصحيحة غير مضبوطة (ans="${escText(String(q.ans))}")</div>` : '';
+        const badgeHtml = badAnsHtml + (isSolved ? (status === 'correct' ? `<div class="z-content quiz-solved-badge" style="background:rgba(34,197,94,.2); color:#4ade80; border:1px solid #22c55e;">✔️ إجابة صحيحة</div>` : `<div class="z-content quiz-solved-badge" style="background:rgba(239,68,68,.2); color:#f87171; border:1px solid #ef4444;">❌ إجابة خاطئة</div>`) : '');
         let options = [ { text: q.opt1, num: '1' }, { text: q.opt2, num: '2' }, { text: q.opt3, num: '3' }, { text: q.opt4, num: '4' } ];
         if (!isSolved && !isRestrictedToLevel2) options = shuffleArray(options);
         
@@ -5341,7 +5328,7 @@ ${escText(alertBody)}
             </button>
           `).join('');
         } else {
-          optionsHtml = options.map(opt => `<button class="quiz-btn" ${isSolved ? 'disabled' : ''} style="${getBtnStyle(opt.num)}" onclick="checkAnswer(this,'${opt.num}','${q.ans}','${q.key}')">${escText(opt.text)}</button>`).join('');
+          optionsHtml = options.map(opt => `<button class="quiz-btn" data-opt="${opt.num}" ${isSolved ? 'disabled' : ''} style="${getBtnStyle(opt.num)}" onclick="checkAnswer(this,'${opt.num}','${qAns}','${q.key}')">${escText(opt.text)}${isSolved && status === 'wrong' && selectedOpt == opt.num ? ' ❌' : ''}${isSolved && qAns === opt.num ? ' ✔️' : ''}</button>`).join('');
         }
 
         return `<div class="card liquid-glass" style="padding:20px; border: ${isSolved ? (status==='correct' ? '1px solid #15803d' : '1px solid #b91c1c') : (isRestrictedToLevel2 ? '1px dashed rgba(245,158,11,0.3)' : 'none')};"><div class="z-content" style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px;"><p style="font-weight:700; font-size:16px; margin:0 0 12px; display:flex; align-items:center; gap:6px;">س${idx+1}: ${escText(q.q)} ${isRestrictedToLevel2 ? '<span style="font-size:11px; background:rgba(245,158,11,.15); color:#fbbf24; border:1px solid rgba(245,158,11,.3); padding:1px 6px; border-radius:4px; margin-right:6px;">معاينة فقط</span>' : ''}</p>${isAdmin ? `
@@ -5356,12 +5343,16 @@ ${escText(alertBody)}
       }
     }
 
+    const __scoring = {};
+    function normAns(v) { if (v === undefined || v === null) return ''; let s = String(v).trim().replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d)); return ['1','2','3','4'].includes(s) ? s : ''; }
     function checkAnswer(btn, selected, correct, quizKey) {
+      if (__scoring[quizKey]) return; __scoring[quizKey] = true; setTimeout(() => { __scoring[quizKey] = false; }, 1500);
       const currSubj = db.find(s => s.id === currentSubjectId);
       if (isRestrictedLevel2(currSubj)) {
         showLevel2RestrictionAlert('حل الكويزات');
         return;
       }
+      if (!['1','2','3','4'].includes(correct)) { __scoring[quizKey] = false; Swal.fire('سؤال غير صالح', 'الإجابة الصحيحة لهذا السؤال غير مضبوطة. بلّغ الإدارة.', 'warning'); return; }
       let buttons = btn.parentElement.querySelectorAll('button'); buttons.forEach(b => { b.disabled = true; b.style.cursor = "not-allowed"; });
       const prevSolve = currentStudentData && currentStudentData.solvedQuizzes && currentStudentData.solvedQuizzes[quizKey];
       const wasWrong = prevSolve && (prevSolve.status === 'wrong' || prevSolve === false);
@@ -5373,11 +5364,14 @@ ${escText(alertBody)}
         btn.style.background = "#15803d"; btn.style.borderColor = "#22c55e"; btn.style.opacity = "1"; btn.innerHTML += " ✔️";
         buttons.forEach(b => { if (b !== btn) b.style.opacity = ".5"; });
         if (currentUser && (!prevSolve || wasWrong)) {
+            const sidNow = currentSubjectId;
             const uu = 'users/'+currentUser.uid, already = !!(currentStudentData && currentStudentData.scoredQuizzes && currentStudentData.scoredQuizzes[quizKey]);
             const up = {};
             up[uu+'/solvedQuizzes/'+quizKey] = solveData;
             if (!already) {
                up[uu+'/scoredQuizzes/'+quizKey] = true;
+               up[uu+'/lastScoredSubject'] = sidNow;
+               up[uu+'/lastScoredQuiz'] = quizKey;
                up[uu+'/score'] = FB.database.ServerValue.increment(1);
                up['leaderboard/'+currentUser.uid+'/score'] = FB.database.ServerValue.increment(1);
             }
@@ -5385,12 +5379,14 @@ ${escText(alertBody)}
                if (currentStudentData) {
                   if (!currentStudentData.solvedQuizzes) currentStudentData.solvedQuizzes = {};
                   currentStudentData.solvedQuizzes[quizKey] = solveData;
+                  if (!currentStudentData.scoredQuizzes) currentStudentData.scoredQuizzes = {};
+                  currentStudentData.scoredQuizzes[quizKey] = true;
                   if (!already) {
                      currentStudentData.score = (currentStudentData.score || 0) + 1;
                      checkAndAwardBadges(currentStudentData);
                   }
                }
-            });
+            }).catch(e => { console.error('score update rejected:', e); });
             const msg = wasWrong ? 'رائع! صححت إجابتك وأصبحت إجابة صحيحة 🎯' : (already ? 'صحيح! (نقطة هذا السؤال احتُسبت لك سابقاً)' : 'تمت إضافة نقطة لرصيدك 🏆');
             Swal.fire({title: 'إجابة صحيحة!', text: msg, icon: 'success', timer: 1600, showConfirmButton: false});
         }
@@ -5399,10 +5395,11 @@ ${escText(alertBody)}
         triggerHaptic('wrong');
         btn.style.background = "#b91c1c"; btn.style.borderColor = "#ef4444"; btn.style.opacity = "1"; btn.innerHTML += " ❌";
         buttons.forEach(b => {
-            if (b.getAttribute('onclick').includes(`,'${correct}',`)) { b.style.background = "#15803d"; b.style.borderColor = "#22c55e"; b.style.opacity = "1"; }
-            else if (b !== btn) { b.style.opacity = ".5"; }
+            if (b === btn) return;
+            if (b.dataset.opt === correct) { b.style.background = "#15803d"; b.style.borderColor = "#22c55e"; b.style.opacity = "1"; b.innerHTML += " ✔️"; }
+            else { b.style.opacity = ".5"; }
         });
-        if (currentUser && !isAlreadySolved) database.ref('users/'+currentUser.uid+'/solvedQuizzes/'+quizKey).set(solveData);
+        if (currentUser && !prevSolve) database.ref('users/'+currentUser.uid+'/solvedQuizzes/'+quizKey).set(solveData);
       }
     }
 
