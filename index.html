@@ -373,6 +373,8 @@
   .research-nav-btn { background: #14b8a6; }
   .research-nav-btn:hover { background: #0d9488; }
   .res-cancel-btn { margin-top: 10px; }
+  #research-locked-content { transition: opacity .6s ease, filter .6s ease; }
+  #research-locked-content.res-locked { opacity: .32; filter: blur(2.5px) grayscale(.6); pointer-events: none; user-select: none; -webkit-user-select: none; }
   .research-entry { transition: transform .2s var(--ease), box-shadow .2s var(--ease); }
   .research-entry:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(20,184,166,.25); }
   #research-tabs .level-tab-btn.active { background: #14b8a6; box-shadow: 0 4px 15px rgba(20,184,166,.4); }
@@ -1382,6 +1384,7 @@
               <h3 style="color:#14b8a6; margin:0 0 6px; font-size:18px; display:flex; align-items:center; gap:8px;"><span>🔬</span> قسم الأبحاث</h3>
               <p style="margin:0; font-size:13px; color:var(--fg-soft);">اختار بحث جاهز من القائمة أو اطلب بحث مش موجود.</p>
               <div id="home-research-status" style="margin-top:8px; font-size:13px; font-weight:700;"></div>
+              <div id="home-research-countdown" style="margin-top:6px; font-size:13px; font-weight:700; color:#fbbf24;"></div>
             </div>
             <button class="pill" style="background:#14b8a6;" onclick="event.stopPropagation(); navigateTo('#research')">دخول القسم ⭠</button>
           </div>
@@ -1405,7 +1408,11 @@
           <button class="level-tab-btn z-content" id="tab-res-new" onclick="switchResearchTab('new', true)">✍️ انشئ بحث مش موجود في القائمة</button>
         </div>
 
-        <div class="card liquid-glass" style="border-color:#14b8a6;">
+        <div class="card liquid-glass" id="research-main-card" style="border-color:#14b8a6; position:relative;">
+          <div id="research-lock-overlay" style="display:none; position:absolute; inset:0; z-index:20; border-radius:inherit;">
+            <div id="research-countdown-box" style="position:sticky; top:90px; max-width:480px; margin:40px auto 0; padding:18px 14px; border-radius:18px; border:1px solid rgba(251,191,36,.55); background:rgba(12,12,18,.82); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); box-shadow:0 12px 40px rgba(0,0,0,.5);"></div>
+          </div>
+          <div id="research-locked-content">
           <!-- اختيار بحث جاهز -->
           <div id="research-pane-pick">
             <p class="z-content" style="font-size:13px; color:var(--fg-soft); margin:0 0 14px;">اختار بحث من القائمة واحجزه باسمك. البحث المحجوز مش بيظهر لغيرك.</p>
@@ -1422,6 +1429,7 @@
               <button class="pill" id="research-request-btn" style="background:#8b5cf6;" onclick="requestNewResearch()">✍️ اطلب بحث جديد</button>
               <p style="font-size:12px; color:var(--fg-faint); margin:8px 0 0;">الطلب بيوصل للإدارة، ولو وافقت بيتحجزلك البحث تلقائي.</p>
             </div>
+          </div>
           </div>
         </div>
       </div>
@@ -1904,6 +1912,15 @@
                             <option value="2">🚀 متاح لطلاب المستوى الثاني فقط</option>
                          </select>
                       </div>
+                   </div>
+
+                   <div style="margin-top: 12px;">
+                      <label style="font-size: 12.5px; font-weight: bold; margin-bottom: 6px; display: block; color: var(--fg);">⏳ موعد فتح التسجيل (عد تنازلي للطلاب) — سيبه فاضي لو التسجيل مفتوح دلوقتي:</label>
+                      <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+                         <input type="datetime-local" class="input-group" id="admin-research-opens-at" style="margin:0; flex:1; min-width:220px;">
+                         <button type="button" class="btn-sm btn-ban" onclick="document.getElementById('admin-research-opens-at').value=''">مسح الموعد</button>
+                      </div>
+                      <div id="admin-research-opens-hint" style="font-size:12px; color:var(--fg-faint); margin-top:6px;"></div>
                    </div>
 
                    <div style="margin-top: 12px;">
@@ -3854,7 +3871,7 @@ ${escText(alertBody)}
             ? `<span style="background: rgba(168,85,247,.15); color: #c084fc; padding: 2px 6px; border-radius: 4px; font-size: 10px; margin-right: 6px;">Lvl 2</span>`
             : `<span style="background: rgba(59,130,246,.15); color: #60a5fa; padding: 2px 6px; border-radius: 4px; font-size: 10px; margin-right: 6px;">Lvl 1</span>`;
         html += `<tr data-level="${u.level == 2 ? 2 : 1}"><td>${i+1}</td>
-        <td><div style="font-weight:bold; color:var(--fg); margin-bottom:4px; display:flex; align-items:center; flex-wrap:wrap;">${escText(u.name)} ${levelBadge}</div>${statusHtml}</td>
+        <td><div style="font-weight:bold; color:var(--fg); margin-bottom:4px; display:flex; align-items:center; flex-wrap:wrap;">${escText(u.name)} ${levelBadge}</div>${statusHtml}${u.researchTopicName ? `<div style="font-size:11px; color:#2dd4bf; margin-top:4px;">🔬 ${escText(u.researchTopicName)}</div>` : ''}</td>
         <td>
             <div style="direction:ltr; font-size:13px; color:var(--fg-soft);">${escText(u.phone||'لا يوجد هاتف')}</div>
             <div style="direction:ltr; font-size:11px; color:var(--primary); margin-top:4px; font-weight:bold;">${escText(u.email||'')}</div>
@@ -3869,6 +3886,7 @@ ${escText(alertBody)}
              <button class="btn-sm btn-track" style="background: rgba(234, 179, 8, 0.2); color:#fbbf24; border-color:#eab308;" onclick="adminChangeStudentPassword('${u.uid}','${escapeHtml(u.name)}','${escapeHtml(u.email||'')}')">🔑 تغيير الباسورد</button>
              <button class="btn-sm btn-track" style="background: rgba(255,215,0,.15); color:var(--gold); border-color:var(--gold);" onclick="adminAddPoints('${u.uid}')">⭐ نقاط</button>
              <button class="btn-sm btn-edit" onclick="editStudentProfile('${u.uid}')">✏️ تعديل</button>
+             <button class="btn-sm btn-track" style="background: rgba(20,184,166,.15); color:#2dd4bf; border-color:#14b8a6;" onclick="adminAssignResearch('${u.uid}','${escapeHtml(u.name)}')">🔬 تعيين بحث</button>
              ${banBtn}
         </div></td></tr>`;
       });
@@ -4075,6 +4093,7 @@ ${escText(alertBody)}
     let researchSettings = {
       enabled: true,
       targetLevel: 'all',
+      opensAt: null,
       closedMessage: 'انتهت فترة حجز وتنسيق الأبحاث لهذا العام وتم إغلاق القسم.'
     };
     let researchSettingsListening = false;
@@ -4082,10 +4101,12 @@ ${escText(alertBody)}
     function listenToResearchSettings() {
       if (researchSettingsListening) return;
       researchSettingsListening = true;
+      try { database.ref('.info/serverTimeOffset').on('value', s => { __srvOffset = s.val() || 0; try { updateResearchCountdownUI(); } catch (e) {} }); } catch (e) {}
       database.ref('settings/researchSettings').on('value', snap => {
         const val = snap.val();
         if (val) {
           researchSettings = Object.assign(researchSettings, val);
+          if (!('opensAt' in val)) researchSettings.opensAt = null;
         }
         updateResearchVisibilityUI();
         renderAdminResearchSettingsForm();
@@ -4139,6 +4160,7 @@ ${escText(alertBody)}
       if (quickCard) quickCard.style.display = allowed ? 'flex' : 'none';
       if (bannerCard) bannerCard.style.display = allowed ? 'block' : 'none';
       if (lbMyResearch && !allowed) lbMyResearch.style.display = 'none';
+      try { updateResearchCountdownUI(); } catch (e) {}
 
       // إذا كان المستخدم غير الأدمن موجوداً حالياً داخل قسم الأبحاث وتم إغلاقه
       const viewRes = document.getElementById('view-research');
@@ -4157,6 +4179,15 @@ ${escText(alertBody)}
       if (statusSel) statusSel.value = researchSettings.enabled === false ? 'disabled' : 'enabled';
       if (levelSel) levelSel.value = researchSettings.targetLevel || 'all';
       if (msgInput) msgInput.value = researchSettings.closedMessage || '';
+      const opensInput = document.getElementById('admin-research-opens-at');
+      if (opensInput) opensInput.value = researchSettings.opensAt ? __toLocalInput(researchSettings.opensAt) : '';
+      const opensHint = document.getElementById('admin-research-opens-hint');
+      if (opensHint) {
+        const ot = Number(researchSettings.opensAt) || 0;
+        opensHint.innerHTML = !ot ? 'مفيش موعد محدد — التسجيل مفتوح دلوقتي.'
+          : (__now() < ot ? '⏳ الموعد الحالي: <b>' + escText(__fmtOpenDate(ot)) + '</b> (العد التنازلي شغال عند الطلاب)'
+                          : '✅ الموعد عدّى (' + escText(__fmtOpenDate(ot)) + ') — التسجيل مفتوح.');
+      }
 
       if (badge) {
         if (researchSettings.enabled === false) {
@@ -4192,10 +4223,17 @@ ${escText(alertBody)}
       const enabled = document.getElementById('admin-research-status-select').value === 'enabled';
       const targetLevel = document.getElementById('admin-research-level-select').value;
       const closedMessage = document.getElementById('admin-research-closed-msg').value.trim();
+      const opensRaw = (document.getElementById('admin-research-opens-at') || {}).value || '';
+      let opensAt = null;
+      if (opensRaw) {
+        opensAt = new Date(opensRaw).getTime();
+        if (!isFinite(opensAt)) return Swal.fire('خطأ', 'موعد فتح التسجيل غير صالح.', 'error');
+      }
 
       const payload = {
         enabled,
         targetLevel,
+        opensAt,
         closedMessage: closedMessage || 'انتهت فترة حجز وتنسيق الأبحاث لهذا العام وتم إغلاق القسم.',
         updatedAt: Date.now(),
         updatedBy: currentStudentData.name || 'الإدارة'
@@ -4203,7 +4241,7 @@ ${escText(alertBody)}
 
       database.ref('settings/researchSettings').set(payload).then(() => {
         researchSettings = Object.assign(researchSettings, payload);
-        logAdminAction('تعديل إعدادات الأبحاث', `الحالة: ${enabled ? 'مفعل' : 'مغلق'} | المستوى: ${targetLevel}`);
+        logAdminAction('تعديل إعدادات الأبحاث', `الحالة: ${enabled ? 'مفعل' : 'مغلق'} | المستوى: ${targetLevel} | فتح التسجيل: ${opensAt ? new Date(opensAt).toLocaleString('ar-EG', { timeZone: 'Africa/Cairo' }) : 'فوري'}`);
         Swal.fire({
           title: 'تم حفظ الإعدادات بنجاح! 💾',
           text: enabled 
@@ -4217,6 +4255,150 @@ ${escText(alertBody)}
         renderAdminResearchSettingsForm();
       }).catch(err => {
         Swal.fire('خطأ في الحفظ', escText(err.message), 'error');
+      });
+    }
+
+    /* =========================================================================
+       العد التنازلي لفتح التسجيل في الأبحاث + تعيين بحث لطالب من الإدارة
+       ========================================================================= */
+    let __srvOffset = 0, __cdTimer = null, __cdWasActive = false;
+    function __now() { return Date.now() + __srvOffset; }
+    function __toLocalInput(t) {
+      const d = new Date(Number(t)), p = n => String(n).padStart(2, '0');
+      return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + 'T' + p(d.getHours()) + ':' + p(d.getMinutes());
+    }
+    function __fmtOpenDate(t) {
+      try { return new Date(Number(t)).toLocaleString('ar-EG', { timeZone: 'Africa/Cairo', dateStyle: 'full', timeStyle: 'short' }); }
+      catch (e) { return new Date(Number(t)).toLocaleString('ar-EG'); }
+    }
+    function researchRegistrationOpen() {
+      if (__isAdmin()) return true;
+      const t = Number(researchSettings.opensAt) || 0;
+      return !t || __now() >= t;
+    }
+    function notifyResearchNotOpen() {
+      const t = Number(researchSettings.opensAt) || 0;
+      Swal.fire({
+        title: 'التسجيل لسه مفتحش ⏳',
+        html: '<div style="text-align:right; line-height:1.7; font-size:13.5px;">التسجيل في الأبحاث هيفتح <b>' + escText(__fmtOpenDate(t)) + '</b>.<br>تقدر تتابع العد التنازلي جوه قسم الأبحاث.</div>',
+        icon: 'info', confirmButtonText: 'تمام', confirmButtonColor: '#14b8a6'
+      });
+    }
+    function __cdBox(n, label) {
+      return '<div style="min-width:64px; padding:10px 8px; border-radius:12px; background:rgba(251,191,36,.12); border:1px solid rgba(251,191,36,.4);">' +
+        '<div style="font-size:26px; font-weight:900; line-height:1.1; color:#fbbf24; font-variant-numeric:tabular-nums;">' + n + '</div>' +
+        '<div style="font-size:11px; color:var(--fg-soft); margin-top:2px;">' + label + '</div></div>';
+    }
+    function updateResearchCountdownUI() {
+      const t = Number(researchSettings.opensAt) || 0;
+      const active = researchSettings.enabled !== false && t > 0 && __now() < t;
+      const box = document.getElementById('research-countdown-box');
+      const hubDesc = document.getElementById('hub-research-status');
+      const homeCd = document.getElementById('home-research-countdown');
+      const lock = active && !__isAdmin();
+      const ov = document.getElementById('research-lock-overlay'), content = document.getElementById('research-locked-content');
+      if (ov) ov.style.display = lock ? 'block' : 'none';
+      if (content) content.classList.toggle('res-locked', lock);
+      if (active) {
+        const s = Math.max(0, Math.floor((t - __now()) / 1000));
+        const d = Math.floor(s / 86400), h = Math.floor(s % 86400 / 3600), m = Math.floor(s % 3600 / 60), sec = s % 60;
+        const p2 = n => String(n).padStart(2, '0');
+        const short = d > 0 ? (d + ' يوم و ' + h + ' ساعة') : (h + ' ساعة و ' + m + ' دقيقة و ' + sec + ' ثانية');
+        if (box) {
+          box.innerHTML = '<div class="z-content" style="text-align:center;">' +
+            '<div style="font-size:13px; font-weight:800; color:#fbbf24; margin-bottom:10px;">⏳ التسجيل في الأبحاث هيفتح بعد:</div>' +
+            '<div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">' +
+            __cdBox(d, 'يوم') + __cdBox(p2(h), 'ساعة') + __cdBox(p2(m), 'دقيقة') + __cdBox(p2(sec), 'ثانية') + '</div>' +
+            '<div style="font-size:12px; color:var(--fg-soft); margin-top:12px;">📅 الموعد: ' + escText(__fmtOpenDate(t)) + '</div>' +
+            '<div style="font-size:12px; color:var(--fg-faint); margin-top:4px;">القائمة هتتفتح تلقائي أول ما العد التنازلي يخلص، وتقدر تسجل ساعتها.</div></div>';
+        }
+        if (hubDesc) hubDesc.textContent = '⏳ التسجيل يفتح بعد ' + short;
+        if (homeCd) homeCd.textContent = '⏳ التسجيل يفتح بعد: ' + short;
+        __cdWasActive = true;
+        if (!__cdTimer) __cdTimer = setInterval(updateResearchCountdownUI, 1000);
+      } else {
+        if (__cdTimer) { clearInterval(__cdTimer); __cdTimer = null; }
+        if (box) box.innerHTML = '';
+        if (hubDesc) hubDesc.textContent = 'تسجيل ومتابعة الأبحاث';
+        if (homeCd) homeCd.textContent = '';
+        if (__cdWasActive) {
+          __cdWasActive = false;
+          try { renderResearchHome(); renderMyRequest(); } catch (e) {}
+          const v = document.getElementById('view-research');
+          if (researchSettings.enabled !== false && v && v.style.display === 'block' && !__isAdmin()) {
+            Swal.fire({ toast: true, position: 'top', icon: 'success', title: '🎉 فتح التسجيل في الأبحاث! احجز بحثك دلوقتي', showConfirmButton: false, timer: 5000 });
+          }
+        }
+      }
+    }
+
+    function adminAssignResearch(uid, name) {
+      if (!__isAdmin()) return;
+      const u = allUsersList.find(x => x.uid === uid) || {};
+      const sname = u.name || name || '';
+      const heldNow = researchTopics.filter(r => r.claimedBy === uid);
+      const free = researchTopics.filter(r => !r.claimedBy);
+      let selKey = '';
+      Swal.fire({
+        title: 'تعيين بحث للطالب',
+        html: '<div style="text-align:right; font-size:13px; line-height:1.8;">' +
+          '<div style="margin-bottom:8px;">الطالب: <b>' + escText(sname) + '</b></div>' +
+          (heldNow.length ? '<div style="margin-bottom:8px; color:#d97706;">⚠️ الطالب حاجز حاليًا: <b>' + escText(heldNow[0].name) + '</b> — هيتلغى ويتبدل بالجديد.</div>' : '') +
+          '<label style="font-weight:bold;">اختار بحث من الأبحاث المتاحة (' + free.length + '):</label>' +
+          '<input id="swal-as-search" class="swal2-input" placeholder="🔍 دوّر على بحث..." style="margin:6px 0 6px; width:90%;">' +
+          '<div id="swal-as-list" style="max-height:200px; overflow-y:auto; text-align:right; border:1px solid rgba(255,255,255,.18); border-radius:10px; margin:0 0 12px;"></div>' +
+          '<label style="font-weight:bold;">أو اكتب بحث جديد:</label>' +
+          '<input id="swal-as-new" class="swal2-input" placeholder="عنوان البحث" style="margin:6px 0 0; width:90%;">' +
+          '</div>',
+        showCancelButton: true, confirmButtonText: 'تعيين', cancelButtonText: 'إلغاء', confirmButtonColor: '#14b8a6', focusConfirm: false,
+        didOpen: () => {
+          const list = document.getElementById('swal-as-list'), q = document.getElementById('swal-as-search'), nw = document.getElementById('swal-as-new');
+          const draw = () => {
+            const k = normName(q.value);
+            const items = free.filter(r => !k || normName(r.name).includes(k));
+            list.innerHTML = items.length ? items.map(r => '<div class="as-item" data-key="' + escText(r.key) + '" style="padding:9px 12px; cursor:pointer; font-size:13.5px; line-height:1.5; color:inherit; border-bottom:1px solid rgba(255,255,255,.07); word-break:break-word;' + (r.key === selKey ? ' background:rgba(20,184,166,.28); font-weight:bold;' : '') + '">' + (r.key === selKey ? '✅ ' : '') + escText(r.name) + '</div>').join('')
+              : '<div style="padding:12px; text-align:center; opacity:.7; font-size:13px;">' + (free.length ? 'لا توجد نتائج' : 'مفيش أبحاث متاحة — اكتب بحث جديد تحت') + '</div>';
+          };
+          list.addEventListener('click', e => { const it = e.target.closest('.as-item'); if (!it) return; selKey = (selKey === it.dataset.key) ? '' : it.dataset.key; if (selKey) nw.value = ''; draw(); });
+          q.addEventListener('input', draw);
+          nw.addEventListener('input', () => { if (nw.value.trim() && selKey) { selKey = ''; draw(); } });
+          draw();
+        },
+        preConfirm: () => {
+          const key = selKey;
+          const title = document.getElementById('swal-as-new').value.trim();
+          if (!key && !title) { Swal.showValidationMessage('اختار بحث من القائمة أو اكتب عنوان'); return false; }
+          if (key && title) { Swal.showValidationMessage('اختار واحد بس: من القائمة أو اكتب بحث جديد'); return false; }
+          if (title && (title.length < 3 || title.length > 150)) { Swal.showValidationMessage('العنوان لازم يكون من 3 لـ 150 حرف'); return false; }
+          return { key, title };
+        }
+      }).then(res => {
+        if (!res.isConfirmed) return;
+        let { key, title } = res.value, topicName, isNew = false;
+        const up = {};
+        if (key) {
+          const t = researchTopics.find(r => r.key === key);
+          if (!t) return Swal.fire('خطأ', 'البحث ده مبقاش موجود.', 'error');
+          if (t.claimedBy && t.claimedBy !== uid) return Swal.fire('بحث محجوز', 'البحث ده اتحجز لطالب تاني.', 'warning');
+          topicName = t.name;
+        } else {
+          const ex = researchTopics.find(r => normName(r.name) === normName(title));
+          if (ex) {
+            if (ex.claimedBy && ex.claimedBy !== uid) return Swal.fire('بحث محجوز', 'فيه بحث بنفس الاسم محجوز لطالب تاني.', 'warning');
+            key = ex.key; topicName = ex.name;
+          } else { key = database.ref('research_topics').push().key; topicName = title; isNew = true; }
+        }
+        if (isNew) up['research_topics/' + key] = { name: topicName, claimedBy: uid, claimedByName: sname, claimedAt: { '.sv': 'timestamp' } };
+        else { up['research_topics/' + key + '/claimedBy'] = uid; up['research_topics/' + key + '/claimedByName'] = sname; up['research_topics/' + key + '/claimedAt'] = { '.sv': 'timestamp' }; }
+        researchTopics.filter(r => r.claimedBy === uid && r.key !== key).forEach(r => {
+          up['research_topics/' + r.key + '/claimedBy'] = null; up['research_topics/' + r.key + '/claimedByName'] = null; up['research_topics/' + r.key + '/claimedAt'] = null;
+        });
+        up['users/' + uid + '/researchTopic'] = key; up['users/' + uid + '/researchTopicName'] = topicName; up['users/' + uid + '/researchTopicAt'] = { '.sv': 'timestamp' };
+        up['research_requests/' + uid] = null;
+        database.ref().update(up).then(() => {
+          logAdminAction('تعيين بحث لطالب', topicName + ' — ' + sname);
+          Swal.fire('تم التعيين ✅', 'اتسجل بحث "' + topicName + '" باسم ' + sname + '.', 'success');
+        }).catch(err => Swal.fire('خطأ', escText(err.message), 'error'));
       });
     }
 
@@ -4302,10 +4484,12 @@ ${escText(alertBody)}
         st.innerHTML = `<span style="color:#f87171;">❌ الإدارة رفضت طلب "${escText(myRequest.title)}"${myRequest.reason ? ' — السبب: ' + escText(myRequest.reason) : ''}. تقدر تطلب بحث تاني أو تحجز من القائمة.</span>`;
         btn.style.display = '';
       } else { st.innerHTML = ''; btn.style.display = ''; }
+      if (!researchRegistrationOpen()) { btn.style.display = 'none'; st.innerHTML += '<div style="color:#fbbf24;">🔒 طلب بحث جديد هيتفتح مع فتح التسجيل.</div>'; }
     }
 
     function requestNewResearch() {
       if (!isResearchAllowedForStudent()) return notifyResearchClosed();
+      if (!researchRegistrationOpen()) return notifyResearchNotOpen();
       if (!currentUser || !currentStudentData) return Swal.fire('', 'لازم تسجل دخول الأول.', 'warning');
       if (myResearch()) return Swal.fire('عندك بحث', 'إنت حاجز بحث بالفعل، الغي الحجز الأول لو عايز تطلب غيره.', 'warning');
       if (myRequest && myRequest.status === 'pending') return Swal.fire('', 'عندك طلب لسه مستني الرد.', 'info');
@@ -4402,7 +4586,7 @@ ${escText(alertBody)}
         boxHtml = `<div class="z-content"><div style="font-size:12px; color:#f87171; font-weight:700; margin-bottom:4px;">❌ الإدارة رفضت طلبك</div><div style="font-size:16px; font-weight:800; word-break:break-word;">${escText(myRequest.title)}</div>${myRequest.reason ? `<div style="font-size:13px; color:var(--fg-soft); margin-top:4px;">السبب: ${escText(myRequest.reason)}</div>` : ''}<div style="font-size:12px; color:var(--fg-faint); margin-top:6px;">تقدر تحجز بحث من القائمة أو تطلب بحث تاني.</div></div>`;
         homeHtml = `<span style="color:#f87171;">❌ طلبك اترفض</span>`;
       } else {
-        boxHtml = `<div class="z-content"><div style="font-size:12px; color:var(--fg-faint); font-weight:700; margin-bottom:4px;">📌 بحثك</div><div style="font-size:14px; color:var(--fg-soft);">لسه ما اخترتش بحث. اختار من القائمة أو اطلب بحث جديد.</div></div>`;
+        boxHtml = `<div class="z-content"><div style="font-size:12px; color:var(--fg-faint); font-weight:700; margin-bottom:4px;">📌 بحثك</div><div style="font-size:14px; color:var(--fg-soft);">${researchRegistrationOpen() ? 'لسه ما اخترتش بحث. اختار من القائمة أو اطلب بحث جديد.' : 'التسجيل لسه مفتحش، هيتفتح في الموعد المحدد في العد التنازلي.'}</div></div>`;
         homeHtml = `<span style="color:var(--fg-faint);">لسه ما اخترتش بحث</span>`;
       }
       if (box) { box.style.display = ''; box.style.borderColor = color; box.innerHTML = boxHtml; }
@@ -4431,6 +4615,7 @@ ${escText(alertBody)}
         let btn;
         if (isMine) btn = `<button class="pill" style="width:100%; background: rgba(34,197,94,.2); color:#4ade80; border:1px solid #22c55e; cursor:default;">✅ بحثك</button>`;
         else if (taken) btn = `<button class="pill" style="width:100%; background: rgba(255,255,255,.06); color: var(--fg-faint); cursor:not-allowed;" disabled>محجوز</button>`;
+        else if (!researchRegistrationOpen()) btn = `<button class="pill" style="width:100%; background: rgba(251,191,36,.12); color:#fbbf24; border:1px solid rgba(251,191,36,.4); cursor:not-allowed;" disabled>🔒 التسجيل لسه مفتحش</button>`;
         else btn = `<button class="pill" style="width:100%; background:#14b8a6;" onclick="claimResearch('${r.key}','${escapeHtml(r.name)}')">احجز البحث ده</button>`;
         return `<div class="card liquid-glass" style="padding:14px 16px; border-color:${isMine ? '#22c55e' : (taken ? 'rgba(255,255,255,.06)' : '#14b8a6')};"><h4 class="z-content" style="margin:0 0 10px; font-size:14px; word-break:break-word;">${escText(r.name)}</h4>${btn}</div>`;
       }).join('');
@@ -4440,6 +4625,7 @@ ${escText(alertBody)}
 
     function claimResearch(id, name) {
       if (!isResearchAllowedForStudent()) return notifyResearchClosed();
+      if (!researchRegistrationOpen()) return notifyResearchNotOpen();
       if (!currentUser || !currentStudentData) return Swal.fire('تنبيه', 'سجّل دخول الأول.', 'warning');
       const existing = myResearch();
       if (existing) return Swal.fire('عندك بحث بالفعل', `انت حاجز بحث \"${existing.name}\" بالفعل، لازم تلغيه الأول لو عايز تغيّره.`, 'warning');
@@ -4476,6 +4662,7 @@ ${escText(alertBody)}
 
     function cancelMyResearch(id) {
       if (!currentUser) return;
+      if (!researchRegistrationOpen()) return Swal.fire('مش متاح دلوقتي', 'مينفعش تلغي الحجز قبل فتح التسجيل. كلّم الإدارة لو محتاج تغيير.', 'info');
       Swal.fire({ title: 'إلغاء حجز البحث؟', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'نعم، إلغاء' }).then(async result => {
         if (!result.isConfirmed) return;
         const up = {}; up['research_topics/' + id + '/claimedBy'] = null; up['research_topics/' + id + '/claimedByName'] = null; up['research_topics/' + id + '/claimedAt'] = null;
