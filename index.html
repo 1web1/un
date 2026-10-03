@@ -1123,6 +1123,18 @@
     color: #4f46e5;
   }
 
+  /* ===== الهيدر على الموبايل: بدون قص — الأزرار والاسم بينزلوا سطر تاني لو المكان ضاق ===== */
+  .container > *, .home-layout > *, .home-layout > div > * { min-width: 0; max-width: 100%; }
+  .table-responsive { max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  #alert-banner { top: var(--header-h-real, var(--header-h)); }
+  @media (max-width: 680px) {
+    .chrome { height: auto !important; min-height: var(--header-h); flex-wrap: wrap; padding-top: calc(6px + env(safe-area-inset-top, 0px)) !important; padding-bottom: 6px !important; row-gap: 6px !important; box-sizing: border-box; width: 100%; }
+    .chrome .mark { flex: 1 1 auto; min-width: 0; }
+    .chrome .mark-text { display: inline !important; white-space: nowrap; }
+    .chrome .nav { flex: 1 1 100% !important; flex-shrink: 1 !important; max-width: 100%; flex-wrap: wrap; justify-content: center; min-width: 0; }
+    .chrome .nav .user-greeting-btn { height: auto !important; min-height: 36px !important; max-height: none !important; max-width: 100% !important; white-space: normal !important; overflow: visible !important; text-overflow: clip !important; padding: 4px 8px !important; line-height: 1.3; word-break: break-word; }
+    html { scroll-padding-top: calc(var(--header-h-real, 56px) + 10px); }
+  }
 </style>
 </head>
 <body>
@@ -8536,7 +8548,8 @@ ${escText(alertBody)}
             @page { size: A4 landscape; margin: 0; }
             body { margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #000; }
             img { width: 100%; max-width: 100vw; height: auto; max-height: 100vh; object-fit: contain; }
-          </style>
+          
+</style>
         </head>
         <body>
           <img src="${dataUrl}" onload="window.print(); window.close();">
@@ -8837,5 +8850,10 @@ ${escText(alertBody)}
       document.querySelectorAll('a[href="#"][target="_blank"]').forEach(a => a.style.display = 'none');
     };
   </script>
+<script>
+(function(){ function setH(){ var h=document.querySelector('.chrome'); if(h) document.documentElement.style.setProperty('--header-h-real', h.offsetHeight+'px'); }
+ window.addEventListener('load',setH); window.addEventListener('resize',setH); window.addEventListener('orientationchange',setH);
+ if(window.ResizeObserver){ var t=setInterval(function(){ var h=document.querySelector('.chrome'); if(h){ new ResizeObserver(setH).observe(h); setH(); clearInterval(t);} },300); } })();
+</script>
 </body>
 </html>
