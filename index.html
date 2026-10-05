@@ -1311,6 +1311,14 @@
             </div>
           </div>
 
+          <div class="quick-card" onclick="openMyReport()" style="--card-accent:#22c55e; --icon-bg:rgba(34,197,94,.15);">
+            <div class="quick-card-icon">📈</div>
+            <div class="quick-card-info">
+              <div class="quick-card-title">تقريري الشخصي</div>
+              <div class="quick-card-desc">نقاطك وترتيبك ونقاط قوتك وضعفك في كل مادة</div>
+            </div>
+          </div>
+
           <div class="quick-card" onclick="document.getElementById('leaderboard-container').scrollIntoView({behavior:'smooth'})" style="--card-accent:#f59e0b; --icon-bg:rgba(245,158,11,.15);">
             <div class="quick-card-icon">🏆</div>
             <div class="quick-card-info">
@@ -1723,7 +1731,7 @@
               <div class="admin-stat-box"><div class="admin-stat-num" id="stat-students">0</div><div class="admin-stat-label">إجمالي الطلاب</div></div>
               <div class="admin-stat-box" style="border-color: rgba(96,165,250,.3);"><div class="admin-stat-num" style="color:#60a5fa;" id="stat-lvl1">0</div><div class="admin-stat-label">المستوى الأول 🎓</div></div>
               <div class="admin-stat-box" style="border-color: rgba(192,132,252,.3);"><div class="admin-stat-num" style="color:#c084fc;" id="stat-lvl2">0</div><div class="admin-stat-label">المستوى الثاني 🚀</div></div>
-              <div class="admin-stat-box"><div class="admin-stat-num" style="color:#4ade80;" id="stat-online">0</div><div class="admin-stat-label">متصل الآن</div></div>
+              <div class="admin-stat-box" id="stat-online-box" style="cursor:pointer;" onclick="toggleOnlineFilter()" title="اضغط لعرض المتصلين فقط"><div class="admin-stat-num" style="color:#4ade80;" id="stat-online">0</div><div class="admin-stat-label">متصل الآن 👆</div></div>
               <div class="admin-stat-box"><div class="admin-stat-num" style="color:#fbbf24;" id="stat-subjects">0</div><div class="admin-stat-label">المواد الدراسية</div></div>
               <div class="admin-stat-box"><div class="admin-stat-num" style="color:#f472b6;" id="stat-questions">0</div><div class="admin-stat-label">بنك الأسئلة</div></div>
             </div>
@@ -1988,6 +1996,32 @@
              <div class="admin-section-header"><span>📨</span> مساهمات الطلاب المقترحة (الملخصات والتفريغات) <span id="admin-contrib-count" class="status-badge status-offline" style="margin-right:8px;">0</span></div>
              <p style="font-size:12px; color:var(--fg-faint); margin-bottom:12px;">مراجعة الملفات والملخصات التي أرسلها الطلاب لنشرها في المواد الدراسية.</p>
              <div id="admin-contributions-list" style="margin-bottom: 24px;"><div class="empty-state">لا توجد مساهمات جديدة للمراجعة.</div></div>
+
+             <div class="admin-section-header"><span>📊</span> إحصائيات المواد الدراسية</div>
+             <p style="font-size:12px; color:var(--fg-faint); margin-bottom:12px;">مقارنة بين المواد: مشاركة الطلاب، عدد الإجابات، نسبة الإجابات الصحيحة، ونسبة تغطية بنك الأسئلة.</p>
+             <div style="margin-bottom: 14px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                <select id="subj-stats-level" class="input-group" style="max-width: 200px; margin:0;" onchange="renderSubjectStats()">
+                   <option value="all">كل المستويات</option>
+                   <option value="1">المستوى الأول 🎓</option>
+                   <option value="2">المستوى الثاني 🚀</option>
+                </select>
+                <select id="subj-stats-sort" class="input-group" style="max-width: 240px; margin:0;" onchange="renderSubjectStats()">
+                   <option value="attempts">الترتيب: الأكثر إجابات</option>
+                   <option value="acc_asc">الترتيب: الأضعف نسبة صحة</option>
+                   <option value="acc_desc">الترتيب: الأعلى نسبة صحة</option>
+                   <option value="cov_asc">الترتيب: الأقل تغطية</option>
+                   <option value="name">الترتيب: أبجدياً</option>
+                </select>
+                <button class="pill" style="background: rgba(255,255,255,.1); font-size: 12px; height: 38px;" onclick="renderSubjectStats()">تحديث 🔄</button>
+                <button class="pill" style="background: #10b981; font-size: 12px; height: 38px;" onclick="exportSubjectStatsCSV()">📥 تصدير Excel</button>
+             </div>
+             <div id="subj-stats-summary" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:10px; margin-bottom:14px;"></div>
+             <div class="table-responsive" style="margin-bottom: 28px;">
+                <table class="styled-table">
+                   <thead><tr><th>#</th><th>المادة</th><th>الأسئلة</th><th>الطلاب المشاركين</th><th>إجمالي الإجابات</th><th>نسبة الصحة</th><th>متوسط التغطية</th><th>أسئلة لم تُجَب</th><th>التقييم</th></tr></thead>
+                   <tbody id="subj-stats-body"><tr><td colspan="9" style="text-align:center;">جاري التحليل...</td></tr></tbody>
+                </table>
+             </div>
 
              <div class="admin-section-header"><span>🔥</span> تحليل الأسئلة الأكثر صعوبة (Hardest Questions Analytics)</div>
              <p style="font-size:12px; color:var(--fg-faint); margin-bottom:12px;">ترتيب الأسئلة التي يخطئ فيها معظم الطلاب لمساعدة المعيدين في التركيز عليها.</p>
@@ -2488,6 +2522,19 @@
       
       <button class="pill z-content" style="width: 100%; background: linear-gradient(135deg, #f59e0b, #d97706); color: #111; margin-top: 8px; font-weight: 800; font-size: 14px;" onclick="openAchievementCardModal()">🏆 بطاقة إنجازاتي (عرض ومشاركة كصورة)</button>
       <button class="pill z-content" style="width: 100%; background: rgba(100,100,100,.2); margin-top: 8px; color: var(--fg);" onclick="closeModal(null, 'profile-overlay')">إغلاق</button>
+    </div>
+  </div>
+
+  <div id="report-overlay" class="overlay-bg" style="display: none;" onclick="closeModal(event, 'report-overlay')">
+    <div class="modal-box large liquid-glass" onclick="event.stopPropagation()" style="background: var(--shade); padding: 0;">
+      <div style="padding: 24px; max-height: 88vh; overflow-y: auto;">
+        <div id="report-content" class="z-content"></div>
+        <div class="z-content" style="display:flex; gap:8px; flex-wrap:wrap; margin-top:16px;">
+          <button class="pill" style="flex:1; min-width:140px; background:#3b82f6;" onclick="printMyReport()">🖨️ طباعة / حفظ PDF</button>
+          <button class="pill" style="flex:1; min-width:140px; background:#25d366; color:#111;" onclick="shareMyReport()">💬 مشاركة على واتساب</button>
+          <button class="pill" style="flex:1; min-width:100px; background: rgba(100,100,100,.2); color: var(--fg); border: 1px solid rgba(100,100,100,.2);" onclick="closeModal(null, 'report-overlay')">إغلاق</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -3013,8 +3060,10 @@ ${escText(alertBody)}
 
     function listenToUsersData() {
       database.ref('users').on('value', (snapshot) => {
-        let users = snapshot.val() || {}; allUsersList = []; for (let id in users) allUsersList.push({ uid: id, ...users[id] }); try { renderAdminResearchTable(); } catch (e) {}
-        allUsersList.sort((a, b) => (b.score || 0) - (a.score || 0)); updateDashboardStats(); renderStudentsTable();
+        let users = snapshot.val() || {}; allUsersList = []; for (let id in users) allUsersList.push({ uid: id, ...users[id] });
+        allUsersList.sort((a, b) => (b.score || 0) - (a.score || 0));
+        clearTimeout(window.__usersRenderT);
+        window.__usersRenderT = setTimeout(() => { try { renderAdminResearchTable(); } catch (e) {} updateDashboardStats(); renderStudentsTable(); }, 400);
       });
     }
 
@@ -3059,6 +3108,33 @@ ${escText(alertBody)}
         logAdminAction("تصدير بيانات", "تم تحميل قائمة الطلاب بملف Excel/CSV");
     }
 
+    function __waLink(phone) {
+      let d = String(phone || '').replace(/\D/g, '');
+      if (!d) return '';
+      if (d.startsWith('00')) d = d.slice(2);
+      else if (d.startsWith('0')) d = '20' + d.slice(1);
+      else if (d.length === 10 && d.startsWith('1')) d = '20' + d;
+      if (d.length < 8) return '';
+      return 'https://wa.me/' + d;
+    }
+    function __waPhoneHtml(phone) {
+      const link = __waLink(phone);
+      if (!link) return '<div style="direction:ltr; font-size:13px; color:var(--fg-soft);">' + escText(phone || 'لا يوجد هاتف') + '</div>';
+      return '<div style="direction:ltr; font-size:13px; display:flex; align-items:center; gap:6px; flex-wrap:wrap;">' +
+        '<a href="' + link + '" target="_blank" rel="noopener noreferrer" style="color:#25d366; font-weight:bold; text-decoration:none;" title="فتح محادثة واتساب">' + escText(phone) + '</a>' +
+        '<a href="' + link + '" target="_blank" rel="noopener noreferrer" style="background:#25d366; color:#fff; padding:2px 8px; border-radius:6px; font-size:11px; font-weight:bold; text-decoration:none;">💬 واتساب</a></div>';
+    }
+
+    let adminOnlineOnly = false;
+    function toggleOnlineFilter() {
+      adminOnlineOnly = !adminOnlineOnly;
+      const box = document.getElementById('stat-online-box');
+      if (box) { box.style.borderColor = adminOnlineOnly ? '#4ade80' : ''; box.style.boxShadow = adminOnlineOnly ? '0 0 0 2px rgba(74,222,128,.35)' : ''; }
+      try { const tab = document.querySelector('.admin-tab'); if (tab && !document.getElementById('tab-students').classList.contains('active')) switchAdminTab('students', tab); } catch (e) {}
+      filterAdminStudents();
+      const tbl = document.getElementById('students-table-body'); if (tbl && tbl.closest) { const w = tbl.closest('.table-responsive'); if (w) w.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+    }
+
     function filterAdminStudents() {
         const query = (document.getElementById('admin-search-student')?.value || '').toLowerCase();
         let visibleCount = 0;
@@ -3067,8 +3143,9 @@ ${escText(alertBody)}
           const userLevel = row.getAttribute('data-level') || '1';
           const matchesLevel = (currentAdminLevelFilter === 'all') || (String(userLevel) === String(currentAdminLevelFilter));
           const matchesQuery = !query || row.innerText.toLowerCase().includes(query);
+          const matchesOnline = !adminOnlineOnly || row.getAttribute('data-online') === '1';
           
-          if (matchesLevel && matchesQuery) {
+          if (matchesLevel && matchesQuery && matchesOnline) {
             row.style.display = '';
             visibleCount++;
           } else {
@@ -3078,7 +3155,7 @@ ${escText(alertBody)}
 
         const filterCountEl = document.getElementById('admin-students-filter-count');
         if (filterCountEl) {
-          filterCountEl.innerText = `(المعروض: ${visibleCount} طالب)`;
+          filterCountEl.innerText = `(المعروض: ${visibleCount} طالب${adminOnlineOnly ? ' — المتصلين فقط 🟢، اضغط «متصل الآن» للرجوع' : ''})`;
         }
     }
 
@@ -3289,6 +3366,7 @@ ${escText(alertBody)}
           const adminBtn = document.getElementById('admin-toggle-btn');
           if (currentStudentData.isAdmin === true) { adminBtn.style.display = 'inline-flex'; listenToAdminLogs(); if (!adminListenersOn) { adminListenersOn = true; listenToUsersData(); listenToOnlinePresence(); } listenToAdminResearch(); listenToContributions(); updateAnalyticsSelect(); renderAdminResearchSettingsForm(); } else { adminBtn.style.display = 'none'; document.getElementById('admin-panel').style.display = 'none'; }
         }
+        try { __syncMyResearchFromUser(); } catch (e) {}
         updateResearchVisibilityUI();
         renderResearchHome();
       });
@@ -3303,6 +3381,93 @@ ${escText(alertBody)}
         ensureOnline();
         withTimeout(Promise.all([ database.ref('users/' + currentUser.uid + '/lastSeen').set(FB.database.ServerValue.TIMESTAMP), database.ref('online_users/' + currentUser.uid).remove() ]), 4000).then(done, done);
       } else { done(); }
+    }
+
+    /* =========================================================================
+       تقرير الطالب الشخصي
+       ========================================================================= */
+    let __lastReport = null;
+    function __myReportData() {
+      const u = currentStudentData || {}, sq = u.solvedQuizzes || {}, lvl = String(u.level || 1);
+      const subs = []; let tAns = 0, tCor = 0;
+      db.forEach(sub => {
+        const qs = sub.quizzes || []; if (!qs.length) return;
+        let ans = 0, cor = 0;
+        qs.forEach(q => { const x = sq[q.key]; if (x) { ans++; if (x === true || x.status === 'correct') cor++; } });
+        if (String(sub.level) !== lvl && ans === 0) return;
+        tAns += ans; tCor += cor;
+        subs.push({ name: sub.name || '', total: qs.length, ans, cor, wrong: ans - cor, acc: ans ? Math.round(cor / ans * 100) : 0 });
+      });
+      const board = (window._lastLeaderboardRaw || []).filter(x => (!x.level && lvl === '1') || String(x.level) === lvl);
+      const idx = currentUser ? board.findIndex(x => x.uid === currentUser.uid) : -1;
+      const earned = u.earnedBadges || {};
+      const badges = BADGES_LIST.filter(b => !!earned[b.id] || b.check(u));
+      const weak = subs.filter(x => x.ans >= 3 && x.acc < 60).sort((a, b) => a.acc - b.acc).slice(0, 3);
+      const notStarted = subs.filter(x => x.ans === 0);
+      const strong = subs.filter(x => x.ans >= 3 && x.acc >= 70).sort((a, b) => b.acc - a.acc)[0] || null;
+      const tips = [];
+      if (tAns - tCor > 0) tips.push('عندك ' + (tAns - tCor) + ' سؤال غلط — افتح فلتر «أخطائي» جوه المادة وراجعهم.');
+      weak.forEach(w => tips.push('ركّز على «' + w.name + '» — نسبة صحتك فيها ' + w.acc + '%.'));
+      if (notStarted.length) tips.push('لسه ما بدأتش في: ' + notStarted.slice(0, 4).map(x => x.name).join('، ') + (notStarted.length > 4 ? ' وغيرهم' : '') + '.');
+      if (!tAns) tips.length = 0, tips.push('ابدأ بحل أسئلة من بنك الأسئلة عشان يظهر تحليل أدائك.');
+      if (tAns && !tips.length) tips.push('أداؤك ممتاز، كمّل بنفس المستوى. 👏');
+      return {
+        name: u.name || '', level: lvl, score: u.score || 0, answered: tAns, correct: tCor,
+        accuracy: tAns ? Math.round(tCor / tAns * 100) : 0,
+        rank: idx >= 0 ? idx + 1 : null, boardSize: board.length, badges,
+        subs, weak, notStarted, strong, tips,
+        research: u.researchTopicName || '',
+        date: new Date().toLocaleDateString('ar-EG', { timeZone: 'Africa/Cairo', dateStyle: 'long' })
+      };
+    }
+
+    function openMyReport() {
+      if (!currentUser || !currentStudentData) return Swal.fire('تنبيه', 'سجّل دخول الأول.', 'warning');
+      const r = __lastReport = __myReportData();
+      const accCol = v => v >= 80 ? '#22c55e' : (v >= 50 ? '#f59e0b' : '#ef4444');
+      const stat = (t, v, c) => '<div class="track-stat-card"><div class="track-stat-title">' + t + '</div><div class="track-stat-value" style="color:' + c + ';">' + v + '</div></div>';
+      const subsHtml = r.subs.length ? r.subs.map(x => {
+        const cov = Math.round(x.ans / x.total * 100), col = x.ans ? accCol(x.acc) : '#64748b';
+        return '<div class="track-subj-card"><div style="display:flex; justify-content:space-between; align-items:center; gap:8px;"><div style="font-weight:bold; font-size:14px;">📖 ' + escText(x.name) + '</div><div style="color:' + col + '; font-weight:900;">' + (x.ans ? x.acc + '% صحة' : 'لم تبدأ') + '</div></div>' +
+          '<div class="track-progress-bar"><div class="track-progress-fill" style="width:' + cov + '%; background:' + col + ';"></div></div>' +
+          '<div style="font-size:12px; color:var(--fg-soft);">أجبت ' + x.ans + ' من ' + x.total + ' سؤال (' + cov + '%) — صح ' + x.cor + ' / غلط ' + x.wrong + '</div></div>';
+      }).join('') : '<div class="empty-state">لا توجد مواد فيها أسئلة حاليًا.</div>';
+      document.getElementById('report-content').innerHTML =
+        '<div style="text-align:center; margin-bottom:18px;"><div style="font-size:12px; color:var(--fg-faint);">📈 تقريري الشخصي — ' + escText(r.date) + '</div><h3 style="margin:6px 0 2px; font-size:20px;">' + escText(r.name) + '</h3><div style="font-size:12px; color:var(--fg-soft);">' + (r.level === '2' ? 'المستوى الثاني 🚀' : 'المستوى الأول 🎓') + '</div></div>' +
+        '<div class="track-stats-grid">' + stat('النقاط', r.score + ' 🏆', '#ffd700') + stat('نسبة الصحة', r.accuracy + '%', accCol(r.accuracy)) + stat('الترتيب', r.rank ? '#' + r.rank + ' من ' + r.boardSize : '—', '#60a5fa') + '</div>' +
+        '<div class="track-stats-grid">' + stat('الإجابات', r.answered, '#c084fc') + stat('الصحيحة', r.correct, '#22c55e') + stat('الشارات', r.badges.length + ' / ' + BADGES_LIST.length, '#f472b6') + '</div>' +
+        (r.research ? '<div class="track-subj-card" style="border-color:rgba(20,184,166,.4);">🔬 بحثك: <b>' + escText(r.research) + '</b></div>' : '') +
+        '<h4 style="margin:18px 0 10px;">📚 أداؤك في المواد</h4>' + subsHtml +
+        '<h4 style="margin:18px 0 10px;">💡 توصيات</h4>' + r.tips.map(t => '<div class="track-subj-card" style="padding:10px 14px; font-size:13px;">' + escText(t) + '</div>').join('') +
+        (r.strong ? '<div class="track-subj-card" style="padding:10px 14px; font-size:13px; border-color:rgba(34,197,94,.4);">⭐ أقوى مادة عندك: <b>' + escText(r.strong.name) + '</b> (' + r.strong.acc + '%)</div>' : '');
+      document.getElementById('report-overlay').style.display = 'flex';
+    }
+
+    function printMyReport() {
+      const r = __lastReport || __myReportData();
+      const w = window.open('', '_blank');
+      if (!w) return Swal.fire('المتصفح منع النافذة', 'اسمح بالنوافذ المنبثقة للموقع وجرّب تاني.', 'info');
+      const rows = r.subs.map(x => '<tr><td>' + escText(x.name) + '</td><td>' + x.ans + ' / ' + x.total + '</td><td>' + x.cor + '</td><td>' + x.wrong + '</td><td>' + (x.ans ? x.acc + '%' : '—') + '</td></tr>').join('');
+      w.document.write('<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>تقرير ' + escText(r.name) + '</title><style>' +
+        'body{font-family:Cairo,Tahoma,Arial,sans-serif;color:#111;margin:28px;line-height:1.7}h1{font-size:22px;margin:0 0 4px}.m{color:#555;font-size:13px;margin-bottom:18px}' +
+        '.g{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px}.c{border:1px solid #ccc;border-radius:10px;padding:10px;text-align:center}.c b{display:block;font-size:20px}' +
+        'table{width:100%;border-collapse:collapse;margin-bottom:18px;font-size:13px}th,td{border:1px solid #ccc;padding:7px 9px;text-align:right}th{background:#f1f5f9}li{margin-bottom:4px}</style></head><body>' +
+        '<h1>📈 التقرير الشخصي — ' + escText(r.name) + '</h1><div class="m">' + (r.level === '2' ? 'المستوى الثاني' : 'المستوى الأول') + ' • ' + escText(r.date) + '</div>' +
+        '<div class="g"><div class="c">النقاط<b>' + r.score + '</b></div><div class="c">نسبة الصحة<b>' + r.accuracy + '%</b></div><div class="c">الترتيب<b>' + (r.rank ? '#' + r.rank + ' من ' + r.boardSize : '—') + '</b></div>' +
+        '<div class="c">الإجابات<b>' + r.answered + '</b></div><div class="c">الصحيحة<b>' + r.correct + '</b></div><div class="c">الشارات<b>' + r.badges.length + ' / ' + BADGES_LIST.length + '</b></div></div>' +
+        (r.research ? '<p>🔬 البحث: <b>' + escText(r.research) + '</b></p>' : '') +
+        '<h3>الأداء في المواد</h3><table><thead><tr><th>المادة</th><th>المُجاب / الكل</th><th>صح</th><th>غلط</th><th>نسبة الصحة</th></tr></thead><tbody>' + rows + '</tbody></table>' +
+        '<h3>توصيات</h3><ul>' + r.tips.map(t => '<li>' + escText(t) + '</li>').join('') + '</ul></body></html>');
+      w.document.close(); w.focus(); setTimeout(() => { try { w.print(); } catch (e) {} }, 500);
+    }
+
+    function shareMyReport() {
+      const r = __lastReport || __myReportData();
+      const lines = ['📈 تقريري على المنصة — ' + r.date, '🏆 النقاط: ' + r.score, '🎯 نسبة الصحة: ' + r.accuracy + '% (' + r.correct + ' من ' + r.answered + ')'];
+      if (r.rank) lines.push('🏅 الترتيب: #' + r.rank + ' من ' + r.boardSize);
+      lines.push('🎖️ الشارات: ' + r.badges.length + ' / ' + BADGES_LIST.length);
+      if (r.strong) lines.push('⭐ أقوى مادة: ' + r.strong.name + ' (' + r.strong.acc + '%)');
+      window.open('https://wa.me/?text=' + encodeURIComponent(lines.join('\n')), '_blank', 'noopener');
     }
 
     function showProfile() {
@@ -3870,10 +4035,10 @@ ${escText(alertBody)}
         const levelBadge = u.level == 2
             ? `<span style="background: rgba(168,85,247,.15); color: #c084fc; padding: 2px 6px; border-radius: 4px; font-size: 10px; margin-right: 6px;">Lvl 2</span>`
             : `<span style="background: rgba(59,130,246,.15); color: #60a5fa; padding: 2px 6px; border-radius: 4px; font-size: 10px; margin-right: 6px;">Lvl 1</span>`;
-        html += `<tr data-level="${u.level == 2 ? 2 : 1}"><td>${i+1}</td>
+        html += `<tr data-level="${u.level == 2 ? 2 : 1}" data-online="${isOnline ? 1 : 0}"><td>${i+1}</td>
         <td><div style="font-weight:bold; color:var(--fg); margin-bottom:4px; display:flex; align-items:center; flex-wrap:wrap;">${escText(u.name)} ${levelBadge}</div>${statusHtml}${u.researchTopicName ? `<div style="font-size:11px; color:#2dd4bf; margin-top:4px;">🔬 ${escText(u.researchTopicName)}</div>` : ''}</td>
         <td>
-            <div style="direction:ltr; font-size:13px; color:var(--fg-soft);">${escText(u.phone||'لا يوجد هاتف')}</div>
+            ${__waPhoneHtml(u.phone)}
             <div style="direction:ltr; font-size:11px; color:var(--primary); margin-top:4px; font-weight:bold;">${escText(u.email||'')}</div>
             <div style="font-size:11px; color:var(--gold); font-family:monospace; margin-top:4px;">ID: ${studentId}</div>
         </td>
@@ -4029,6 +4194,7 @@ ${escText(alertBody)}
         listenToContributions();
         updateAnalyticsSelect();
         renderHardestQuestionsTable();
+        try { renderSubjectStats(); } catch (e) { console.error(e); }
       }
     }
 
@@ -4324,6 +4490,7 @@ ${escText(alertBody)}
         if (__cdWasActive) {
           __cdWasActive = false;
           try { renderResearchHome(); renderMyRequest(); } catch (e) {}
+          try { clearTimeout(__pollT); __pollT = setTimeout(__pollResearch, Math.random() * 3000); } catch (e) {}
           const v = document.getElementById('view-research');
           if (researchSettings.enabled !== false && v && v.style.display === 'block' && !__isAdmin()) {
             Swal.fire({ toast: true, position: 'top', icon: 'success', title: '🎉 فتح التسجيل في الأبحاث! احجز بحثك دلوقتي', showConfirmButton: false, timer: 5000 });
@@ -4421,7 +4588,8 @@ ${escText(alertBody)}
       val = val || {};
       researchTopics = Object.keys(val).map(k => ({ key: k, ...val[k] }));
       researchTopics.sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ar'));
-      renderResearchHome(); renderAdminResearchTable(); renderMyRequest();
+      clearTimeout(window.__topicsRenderT);
+      window.__topicsRenderT = setTimeout(() => { renderResearchHome(); renderAdminResearchTable(); renderMyRequest(); }, 250);
     }
     async function __fetchTopics() {
       if (!currentUser) return;
@@ -4434,7 +4602,10 @@ ${escText(alertBody)}
     }
     function __pollResearch() {
       clearTimeout(__pollT);
-      const next = () => { __pollT = setTimeout(__pollResearch, 7000 + Math.random() * 3000); };
+      const next = () => {
+        const locked = !__isAdmin() && !researchRegistrationOpen();
+        __pollT = setTimeout(__pollResearch, locked ? 25000 + Math.random() * 10000 : 7000 + Math.random() * 3000);
+      };
       if (document.hidden || !currentUser || myResearch() || __isAdmin()) { next(); return; }
       __fetchTopics().then(next, next);
     }
@@ -4561,6 +4732,18 @@ ${escText(alertBody)}
         database.ref('research_requests/' + uid).update({ status: 'rejected', reason }).then(() => { logAdminAction('رفض طلب بحث', `${req.title} — ${req.name || uid}`); Swal.fire('تم', 'تم رفض الطلب.', 'success'); })
           .catch(err => Swal.fire('خطأ', escText(err.message), 'error'));
       });
+    }
+
+    function __syncMyResearchFromUser() {
+      if (!currentUser || !currentStudentData || currentStudentData.isAdmin === true) return;
+      const uid = currentUser.uid, key = currentStudentData.researchTopic || null;
+      let changed = false;
+      researchTopics.forEach(r => {
+        if (key && r.key === key) { if (r.claimedBy !== uid) { r.claimedBy = uid; r.claimedByName = currentStudentData.name || ''; changed = true; } }
+        else if (r.claimedBy === uid) { r.claimedBy = null; r.claimedByName = null; r.claimedAt = null; changed = true; }
+      });
+      if (changed) { try { renderMyRequest(); } catch (e) {} }
+      if ((!key && changed) || (key && !researchTopics.some(r => r.key === key))) __fetchTopics();
     }
 
     function myResearch() { if (!currentStudentData) return null; return (currentStudentData.researchTopic && researchTopics.find(r => r.key === currentStudentData.researchTopic)) || (currentUser && researchTopics.find(r => r.claimedBy === currentUser.uid)) || null; }
@@ -4808,8 +4991,15 @@ ${escText(alertBody)}
           });
         }
 
-        // 3. Clear all research requests
-        up['research_requests'] = null;
+        // 3. Clear all research requests (واحد واحد، لأن القواعد بتسمح بالكتابة على كل طلب مش على العقدة كلها)
+        try {
+          const snapR = await database.ref('research_requests').once('value');
+          const valR = snapR.val() || {};
+          Object.keys(valR).forEach(uid => { up['research_requests/' + uid] = null; });
+        } catch (e) {
+          console.warn('Fallback reading researchRequests array:', e);
+          (researchRequests || []).forEach(r => { if (r && r.uid) up['research_requests/' + r.uid] = null; });
+        }
 
         // 4. Multi-path update in chunks
         const updateKeys = Object.keys(up);
@@ -6371,6 +6561,91 @@ ${escText(alertBody)}
     }
 
     /* ===== 4. تحليل الأسئلة الأكثر صعوبة (Hardest Questions Analytics) ===== */
+    /* =========================================================================
+       إحصائيات المواد (لوحة الإدارة)
+       ========================================================================= */
+    let __subjStatsRows = [];
+    function __computeSubjectStats() {
+      const lvlSel = (document.getElementById('subj-stats-level') || {}).value || 'all';
+      const students = allUsersList.filter(u => !u.isAdmin && !u.isBanned);
+      const rows = [];
+      db.forEach(sub => {
+        if (lvlSel !== 'all' && String(sub.level) !== String(lvlSel)) return;
+        const qs = sub.quizzes || [];
+        if (!qs.length) return;
+        let attempts = 0, correct = 0, participants = 0, covSum = 0, unanswered = 0;
+        qs.forEach(q => {
+          let a = 0;
+          students.forEach(u => { if (u.solvedQuizzes && u.solvedQuizzes[q.key]) a++; });
+          if (!a) unanswered++;
+        });
+        students.forEach(u => {
+          const sq = u.solvedQuizzes || {};
+          let ans = 0;
+          qs.forEach(q => { const x = sq[q.key]; if (x) { ans++; attempts++; if (x === true || x.status === 'correct') correct++; } });
+          if (ans) { participants++; covSum += ans / qs.length; }
+        });
+        rows.push({
+          name: sub.name || '', level: sub.level, questions: qs.length, participants, attempts, correct,
+          acc: attempts ? Math.round(correct / attempts * 100) : null,
+          cov: participants ? Math.round(covSum / participants * 100) : 0,
+          unanswered
+        });
+      });
+      return { rows, students };
+    }
+
+    function renderSubjectStats() {
+      const body = document.getElementById('subj-stats-body'); if (!body) return;
+      const sortBy = (document.getElementById('subj-stats-sort') || {}).value || 'attempts';
+      const { rows, students } = __computeSubjectStats();
+      const cmp = {
+        attempts: (a, b) => b.attempts - a.attempts,
+        acc_asc: (a, b) => (a.acc === null) - (b.acc === null) || (a.acc || 0) - (b.acc || 0),
+        acc_desc: (a, b) => (a.acc === null) - (b.acc === null) || (b.acc || 0) - (a.acc || 0),
+        cov_asc: (a, b) => a.cov - b.cov,
+        name: (a, b) => a.name.localeCompare(b.name, 'ar')
+      }[sortBy];
+      rows.sort(cmp);
+      __subjStatsRows = rows;
+
+      const totalAtt = rows.reduce((t, r) => t + r.attempts, 0), totalCor = rows.reduce((t, r) => t + r.correct, 0);
+      const engaged = students.filter(u => u.solvedQuizzes && Object.keys(u.solvedQuizzes).length > 0).length;
+      const withAcc = rows.filter(r => r.attempts >= 5 && r.acc !== null);
+      const weakest = withAcc.slice().sort((a, b) => a.acc - b.acc)[0];
+      const strongest = withAcc.slice().sort((a, b) => b.acc - a.acc)[0];
+      const mostUsed = rows.slice().sort((a, b) => b.attempts - a.attempts)[0];
+      const card = (title, val, sub, col) => '<div class="track-stat-card"><div class="track-stat-title">' + title + '</div><div class="track-stat-value" style="color:' + col + '; font-size:16px; word-break:break-word;">' + val + '</div>' + (sub ? '<div style="font-size:11px; color:var(--fg-faint); margin-top:6px;">' + sub + '</div>' : '') + '</div>';
+      const sum = document.getElementById('subj-stats-summary');
+      if (sum) sum.innerHTML =
+        card('إجمالي الإجابات', totalAtt, 'نسبة الصحة العامة: ' + (totalAtt ? Math.round(totalCor / totalAtt * 100) + '%' : '—'), '#60a5fa') +
+        card('الطلاب المتفاعلون', engaged + ' / ' + students.length, students.length ? Math.round(engaged / students.length * 100) + '% حلّوا سؤال على الأقل' : '', '#4ade80') +
+        card('الأكثر استخدامًا', mostUsed && mostUsed.attempts ? escText(mostUsed.name) : '—', mostUsed && mostUsed.attempts ? mostUsed.attempts + ' إجابة' : '', '#fbbf24') +
+        card('الأضعف نتيجة', weakest ? escText(weakest.name) : '—', weakest ? weakest.acc + '% صحة (5 إجابات فأكثر)' : 'محتاج 5 إجابات على الأقل', '#f87171') +
+        card('الأقوى نتيجة', strongest ? escText(strongest.name) : '—', strongest ? strongest.acc + '% صحة' : '', '#22c55e');
+
+      if (!rows.length) { body.innerHTML = '<tr><td colspan="9" style="text-align:center;">لا توجد مواد فيها أسئلة للتحليل.</td></tr>'; return; }
+      body.innerHTML = rows.map((r, i) => {
+        let badge, col;
+        if (r.attempts < 5) { badge = 'بيانات قليلة ⚪'; col = '#94a3b8'; }
+        else if (r.acc >= 80) { badge = 'متقنة 🟢'; col = '#22c55e'; }
+        else if (r.acc >= 50) { badge = 'متوسطة 🟡'; col = '#f59e0b'; }
+        else { badge = 'محتاجة مراجعة 🔴'; col = '#ef4444'; }
+        const accHtml = r.acc === null ? '<span style="color:var(--fg-faint);">—</span>' :
+          '<div style="min-width:110px;"><div style="font-weight:bold; color:' + col + ';">' + r.acc + '%</div><div class="track-progress-bar" style="margin:4px 0 0;"><div class="track-progress-fill" style="width:' + r.acc + '%; background:' + col + ';"></div></div></div>';
+        return '<tr><td>' + (i + 1) + '</td><td><span style="color:var(--primary); font-weight:bold;">📚 ' + escText(r.name) + '</span><div style="font-size:11px; color:var(--fg-faint);">مستوى ' + escText(r.level) + '</div></td><td>' + r.questions + '</td><td>' + r.participants + '</td><td>' + r.attempts + '</td><td>' + accHtml + '</td><td>' + r.cov + '%</td><td>' + (r.unanswered ? '<span style="color:#fbbf24;">' + r.unanswered + '</span>' : '0') + '</td><td><span class="status-badge" style="color:' + col + '; border:1px solid ' + col + ';">' + badge + '</span></td></tr>';
+      }).join('');
+    }
+
+    function exportSubjectStatsCSV() {
+      if (!__subjStatsRows.length) renderSubjectStats();
+      let csv = 'المادة,المستوى,عدد الأسئلة,الطلاب المشاركين,إجمالي الإجابات,الإجابات الصحيحة,نسبة الصحة %,متوسط التغطية %,أسئلة لم تُجَب\n';
+      __subjStatsRows.forEach(r => { csv += [r.name, r.level, r.questions, r.participants, r.attempts, r.correct, r.acc === null ? '' : r.acc, r.cov, r.unanswered].map(csvCell).join(',') + '\n'; });
+      const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'subject_stats.csv'; a.click();
+      logAdminAction('تصدير إحصائيات المواد', 'تم تحميل ملف إحصائيات المواد');
+    }
+
     function updateAnalyticsSelect() {
       const el = document.getElementById('analytics-subj-select');
       if (!el) return;
