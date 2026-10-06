@@ -1141,6 +1141,17 @@
   .podium-col { min-width: 0; }
   .podium-col .podium-name { white-space: normal !important; overflow: visible !important; text-overflow: clip !important; word-break: break-word; line-height: 1.35; }
   @media (max-width: 480px) { .podium-col .podium-name { font-size: 11px !important; } .podium-col { padding-left: 3px !important; padding-right: 3px !important; } }
+
+  /* ===== تنظيم تبويب إدارة المحتوى ===== */
+  .admin-sub-group { display: none; }
+  .admin-sub-group.active { display: block; }
+  .admin-sub-group > .admin-section-header { display: none; }
+  select[data-ctx] { display: none !important; }
+  .admin-sub-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 4px; }
+  .admin-sub-tabs .level-tab-btn { flex: 1; min-width: 130px; }
+  .admin-ctx-bar { position: sticky; top: 0; z-index: 20; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; padding: 10px 14px; margin: 12px 0 18px; border-radius: 12px; background: rgba(20,60,56,.92); border: 1px solid rgba(20,184,166,.55); backdrop-filter: blur(10px); }
+  .admin-ctx-bar select.input-group { margin: 0; width: auto; min-width: 150px; flex: 1; }
+  #ctx-summary { font-size: 12px; color: var(--fg-soft); flex-basis: 100%; }
 </style>
 </head>
 <body>
@@ -1680,6 +1691,10 @@
         <p id="subject-desc" class="z-content" style="color: var(--fg-soft); margin-bottom: 20px; font-size: 14px; line-height: 1.6;"></p>
         <div id="subject-images" class="z-content" style="margin-bottom: 20px;"></div>
 
+        <!-- ===== فصول المادة (كل محاضرة لوحدها) ===== -->
+        <div id="chapter-bar" class="z-content" style="display:none; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:16px; padding:10px 14px; border-radius:12px; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1);"></div>
+        <div id="chapters-view" style="display:none;"></div>
+        <div id="subject-chapter-content">
         <!-- شريط تبويبات أقسام المادة لتصفح فائق السرعة -->
         <div class="subject-nav-tabs z-content" id="subject-section-tabs">
           <button type="button" class="level-tab-btn active" id="sec-tab-all" onclick="switchSubjectTab('all')">🌟 عرض الكل</button>
@@ -1720,6 +1735,7 @@
         </div>
         <div class="grid" id="subject-quizzes"></div>
         </div>
+        </div><!-- /subject-chapter-content -->
       </div>
 
       <!-- لوحة الإدارة -->
@@ -1774,26 +1790,20 @@
           </div>
 
           <div id="tab-content" class="admin-tab-content">
-             <div class="admin-section-header"><span>1️⃣</span> إدارة المواد الدراسية</div>
-             <!-- بطاقة التحكم في قيود المستوى الثاني لطلاب المستوى الأول -->
-             <div class="card liquid-glass" style="background:rgba(0,0,0,.45); margin-bottom: 20px; border-color: rgba(245, 158, 11, 0.4); padding: 16px 20px;">
-                <div class="z-content flex-between" style="flex-wrap: wrap; gap: 12px;">
-                   <div style="display:flex; align-items:center; gap:12px;">
-                      <span style="font-size: 26px;">🎓</span>
-                      <div>
-                         <div style="font-weight: bold; font-size: 14.5px; display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-                            <span>صلاحيات المستوى الثاني لطلاب المستوى الأول:</span>
-                            <span id="sec1-level2-restrictions-badge" class="status-badge" style="font-size:11.5px; padding:3px 10px;">جاري التحميل...</span>
-                         </div>
-                         <p style="font-size: 12px; color: var(--fg-soft); margin: 3px 0 0;">إلغاء القيود يسمح لطلاب المستوى الأول بفتح وتحميل الملفات ومشاهدة الشروحات وحل الكويزات بالمستوى الثاني بشكل طبيعي.</p>
-                      </div>
-                   </div>
-                   <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                      <button class="pill" onclick="setLevel2Restrictions(false)" style="background: #10b981; color:#fff; font-weight:bold; font-size:12.5px; padding:8px 16px;">🔓 إلغاء القيود (فتح للمستوى الأول)</button>
-                      <button class="pill" onclick="setLevel2Restrictions(true)" style="background: #ef4444; color:#fff; font-weight:bold; font-size:12.5px; padding:8px 16px;">🔒 تفعيل القيود (وضع المعاينة)</button>
-                   </div>
-                </div>
+             <div class="level-tabs admin-sub-tabs" style="padding:3px; background:rgba(0,0,0,.35);">
+                <button type="button" class="level-tab-btn active" data-sub="subjects" onclick="switchContentSub('subjects', this)">🏫 المواد والفصول</button>
+                <button type="button" class="level-tab-btn" data-sub="media" onclick="switchContentSub('media', this)">📎 الملفات والفيديو</button>
+                <button type="button" class="level-tab-btn" data-sub="quizzes" onclick="switchContentSub('quizzes', this)">🧠 الأسئلة</button>
+                <button type="button" class="level-tab-btn" data-sub="research" onclick="switchContentSub('research', this)">🔬 الأبحاث</button>
              </div>
+             <div id="admin-ctx-bar" class="admin-ctx-bar">
+                <span style="font-weight:bold; font-size:13px; color:#5eead4;">📌 شغال على:</span>
+                <select id="ctx-subj" class="input-group" onchange="syncAdminContext(true)"></select>
+                <select id="ctx-chapter" class="input-group" onchange="syncAdminContext(false)"></select>
+                <div id="ctx-summary"></div>
+             </div>
+             <div class="admin-sub-group active" id="sub-subjects">
+             <div class="admin-section-header"><span>1️⃣</span> إدارة المواد الدراسية</div>
              <div class="card liquid-glass" style="background:rgba(0,0,0,.4); margin-bottom: 24px;">
                 <h3 style="color: #fbbf24; font-size: 16px; margin-top:0;">إضافة مادة جديدة</h3>
                 <form class="upload-form" onsubmit="addSubject(event)">
@@ -1806,12 +1816,40 @@
                 </form>
              </div>
 
+             <div class="card liquid-glass" style="background:rgba(0,0,0,.4); margin-bottom: 24px; border-color: #14b8a6;">
+                <h3 style="color: #14b8a6; font-size: 16px; margin-top:0; display:flex; align-items:center; gap:8px;"><span>📂</span> إدارة الفصول والمحاضرات</h3>
+                <p style="font-size:12px; color:var(--fg-faint); margin:0 0 10px; line-height:1.7;">الفصل بيحتوي على محاضراته، وكل محاضرة فيها الملفات والفيديوهات والأسئلة بتاعتها لوحدها. أنشئ الفصل الأول (فصل رئيسي)، وبعدين اختار "محاضرات داخل الفصل" وأضف المحاضرات. اكتب كل اسم في سطر.</p>
+                <form class="upload-form" onsubmit="addChapters(event)">
+                   <select class="input-group" id="chapter-subj-select" data-ctx="1" required onchange="renderAdminChapters()"></select>
+                   <select class="input-group" id="chapter-parent-select" style="border-color:#14b8a6;"></select>
+                   <textarea class="input-group" id="chapter-names" rows="3" placeholder="اسم في كل سطر (مثال: المحاضرة الأولى ⏎ المحاضرة الثانية)" required style="resize:vertical;"></textarea>
+                   <button class="pill" type="submit" style="background:#14b8a6; width:fit-content;">إضافة ➕</button>
+                </form>
+                <div id="admin-chapters-list" style="margin-top:14px;"></div>
+                <div style="margin-top:16px; padding-top:14px; border-top:1px dashed rgba(255,255,255,.15);">
+                   <div style="font-weight:bold; font-size:13.5px; color:#fbbf24; margin-bottom:6px;">🚚 نقل المحتوى القديم (غير المصنف) إلى فصل</div>
+                   <p style="font-size:12px; color:var(--fg-faint); margin:0 0 8px;">بينقل بس الحاجات اللي مش داخلة في أي فصل للمادة المختارة فوق.</p>
+                   <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:10px;">
+                      <select class="input-group" id="bulk-chapter-target"></select>
+                      <select class="input-group" id="bulk-chapter-type">
+                         <option value="all">كل حاجة (ملفات + فيديو + أسئلة)</option>
+                         <option value="files">الملفات بس</option>
+                         <option value="videos">الفيديوهات بس</option>
+                         <option value="quizzes">الأسئلة بس</option>
+                      </select>
+                   </div>
+                   <button class="pill" type="button" style="background:#f59e0b; width:fit-content; margin-top:10px;" onclick="bulkMoveToChapter()">نقل للفصل المختار 🚚</button>
+                </div>
+             </div>
+
+             </div><div class="admin-sub-group" id="sub-media">
              <div class="admin-section-header"><span>2️⃣</span> إدارة الملفات والوسائط</div>
              <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); margin-bottom: 24px;">
                 <div class="card liquid-glass" style="background:rgba(0,0,0,.4);">
                    <h3 style="font-size: 16px; margin-top:0;">رفع ملف (ملخص/محاضرة)</h3>
                    <form class="upload-form" onsubmit="addFile(event)">
-                      <select class="input-group" id="file-subj-select" required></select>
+                      <select class="input-group" id="file-subj-select" data-ctx="1" required onchange="refreshChapterSelects()"></select>
+                      <select class="input-group" id="file-chapter-select" data-ctx="1" style="border-color:#14b8a6;"></select>
                       <select class="input-group" id="file-category" required><option value="محاضرات">محاضرات نظري</option><option value="سكاشن">سكاشن وتطبيقات</option><option value="امتحانات">امتحانات سابقة</option></select>
                       <input class="input-group" id="file-title" placeholder="عنوان الملف" required>
                       <input class="input-group" id="file-link" type="url" placeholder="رابط الملف (درايف/ميديافاير)" required>
@@ -1821,7 +1859,7 @@
                 <div class="card liquid-glass" style="background:rgba(0,0,0,.4);">
                    <h3 style="color: #ec4899; font-size: 16px; margin-top:0;">إضافة صورة للمادة (جدول/إعلان)</h3>
                    <form class="upload-form" onsubmit="addSubjectImage(event)">
-                      <select class="input-group" id="img-subj-select" required></select>
+                      <select class="input-group" id="img-subj-select" data-ctx="1" required></select>
                       <input class="input-group" id="img-title" placeholder="وصف الصورة (مثال: جدول المحاضرات)" required>
                       <input class="input-group" id="img-link" type="url" placeholder="رابط الصورة المباشر (مثل رابط Imgur)" required>
                       <button class="pill" type="submit" style="background: #ec4899; margin-top: auto;">رفع الصورة للموقع</button>
@@ -1835,7 +1873,8 @@
                    </h3>
                    <form class="upload-form" onsubmit="addSubjectVideo(event)">
                       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px;">
-                         <select class="input-group" id="video-subj-select" required></select>
+                         <select class="input-group" id="video-subj-select" data-ctx="1" required onchange="refreshChapterSelects()"></select>
+                         <select class="input-group" id="video-chapter-select" data-ctx="1" style="border-color:#14b8a6;"></select>
                          <select class="input-group" id="video-category" required>
                             <option value="شروحات نظري">شروحات نظري</option>
                             <option value="سكاشن وتطبيقات عملية">سكاشن وتطبيقات عملية (برامج)</option>
@@ -1848,13 +1887,15 @@
                    </form>
                 </div>
 
+                </div><div class="admin-sub-group" id="sub-quizzes">
                 <div class="admin-section-header"><span>3️⃣</span> إدارة بنك الأسئلة (MCQ)</div>
              <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); margin-bottom: 24px;">
                 <div class="card liquid-glass" style="background:rgba(0,0,0,.4); grid-column: 1 / -1; border-color: #14b8a6;">
                    <h3 style="color: #14b8a6; font-size: 16px; margin-top:0; display:flex; align-items:center; gap:8px;"><span>🤖</span> الرفع الذكي السريع للأسئلة (نسخ ولصق كود JSON)</h3>
                    <p style="font-size:12px; color:var(--fg-faint); margin-bottom:10px;">انسخ كود الأسئلة الذي سيولده لك الذكاء الاصطناعي والصقه هنا مباشرة لإضافة مئات الأسئلة في ثانية واحدة.</p>
                    <form class="upload-form" onsubmit="addAIQuizzes(event)">
-                      <select class="input-group" id="ai-quiz-subj-select" required></select>
+                      <select class="input-group" id="ai-quiz-subj-select" data-ctx="1" required onchange="refreshChapterSelects()"></select>
+                      <select class="input-group" id="ai-quiz-chapter-select" data-ctx="1" style="border-color:#14b8a6;"></select>
                       <textarea class="input-group" id="ai-quiz-data" rows="4" placeholder='مثال: [{ "q": "سؤال؟", "opt1": "أ", "opt2": "ب", "opt3": "ج", "opt4": "د", "ans": "1" }]' required style="resize:vertical; font-family:monospace; direction:ltr; text-align:left;"></textarea>
                       <button class="pill" type="submit" style="background: #14b8a6; font-size: 14px; width: fit-content;">رفع الأسئلة بضغطة واحدة 🚀</button>
                    </form>
@@ -1863,7 +1904,8 @@
                 <div class="card liquid-glass" style="background:rgba(0,0,0,.4);">
                    <h3 style="color: #4ade80; font-size: 16px; margin-top:0;">إضافة سؤال يدوياً</h3>
                    <form class="upload-form" onsubmit="addQuiz(event)">
-                      <select class="input-group" id="quiz-subj-select" required></select>
+                      <select class="input-group" id="quiz-subj-select" data-ctx="1" required onchange="refreshChapterSelects()"></select>
+                      <select class="input-group" id="quiz-chapter-select" data-ctx="1" style="border-color:#14b8a6;"></select>
                       <input class="input-group" id="quiz-q" placeholder="اكتب نص السؤال هنا..." required>
                       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
                          <input class="input-group" id="quiz-opt1" placeholder="الاختيار الأول" required>
@@ -1880,12 +1922,14 @@
                    <h3 style="color: #f87171; font-size: 16px; margin-top:0;">🗑️ مسح كل أسئلة المادة</h3>
                    <p style="font-size:12px; color:var(--fg-faint); margin-bottom:10px;">احذر: سيتم مسح جميع الأسئلة الموجودة في بنك أسئلة المادة المحددة نهائياً، ولا يمكن التراجع عن هذا الإجراء!</p>
                    <div class="upload-form" style="margin-top: auto;">
-                      <select class="input-group" id="delete-all-quiz-subj-select" required></select>
+                      <select class="input-group" id="delete-all-quiz-subj-select" data-ctx="1" required></select>
+                      <button class="pill" type="button" style="background: #f59e0b; font-size: 14px;" onclick="deleteChapterQuizzes()">🧹 مسح أسئلة الفصل المختار بس</button>
                       <button class="pill" type="button" style="background: var(--danger); font-size: 14px;" onclick="deleteAllQuizzesFromSubject()">مسح بنك أسئلة المادة بالكامل ⚠️</button>
                    </div>
                 </div>
              </div>
 
+             </div><div class="admin-sub-group" id="sub-research">
              <div class="admin-section-header"><span>4️⃣</span> إدارة الأبحاث (حجز الطلاب)</div>
              <!-- بطاقة التحكم في ظهور وإعدادات موسم الأبحاث حسب المستوى -->
              <div class="card liquid-glass" style="background:rgba(0,0,0,.45); grid-column: 1 / -1; border-color: #14b8a6; margin-bottom: 20px; padding: 20px;">
@@ -1990,6 +2034,7 @@
                    <tbody id="research-table-body"><tr><td colspan="5" style="text-align:center;">جاري التحميل...</td></tr></tbody>
                 </table>
              </div>
+          </div><!-- /sub-research -->
           </div>
 
           <div id="tab-analytics" class="admin-tab-content">
@@ -2565,6 +2610,7 @@
     let currentUser = null, currentStudentData = null, isRegisterMode = false, activeLevel = 1, allUsersList = [], onlineUsersMap = {};
     let adminLogsListening = false, isMaintenanceActive = false, privateAlertListening = false;
     let db = [], currentSubjectId = null, userDataRef = null, searchTimeout = null;
+    let currentChapterId = null; // الفصل المفتوح حالياً داخل المادة (null = شاشة الفصول)
     let researchTopics = [], researchSearchTimeout = null, researchListening = false;
     let researchRequests = [], myRequest = null, adminResearchOn = false;
     let presenceInitialized = false, heartbeatInterval = null;
@@ -3360,6 +3406,7 @@ ${escText(alertBody)}
       userDataRef = database.ref('users/' + uid);
       userDataRef.on('value', (snap) => {
         currentStudentData = snap.val(); checkMaintenanceUI();
+        { const __a = !!(currentStudentData && currentStudentData.isAdmin === true); if (window.__lastAdm !== __a && window.__subjectsRaw) { try { applySubjectsRaw(); } catch (err) { console.error(err); } } }
         if (currentStudentData) {
           if (currentStudentData.isBanned) { Swal.fire('محظور!', `⚠️ تم حظرك!<br>السبب: ${escText(currentStudentData.banReason)}`, 'error'); logoutStudent(); return; }
           document.getElementById('user-greeting').innerHTML = `👤 ${escText(currentStudentData.name)}`; setupPresence(uid, currentStudentData); syncLeaderboard(uid, currentStudentData);
@@ -4155,8 +4202,13 @@ ${escText(alertBody)}
     }
 
     function listenToSubjects() {
-      database.ref('subjects').on('value', (snap) => {
-        const val = snap.val() || {};
+      database.ref('subjects').on('value', (snap) => { window.__subjectsRaw = snap.val() || {}; applySubjectsRaw(); });
+    }
+    function applySubjectsRaw() {
+        const val = window.__subjectsRaw || {};
+        const __adm = !!(currentStudentData && currentStudentData.isAdmin === true);
+        window.__lastAdm = __adm;
+        const __vis = (arr) => __adm ? arr : arr.filter(x => !x.hidden);
         db = Object.keys(val).map(id => {
           const s = val[id];
           return {
@@ -4165,9 +4217,10 @@ ${escText(alertBody)}
             name: s.name,
             desc: s.desc,
             order: s.order !== undefined ? parseInt(s.order, 10) : 0,
+            chapters: s.chapters ? Object.keys(s.chapters).map(k=>({key:k,...s.chapters[k]})).sort((a,b) => ((a.order||0) - (b.order||0)) || ((a.createdAt||0) - (b.createdAt||0))) : [],
             images: s.images ? Object.keys(s.images).map(k=>({key:k,...s.images[k]})) : [],
-            files: s.files ? Object.keys(s.files).map(k=>({key:k,...s.files[k]})) : [],
-            videos: s.videos ? Object.keys(s.videos).map(k=>({key:k,...s.videos[k]})) : [],
+            files: __vis(s.files ? Object.keys(s.files).map(k=>({key:k,...s.files[k]})) : []),
+            videos: __vis(s.videos ? Object.keys(s.videos).map(k=>({key:k,...s.videos[k]})) : []),
             quizzes: s.quizzes ? Object.keys(s.quizzes).map(k=>({key:k,...s.quizzes[k]})) : []
           };
         });
@@ -4182,7 +4235,6 @@ ${escText(alertBody)}
           if (exist) openSubject(currentSubjectId, true); else showHome(true);
         }
         updateAdminSelects(); updateDashboardStats();
-      });
     }
 
     function switchAdminTab(tabId, btnElement) {
@@ -4203,11 +4255,12 @@ ${escText(alertBody)}
 
     function updateAdminSelects() {
         const opts = db.map(s => `<option value="${escText(s.id)}">[مستوى ${s.level}] ${escText(s.name)}</option>`).join('');
-        ['file-subj-select','video-subj-select','quiz-subj-select','ai-quiz-subj-select','img-subj-select','delete-all-quiz-subj-select'].forEach(id => { const el = document.getElementById(id); if (el) { const prev = el.value; el.innerHTML = opts; if (prev) el.value = prev; } });
+        ['file-subj-select','video-subj-select','quiz-subj-select','ai-quiz-subj-select','img-subj-select','delete-all-quiz-subj-select','chapter-subj-select'].forEach(id => { const el = document.getElementById(id); if (el) { const prev = el.value; el.innerHTML = opts; if (prev) el.value = prev; } });
+        try { initAdminContext(opts); } catch (err) { console.error(err); }
     }
 
     function addSubject(e) { e.preventDefault(); const id = "subj-" + Date.now(); const n = document.getElementById("new-subj-name").value; database.ref('subjects/'+id).set({ level: parseInt(document.getElementById("new-subj-level").value, 10), name: n, desc: document.getElementById("new-subj-desc").value }).then(() => { e.target.reset(); logAdminAction('إضافة مادة جديدة', `المادة: ${n}`); Swal.fire('تم', "تمت إضافة المادة!", 'success'); }); }
-    function addFile(e) { e.preventDefault(); const title = document.getElementById("file-title").value; const sId = document.getElementById("file-subj-select").value; const subj = db.find(x=>x.id===sId); database.ref('subjects/'+sId+'/files').push({ title: title, link: document.getElementById("file-link").value, category: document.getElementById("file-category").value }).then(() => { e.target.reset(); logAdminAction('رفع ملف', `عنوان الملف: ${title} | المادة: ${subj?subj.name:''}`); Swal.fire('تم', "تم الرفع بنجاح!", 'success'); }); }
+    function addFile(e) { e.preventDefault(); const form = e.target; const title = document.getElementById("file-title").value; const sId = document.getElementById("file-subj-select").value; const ch = getChapterChoice('file-subj-select','file-chapter-select'); if (!ch.ok) return; const subj = db.find(x=>x.id===sId); const fileData = { title: title, link: document.getElementById("file-link").value, category: document.getElementById("file-category").value }; if (ch.cid) fileData.chapter = ch.cid; database.ref('subjects/'+sId+'/files').push(fileData).then(() => { resetFormKeepTarget(form,'file-subj-select','file-chapter-select'); logAdminAction('رفع ملف', `عنوان الملف: ${title} | المادة: ${subj?subj.name:''}`); Swal.fire('تم', "تم الرفع بنجاح!", 'success'); }); }
 
     function addSubjectImage(e) {
         e.preventDefault();
@@ -4216,19 +4269,20 @@ ${escText(alertBody)}
     }
     function deleteSubjectImage(sId, imgKey, imgTitle) { Swal.fire({title: "حذف الصورة؟", showCancelButton: true, confirmButtonColor: '#ef4444'}).then((r)=>{ if(r.isConfirmed) { database.ref('subjects/'+sId+'/images/'+imgKey).remove(); logAdminAction('حذف صورة', `الصورة: ${imgTitle}`); }}); }
 
-    function addQuiz(e) { e.preventDefault(); const qText = document.getElementById("quiz-q").value; const sId = document.getElementById("quiz-subj-select").value; const subj = db.find(x=>x.id===sId); database.ref('subjects/'+sId+'/quizzes').push({ q: qText, opt1: document.getElementById("quiz-opt1").value, opt2: document.getElementById("quiz-opt2").value, opt3: document.getElementById("quiz-opt3").value, opt4: document.getElementById("quiz-opt4").value, ans: document.getElementById("quiz-ans").value }).then(() => { e.target.reset(); logAdminAction('إضافة سؤال MCQ', `للمادة: ${subj?subj.name:''}`); Swal.fire('تم', "تمت إضافة السؤال بنجاح!", 'success'); }); }
+    function addQuiz(e) { e.preventDefault(); const form = e.target; const qText = document.getElementById("quiz-q").value; const sId = document.getElementById("quiz-subj-select").value; const ch = getChapterChoice('quiz-subj-select','quiz-chapter-select'); if (!ch.ok) return; const subj = db.find(x=>x.id===sId); const quizData = { q: qText, opt1: document.getElementById("quiz-opt1").value, opt2: document.getElementById("quiz-opt2").value, opt3: document.getElementById("quiz-opt3").value, opt4: document.getElementById("quiz-opt4").value, ans: document.getElementById("quiz-ans").value }; if (ch.cid) quizData.chapter = ch.cid; database.ref('subjects/'+sId+'/quizzes').push(quizData).then(() => { resetFormKeepTarget(form,'quiz-subj-select','quiz-chapter-select'); logAdminAction('إضافة سؤال MCQ', `للمادة: ${subj?subj.name:''}`); Swal.fire('تم', "تمت إضافة السؤال بنجاح!", 'success'); }); }
 
     function addAIQuizzes(e) {
         e.preventDefault();
         const sId = document.getElementById("ai-quiz-subj-select").value; const jsonText = document.getElementById("ai-quiz-data").value.trim(); const subj = db.find(x=>x.id===sId);
         if (!jsonText) return Swal.fire('تنبيه', 'برجاء لصق الكود أولاً', 'warning');
+        const chAI = getChapterChoice('ai-quiz-subj-select','ai-quiz-chapter-select'); if (!chAI.ok) return;
         try {
             const questions = JSON.parse(jsonText.replace(/^```(?:json)?/i, '').replace(/```$/, '').trim());
             if (!Array.isArray(questions)) throw new Error("الكود يجب أن يبدأ بـ [ وينتهي بـ ] (مصفوفة)");
             let added = 0, skipped = 0; const up = {}; const base = database.ref('subjects/' + sId + '/quizzes');
             questions.forEach(q => {
                 const ans = q && q.ans !== undefined ? String(q.ans).trim() : '';
-                if (q && q.q && q.opt1 && q.opt2 && q.opt3 && q.opt4 && ['1','2','3','4'].includes(ans)) { up[base.push().key] = { q: String(q.q), opt1: String(q.opt1), opt2: String(q.opt2), opt3: String(q.opt3), opt4: String(q.opt4), ans }; added++; } else skipped++;
+                if (q && q.q && q.opt1 && q.opt2 && q.opt3 && q.opt4 && ['1','2','3','4'].includes(ans)) { up[base.push().key] = Object.assign({ q: String(q.q), opt1: String(q.opt1), opt2: String(q.opt2), opt3: String(q.opt3), opt4: String(q.opt4), ans }, chAI.cid ? { chapter: chAI.cid } : {}); added++; } else skipped++;
             });
             if (!added) throw new Error("لا توجد أسئلة صالحة (تأكد أن ans رقم من 1 إلى 4)");
             base.update(up).then(() => {
@@ -5527,20 +5581,389 @@ ${escText(alertBody)}
           `;
         }
 
-        return `<div class="card liquid-glass" style="flex-direction:row; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px; padding: 12px 16px;">
+        return `<div class="card liquid-glass" style="flex-direction:row; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px; padding: 12px 16px; ${f.hidden ? 'opacity:.6; border:1px dashed #f59e0b;' : ''}">
           <div class="z-content" style="display:flex; align-items:center; gap:8px; min-width:0;">
             ${!isRestricted ? `<button class="bookmark-star-btn ${bmActive ? 'active' : ''}" title="${bmActive ? 'إزالة من المفضلة' : 'حفظ في المفضلة'}" onclick="toggleFileBookmark('${subjId}','${f.key}','${escapeHtml(f.title)}','${escapeHtml(fileUrl)}','${escapeHtml(f.category || 'محاضرات')}')">⭐</button>` : '<span title="المفضلة مقيدة" style="opacity:0.3; font-size:14px; cursor:not-allowed;">⭐</span>'}
-            <h4 style="margin:0; font-size:14px; min-width:0; word-break:break-word;">${escText(f.title)}</h4>
+            <h4 style="margin:0; font-size:14px; min-width:0; word-break:break-word;">${escText(f.title)}${f.hidden ? ' <span style="font-size:11px; background:rgba(245,158,11,.2); color:#fbbf24; border:1px solid rgba(245,158,11,.4); padding:1px 8px; border-radius:6px; white-space:nowrap;">🙈 مخفي عن الطلاب</span>' : ''}</h4>
           </div>
           <div class="z-content" style="display:flex; gap:6px; flex-shrink:0; align-items:center; flex-wrap:wrap;">
             ${actionBtns}
             ${isAdmin ? `
             <button class="btn-sm btn-edit" onclick="editFile('${subjId}','${f.key}','${escapeHtml(f.title)}','${escapeHtml(fileUrl)}','${escapeHtml(f.category || 'محاضرات')}')">✏️</button>
+            <button class="btn-sm btn-edit" title="${f.hidden ? 'إظهار للطلاب' : 'إخفاء عن الطلاب'}" onclick="toggleItemHidden('files','${subjId}','${f.key}',${f.hidden ? 'false' : 'true'})">${f.hidden ? '👁️ إظهار' : '🙈 إخفاء'}</button>
+            <button class="btn-sm btn-edit" title="نقل لفصل" onclick="moveItemToChapter('files','${subjId}','${f.key}')">📂</button>
             <button class="btn-sm btn-ban" onclick="deleteFile('${subjId}','${f.key}','${escapeHtml(f.title)}')">🗑️</button>` : ''}
           </div>
         </div>`;
       }).join('');
       return html;
+    }
+
+
+    /* =========================================================================
+       الفصول (المحاضرات) داخل المادة: كل فصل ليه ملفاته وفيديوهاته وأسئلته لوحده
+       التخزين: subjects/{id}/chapters/{chapterId} = {name, order}
+       وكل ملف/فيديو/سؤال بياخد حقل chapter = chapterId (والـ Rules زي ما هي)
+       ========================================================================= */
+    function topChapters(subj) {
+      const chs = subj.chapters || []; const ids = new Set(chs.map(c => c.key));
+      return chs.filter(c => !c.parent || !ids.has(c.parent));
+    }
+    function childChapters(subj, id) { return (subj.chapters || []).filter(c => c.parent === id); }
+    function chapterOptionList(subj) {
+      const out = [];
+      topChapters(subj).forEach(t => {
+        const kids = childChapters(subj, t.key);
+        out.push({ key: t.key, label: t.name + (kids.length ? ' (عام بالفصل)' : '') });
+        kids.forEach(k => out.push({ key: k.key, label: t.name + ' ▸ ' + k.name }));
+      });
+      return out;
+    }
+    function isSelfId(id) { return typeof id === 'string' && id.indexOf('self:') === 0; }
+    function isValidChapterId(subj, id) {
+      if (!id || id === '__none') return true;
+      const raw = isSelfId(id) ? id.slice(5) : id;
+      return (subj.chapters || []).some(c => c.key === raw);
+    }
+    function isGridLevel(subj, id) {
+      if (!id) return true;
+      if (id === '__none' || isSelfId(id)) return false;
+      return childChapters(subj, id).length > 0;
+    }
+    function chapterFilter(subj, list, cid) {
+      list = list || [];
+      const ids = new Set((subj.chapters || []).map(c => c.key));
+      if (cid === '__none') return list.filter(x => !x.chapter || !ids.has(x.chapter));
+      if (isSelfId(cid)) { const id = cid.slice(5); return list.filter(x => x.chapter === id); }
+      const set = new Set([cid].concat(childChapters(subj, cid).map(c => c.key)));
+      return list.filter(x => set.has(x.chapter));
+    }
+
+    function getScopedLists(subj) {
+      const all = { files: subj.files || [], videos: subj.videos || [], quizzes: subj.quizzes || [] };
+      if (!(subj.chapters || []).length) return all;
+      if (isGridLevel(subj, currentChapterId)) return { files: [], videos: [], quizzes: [] };
+      return { files: chapterFilter(subj, all.files, currentChapterId), videos: chapterFilter(subj, all.videos, currentChapterId), quizzes: chapterFilter(subj, all.quizzes, currentChapterId) };
+    }
+
+    function chapterTitleById(subj, cid) {
+      if (cid === '__none') return 'عام (غير مصنف)';
+      const self = isSelfId(cid); const id = self ? cid.slice(5) : cid;
+      const chs = subj.chapters || []; const c = chs.find(x => x.key === id); if (!c) return '';
+      const p = c.parent && chs.find(x => x.key === c.parent);
+      return (p ? p.name + ' ▸ ' : '') + c.name + (self ? ' (عام بالفصل)' : '');
+    }
+
+    function scrollToSubjectTop() {
+      const el = document.getElementById('subject-title');
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function openChapter(cid) {
+      if (!currentSubjectId) return;
+      currentChapterId = cid || null; currentSubjectActiveTab = 'all'; quizActiveFilter = 'all';
+      ['all', 'mistakes', 'unsolved'].forEach(f => { const el = document.getElementById('quiz-filter-' + f); if (el) el.classList.toggle('active', f === 'all'); });
+      openSubject(currentSubjectId, true, true);
+      scrollToSubjectTop();
+    }
+
+    function backToChapters() {
+      const subj = db.find(s => s.id === currentSubjectId); let up = null; const id = currentChapterId;
+      if (subj && id) {
+        if (isSelfId(id)) up = id.slice(5);
+        else { const c = (subj.chapters || []).find(x => x.key === id); if (c && c.parent) up = c.parent; }
+      }
+      openChapter(up);
+    }
+
+    function buildChaptersGridHtml(subj) {
+      const isAdmin = currentStudentData && currentStudentData.isAdmin === true;
+      const solved = (currentStudentData && currentStudentData.solvedQuizzes) || {};
+      const level = currentChapterId; // null = الفصول الرئيسية | id فصل = محاضراته
+      let cards;
+      if (!level) {
+        cards = topChapters(subj).map(c => ({ id: c.key, name: c.name, real: true }));
+        if (chapterFilter(subj, subj.files, '__none').length + chapterFilter(subj, subj.videos, '__none').length + chapterFilter(subj, subj.quizzes, '__none').length > 0) cards.push({ id: '__none', name: 'عام (غير مصنف)', real: false });
+      } else {
+        cards = childChapters(subj, level).map(c => ({ id: c.key, name: c.name, real: true }));
+        const sid = 'self:' + level;
+        if (chapterFilter(subj, subj.files, sid).length + chapterFilter(subj, subj.videos, sid).length + chapterFilter(subj, subj.quizzes, sid).length > 0) cards.push({ id: sid, name: 'عام بالفصل', real: false });
+      }
+      const title = level ? `📚 محاضرات ${escText(chapterTitleById(subj, level))}` : '📂 فصول المادة';
+      const hint = level ? 'اختار المحاضرة عشان تشوف ملفاتها وفيديوهاتها وأسئلتها.' : 'اختار الفصل، وجواه هتلاقي محاضراته.';
+      const head = `<div class="z-content" style="margin-bottom:14px;"><h3 style="margin:0 0 4px; font-size:17px; color:var(--primary);">${title}</h3><p style="margin:0; font-size:12.5px; color:var(--fg-soft);">${hint}</p></div>`;
+      if (!cards.length) return head + '<div class="empty-state z-content">لا يوجد محتوى هنا بعد.</div>';
+
+      return head + `<div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap:14px; margin-bottom:32px;">` + cards.map(c => {
+        const kids = c.real ? childChapters(subj, c.id).length : 0;
+        const f = chapterFilter(subj, subj.files, c.id).length;
+        const v = chapterFilter(subj, subj.videos, c.id).length;
+        const qs = chapterFilter(subj, subj.quizzes, c.id);
+        let answered = 0, correct = 0;
+        qs.forEach(x => { const sq = solved[x.key]; if (sq) { answered++; if (sq === true || sq.status === 'correct') correct++; } });
+        const pct = qs.length ? Math.round(answered / qs.length * 100) : 0;
+        const progress = qs.length ? `<div class="z-content" style="margin-top:12px;"><div style="height:6px; border-radius:4px; background:rgba(255,255,255,.1); overflow:hidden;"><div style="height:100%; width:${pct}%; background:#22c55e;"></div></div><div style="font-size:11px; color:var(--fg-faint); margin-top:5px;">حليت ${answered} من ${qs.length} سؤال (${correct} صح)</div></div>` : '';
+        const adminBtns = (isAdmin && c.real) ? `<div style="display:flex; gap:4px; flex-shrink:0;">
+            <button class="btn-sm btn-edit" onclick="event.stopPropagation(); renameChapter('${subj.id}','${c.id}','${escapeHtml(c.name)}')">✏️</button>
+            <button class="btn-sm btn-ban" onclick="event.stopPropagation(); deleteChapter('${subj.id}','${c.id}','${escapeHtml(c.name)}')">🗑️</button>
+          </div>` : '';
+        return `<div class="card liquid-glass" style="cursor:pointer;" onclick="openChapter('${c.id}')">
+          <div class="z-content flex-between" style="gap:8px; align-items:flex-start;">
+            <h3 style="margin:0; font-size:16px; line-height:1.5; word-break:break-word;">${kids ? '📚' : '📂'} ${escText(c.name)}</h3>
+            ${adminBtns}
+          </div>
+          <div class="z-content" style="display:flex; gap:6px; flex-wrap:wrap; margin-top:10px;">
+            ${kids ? `<span class="subj-badge" style="color:#a78bfa;">📚 ${kids} محاضرة</span>` : ''}
+            <span class="subj-badge">📖 ${f} ملف</span>
+            <span class="subj-badge" style="color:#f472b6;">🎥 ${v} فيديو</span>
+            <span class="subj-badge" style="color:#60a5fa;">🧠 ${qs.length} سؤال</span>
+          </div>
+          ${progress}
+          <button class="pill z-content" style="width:100%; height:36px; margin-top:12px; font-size:13px; justify-content:center;" onclick="event.stopPropagation(); openChapter('${c.id}')">${kids ? 'عرض المحاضرات ⭠' : 'فتح ⭠'}</button>
+        </div>`;
+      }).join('') + '</div>';
+    }
+
+    function renderChapterUI(subj, showGrid, chapterMode) {
+      const gridEl = document.getElementById('chapters-view');
+      const contentEl = document.getElementById('subject-chapter-content');
+      const barEl = document.getElementById('chapter-bar');
+      if (!gridEl || !contentEl || !barEl) return;
+      gridEl.style.display = showGrid ? 'block' : 'none';
+      contentEl.style.display = showGrid ? 'none' : 'block';
+      gridEl.innerHTML = showGrid ? buildChaptersGridHtml(subj) : '';
+      if (chapterMode && currentChapterId) {
+        const id = currentChapterId, self = isSelfId(id), raw = self ? id.slice(5) : id;
+        const chs = subj.chapters || []; const node = chs.find(x => x.key === raw); const parts = [];
+        if (id === '__none') parts.push({ label: 'عام (غير مصنف)' });
+        else if (node) {
+          const p = node.parent && chs.find(x => x.key === node.parent);
+          if (p) parts.push({ id: p.key, label: p.name });
+          if (self) { parts.push({ id: node.key, label: node.name }); parts.push({ label: 'عام بالفصل' }); } else parts.push({ label: node.name });
+        }
+        const btn = 'type="button" class="pill" style="height:32px; font-size:12.5px; background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.2); color:var(--fg);"';
+        barEl.style.display = 'flex';
+        barEl.innerHTML = `<button ${btn} onclick="openChapter(null)">⭢ كل الفصول</button>` + parts.map((p, i) => ' <span style="opacity:.5;">›</span> ' + (p.id ? `<button ${btn} onclick="openChapter('${p.id}')">${escText(p.label)}</button>` : `<b style="font-size:15px; color:var(--gold);">${i === parts.length - 1 ? '📂 ' : ''}${escText(p.label)}</b>`)).join('');
+      } else {
+        barEl.style.display = 'none'; barEl.innerHTML = '';
+      }
+    }
+
+    /* ----- إدارة الفصول (للأدمن) ----- */
+    function refreshChapterSelects() {
+      [['file-subj-select','file-chapter-select'], ['video-subj-select','video-chapter-select'], ['quiz-subj-select','quiz-chapter-select'], ['ai-quiz-subj-select','ai-quiz-chapter-select']].forEach(pair => {
+        const sEl = document.getElementById(pair[0]), cEl = document.getElementById(pair[1]); if (!sEl || !cEl) return;
+        const subj = db.find(x => x.id === sEl.value); const list = subj ? chapterOptionList(subj) : [];
+        const prev = cEl.value;
+        cEl.innerHTML = list.length
+          ? '<option value="">— اختر الفصل / المحاضرة —</option>' + list.map(o => `<option value="${escText(o.key)}">${escText(o.label)}</option>`).join('')
+          : '<option value="">(المادة دي مفيهاش فصول)</option>';
+        if (prev && list.some(o => o.key === prev)) cEl.value = prev;
+      });
+    }
+
+    function getChapterChoice(subjSelId, chSelId) {
+      const sEl = document.getElementById(subjSelId), cEl = document.getElementById(chSelId);
+      const subj = db.find(x => x.id === (sEl ? sEl.value : ''));
+      const hasChapters = subj && (subj.chapters || []).length > 0;
+      const v = cEl ? cEl.value : '';
+      if (hasChapters && !v) { Swal.fire('تنبيه', 'اختار الفصل من الشريط الأخضر فوق (📌 شغال على) عشان المحتوى يتحط في مكانه الصح.', 'warning'); return { ok: false }; }
+      return { ok: true, cid: hasChapters ? v : '' };
+    }
+
+    function resetFormKeepTarget(form, sSelId, cSelId) {
+      const sEl = document.getElementById(sSelId), cEl = document.getElementById(cSelId);
+      const sv = sEl ? sEl.value : '', cv = cEl ? cEl.value : '';
+      form.reset();
+      if (sEl && sv) sEl.value = sv;
+      refreshChapterSelects();
+      if (cEl && cv) cEl.value = cv;
+    }
+
+    function renderAdminChapters() {
+      const listEl = document.getElementById('admin-chapters-list'); if (!listEl) return;
+      const sEl = document.getElementById('chapter-subj-select');
+      const subj = db.find(x => x.id === (sEl ? sEl.value : ''));
+      const bulkSel = document.getElementById('bulk-chapter-target'), parSel = document.getElementById('chapter-parent-select');
+      if (!subj) { listEl.innerHTML = ''; if (bulkSel) bulkSel.innerHTML = ''; if (parSel) parSel.innerHTML = ''; return; }
+      const tops = topChapters(subj), opts = chapterOptionList(subj);
+      if (bulkSel) { const prev = bulkSel.value; bulkSel.innerHTML = '<option value="">— انقل إلى —</option>' + opts.map(o => `<option value="${escText(o.key)}">${escText(o.label)}</option>`).join(''); if (prev && opts.some(o => o.key === prev)) bulkSel.value = prev; }
+      if (parSel) { const prev = parSel.value; parSel.innerHTML = '<option value="">➕ فصل رئيسي جديد (الفصل الأول، الفصل الثاني ...)</option>' + tops.map(t => `<option value="${escText(t.key)}">📚 محاضرات داخل: ${escText(t.name)}</option>`).join(''); if (prev && tops.some(t => t.key === prev)) parSel.value = prev; }
+      const counts = k => { const f = chapterFilter(subj, subj.files, 'self:' + k).length, v = chapterFilter(subj, subj.videos, 'self:' + k).length, q = chapterFilter(subj, subj.quizzes, 'self:' + k).length; return `${f} ملف • ${v} فيديو • ${q} سؤال`; };
+      const row = (c, indent, i, n) => `<div style="display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap; padding:8px 12px; margin:0 ${indent ? '24px' : '0'} 6px 0; border-radius:10px; background:rgba(255,255,255,${indent ? '.03' : '.06'}); border:1px solid rgba(255,255,255,.08);">
+          <div style="min-width:0;"><b style="font-size:13.5px;">${indent ? '↳ 📄' : '📚'} ${escText(c.name)}</b> <span style="font-size:11.5px; color:var(--fg-faint);">— ${counts(c.key)}</span></div>
+          <div style="display:flex; gap:4px;">
+            <button class="btn-sm btn-edit" ${i === 0 ? 'disabled style="opacity:.3"' : ''} onclick="moveChapter('${subj.id}','${c.key}',-1)">⬆️</button>
+            <button class="btn-sm btn-edit" ${i === n - 1 ? 'disabled style="opacity:.3"' : ''} onclick="moveChapter('${subj.id}','${c.key}',1)">⬇️</button>
+            <button class="btn-sm btn-edit" title="نقل داخل فصل" onclick="setChapterParent('${subj.id}','${c.key}')">📥</button>
+            <button class="btn-sm btn-edit" onclick="renameChapter('${subj.id}','${c.key}','${escapeHtml(c.name)}')">✏️</button>
+            <button class="btn-sm btn-ban" onclick="deleteChapter('${subj.id}','${c.key}','${escapeHtml(c.name)}')">🗑️</button>
+          </div></div>`;
+      let html = tops.length ? '' : '<div style="font-size:12.5px; color:var(--fg-faint);">لسه مفيش فصول للمادة دي.</div>';
+      tops.forEach((t, i) => { html += row(t, false, i, tops.length); const kids = childChapters(subj, t.key); kids.forEach((k, j) => { html += row(k, true, j, kids.length); }); });
+      const uf = chapterFilter(subj, subj.files, '__none').length, uv = chapterFilter(subj, subj.videos, '__none').length, uq = chapterFilter(subj, subj.quizzes, '__none').length;
+      if (tops.length && (uf + uv + uq) > 0) html += `<div style="font-size:12px; color:#fbbf24; margin-top:6px;">📁 غير مصنف: ${uf} ملف • ${uv} فيديو • ${uq} سؤال (استخدم أداة النقل تحت)</div>`;
+      listEl.innerHTML = html;
+    }
+
+    function addChapters(e) {
+      e.preventDefault();
+      const sId = document.getElementById('chapter-subj-select').value;
+      const subj = db.find(x => x.id === sId); if (!subj) return;
+      const parent = document.getElementById('chapter-parent-select').value;
+      const names = document.getElementById('chapter-names').value.split('\n').map(x => x.trim()).filter(Boolean);
+      if (!names.length) return;
+      const sibs = parent ? childChapters(subj, parent) : topChapters(subj);
+      let order = sibs.length ? Math.max.apply(null, sibs.map(c => c.order || 0)) + 1 : 0;
+      const base = database.ref('subjects/' + sId + '/chapters'); const up = {};
+      names.forEach(n => { const node = { name: n.slice(0, 100), order: order++, createdAt: Date.now() }; if (parent) node.parent = parent; up[base.push().key] = node; });
+      base.update(up).then(() => {
+        document.getElementById('chapter-names').value = '';
+        logAdminAction(parent ? 'إضافة محاضرات' : 'إضافة فصول', `المادة: ${subj.name} | ${names.join('، ')}`);
+        Swal.fire('تم', `تمت إضافة ${names.length} ${parent ? 'محاضرة' : 'فصل'}.`, 'success');
+      }).catch(err => Swal.fire('خطأ', err.message, 'error'));
+    }
+
+    function renameChapter(sId, cid, oldName) {
+      Swal.fire({ title: 'تعديل اسم الفصل', input: 'text', inputValue: oldName, showCancelButton: true, confirmButtonText: 'حفظ', cancelButtonText: 'إلغاء', inputValidator: v => (!v || !v.trim()) ? 'اكتب اسم الفصل' : null }).then(r => {
+        if (r.isConfirmed) database.ref('subjects/' + sId + '/chapters/' + cid + '/name').set(r.value.trim().slice(0, 100)).then(() => logAdminAction('تعديل اسم فصل', `${oldName} ← ${r.value.trim()}`));
+      });
+    }
+
+    function moveChapter(sId, cid, dir) {
+      const subj = db.find(x => x.id === sId); if (!subj) return;
+      const node = (subj.chapters || []).find(c => c.key === cid); if (!node) return;
+      const isChild = node.parent && (subj.chapters || []).some(c => c.key === node.parent);
+      const arr = (isChild ? childChapters(subj, node.parent) : topChapters(subj)).map(c => c.key);
+      const i = arr.indexOf(cid), j = i + dir;
+      if (i < 0 || j < 0 || j >= arr.length) return;
+      const t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+      const up = {}; arr.forEach((k, idx) => { up['subjects/' + sId + '/chapters/' + k + '/order'] = idx; });
+      database.ref().update(up);
+    }
+
+    function setChapterParent(sId, cid) {
+      const subj = db.find(x => x.id === sId); if (!subj) return;
+      const node = (subj.chapters || []).find(c => c.key === cid); if (!node) return;
+      if (childChapters(subj, cid).length) { Swal.fire('مينفعش', 'الفصل ده جواه محاضرات، فمينفعش يتحط جوه فصل تاني.', 'info'); return; }
+      const opts = { '__top': 'فصل رئيسي (مش جوه أي فصل)' };
+      topChapters(subj).filter(c => c.key !== cid).forEach(c => { opts[c.key] = 'محاضرة داخل: ' + c.name; });
+      Swal.fire({ title: `نقل «${node.name}»`, input: 'select', inputOptions: opts, inputValue: node.parent && opts[node.parent] ? node.parent : '__top', showCancelButton: true, confirmButtonText: 'نقل', cancelButtonText: 'إلغاء' }).then(r => {
+        if (!r.isConfirmed) return;
+        const np = r.value === '__top' ? null : r.value;
+        const sibs = np ? childChapters(subj, np) : topChapters(subj);
+        const order = sibs.length ? Math.max.apply(null, sibs.map(c => c.order || 0)) + 1 : 0;
+        const up = {}; up['subjects/' + sId + '/chapters/' + cid + '/parent'] = np; up['subjects/' + sId + '/chapters/' + cid + '/order'] = order;
+        database.ref().update(up).then(() => logAdminAction('نقل محاضرة/فصل', `${node.name} ← ${np ? opts[np] : 'فصل رئيسي'}`));
+      });
+    }
+
+    function deleteChapter(sId, cid, name) {
+      const subj = db.find(x => x.id === sId); if (!subj) return;
+      const kids = childChapters(subj, cid);
+      Swal.fire({ title: `حذف "${name}"؟`, text: 'هيتحذف الاسم بس، والملفات والفيديوهات والأسئلة اللي جواه هتفضل موجودة تحت "غير مصنف" ومش هتتمسح.' + (kids.length ? ` والـ ${kids.length} محاضرة اللي جواه هتبقى فصول رئيسية.` : ''), icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'نعم، احذف', cancelButtonText: 'إلغاء' }).then(r => {
+        if (!r.isConfirmed) return;
+        const up = {}; up['subjects/' + sId + '/chapters/' + cid] = null;
+        kids.forEach(k => { up['subjects/' + sId + '/chapters/' + k.key + '/parent'] = null; });
+        ['files', 'videos', 'quizzes'].forEach(t => { (subj[t] || []).forEach(it => { if (it.chapter === cid) up['subjects/' + sId + '/' + t + '/' + it.key + '/chapter'] = null; }); });
+        database.ref().update(up).then(() => { logAdminAction('حذف فصل/محاضرة', `${name} | المادة: ${subj.name}`); if (currentChapterId === cid) currentChapterId = null; });
+      });
+    }
+
+    function toggleItemHidden(type, sId, key, hide) {
+      const subj = db.find(x => x.id === sId);
+      const item = subj && (subj[type] || []).find(x => x.key === key);
+      const title = item ? (item.title || '') : '';
+      database.ref('subjects/' + sId + '/' + type + '/' + key + '/hidden').set(hide ? true : null).then(() => {
+        logAdminAction(hide ? 'إخفاء عن الطلاب' : 'إظهار للطلاب', `${type === 'files' ? 'ملف' : 'فيديو'}: ${title} | المادة: ${subj ? subj.name : ''}`);
+        if (window.Swal) Swal.fire({ toast: true, position: 'top', timer: 1800, showConfirmButton: false, icon: 'success', title: hide ? 'اتخفى عن الطلاب 🙈' : 'رجع ظاهر للطلاب 👁️' });
+      }).catch(err => Swal.fire('خطأ', err.message, 'error'));
+    }
+
+    function moveItemToChapter(type, sId, key) {
+      const subj = db.find(x => x.id === sId); if (!subj) return;
+      const list = chapterOptionList(subj);
+      if (!list.length) { Swal.fire('تنبيه', 'أنشئ فصول للمادة الأول من لوحة الإدارة (إدارة الفصول والمحاضرات).', 'info'); return; }
+      const opts = { '__none': 'بدون فصل (عام)' }; list.forEach(o => { opts[o.key] = o.label; });
+      Swal.fire({ title: 'نقل إلى', input: 'select', inputOptions: opts, showCancelButton: true, confirmButtonText: 'نقل', cancelButtonText: 'إلغاء' }).then(r => {
+        if (!r.isConfirmed) return;
+        database.ref('subjects/' + sId + '/' + type + '/' + key + '/chapter').set(r.value === '__none' ? null : r.value).then(() => logAdminAction('نقل عنصر لفصل', `المادة: ${subj.name} | إلى: ${opts[r.value]}`));
+      });
+    }
+
+    function bulkMoveToChapter() {
+      const sId = document.getElementById('chapter-subj-select').value;
+      const cid = document.getElementById('bulk-chapter-target').value;
+      const type = document.getElementById('bulk-chapter-type').value;
+      const subj = db.find(x => x.id === sId); if (!subj) return;
+      if (!cid) return Swal.fire('تنبيه', 'اختار الفصل اللي هتنقل له الأول.', 'warning');
+      const ids = new Set((subj.chapters || []).map(c => c.key));
+      const up = {}; let n = 0;
+      ['files', 'videos', 'quizzes'].forEach(t => {
+        if (type !== 'all' && type !== t) return;
+        (subj[t] || []).forEach(it => { if (!it.chapter || !ids.has(it.chapter)) { up['subjects/' + sId + '/' + t + '/' + it.key + '/chapter'] = cid; n++; } });
+      });
+      if (!n) return Swal.fire('مفيش حاجة تتنقل', 'مفيش محتوى غير مصنف بالنوع ده في المادة دي.', 'info');
+      Swal.fire({ title: `نقل ${n} عنصر؟`, text: `هيتنقلوا إلى فصل "${chapterTitleById(subj, cid)}".`, icon: 'question', showCancelButton: true, confirmButtonText: 'نعم، انقل', cancelButtonText: 'إلغاء' }).then(r => {
+        if (r.isConfirmed) database.ref().update(up).then(() => { logAdminAction('نقل جماعي لفصل', `${n} عنصر | المادة: ${subj.name}`); Swal.fire('تم', `تم نقل ${n} عنصر.`, 'success'); }).catch(err => Swal.fire('خطأ', err.message, 'error'));
+      });
+    }
+
+
+    /* =========================================================================
+       سياق الإدارة: مادة وفصل واحد مختارين فوق، وكل الفورمات بتستخدمهم
+       ========================================================================= */
+    function switchContentSub(name, btn) {
+      document.querySelectorAll('#tab-content .admin-sub-group').forEach(g => g.classList.toggle('active', g.id === 'sub-' + name));
+      document.querySelectorAll('#tab-content .admin-sub-tabs .level-tab-btn').forEach(b => b.classList.toggle('active', b.getAttribute('data-sub') === name));
+      const bar = document.getElementById('admin-ctx-bar'); if (bar) bar.style.display = name === 'research' ? 'none' : 'flex';
+    }
+
+    function initAdminContext(optsHtml) {
+      const cs = document.getElementById('ctx-subj'); if (!cs) return;
+      const prev = cs.value;
+      cs.innerHTML = optsHtml || '';
+      if (prev && db.some(x => x.id === prev)) cs.value = prev;
+      syncAdminContext(true);
+    }
+
+    function syncAdminContext(rebuildChapters) {
+      const cs = document.getElementById('ctx-subj'), cc = document.getElementById('ctx-chapter'); if (!cs || !cc) return;
+      const sId = cs.value; const subj = db.find(x => x.id === sId);
+      ['file-subj-select', 'video-subj-select', 'quiz-subj-select', 'ai-quiz-subj-select', 'img-subj-select', 'delete-all-quiz-subj-select', 'chapter-subj-select'].forEach(id => { const el = document.getElementById(id); if (el && sId) el.value = sId; });
+      const list = subj ? chapterOptionList(subj) : [];
+      const prevCh = cc.value;
+      if (rebuildChapters !== false || cc.options.length === 0) {
+        cc.innerHTML = list.length ? '<option value="">— اختر الفصل / المحاضرة —</option>' + list.map(o => `<option value="${escText(o.key)}">${escText(o.label)}</option>`).join('') : '<option value="">(المادة دي مفيهاش فصول)</option>';
+        if (prevCh && list.some(o => o.key === prevCh)) cc.value = prevCh;
+      }
+      refreshChapterSelects();
+      const cid = cc.value;
+      ['file', 'video', 'quiz', 'ai-quiz'].forEach(p => { const el = document.getElementById(p + '-chapter-select'); if (el && cid) el.value = cid; });
+      renderAdminChapters();
+      const sum = document.getElementById('ctx-summary');
+      if (sum) {
+        if (!subj) sum.textContent = '';
+        else {
+          const sel = cid ? 'self:' + cid : null;
+          const sc = sel ? { f: chapterFilter(subj, subj.files, sel).length, v: chapterFilter(subj, subj.videos, sel).length, q: chapterFilter(subj, subj.quizzes, sel).length } : { f: (subj.files || []).length, v: (subj.videos || []).length, q: (subj.quizzes || []).length };
+          sum.innerHTML = `${cid ? 'محتوى «' + escText(chapterTitleById(subj, cid)) + '»' : 'إجمالي المادة'}: 📖 ${sc.f} ملف • 🎥 ${sc.v} فيديو • 🧠 ${sc.q} سؤال` + (list.length && !cid ? ' — <span style="color:#fbbf24;">اختار فصل/محاضرة قبل الرفع</span>' : '');
+        }
+      }
+    }
+
+    function deleteChapterQuizzes() {
+      const sId = document.getElementById('ctx-subj').value, cid = document.getElementById('ctx-chapter').value;
+      const subj = db.find(x => x.id === sId); if (!subj) return;
+      if (!cid) return Swal.fire('تنبيه', 'اختار الفصل من الشريط الأخضر فوق الأول.', 'warning');
+      const qs = chapterFilter(subj, subj.quizzes, 'self:' + cid);
+      if (!qs.length) return Swal.fire('مفيش أسئلة', 'الفصل ده مفيهوش أسئلة.', 'info');
+      const name = chapterTitleById(subj, cid);
+      Swal.fire({ title: `مسح ${qs.length} سؤال؟`, text: `هيتمسحوا كل أسئلة فصل "${name}" في مادة "${subj.name}" نهائياً.`, icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'نعم، امسح', cancelButtonText: 'إلغاء' }).then(r => {
+        if (!r.isConfirmed) return;
+        const up = {}; qs.forEach(q => { up['subjects/' + sId + '/quizzes/' + q.key] = null; });
+        database.ref().update(up).then(() => { logAdminAction('مسح أسئلة فصل', `الفصل: ${name} | المادة: ${subj.name} | ${qs.length} سؤال`); Swal.fire('تم', 'تم مسح أسئلة الفصل.', 'success'); }).catch(err => Swal.fire('خطأ', err.message, 'error'));
+      });
     }
 
     function resetSubjectQuizzes() {
@@ -5553,18 +5976,25 @@ ${escText(alertBody)}
         Swal.fire({ title: 'هل تريد إعادة امتحان المادة؟', text: "سيتم مسح إجاباتك السابقة في هذه المادة فقط (ولن يتم خصم أي نقاط من لوحة الشرف)، وسيتم خلط الأسئلة لتبدأ من جديد للتدريب.", icon: 'question', showCancelButton: true, confirmButtonColor: '#3b82f6', cancelButtonColor: '#ef4444', confirmButtonText: 'نعم، ابدأ من جديد', cancelButtonText: 'إلغاء' }).then((result) => {
             if (result.isConfirmed) {
                 const subj = db.find(s => s.id === currentSubjectId); if (!subj || !subj.quizzes) return;
-                const quizKeys = subj.quizzes.map(q => q.key);
+                const quizKeys = getScopedLists(subj).quizzes.map(q => q.key);
                 database.ref('users/' + currentUser.uid + '/solvedQuizzes').once('value').then(snap => {
                     let currentSolved = snap.val() || {}; let updates = {};
                     quizKeys.forEach(k => { if (currentSolved[k]) updates[k] = null; if (currentStudentData && currentStudentData.solvedQuizzes) delete currentStudentData.solvedQuizzes[k]; __scoring[k] = false; });
-                    Promise.resolve(Object.keys(updates).length ? database.ref('users/' + currentUser.uid + '/solvedQuizzes').update(updates) : null).then(() => { delete quizOrder[currentSubjectId]; Swal.fire('تم!', 'تم تجهيز الامتحان من جديد وبترتيب مختلف.', 'success').then(() => { openSubject(currentSubjectId); }); });
+                    Promise.resolve(Object.keys(updates).length ? database.ref('users/' + currentUser.uid + '/solvedQuizzes').update(updates) : null).then(() => { delete quizOrder[currentSubjectId + '|' + (currentChapterId || '')]; Swal.fire('تم!', 'تم تجهيز الامتحان من جديد وبترتيب مختلف.', 'success').then(() => { openSubject(currentSubjectId, false, true); }); });
                 });
             }
         });
     }
 
-    function openSubject(id, silent) {
+    function openSubject(id, silent, keepChapter) {
+      const __subjChanged = currentSubjectId !== id;
       currentSubjectId = id; const subj = db.find(s => s.id === id); if (!subj) return showHome();
+      if (__subjChanged || (!silent && !keepChapter)) currentChapterId = null;
+      const __chapterMode = (subj.chapters || []).length > 0;
+      if (!__chapterMode) currentChapterId = null;
+      if (currentChapterId && !isValidChapterId(subj, currentChapterId)) currentChapterId = null;
+      const __showGrid = __chapterMode && isGridLevel(subj, currentChapterId);
+      const __scope = getScopedLists(subj);
       document.getElementById('view-home').style.display = 'none';
       document.getElementById('view-research').style.display = 'none';
       document.getElementById('view-subject').style.display = 'block';
@@ -5601,10 +6031,11 @@ ${escText(alertBody)}
       const bFiles = document.getElementById('sec-badge-files');
       const bVideos = document.getElementById('sec-badge-videos');
       const bQuizzes = document.getElementById('sec-badge-quizzes');
-      if (bFiles) bFiles.innerText = subj.files ? subj.files.length : 0;
-      if (bVideos) bVideos.innerText = subj.videos ? subj.videos.length : 0;
-      if (bQuizzes) bQuizzes.innerText = subj.quizzes ? subj.quizzes.length : 0;
-      switchSubjectTab('all');
+      if (bFiles) bFiles.innerText = __scope.files.length;
+      if (bVideos) bVideos.innerText = __scope.videos.length;
+      if (bQuizzes) bQuizzes.innerText = __scope.quizzes.length;
+      switchSubjectTab(silent ? currentSubjectActiveTab : 'all');
+      renderChapterUI(subj, __showGrid, __chapterMode);
 
       if (!silent && !isHashNavigationInProgress) {
         const hash = '#subject/' + id;
@@ -5623,13 +6054,13 @@ ${escText(alertBody)}
               </div>`).join('');
       } else { document.getElementById('subject-images').innerHTML = ''; }
 
-      if (subj.files.length === 0) document.getElementById('subject-files').innerHTML = '<div class="empty-state z-content">لا توجد ملفات.</div>';
-      else { let filesHtml = renderFilesCategory(subj.files, 'محاضرات', '📖', isAdmin, subj.id) + renderFilesCategory(subj.files, 'سكاشن', '🔬', isAdmin, subj.id) + renderFilesCategory(subj.files, 'امتحانات', '📝', isAdmin, subj.id); document.getElementById('subject-files').innerHTML = filesHtml || '<div class="empty-state z-content">لا توجد ملفات مصنفة.</div>'; }
+      if (__scope.files.length === 0) document.getElementById('subject-files').innerHTML = '<div class="empty-state z-content">لا توجد ملفات.</div>';
+      else { let filesHtml = renderFilesCategory(__scope.files, 'محاضرات', '📖', isAdmin, subj.id) + renderFilesCategory(__scope.files, 'سكاشن', '🔬', isAdmin, subj.id) + renderFilesCategory(__scope.files, 'امتحانات', '📝', isAdmin, subj.id); document.getElementById('subject-files').innerHTML = filesHtml || '<div class="empty-state z-content">لا توجد ملفات مصنفة.</div>'; }
 
       // عرض شروحات الفيديو والسكاشن المسجلة
       const videosContainer = document.getElementById('subject-videos');
       const vCountEl = document.getElementById('subject-videos-count');
-      const videosList = subj.videos || [];
+      const videosList = __scope.videos || [];
       if (vCountEl) vCountEl.innerText = videosList.length ? `(${videosList.length} فيديو)` : '';
       if (videosContainer) {
         if (videosList.length === 0) {
@@ -5647,15 +6078,17 @@ ${escText(alertBody)}
             }
 
             return `
-              <div class="card liquid-glass" style="border-color: rgba(236,72,153,.3); background: rgba(236,72,153,.04);">
+              <div class="card liquid-glass" style="border-color: rgba(236,72,153,.3); background: rgba(236,72,153,.04); ${v.hidden ? 'opacity:.6; border:1px dashed #f59e0b;' : ''}">
                  <div class="z-content flex-between" style="margin-bottom:8px; flex-wrap:wrap; gap:6px;">
                     <span style="font-size:11px; background:rgba(236,72,153,.2); color:#f472b6; padding:2px 8px; border-radius:6px; font-weight:bold;">${escText(v.category || 'شرح')}</span>
                     ${isAdmin ? `<div style="display:flex; gap:4px;">
                        <button class="btn-sm btn-edit" onclick="editSubjectVideo('${subj.id}','${v.key}','${escapeHtml(v.title)}','${escapeHtml(v.url)}','${escapeHtml(v.category||'شروحات نظري')}')">✏️</button>
+                       <button class="btn-sm btn-edit" title="${v.hidden ? 'إظهار للطلاب' : 'إخفاء عن الطلاب'}" onclick="toggleItemHidden('videos','${subj.id}','${v.key}',${v.hidden ? 'false' : 'true'})">${v.hidden ? '👁️' : '🙈'}</button>
+                       <button class="btn-sm btn-edit" title="نقل لفصل" onclick="moveItemToChapter('videos','${subj.id}','${v.key}')">📂</button>
                        <button class="btn-sm btn-ban" onclick="deleteSubjectVideo('${subj.id}','${v.key}','${escapeHtml(v.title)}')">🗑️</button>
                     </div>` : ''}
                  </div>
-                 <h4 class="z-content" style="margin:0 0 12px; font-size:14px; font-weight:bold; color:var(--fg); line-height:1.5;">🎬 ${escText(v.title)}</h4>
+                 <h4 class="z-content" style="margin:0 0 12px; font-size:14px; font-weight:bold; color:var(--fg); line-height:1.5;">🎬 ${escText(v.title)}${v.hidden ? ' <span style="font-size:11px; background:rgba(245,158,11,.2); color:#fbbf24; border:1px solid rgba(245,158,11,.4); padding:1px 8px; border-radius:6px; white-space:nowrap;">🙈 مخفي</span>' : ''}</h4>
                  <div class="z-content" style="display:flex; gap:8px; margin-top:auto;">
                     ${videoBtns}
                  </div>
@@ -5665,15 +6098,16 @@ ${escText(alertBody)}
       }
 
       // حساب الأسئلة غير المتقنة (الأخطاء)
-      const wrongCount = (subj.quizzes || []).filter(q => {
+      const wrongCount = (__scope.quizzes || []).filter(q => {
         const sq = solvedQuizzes[q.key];
         return sq && (sq.status === 'wrong' || sq === false);
       }).length;
       const mistakesBadge = document.getElementById('quiz-mistakes-badge');
       if (mistakesBadge) mistakesBadge.innerText = wrongCount > 0 ? `(${wrongCount})` : '';
 
-      if (!silent || !quizOrder[id]) quizOrder[id] = shuffleArray(subj.quizzes.map(q => q.key));
-      let allQuizzes = quizOrder[id].map(k => subj.quizzes.find(q => q.key === k)).filter(Boolean).concat(subj.quizzes.filter(q => !quizOrder[id].includes(q.key)));
+      const __qoKey = id + '|' + (currentChapterId || '');
+      if (!silent || !quizOrder[__qoKey]) quizOrder[__qoKey] = shuffleArray(__scope.quizzes.map(q => q.key));
+      let allQuizzes = quizOrder[__qoKey].map(k => __scope.quizzes.find(q => q.key === k)).filter(Boolean).concat(__scope.quizzes.filter(q => !quizOrder[__qoKey].includes(q.key)));
 
       // تطبيق فلتر الأسئلة (الكل / أخطائي / غير محلول)
       let filteredQuizzes = allQuizzes;
@@ -5694,7 +6128,7 @@ ${escText(alertBody)}
       }
 
       const resetBtn = document.getElementById('btn-reset-subject-quizzes');
-      if (resetBtn) resetBtn.style.display = isRestrictedToLevel2 ? 'none' : 'inline-flex';
+      if (resetBtn) { resetBtn.style.display = isRestrictedToLevel2 ? 'none' : 'inline-flex'; resetBtn.innerText = currentChapterId ? '🔄 إعادة امتحان الفصل' : '🔄 إعادة امتحان المادة بالكامل'; }
 
       const quizzesNoticeHtml = isRestrictedToLevel2 ? `
         <div class="liquid-glass z-content" style="grid-column: 1/-1; padding: 12px 18px; margin-bottom: 12px; border: 1.5px solid rgba(245, 158, 11, 0.35); background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(180, 83, 9, 0.12)); color: #fde68a; border-radius: 10px; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 10px;">
@@ -5726,6 +6160,7 @@ ${escText(alertBody)}
 
         return `<div class="card liquid-glass" style="padding:20px; border: ${isSolved ? (status==='correct' ? '1px solid #15803d' : '1px solid #b91c1c') : (isRestrictedToLevel2 ? '1px dashed rgba(245,158,11,0.3)' : 'none')};"><div class="z-content" style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px;"><p style="font-weight:700; font-size:16px; margin:0 0 12px; display:flex; align-items:center; gap:6px;">س${idx+1}: ${escText(q.q)} ${isRestrictedToLevel2 ? '<span style="font-size:11px; background:rgba(245,158,11,.15); color:#fbbf24; border:1px solid rgba(245,158,11,.3); padding:1px 6px; border-radius:4px; margin-right:6px;">معاينة فقط</span>' : ''}</p>${isAdmin ? `
           <button class="btn-sm btn-edit" onclick="editQuiz('${subj.id}','${q.key}')">✏️</button>
+          <button class="btn-sm btn-edit" title="نقل لفصل" onclick="moveItemToChapter('quizzes','${subj.id}','${q.key}')">📂</button>
           <button class="btn-sm btn-ban" onclick="deleteQuiz('${subj.id}','${q.key}','${escapeHtml(q.q)}')">🗑️</button>` : ''}</div>
         <div style="display:flex; justify-content:space-between; align-items:center;">${badgeHtml}</div>
         <div class="quiz-options z-content" style="margin-top:16px;">${optionsHtml}</div></div>`;
@@ -6924,14 +7359,13 @@ ${escText(alertBody)}
       const subj = db.find(s => s.id === sId);
 
       if (!sId || !title || !link) return;
+      const chV = getChapterChoice('video-subj-select', 'video-chapter-select'); if (!chV.ok) return;
+      const form = e.target;
+      const videoData = { title: title, url: link, category: category, createdAt: Date.now() };
+      if (chV.cid) videoData.chapter = chV.cid;
 
-      database.ref('subjects/' + sId + '/videos').push({
-        title: title,
-        url: link,
-        category: category,
-        createdAt: Date.now()
-      }).then(() => {
-        e.target.reset();
+      database.ref('subjects/' + sId + '/videos').push(videoData).then(() => {
+        resetFormKeepTarget(form, 'video-subj-select', 'video-chapter-select');
         logAdminAction('إضافة فيديو شرح', `العنوان: ${title} | المادة: ${subj ? subj.name : ''}`);
         Swal.fire('تم!', 'تم نشر الفيديو في المادة بنجاح 🎬', 'success');
       });
