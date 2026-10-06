@@ -6215,7 +6215,7 @@ ${escText(alertBody)}
                   }
                }
             }).catch(e => { console.error('score update rejected:', e); });
-            const msg = wasWrong ? 'رائع! صححت إجابتك وأصبحت إجابة صحيحة 🎯' : (already ? 'صحيح! (نقطة هذا السؤال احتُسبت لك سابقاً)' : 'تمت إضافة نقطة لرصيدك 🏆');
+            const msg = already ? (wasWrong ? 'صححت إجابتك 🎯 (النقطة بتتحسب من أول محاولة بس)' : 'صحيح! (نقطة هذا السؤال احتُسبت لك سابقاً)') : (wasWrong ? 'رائع! صححت إجابتك وأصبحت إجابة صحيحة 🎯' : 'تمت إضافة نقطة لرصيدك 🏆');
             Swal.fire({title: 'إجابة صحيحة!', text: msg, icon: 'success', timer: 1600, showConfirmButton: false});
         }
       } else {
@@ -6227,7 +6227,16 @@ ${escText(alertBody)}
             if (b.dataset.opt === correct) { b.style.background = "#15803d"; b.style.borderColor = "#22c55e"; b.style.opacity = "1"; b.innerHTML += " ✔️"; }
             else { b.style.opacity = ".5"; }
         });
-        if (currentUser && !prevSolve) database.ref('users/'+currentUser.uid+'/solvedQuizzes/'+quizKey).set(solveData);
+        if (currentUser && !prevSolve) {
+            // أول محاولة غلط = نقطة السؤال اتحرقت (متتحسبش لو جاوب صح بعد كده)
+            const uu2 = 'users/' + currentUser.uid, up2 = {};
+            up2[uu2 + '/solvedQuizzes/' + quizKey] = solveData;
+            const burned = !!(currentStudentData && currentStudentData.scoredQuizzes && currentStudentData.scoredQuizzes[quizKey]);
+            if (!burned) up2[uu2 + '/scoredQuizzes/' + quizKey] = true;
+            database.ref().update(up2).then(() => {
+               if (currentStudentData) { if (!currentStudentData.scoredQuizzes) currentStudentData.scoredQuizzes = {}; currentStudentData.scoredQuizzes[quizKey] = true; }
+            }).catch(e => { console.error('wrong-answer save rejected:', e); });
+        }
       }
     }
 
