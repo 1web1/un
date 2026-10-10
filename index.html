@@ -1191,6 +1191,7 @@
         <button class="pill nav-desktop-only" id="gpa-nav-btn" onclick="navigateTo('#gpa')" title="حاسبة المعدل التراكمي GPA" style="background:#8b5cf6;"><span>🧮</span><span class="btn-txt">حاسبة GPA</span></button>
         <button class="pill nav-desktop-only" id="bookmarks-nav-btn" onclick="openBookmarksModal()" title="المحفوظات والمفضلة" style="background:#f59e0b; color:#111;"><span>⭐</span><span class="btn-txt">المفضلة</span><span id="nav-bookmarks-badge" class="badge" style="background:#000; color:#ffd700; margin-right:4px; display:none;">0</span></button>
         <div class="user-greeting-btn" onclick="showProfile()" id="user-greeting" title="الملف الشخصي"></div>
+        <button class="pill" id="support-nav-btn" onclick="openSupportModal()" title="الدعم الفني" style="background:#0ea5e9; color:#fff;"><span>🛟</span><span class="btn-txt">الدعم الفني</span></button>
         <button class="pill research-nav-btn" id="research-nav-btn" onclick="navigateTo('#research')" title="قسم الأبحاث"><span>🔬</span><span class="btn-txt">الأبحاث</span></button>
         <button class="pill admin-btn" id="admin-toggle-btn" onclick="toggleAdminPanel()" style="display:none;"><span>⚙️</span><span class="btn-txt">الإدارة</span></button>
         <button class="pill mobile-tools-btn" id="mobile-tools-btn" onclick="toggleMobileToolsMenu(event)" title="أدوات وإعدادات سريعة"><span>⚡</span></button>
@@ -1757,8 +1758,8 @@
             <div class="admin-tab active" onclick="switchAdminTab('students', this)">👥 إدارة الطلاب</div>
             <div class="admin-tab" onclick="switchAdminTab('content', this)">📚 إدارة المحتوى</div>
             <div class="admin-tab" onclick="switchAdminTab('analytics', this)">📊 الأسئلة الأصعب والمساهمات</div>
-            <div class="admin-tab" onclick="switchAdminTab('tools', this)">⚙️ أدوات النظام</div>
-            <div class="admin-tab" onclick="switchAdminTab('logs', this)">⏱️ سجل النشاط</div>
+            <div class="admin-tab" data-admin-only onclick="switchAdminTab('tools', this)">⚙️ أدوات النظام</div>
+            <div class="admin-tab" data-admin-only onclick="switchAdminTab('logs', this)">⏱️ سجل النشاط</div>
           </div>
 
           <div id="tab-students" class="admin-tab-content active">
@@ -1767,7 +1768,7 @@
                   <span>👥</span> <span>قاعدة بيانات الطلاب</span>
                   <span id="admin-students-filter-count" style="font-size:12px; color:var(--fg-soft); font-weight:normal;"></span>
                 </h3>
-                <button class="pill" style="background: #10b981; font-size: 12px;" onclick="exportStudentsCSV()">📥 تصدير Excel</button>
+                <button class="pill" data-admin-only style="background: #10b981; font-size: 12px;" onclick="exportStudentsCSV()">📥 تصدير Excel</button>
              </div>
 
              <!-- أزرار فلتر المستوى الدراسي -->
@@ -2352,6 +2353,17 @@
 
   <!-- نافذة صانع شهادات التقدير وبادجات LinkedIn الرسمية -->
     <!-- نافذة بطاقة تعريف مؤسس وإدارة المنصة (Founder & 2 CEOs) -->
+  <div id="support-overlay" class="overlay-bg" style="display: none;" onclick="closeModal(event, 'support-overlay')">
+    <div class="modal-box liquid-glass" onclick="event.stopPropagation()" style="max-width: 460px; text-align: center; padding: 24px 18px; border: 2px solid #0ea5e9;">
+      <div style="font-size: 44px; margin-bottom: 4px;">🛟</div>
+      <h3 style="margin: 0 0 6px; color: #38bdf8;">الدعم الفني</h3>
+      <p style="font-size: 13px; color: var(--fg-soft); margin: 0 0 14px;">لو واجهتك مشكلة في المنصة، تواصل معنا على أي رقم من دول:</p>
+      <div id="support-list" style="display:flex; flex-direction:column; gap:10px;"></div>
+      <button id="support-edit-btn" class="pill" style="background: rgba(255,215,0,0.15); color: var(--gold); border: 1px solid var(--gold); display: none; width: 100%; margin-top: 12px;" onclick="adminEditSupport()">✏️ تعديل أرقام الدعم</button>
+      <button class="pill" style="background: rgba(255,255,255,.1); color: var(--fg); width: 100%; margin-top: 8px;" onclick="closeModal(null, 'support-overlay')">إغلاق</button>
+    </div>
+  </div>
+
   <div id="founder-overlay" class="overlay-bg" style="display: none;" onclick="closeModal(event, 'founder-overlay')">
     <div class="modal-box liquid-glass" onclick="event.stopPropagation()" style="max-width: 580px; text-align: center; padding: 26px 20px; border: 2px solid #f59e0b; box-shadow: 0 0 50px rgba(245,158,11,0.3);">
       
@@ -2626,7 +2638,15 @@
 
     /* ===== توفير اتصالات Firebase: فصل الاتصال تلقائيًا للطالب الخامل ===== */
     var __offline = false, __idleT = null, __lastWake = 0, IDLE_MS = 20000, HIDDEN_MS = 8000;
-    function __isAdmin() { try { return !!(currentStudentData && currentStudentData.isAdmin === true); } catch (e) { return false; } }
+    function isAdminUser() { try { return !!(currentStudentData && currentStudentData.isAdmin === true); } catch (e) { return false; } }
+    function isLeaderUser() { try { return !!(currentStudentData && currentStudentData.isLeader === true && currentStudentData.isAdmin !== true); } catch (e) { return false; } }
+    function isStaffUser() { try { return !!(currentStudentData && (currentStudentData.isAdmin === true || currentStudentData.isLeader === true)); } catch (e) { return false; } }
+    function applyStaffRoleUI() {
+      const adm = isAdminUser();
+      document.querySelectorAll('[data-admin-only]').forEach(el => { el.style.display = adm ? '' : 'none'; });
+      if (!adm) { const act = document.querySelector('.admin-tab.active'); if (act && act.hasAttribute('data-admin-only')) { const first = document.querySelector('.admin-tab:not([data-admin-only])'); if (first) switchAdminTab('students', first); } }
+    }
+    function __isAdmin() { return isStaffUser(); }
     function __goOffline() { if (__offline || __isAdmin() || isRegistering) return; try { database.goOffline(); __offline = true; } catch (e) {} }
     function __wake() {
       clearTimeout(__idleT);
@@ -2792,7 +2812,7 @@
 
     function checkMaintenanceUI() {
       const overlay = document.getElementById('maintenance-overlay'); const mainSite = document.getElementById('main-site'); const cinematicHero = document.querySelector('.cinematic-hero');
-      const isUserAdmin = currentStudentData && currentStudentData.isAdmin === true;
+      const isUserAdmin = currentStudentData && isStaffUser();
       if (isMaintenanceActive && !isUserAdmin) { overlay.style.display = 'flex'; const ab = document.getElementById('maint-admin-btn'); if (ab) ab.style.display = currentUser ? 'none' : 'inline-block'; if (mainSite) mainSite.style.display = 'none'; if (cinematicHero) cinematicHero.style.display = 'none'; }
       else { overlay.style.display = 'none'; if (authReady && !currentUser && !isRegistering) document.getElementById('auth-overlay').style.display = 'flex'; if (mainSite) mainSite.style.display = 'block'; if (cinematicHero) cinematicHero.style.display = 'flex'; }
     }
@@ -3114,8 +3134,8 @@ ${escText(alertBody)}
     }
 
     function logAdminAction(actionTitle, detailsText) {
-      if (!currentStudentData || !currentUser || currentStudentData.isAdmin !== true) return;
-      database.ref('admin_logs').push({ adminName: currentStudentData.name, uid: currentUser.uid, action: actionTitle, details: detailsText, timestamp: FB.database.ServerValue.TIMESTAMP });
+      if (!currentStudentData || !currentUser || !isStaffUser()) return;
+      database.ref('admin_logs').push({ adminName: currentStudentData.name + (isAdminUser() ? '' : ' (ليدر)'), role: isAdminUser() ? 'admin' : 'leader', uid: currentUser.uid, action: actionTitle, details: detailsText, timestamp: FB.database.ServerValue.TIMESTAMP });
     }
 
     function listenToAdminLogs() {
@@ -3406,12 +3426,13 @@ ${escText(alertBody)}
       userDataRef = database.ref('users/' + uid);
       userDataRef.on('value', (snap) => {
         currentStudentData = snap.val(); checkMaintenanceUI();
-        { const __a = !!(currentStudentData && currentStudentData.isAdmin === true); if (window.__lastAdm !== __a && window.__subjectsRaw) { try { applySubjectsRaw(); } catch (err) { console.error(err); } } }
+        { const __a = !!(currentStudentData && isStaffUser()); if (window.__lastAdm !== __a && window.__subjectsRaw) { try { applySubjectsRaw(); } catch (err) { console.error(err); } } }
         if (currentStudentData) {
           if (currentStudentData.isBanned) { Swal.fire('محظور!', `⚠️ تم حظرك!<br>السبب: ${escText(currentStudentData.banReason)}`, 'error'); logoutStudent(); return; }
           document.getElementById('user-greeting').innerHTML = `👤 ${escText(currentStudentData.name)}`; setupPresence(uid, currentStudentData); syncLeaderboard(uid, currentStudentData);
           const adminBtn = document.getElementById('admin-toggle-btn');
-          if (currentStudentData.isAdmin === true) { adminBtn.style.display = 'inline-flex'; listenToAdminLogs(); if (!adminListenersOn) { adminListenersOn = true; listenToUsersData(); listenToOnlinePresence(); } listenToAdminResearch(); listenToContributions(); updateAnalyticsSelect(); renderAdminResearchSettingsForm(); } else { adminBtn.style.display = 'none'; document.getElementById('admin-panel').style.display = 'none'; }
+          try { listenToSupport(); renderSupportList(); } catch (e) {}
+          if (isStaffUser()) { adminBtn.style.display = 'inline-flex'; applyStaffRoleUI(); if (isAdminUser()) listenToAdminLogs(); if (!adminListenersOn) { adminListenersOn = true; listenToUsersData(); listenToOnlinePresence(); } listenToAdminResearch(); listenToContributions(); updateAnalyticsSelect(); renderAdminResearchSettingsForm(); } else { adminBtn.style.display = 'none'; document.getElementById('admin-panel').style.display = 'none'; }
         }
         try { __syncMyResearchFromUser(); } catch (e) {}
         updateResearchVisibilityUI();
@@ -3532,7 +3553,8 @@ ${escText(alertBody)}
         <div class="profile-row z-content"><div class="profile-row-label">البريد الإلكتروني</div><div class="profile-row-value" style="color:var(--primary); font-size:13px;">${escText(currentStudentData.email)}</div></div>
         <div class="profile-row z-content"><div class="profile-row-label">حالة الاتصال</div><div class="profile-row-value" style="font-size:13px;">${lastSeenText}</div></div>
         <div class="profile-row z-content" style="border-color:var(--gold); background:rgba(255,215,0,.05);"><div class="profile-row-label">مجموع النقاط</div><div class="profile-row-value" style="color:var(--gold);">🏆 ${currentStudentData.score || 0} نقطة</div></div>`
-        + (currentStudentData.isAdmin === true ? `<div class="profile-row z-content" style="border:1.5px solid #ffd700; background:linear-gradient(135deg, rgba(255,215,0,0.15), rgba(180,83,9,0.25));"><div class="profile-row-label">الرتبة في المنصة</div><div class="profile-row-value" style="color:#ffd700; font-weight:900;">👑 مؤسس ومطور المنصة التقنية</div></div>` : '') + `` + renderBadgesHtml(currentStudentData) + renderStudentAwardBadgeHtml(currentStudentData);
+        + (isLeaderUser() ? `<div class="profile-row z-content" style="border:1.5px solid #38bdf8; background:rgba(56,189,248,0.12);"><div class="profile-row-label">الرتبة في المنصة</div><div class="profile-row-value" style="color:#38bdf8; font-weight:900;">🛡️ ليدر الإدارة</div></div>` : '')
+        + (isAdminUser() ? `<div class="profile-row z-content" style="border:1.5px solid #ffd700; background:linear-gradient(135deg, rgba(255,215,0,0.15), rgba(180,83,9,0.25));"><div class="profile-row-label">الرتبة في المنصة</div><div class="profile-row-value" style="color:#ffd700; font-weight:900;">👑 مؤسس ومطور المنصة التقنية</div></div>` : '') + `` + renderBadgesHtml(currentStudentData) + renderStudentAwardBadgeHtml(currentStudentData);
       document.getElementById('profile-overlay').style.display = 'flex';
     }
 
@@ -4071,7 +4093,7 @@ ${escText(alertBody)}
     function renderStudentsTable() {
       const tbody = document.getElementById('students-table-body'); if (!tbody) return;
       if (allUsersList.length === 0) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">لم يسجل أحد بعد.</td></tr>'; return; }
-      let html = '';
+      let html = ''; const adm = isAdminUser();
       allUsersList.forEach((u, i) => {
         const isOnline = onlineUsersMap.hasOwnProperty(u.uid); let statusHtml = '';
         if (u.isBanned) statusHtml = `<span class="status-badge status-banned">⛔ محظور</span>`;
@@ -4094,11 +4116,11 @@ ${escText(alertBody)}
              <button class="btn-sm btn-track" onclick="trackStudent('${u.uid}')">📊 النتائج</button>
              <button class="btn-sm btn-msg" onclick="sendPrivateAlert('${u.uid}','${escapeHtml(u.name)}')">📩 رسالة</button>
              <button class="btn-sm btn-track" style="background: rgba(16,185,129,.18); color:#34d399; border-color:#10b981;" onclick="adminOpenCertificateIssuer('${u.uid}','${escapeHtml(u.name)}','${escapeHtml(u.level||'المستوى الأول')}')">📜 منح شهادة</button>
-             <button class="btn-sm btn-track" style="background: rgba(168,85,247,.15); color:#c084fc; border-color:#a855f7;" onclick="adminSendPasswordReset('${escapeHtml(u.email||'')}','${escapeHtml(u.name)}')">🔑 استعادة الباسورد</button>
-             <button class="btn-sm btn-track" style="background: rgba(234, 179, 8, 0.2); color:#fbbf24; border-color:#eab308;" onclick="adminChangeStudentPassword('${u.uid}','${escapeHtml(u.name)}','${escapeHtml(u.email||'')}')">🔑 تغيير الباسورد</button>
-             <button class="btn-sm btn-track" style="background: rgba(255,215,0,.15); color:var(--gold); border-color:var(--gold);" onclick="adminAddPoints('${u.uid}')">⭐ نقاط</button>
+             ${adm ? `<button class="btn-sm btn-track" style="background: rgba(168,85,247,.15); color:#c084fc; border-color:#a855f7;" onclick="adminSendPasswordReset('${escapeHtml(u.email||'')}','${escapeHtml(u.name)}')">🔑 استعادة الباسورد</button>` : ''}
+             ${adm ? `<button class="btn-sm btn-track" style="background: rgba(234, 179, 8, 0.2); color:#fbbf24; border-color:#eab308;" onclick="adminChangeStudentPassword('${u.uid}','${escapeHtml(u.name)}','${escapeHtml(u.email||'')}')">🔑 تغيير الباسورد</button>` : ''}
+             ${adm ? `<button class="btn-sm btn-track" style="background: rgba(255,215,0,.15); color:var(--gold); border-color:var(--gold);" onclick="adminAddPoints('${u.uid}')">⭐ نقاط</button>` : ''}
              <button class="btn-sm btn-edit" onclick="editStudentProfile('${u.uid}')">✏️ تعديل</button>
-             <button class="btn-sm btn-track" style="background: rgba(20,184,166,.15); color:#2dd4bf; border-color:#14b8a6;" onclick="adminAssignResearch('${u.uid}','${escapeHtml(u.name)}')">🔬 تعيين بحث</button>
+             ${adm ? `<button class="btn-sm btn-track" style="background: rgba(20,184,166,.15); color:#2dd4bf; border-color:#14b8a6;" onclick="adminAssignResearch('${u.uid}','${escapeHtml(u.name)}')">🔬 تعيين بحث</button>` : ''}
              ${banBtn}
         </div></td></tr>`;
       });
@@ -4188,9 +4210,9 @@ ${escText(alertBody)}
 
     async function banStudent(uid, n) {
       const { value: r } = await Swal.fire({title: `سبب الحظر لـ ${n}`, input: 'text', showCancelButton: true, confirmButtonText: 'حظر', confirmButtonColor: '#ef4444'});
-      if (r) { database.ref('users/'+uid).update({isBanned:true, banReason:r, score:0}); database.ref('leaderboard/'+uid).remove(); logAdminAction('حظر طالب', `اسم الطالب: ${n} | السبب: ${r}`); }
+      if (r) { database.ref().update({['users/'+uid+'/isBanned']:true, ['users/'+uid+'/banReason']:r, ['users/'+uid+'/score']:0, ['leaderboard/'+uid]:null}).catch(e=>Swal.fire('خطأ',escText(e.message),'error')); logAdminAction('حظر طالب', `اسم الطالب: ${n} | السبب: ${r}`); }
     }
-    function unbanStudent(uid, n) { Swal.fire({title: `فك الحظر عن ${n}؟`, showCancelButton: true}).then((r)=>{ if(r.isConfirmed){ database.ref('users/'+uid).update({isBanned:false, banReason:null}); logAdminAction('فك حظر طالب', `اسم الطالب: ${n}`); }}); }
+    function unbanStudent(uid, n) { Swal.fire({title: `فك الحظر عن ${n}؟`, showCancelButton: true}).then((r)=>{ if(r.isConfirmed){ database.ref().update({['users/'+uid+'/isBanned']:false, ['users/'+uid+'/banReason']:null}).catch(e=>Swal.fire('خطأ',escText(e.message),'error')); logAdminAction('فك حظر طالب', `اسم الطالب: ${n}`); }}); }
     function resetAllScores() { Swal.fire({title: "تصفير نقاط جميع الطلاب؟", icon:'warning', showCancelButton: true, confirmButtonColor: '#ef4444'}).then((r)=>{ if(r.isConfirmed) { let up={}, lb={}; allUsersList.forEach(u => { up[u.uid+'/score']=0; up[u.uid+'/solvedQuizzes']=null; up[u.uid+'/scoredQuizzes']=null; if (!u.isBanned) lb['leaderboard/'+u.uid+'/score']=0; }); database.ref('users').update(up); database.ref().update(lb); logAdminAction('تصفير الدفعة', 'تم تصفير النقاط لجميع الطلاب'); Swal.fire('تم','تم تصفير الدفعة بنجاح','success'); } }); }
 
     function listenToAlerts() { database.ref('alert').on('value', (snap) => { let msg = snap.val(); let banner = document.getElementById("alert-banner"); if (msg) { document.getElementById("alert-text-content").innerText = msg; banner.style.display = "block"; } else banner.style.display = "none"; }); }
@@ -4206,7 +4228,7 @@ ${escText(alertBody)}
     }
     function applySubjectsRaw() {
         const val = window.__subjectsRaw || {};
-        const __adm = !!(currentStudentData && currentStudentData.isAdmin === true);
+        const __adm = !!(currentStudentData && isStaffUser());
         window.__lastAdm = __adm;
         const __vis = (arr) => __adm ? arr : arr.filter(x => !x.hidden);
         db = Object.keys(val).map(id => {
@@ -4238,6 +4260,7 @@ ${escText(alertBody)}
     }
 
     function switchAdminTab(tabId, btnElement) {
+      if ((tabId === 'tools' || tabId === 'logs') && !isAdminUser()) return;
       document.querySelectorAll('.admin-tab-content').forEach(el => el.classList.remove('active'));
       document.querySelectorAll('.admin-tab').forEach(el => el.classList.remove('active'));
       document.getElementById('tab-' + tabId).classList.add('active'); btnElement.classList.add('active');
@@ -4250,7 +4273,7 @@ ${escText(alertBody)}
       }
     }
 
-    function toggleAdminPanel() { if (!currentStudentData || currentStudentData.isAdmin !== true) { Swal.fire('تنبيه','غير مصرح لك.','warning'); return; } const p = document.getElementById("admin-panel"); const vis = p.style.display === "block"; p.style.display = vis ? "none" : "block"; if (!vis) { updateAdminSelects(); updateLevelRestrictionsUI(); p.scrollIntoView({behavior:'smooth'}); } }
+    function toggleAdminPanel() { if (!isStaffUser()) { Swal.fire('تنبيه','غير مصرح لك.','warning'); return; } const p = document.getElementById("admin-panel"); const vis = p.style.display === "block"; p.style.display = vis ? "none" : "block"; if (!vis) { updateAdminSelects(); updateLevelRestrictionsUI(); p.scrollIntoView({behavior:'smooth'}); } }
     function updateAlert(e) { e.preventDefault(); let text = document.getElementById("alert-input").value; database.ref('alert').set(text); e.target.reset(); logAdminAction('نشر تنبيه للدفعة', text); Swal.fire('تم', 'تم نشر التنبيه بنجاح', 'success'); }
 
     function updateAdminSelects() {
@@ -4334,7 +4357,7 @@ ${escText(alertBody)}
     }
 
     function isResearchAllowedForStudent() {
-      if (currentStudentData && currentStudentData.isAdmin === true) return true;
+      if (currentStudentData && isStaffUser()) return true;
       if (researchSettings.enabled === false) return false;
 
       const target = researchSettings.targetLevel || 'all';
@@ -4438,7 +4461,7 @@ ${escText(alertBody)}
 
     function adminSaveResearchSettings(e) {
       e.preventDefault();
-      if (!currentStudentData || currentStudentData.isAdmin !== true) return;
+      if (!isStaffUser()) return;
 
       const enabled = document.getElementById('admin-research-status-select').value === 'enabled';
       const targetLevel = document.getElementById('admin-research-level-select').value;
@@ -4626,7 +4649,7 @@ ${escText(alertBody)}
     /* ===== الأبحاث ===== */
     function listenToResearchTopics() {
       if (researchListening) return; researchListening = true;
-      if (currentStudentData && currentStudentData.isAdmin === true) { listenToAdminResearch(); }
+      if (currentStudentData && isStaffUser()) { listenToAdminResearch(); }
       else { __pollResearch(); }
     }
     function listenToAdminResearch() {
@@ -4685,7 +4708,7 @@ ${escText(alertBody)}
     }
 
     async function __fetchMyRequest(tok) {
-      if (!currentUser || (currentStudentData && currentStudentData.isAdmin === true)) return;
+      if (!currentUser || (currentStudentData && isStaffUser())) return;
       try {
         const t = tok || await currentUser.getIdToken();
         const r = await fetch(__DB + '/research_requests/' + currentUser.uid + '.json?auth=' + encodeURIComponent(t), { cache: 'no-store' });
@@ -4789,7 +4812,7 @@ ${escText(alertBody)}
     }
 
     function __syncMyResearchFromUser() {
-      if (!currentUser || !currentStudentData || currentStudentData.isAdmin === true) return;
+      if (!currentUser || !currentStudentData || isStaffUser()) return;
       const uid = currentUser.uid, key = currentStudentData.researchTopic || null;
       let changed = false;
       researchTopics.forEach(r => {
@@ -4806,7 +4829,7 @@ ${escText(alertBody)}
       const box = document.getElementById('my-research-box'), home = document.getElementById('home-research-status');
       if (!box && !home) return;
       let boxHtml = '', homeHtml = '', color = 'var(--fg-faint)';
-      if (!currentUser || (currentStudentData && currentStudentData.isAdmin === true)) {
+      if (!currentUser || (currentStudentData && isStaffUser())) {
         if (box) box.style.display = 'none'; if (home) home.innerHTML = ''; const __lb0 = document.getElementById('lb-my-research'); if (__lb0) { __lb0.style.display = 'none'; __lb0.innerHTML = ''; } return;
       }
       const mine = myResearch();
@@ -4943,7 +4966,7 @@ ${escText(alertBody)}
     }
 
     async function adminResetAllResearchBookings() {
-      if (!currentUser || !currentStudentData || currentStudentData.isAdmin !== true) {
+      if (!currentUser || !isAdminUser()) {
         return Swal.fire('غير مصرح', 'هذا الإجراء متاح لمدير النظام فقط.', 'error');
       }
 
@@ -5427,7 +5450,7 @@ ${escText(alertBody)}
     }
 
     function setLevel2Restrictions(enable) {
-      if (!currentUser || !currentStudentData || currentStudentData.isAdmin !== true) {
+      if (!currentUser || !isAdminUser()) {
         return Swal.fire('غير مصرح', 'هذا الإجراء متاح لمدير النظام فقط.', 'error');
       }
 
@@ -5480,7 +5503,7 @@ ${escText(alertBody)}
     function isRestrictedLevel2(subj) {
       if (!subj || parseInt(subj.level, 10) !== 2) return false;
       if (!isLevel2RestrictionActive) return false;
-      if (currentStudentData && currentStudentData.isAdmin === true) return false;
+      if (currentStudentData && isStaffUser()) return false;
       const userLevel = (currentStudentData && currentStudentData.level) ? parseInt(currentStudentData.level, 10) : 1;
       return userLevel === 1;
     }
@@ -5521,7 +5544,7 @@ ${escText(alertBody)}
         return;
       }
 
-      const isAdmin = currentStudentData && currentStudentData.isAdmin === true;
+      const isAdmin = currentStudentData && isStaffUser();
       const isLevel1Student = !isAdmin && (!currentStudentData || (currentStudentData.level || 1) == 1);
       const isLvl2Preview = (activeLevel === 2 && isLevel1Student && isLevel2RestrictionActive);
 
@@ -5677,7 +5700,7 @@ ${escText(alertBody)}
     }
 
     function buildChaptersGridHtml(subj) {
-      const isAdmin = currentStudentData && currentStudentData.isAdmin === true;
+      const isAdmin = currentStudentData && isStaffUser();
       const solved = (currentStudentData && currentStudentData.solvedQuizzes) || {};
       const level = currentChapterId; // null = الفصول الرئيسية | id فصل = محاضراته
       let cards;
@@ -6044,7 +6067,7 @@ ${escText(alertBody)}
         }
       }
 
-      const isAdmin = currentStudentData && currentStudentData.isAdmin === true; const solvedQuizzes = (currentStudentData && currentStudentData.solvedQuizzes) ? currentStudentData.solvedQuizzes : {};
+      const isAdmin = currentStudentData && isStaffUser(); const solvedQuizzes = (currentStudentData && currentStudentData.solvedQuizzes) ? currentStudentData.solvedQuizzes : {};
 
       if (subj.images && subj.images.length > 0) {
           document.getElementById('subject-images').innerHTML = subj.images.map(img => `
@@ -7011,7 +7034,7 @@ ${escText(alertBody)}
     let __subjStatsRows = [];
     function __computeSubjectStats() {
       const lvlSel = (document.getElementById('subj-stats-level') || {}).value || 'all';
-      const students = allUsersList.filter(u => !u.isAdmin && !u.isBanned);
+      const students = allUsersList.filter(u => !u.isAdmin && !u.isLeader && !u.isBanned);
       const rows = [];
       db.forEach(sub => {
         if (lvlSel !== 'all' && String(sub.level) !== String(lvlSel)) return;
@@ -7874,7 +7897,7 @@ ${escText(alertBody)}
       const container = document.getElementById('community-links-list');
       if (!container) return;
 
-      const isAdmin = currentStudentData && currentStudentData.isAdmin === true;
+      const isAdmin = currentStudentData && isStaffUser();
 
       let html = communityLinksList.map((item, idx) => {
         const platformIcon = item.platform === 'telegram' ? '✈️' : '🟢';
@@ -8074,8 +8097,9 @@ ${escText(alertBody)}
       const u = allUsersList.find(x => x.uid === uid);
       if (!u) return;
 
+      const __ro = !isAdminUser();
       const { value: formValues } = await Swal.fire({
-        title: 'تعديل بيانات ومستوى الطالب',
+        title: __ro ? 'بيانات الطالب (عرض فقط)' : 'تعديل بيانات ومستوى الطالب',
         html: `
           <div style="text-align:right; font-size:12px; margin-bottom:4px;">الاسم الكامل:</div>
           <input id="swal-edit-name" class="swal2-input" value="${escText(u.name || '')}" placeholder="الاسم الكامل" style="margin-top:0;">
@@ -8097,9 +8121,12 @@ ${escText(alertBody)}
         `,
         focusConfirm: false,
         showCancelButton: true,
+        showConfirmButton: !__ro,
         confirmButtonText: 'حفظ التعديلات 💾',
-        cancelButtonText: 'إلغاء',
+        cancelButtonText: __ro ? 'إغلاق' : 'إلغاء',
+        didOpen: () => { if (__ro) ['swal-edit-name','swal-edit-email','swal-edit-phone','swal-edit-level','swal-edit-id'].forEach(id => { const el = document.getElementById(id); if (el) { el.disabled = true; el.style.opacity = '.85'; } }); },
         preConfirm: () => {
+          if (__ro) return false;
           const name = document.getElementById('swal-edit-name').value.trim();
           const email = document.getElementById('swal-edit-email').value.trim();
           const phone = document.getElementById('swal-edit-phone').value.trim();
@@ -8113,7 +8140,7 @@ ${escText(alertBody)}
         }
       });
 
-      if (formValues) {
+      if (formValues && isAdminUser()) {
         const up = {};
         up['users/' + uid + '/name'] = formValues.name;
         up['users/' + uid + '/email'] = formValues.email;
@@ -8657,7 +8684,7 @@ ${escText(alertBody)}
     function submitPollVote(pollId) {
       if (!currentUser) return Swal.fire('تنبيه', 'يجب تسجيل الدخول للمشاركة في التصويت', 'info');
       const p = pollsList.find(x => x.id === pollId);
-      const isAdmin = currentStudentData && currentStudentData.isAdmin === true;
+      const isAdmin = currentStudentData && isStaffUser();
       const userLevel = (currentStudentData && currentStudentData.level) ? parseInt(currentStudentData.level, 10) : 1;
       if (p && p.targetLevel === '2' && !isAdmin && userLevel === 1 && isLevel2RestrictionActive) {
         showLevel2RestrictionAlert('التصويت في استطلاعات المستوى الثاني');
@@ -9522,6 +9549,53 @@ ${escText(alertBody)}
       whatsapp: ''
     };
 
+    /* ===== الدعم الفني (3 أرقام قابلة للتعديل من الأدمن) ===== */
+    let supportContacts = [{ label: '', phone: '' }, { label: '', phone: '' }, { label: '', phone: '' }];
+    let supportListening = false;
+    function listenToSupport() {
+      if (supportListening) return; supportListening = true;
+      database.ref('settings/supportContacts').on('value', snap => {
+        const v = snap.val();
+        const arr = Array.isArray(v) ? v : (v ? Object.values(v) : []);
+        supportContacts = [0, 1, 2].map(i => ({ label: String((arr[i] && arr[i].label) || ''), phone: String((arr[i] && arr[i].phone) || '') }));
+        renderSupportList();
+      }, () => { supportListening = false; });
+    }
+    function renderSupportList() {
+      const box = document.getElementById('support-list'); if (!box) return;
+      const items = supportContacts.filter(c => c.phone.trim());
+      if (!items.length) { box.innerHTML = '<div class="empty-state">لم يتم إضافة أرقام الدعم الفني بعد.</div>'; }
+      else box.innerHTML = items.map(c => {
+        const digits = c.phone.replace(/\D/g, '');
+        return `<div style="background:rgba(255,255,255,.05); border:1px solid rgba(14,165,233,.35); border-radius:12px; padding:10px 12px; text-align:right;">
+          <div style="font-weight:bold; margin-bottom:6px;">${escText(c.label || 'الدعم الفني')}</div>
+          <div style="direction:ltr; text-align:right; color:var(--primary); font-weight:bold; margin-bottom:8px;">${escText(c.phone)}</div>
+          <div style="display:flex; gap:8px;">
+            <a class="pill" style="background:#16a34a; color:#fff; flex:1; text-decoration:none; justify-content:center;" href="https://wa.me/${digits}" target="_blank" rel="noopener">💬 واتساب</a>
+            <a class="pill" style="background:#0ea5e9; color:#fff; flex:1; text-decoration:none; justify-content:center;" href="tel:${digits}">📞 اتصال</a>
+          </div></div>`;
+      }).join('');
+      const eb = document.getElementById('support-edit-btn'); if (eb) eb.style.display = isAdminUser() ? 'block' : 'none';
+    }
+    function openSupportModal() { listenToSupport(); renderSupportList(); document.getElementById('support-overlay').style.display = 'flex'; }
+    async function adminEditSupport() {
+      if (!isAdminUser()) { Swal.fire('غير مصرح', 'تعديل أرقام الدعم الفني للأدمن فقط.', 'error'); return; }
+      const row = (i) => `<div style="text-align:right; font-size:12px; margin:8px 0 2px;">الرقم ${i + 1}:</div>
+        <input id="swal-sup-l${i}" class="swal2-input" value="${escText(supportContacts[i].label)}" placeholder="الاسم / الوصف (مثال: أ. محمد)" style="margin:0 0 4px;">
+        <input id="swal-sup-p${i}" class="swal2-input" value="${escText(supportContacts[i].phone)}" placeholder="مثال: 201001234567" style="margin:0; direction:ltr;">`;
+      const { value } = await Swal.fire({
+        title: 'أرقام الدعم الفني',
+        html: row(0) + row(1) + row(2) + '<div style="font-size:11px; color:var(--fg-faint); margin-top:8px;">اتركه فارغاً لإخفاء الرقم. الأفضل كتابة الرقم بصيغة دولية بدون + (مصر: 20 ثم الرقم بدون صفر).</div>',
+        focusConfirm: false, showCancelButton: true, confirmButtonText: 'حفظ ✓', cancelButtonText: 'إلغاء',
+        preConfirm: () => [0, 1, 2].map(i => ({ label: document.getElementById('swal-sup-l' + i).value.trim().slice(0, 60), phone: document.getElementById('swal-sup-p' + i).value.trim().slice(0, 30) }))
+      });
+      if (!value) return;
+      database.ref('settings/supportContacts').set(value).then(() => {
+        logAdminAction('تعديل أرقام الدعم الفني', value.filter(c => c.phone).map(c => c.phone).join(' | ') || 'تم مسح الأرقام');
+        Swal.fire('تم الحفظ!', 'تم تحديث أرقام الدعم الفني.', 'success');
+      }).catch(e => Swal.fire('خطأ', escText(e.message), 'error'));
+    }
+
     function listenToFounderInfo() {
       database.ref('settings/founderInfo').on('value', snap => {
         const val = snap.val();
@@ -9625,7 +9699,7 @@ ${escText(alertBody)}
       // 5. Edit Button for Admin
       const editBtn = document.getElementById('founder-edit-btn');
       if (editBtn) {
-        editBtn.style.display = (currentStudentData && currentStudentData.isAdmin === true) ? 'block' : 'none';
+        editBtn.style.display = isAdminUser() ? 'block' : 'none';
       }
     }
 
@@ -9652,7 +9726,7 @@ ${escText(alertBody)}
     }
 
     async function adminEditFounderInfo() {
-      if (!currentStudentData || currentStudentData.isAdmin !== true) {
+      if (!isAdminUser()) {
         Swal.fire('غير مصرح به ⛔', 'عذراً، تعديل بيانات القيادة وهوية المؤسس محمي ومخصص لمالك المنصة والإدارة فقط.', 'error');
         return;
       }
