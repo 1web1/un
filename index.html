@@ -339,6 +339,16 @@
   select.input-group, input.input-group, textarea.input-group { background: rgba(0,0,0,.4); border: 1px solid rgba(255,255,255,.15); border-radius: 8px; padding: 12px; color: var(--fg); font-family: inherit; font-size: 16px; width: 100%; }
   body.light-mode select.input-group, body.light-mode input.input-group, body.light-mode textarea.input-group { background: rgba(255,255,255,.9); border-color: rgba(0,0,0,.15); color: #111; }
 
+
+  .support-fab { position: fixed; left: 18px; bottom: 18px; z-index: 900; display: inline-flex; align-items: center; gap: 8px; padding: 12px 18px 12px 14px; border: 1px solid rgba(255,255,255,.28); border-radius: 999px; cursor: pointer; font-family: inherit; font-size: 14px; font-weight: 800; color: #fff; background: linear-gradient(135deg, #0ea5e9, #6366f1); box-shadow: 0 8px 26px rgba(14,165,233,.45), inset 0 1px 0 rgba(255,255,255,.35); transition: transform .2s, box-shadow .2s; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+  .support-fab:hover { transform: translateY(-3px) scale(1.04); box-shadow: 0 12px 32px rgba(99,102,241,.55), inset 0 1px 0 rgba(255,255,255,.35); }
+  .support-fab:active { transform: scale(.97); }
+  .support-fab-ico { font-size: 20px; line-height: 1; animation: supportWiggle 3.5s ease-in-out infinite; }
+  .support-fab::after { content: ''; position: absolute; inset: -4px; border-radius: inherit; border: 2px solid rgba(14,165,233,.55); animation: supportPulse 2.4s ease-out infinite; pointer-events: none; }
+  @keyframes supportPulse { 0% { transform: scale(1); opacity: .8; } 100% { transform: scale(1.22); opacity: 0; } }
+  @keyframes supportWiggle { 0%, 88%, 100% { transform: rotate(0); } 92% { transform: rotate(-14deg); } 96% { transform: rotate(12deg); } }
+  @media (max-width: 640px) { .support-fab { left: 12px; bottom: 12px; padding: 12px; } .support-fab-txt { display: none; } .support-fab-ico { font-size: 22px; } }
+  @media (prefers-reduced-motion: reduce) { .support-fab::after, .support-fab-ico { animation: none; } }
   .overlay-bg { position: fixed; inset: 0; background: rgba(0,0,0,.85); backdrop-filter: blur(10px); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 16px; overflow-y: auto; }
   .modal-box { width: 100%; max-width: 450px; border-radius: 18px; padding: 26px 20px; max-height: 92vh; overflow-y: auto; }
   .modal-box.large { max-width: 600px; }
@@ -1175,6 +1185,9 @@
   
 
   <div id="main-site">
+    <button id="support-fab" class="support-fab" onclick="openSupportModal()" aria-label="الدعم الفني" title="الدعم الفني">
+      <span class="support-fab-ico">🎧</span><span class="support-fab-txt">الدعم الفني</span>
+    </button>
     <header class="chrome liquid-glass">
       <div class="mark z-content" onclick="navigateTo('#home')">
         <div class="mark-logo-box">
@@ -1191,7 +1204,6 @@
         <button class="pill nav-desktop-only" id="gpa-nav-btn" onclick="navigateTo('#gpa')" title="حاسبة المعدل التراكمي GPA" style="background:#8b5cf6;"><span>🧮</span><span class="btn-txt">حاسبة GPA</span></button>
         <button class="pill nav-desktop-only" id="bookmarks-nav-btn" onclick="openBookmarksModal()" title="المحفوظات والمفضلة" style="background:#f59e0b; color:#111;"><span>⭐</span><span class="btn-txt">المفضلة</span><span id="nav-bookmarks-badge" class="badge" style="background:#000; color:#ffd700; margin-right:4px; display:none;">0</span></button>
         <div class="user-greeting-btn" onclick="showProfile()" id="user-greeting" title="الملف الشخصي"></div>
-        <button class="pill" id="support-nav-btn" onclick="openSupportModal()" title="الدعم الفني" style="background:#0ea5e9; color:#fff;"><span>🛟</span><span class="btn-txt">الدعم الفني</span></button>
         <button class="pill research-nav-btn" id="research-nav-btn" onclick="navigateTo('#research')" title="قسم الأبحاث"><span>🔬</span><span class="btn-txt">الأبحاث</span></button>
         <button class="pill admin-btn" id="admin-toggle-btn" onclick="toggleAdminPanel()" style="display:none;"><span>⚙️</span><span class="btn-txt">الإدارة</span></button>
         <button class="pill mobile-tools-btn" id="mobile-tools-btn" onclick="toggleMobileToolsMenu(event)" title="أدوات وإعدادات سريعة"><span>⚡</span></button>
@@ -2355,7 +2367,7 @@
     <!-- نافذة بطاقة تعريف مؤسس وإدارة المنصة (Founder & 2 CEOs) -->
   <div id="support-overlay" class="overlay-bg" style="display: none;" onclick="closeModal(event, 'support-overlay')">
     <div class="modal-box liquid-glass" onclick="event.stopPropagation()" style="max-width: 460px; text-align: center; padding: 24px 18px; border: 2px solid #0ea5e9;">
-      <div style="font-size: 44px; margin-bottom: 4px;">🛟</div>
+      <div style="width:64px; height:64px; margin:0 auto 8px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:32px; background:linear-gradient(135deg,#0ea5e9,#6366f1); box-shadow:0 6px 22px rgba(14,165,233,.45);">🎧</div>
       <h3 style="margin: 0 0 6px; color: #38bdf8;">الدعم الفني</h3>
       <p style="font-size: 13px; color: var(--fg-soft); margin: 0 0 14px;">لو واجهتك مشكلة في المنصة، تواصل معنا على أي رقم من دول:</p>
       <div id="support-list" style="display:flex; flex-direction:column; gap:10px;"></div>
