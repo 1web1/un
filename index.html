@@ -8087,7 +8087,7 @@ function neoProgressHtml(subj, vis) {
 function neoRenderSubjectHero(subj) {
   const card = document.getElementById('subject-hero-card'); if (!card) return;
   const vis = getSubjectThematicVisual(subj.name, subj.level);
-  const __cv = subjCoverUrl(subj.cover); if (__cv) vis.image = __cv;
+  const __cv = subjCoverUrl(subj.cover); if (__cv && !(typeof __NEO_SUBJECT_COVERS !== 'undefined' && __NEO_SUBJECT_COVERS[vis.key])) vis.image = __cv;
   const saver = (typeof dataSaverEnabled !== 'undefined' && dataSaverEnabled);
   const img = saver ? '' : `, url('${vis.image}') center/cover no-repeat`;
   card.style.setProperty('background', `linear-gradient(180deg, rgba(0,0,0,.35) 0%, rgba(0,0,0,.82) 100%)${img}, ${vis.gradient}`, 'important');
@@ -8217,7 +8217,7 @@ function openThemePicker() {
         const quizzesCount = subj.quizzes ? subj.quizzes.length : 0;
 
         const vis = getSubjectThematicVisual(subj.name, subj.level);
-        const __cv = subjCoverUrl(subj.cover); if (__cv) vis.image = __cv;
+        const __cv = subjCoverUrl(subj.cover); if (__cv && !(typeof __NEO_SUBJECT_COVERS !== 'undefined' && __NEO_SUBJECT_COVERS[vis.key])) vis.image = __cv;
         const saver = (typeof dataSaverEnabled !== 'undefined' && dataSaverEnabled);
         const progressHtml = neoProgressHtml(subj, vis);
 
