@@ -4782,7 +4782,10 @@ body[class*="theme-"] .mob-nav-item.active{color:var(--primary)!important}
                       <select class="input-group" id="file-chapter-select" data-ctx="1" style="border-color:#14b8a6;"></select>
                       <select class="input-group" id="file-category" required><option value="محاضرات">محاضرات نظري</option><option value="سكاشن">سكاشن وتطبيقات</option><option value="امتحانات">امتحانات سابقة</option></select>
                       <input class="input-group" id="file-title" placeholder="عنوان الملف" required>
-                      <input class="input-group" id="file-link" type="url" placeholder="رابط الملف (درايف/ميديافاير)" required>
+                      <select class="input-group" id="file-source" onchange="__fsrc()"><option value="upload">📤 رفع من الجهاز (PDF أو صور)</option><option value="link">🔗 رابط خارجي (درايف/ميديافاير)</option></select>
+                       <input class="input-group" id="file-upload" type="file" accept="application/pdf,image/*" multiple>
+                       <div id="file-upload-hint" style="font-size:11px; color:var(--fg-faint); line-height:1.7;">ملف PDF واحد (لحد 6MB) أو صور متعددة للامتحان (بتتضغط وتترتب تلقائيًا بالاسم).</div>
+                       <input class="input-group" id="file-link" type="url" placeholder="رابط الملف (درايف/ميديافاير)" style="display:none;">
                       <button class="pill" type="submit">نشر الملف</button>
                    </form>
                 </div>
@@ -5707,7 +5710,7 @@ body[class*="theme-"] .mob-nav-item.active{color:var(--primary)!important}
 
     function escapeHtml(str) { if (str === null || str === undefined) return ''; return String(str).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\r?\n/g, '\\n').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
     function escText(str) { if (str === null || str === undefined) return ''; return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
-    function safeUrl(u) { try { const x = new URL(u); return (x.protocol === 'https:' || x.protocol === 'http:') ? x.href : '#'; } catch (e) { return '#'; } }
+    function safeUrl(u) { try { if (typeof u === 'string' && u.indexOf('hosted:') === 0) return u; const x = new URL(u); return (x.protocol === 'https:' || x.protocol === 'http:') ? x.href : '#'; } catch (e) { return '#'; } }
 
     function getStudentShortId(uid, customId) { if (customId && customId.trim() !== '') return customId; return uid ? uid.substring(0,6).toUpperCase() : 'غير متوفر'; }
 
@@ -14028,5 +14031,151 @@ function openThemePicker() {
 })();
 </script>
 
+
+<script>
+/* ===== رفع الملفات والامتحانات مباشرة على المنصة (بدون درايف) ===== */
+(function(){
+  var cache = {}, MAX = 8 * 1024 * 1024;
+  function isH(u){ return typeof u === 'string' && u.indexOf('hosted:') === 0; }
+  window.__fsrc = function(){
+    var up = document.getElementById('file-source').value === 'upload';
+    document.getElementById('file-upload').style.display = up ? '' : 'none';
+    document.getElementById('file-upload-hint').style.display = up ? '' : 'none';
+    document.getElementById('file-link').style.display = up ? 'none' : '';
+  };
+  function readDU(f){ return new Promise(function(res,rej){ var r=new FileReader(); r.onload=function(){res(r.result);}; r.onerror=rej; r.readAsDataURL(f); }); }
+  function compress(f){ return new Promise(function(res,rej){
+    var u=URL.createObjectURL(f), im=new Image();
+    im.onload=function(){ var k=Math.min(1,1800/Math.max(im.width,im.height)), c=document.createElement('canvas');
+      c.width=Math.round(im.width*k); c.height=Math.round(im.height*k);
+      var x=c.getContext('2d'); x.fillStyle='#fff'; x.fillRect(0,0,c.width,c.height); x.drawImage(im,0,0,c.width,c.height);
+      URL.revokeObjectURL(u); res(c.toDataURL('image/jpeg',0.72)); };
+    im.onerror=function(){ rej(new Error('تعذر قراءة إحدى الصور')); }; im.src=u; }); }
+
+  window.addFile = async function(e){
+    e.preventDefault();
+    var form=e.target, title=document.getElementById('file-title').value.trim();
+    var sId=document.getElementById('file-subj-select').value;
+    var ch=getChapterChoice('file-subj-select','file-chapter-select'); if(!ch.ok) return;
+    var subj=db.find(function(x){return x.id===sId;});
+    var fileData={ title:title, category:document.getElementById('file-category').value };
+    if(ch.cid) fileData.chapter=ch.cid;
+    try{
+      if(document.getElementById('file-source').value==='link'){
+        var l=document.getElementById('file-link').value.trim();
+        if(!l) return Swal.fire('تنبيه','اكتب رابط الملف','warning');
+        fileData.link=l;
+      } else {
+        var fl=[].slice.call(document.getElementById('file-upload').files);
+        if(!fl.length) return Swal.fire('تنبيه','اختار ملف الأول','warning');
+        fl.sort(function(a,b){return a.name.localeCompare(b.name,undefined,{numeric:true});});
+        var pdfs=fl.filter(function(f){return f.type==='application/pdf'||/\.pdf$/i.test(f.name);});
+        if(pdfs.length && fl.length>1) return Swal.fire('تنبيه','ارفع ملف PDF واحد بس، أو مجموعة صور بس (مش الاتنين مع بعض).','warning');
+        Swal.fire({title:'جاري الرفع...',text:'متقفلش الصفحة',allowOutsideClick:false,didOpen:function(){Swal.showLoading();}});
+        var blob={ name:fl[0].name, by:currentUser.uid, at:Date.now() };
+        if(pdfs.length){ blob.kind='pdf'; blob.data=await readDU(pdfs[0]); }
+        else { blob.kind='images'; blob.pages=[]; for(var i=0;i<fl.length;i++) blob.pages.push(await compress(fl[i])); }
+        if(JSON.stringify(blob).length>MAX) throw new Error('الملف كبير. صغّره (مثلاً من ilovepdf.com) أو قلل عدد الصفحات. الحد حوالي 6MB.');
+        var ref=await database.ref('file_blobs').push(blob);
+        fileData.link='hosted:'+ref.key; fileData.hosted=true; fileData.kind=blob.kind;
+      }
+      await database.ref('subjects/'+sId+'/files').push(fileData);
+      resetFormKeepTarget(form,'file-subj-select','file-chapter-select');
+      logAdminAction('رفع ملف','عنوان الملف: '+title+' | المادة: '+(subj?subj.name:''));
+      Swal.fire('تم','تم الرفع بنجاح!','success');
+    }catch(err){ console.error(err); Swal.fire('خطأ', (err&&err.message)||'فشل الرفع. اتأكد إن قواعد Firebase اتحدثت (file_blobs).','error'); }
+  };
+
+  function load(id){
+    if(cache[id]) return Promise.resolve(cache[id]);
+    return database.ref('file_blobs/'+id).once('value').then(function(s){ var v=s.val(); if(!v) throw new Error('الملف مش موجود'); cache[id]=v; return v; });
+  }
+  function loadPdfJs(){
+    if(window.pdfjsLib) return Promise.resolve();
+    return new Promise(function(res,rej){ var s=document.createElement('script');
+      s.src='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+      s.onload=function(){ pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'; res(); };
+      s.onerror=rej; document.head.appendChild(s); });
+  }
+  function toBytes(du){ var b=atob(du.split(',')[1]), a=new Uint8Array(b.length); for(var i=0;i<b.length;i++) a[i]=b.charCodeAt(i); return a; }
+  function hostEl(frame){
+    var h=document.getElementById('hosted-viewer');
+    if(!h){ h=document.createElement('div'); h.id='hosted-viewer';
+      h.style.cssText='position:absolute;inset:0;overflow:auto;z-index:3;background:#18181b;padding:8px;text-align:center;-webkit-overflow-scrolling:touch;';
+      ['contextmenu','dragstart','copy','cut','selectstart'].forEach(function(ev){ h.addEventListener(ev,function(e){e.preventDefault();}); });
+      h.style.userSelect='none'; h.style.webkitUserSelect='none'; h.style.webkitTouchCallout='none';
+      frame.parentNode.appendChild(h); }
+    return h;
+  }
+  async function renderPdf(host,data){
+    await loadPdfJs();
+    var pdf=await pdfjsLib.getDocument({data:toBytes(data)}).promise;
+    for(var p=1;p<=pdf.numPages;p++){
+      var pg=await pdf.getPage(p), v0=pg.getViewport({scale:1});
+      var sc=Math.min(2,(host.clientWidth-16)/v0.width*(window.devicePixelRatio||1));
+      var vp=pg.getViewport({scale:sc}), c=document.createElement('canvas');
+      c.width=vp.width; c.height=vp.height; c.style.cssText='width:100%;max-width:900px;background:#fff;margin:0 auto 10px;display:block;border-radius:6px;';
+      host.appendChild(c); await pg.render({canvasContext:c.getContext('2d'),viewport:vp}).promise;
+    }
+  }
+
+  function tog(hide){
+    var ex=document.getElementById('pdf-viewer-external-link'), cp=document.querySelector('#pdf-viewer-overlay button[onclick="copyCurrentPdfLink()"]');
+    if(ex) ex.style.display=hide?'none':''; if(cp) cp.style.display=hide?'none':'';
+  }
+  var st=document.createElement('style'); st.textContent='@media print{#hosted-viewer,#pdf-viewer-overlay{display:none!important}}'; document.head.appendChild(st);
+  document.addEventListener('keydown',function(e){
+    var h=document.getElementById('hosted-viewer');
+    if(h && h.style.display==='block' && (e.ctrlKey||e.metaKey) && /^[sp]$/i.test(e.key)) e.preventDefault();
+  });
+  var origOpen=window.openPdfViewer, origClose=window.closePdfViewer;
+  window.openPdfViewer=function(title,url){
+    var h0=document.getElementById('hosted-viewer'); if(h0) h0.style.display='none';
+    if(!isH(url)){ tog(false); return origOpen(title,url); }
+    tog(true);
+    var cs=db.find(function(s){return s.id===currentSubjectId;});
+    if(isRestrictedLevel2(cs)) return showLevel2RestrictionAlert('معاينة الملفات والمحاضرات');
+    var ov=document.getElementById('pdf-viewer-overlay'), fr=document.getElementById('pdf-viewer-frame'), sp=document.getElementById('pdf-loading-spinner');
+    document.getElementById('pdf-viewer-title').innerText=title||'معاينة الملف';
+    document.getElementById('pdf-viewer-external-link').href='#';
+    try{ currentViewingPdfUrl=location.href; }catch(e){}
+    fr.src=''; var host=hostEl(fr); host.innerHTML=''; host.style.display='block';
+    if(sp) sp.style.display='flex'; ov.style.display='flex';
+    load(url.slice(7)).then(async function(b){
+      try{
+        if(b.kind==='pdf'){
+          try{ await renderPdf(host,b.data); }
+          catch(er){ console.warn(er); host.innerHTML='<div style="color:#f87171;padding:30px;">تعذر عرض الملف. حدّث الصفحة وحاول تاني.</div>'; return; }
+        } else {
+          (b.pages||[]).forEach(function(d){ var c=document.createElement('canvas'); c.style.cssText='width:100%;max-width:900px;display:block;margin:0 auto 10px;border-radius:6px;background:#fff;'; host.appendChild(c); var im=new Image(); im.onload=function(){ c.width=im.width; c.height=im.height; c.getContext('2d').drawImage(im,0,0); }; im.src=d; });
+        }
+      } finally { if(sp) sp.style.display='none'; }
+    }).catch(function(er){ if(sp) sp.style.display='none'; host.innerHTML='<div style="color:#f87171;padding:30px;">تعذر تحميل الملف: '+(er.message||'')+'</div>'; });
+  };
+  window.closePdfViewer=function(e){
+    if(e && e.target && e.target.id!=='pdf-viewer-overlay' && e.target.tagName!=='BUTTON') return;
+    var h=document.getElementById('hosted-viewer'); if(h){ h.innerHTML=''; h.style.display='none'; }
+    origClose(e);
+  };
+
+  var origExt=window.openExternalFileAndTrack;
+  window.openExternalFileAndTrack=function(subjId,fileKey,title,url){
+    if(!isH(url)) return origExt(subjId,fileKey,title,url);
+    try{ recordFileAccess(subjId,fileKey,title); }catch(e){}
+    window.openPdfViewer(title,url);
+  };
+
+  window.deleteFile=function(s,f,name){
+    var sub=db.find(function(x){return x.id===s;}), fl=sub&&sub.files.find(function(x){return x.key===f;});
+    var bid=(fl&&isH(fl.link))?fl.link.slice(7):null;
+    Swal.fire({title:'حذف الملف؟',showCancelButton:true,confirmButtonColor:'#ef4444'}).then(function(r){
+      if(!r.isConfirmed) return;
+      database.ref('subjects/'+s+'/files/'+f).remove();
+      if(bid){ database.ref('file_blobs/'+bid).remove(); delete cache[bid]; }
+      logAdminAction('حذف ملف','الملف: '+name);
+    });
+  };
+})();
+</script>
 </body>
 </html>
