@@ -14211,5 +14211,91 @@ function openThemePicker() {
   };
 })();
 </script>
+<script>
+/* ===== تسريع قايمة الطلاب: عرض تدريجي + بحث ذكي ===== */
+(function(){
+  var CHUNK = 40, shown = 0, matches = [], built = false, inR = false, tmr = null, tmr2 = null, io = null;
+  var __orig = window.renderStudentsTable;
+  if (typeof __orig !== 'function') return;
+
+  function norm(s){
+    s = String(s == null ? '' : s).toLowerCase();
+    s = s.replace(/[٠-٩]/g, function(d){ return '٠١٢٣٤٥٦٧٨٩'.indexOf(d); }).replace(/[۰-۹]/g, function(d){ return '۰۱۲۳۴۵۶۷۸۹'.indexOf(d); });
+    return s.replace(/[\u064B-\u065F\u0670\u0640]/g,'').replace(/[أإآٱ]/g,'ا').replace(/ى/g,'ي').replace(/ة/g,'ه').replace(/ؤ/g,'و').replace(/ئ/g,'ي').replace(/\s+/g,' ').trim();
+  }
+  function ph(s){
+    var d = norm(s).replace(/\D/g,'');
+    if (d.indexOf('0020') === 0) d = d.slice(4); else if (d.length > 10 && d.indexOf('20') === 0) d = d.slice(2);
+    return d.replace(/^0+/,'');
+  }
+  function index(u){
+    if (u.__t === undefined) {
+      u.__t = norm([u.name, u.email, u.studentId, (u.uid || '').slice(0,6), u.researchTopicName].join(' '));
+      u.__p = ph(u.phone);
+    }
+  }
+  function matchQuery(u, toks){
+    for (var i = 0; i < toks.length; i++) {
+      var t = toks[i], ok = u.__t.indexOf(t) >= 0;
+      if (!ok && /^\d+$/.test(t)) {
+        var p = t; if (p.length > 10 && p.indexOf('20') === 0) p = p.slice(2); p = p.replace(/^0+/,'');
+        ok = !!p && u.__p.indexOf(p) >= 0;
+      }
+      if (!ok) return false;
+    }
+    return true;
+  }
+  function compute(){
+    var inp = document.getElementById('admin-search-student');
+    var q = norm(inp ? inp.value : ''), toks = q ? q.split(' ') : [];
+    var lvlF = (typeof currentAdminLevelFilter !== 'undefined') ? currentAdminLevelFilter : 'all';
+    var onlyOn = (typeof adminOnlineOnly !== 'undefined') ? adminOnlineOnly : false;
+    var out = [];
+    for (var i = 0; i < allUsersList.length; i++) {
+      var u = allUsersList[i]; index(u);
+      if (lvlF !== 'all' && String(u.level == 2 ? 2 : 1) !== String(lvlF)) continue;
+      if (onlyOn && !onlineUsersMap.hasOwnProperty(u.uid)) continue;
+      if (toks.length && !matchQuery(u, toks)) continue;
+      out.push(u);
+    }
+    return out;
+  }
+  function paint(list){
+    var full = allUsersList; allUsersList = list; inR = true;
+    try { __orig(); } finally { inR = false; allUsersList = full; }
+  }
+  function build(reset){
+    var tb = document.getElementById('students-table-body'); if (!tb) return;
+    if (!allUsersList.length) { __orig(); return; }
+    matches = compute();
+    shown = reset ? CHUNK : Math.max(shown, CHUNK);
+    shown = Math.min(shown, matches.length);
+    if (!matches.length) tb.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;">لا توجد نتائج مطابقة.</td></tr>';
+    else {
+      paint(matches.slice(0, shown));
+      if (shown < matches.length) {
+        tb.insertAdjacentHTML('beforeend', '<tr id="students-more-row"><td colspan="5" style="text-align:center;padding:14px;"><button type="button" class="btn-sm btn-track" onclick="__moreStudents()">⬇ عرض المزيد (' + (matches.length - shown) + ')</button></td></tr>');
+        try {
+          if (!io) io = new IntersectionObserver(function(es){ if (es[0] && es[0].isIntersecting) window.__moreStudents(); }, { rootMargin: '300px' });
+          io.disconnect(); io.observe(document.getElementById('students-more-row'));
+        } catch (e) {}
+      }
+    }
+    var c = document.getElementById('admin-students-filter-count');
+    if (c) c.innerText = '(المعروض: ' + matches.length + ' طالب' + ((typeof adminOnlineOnly !== 'undefined' && adminOnlineOnly) ? ' — المتصلين فقط 🟢، اضغط «متصل الآن» للرجوع' : '') + ')';
+  }
+  window.__moreStudents = function(){ if (shown >= matches.length) return; shown += CHUNK; build(false); };
+  window.renderStudentsTable = function(){
+    if (!built && allUsersList.length) { built = true; build(true); return; }
+    if (tmr) return;
+    tmr = setTimeout(function(){ tmr = null; build(false); }, 1500);
+  };
+  window.filterAdminStudents = function(){
+    if (inR) return;
+    clearTimeout(tmr2); tmr2 = setTimeout(function(){ build(true); }, 220);
+  };
+  window.__studentsTest = { norm: norm, ph: ph, matchQuery: matchQuery, index: index };
+})();
+</script>
 </body>
 </html>
