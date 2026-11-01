@@ -4782,9 +4782,9 @@ body[class*="theme-"] .mob-nav-item.active{color:var(--primary)!important}
                       <select class="input-group" id="file-chapter-select" data-ctx="1" style="border-color:#14b8a6;"></select>
                       <select class="input-group" id="file-category" required><option value="محاضرات">محاضرات نظري</option><option value="سكاشن">سكاشن وتطبيقات</option><option value="امتحانات">امتحانات سابقة</option></select>
                       <input class="input-group" id="file-title" placeholder="عنوان الملف" required>
-                      <select class="input-group" id="file-source" onchange="__fsrc()"><option value="upload">📤 رفع من الجهاز (PDF أو صور)</option><option value="link">🔗 رابط خارجي (درايف/ميديافاير)</option></select>
+                      <select class="input-group" id="file-source" onchange="__fsrc()"><option value="drive">☁️ رفع تلقائي على درايف (PDF أو صور)</option><option value="link">🔗 رابط خارجي (درايف/ميديافاير)</option></select>
                        <input class="input-group" id="file-upload" type="file" accept="application/pdf,image/*" multiple>
-                       <div id="file-upload-hint" style="font-size:11px; color:var(--fg-faint); line-height:1.7;">ملف PDF واحد (لحد 6MB) أو صور متعددة للامتحان (بتتضغط وتترتب تلقائيًا بالاسم).</div>
+                       <div id="file-upload-hint" style="font-size:11px; color:var(--fg-faint); line-height:1.7;">ملف PDF واحد أو صور متعددة للامتحان (الصور بتتحول PDF واحد وبتترتب تلقائيًا بالاسم).</div>
                        <input class="input-group" id="file-link" type="url" placeholder="رابط الملف (درايف/ميديافاير)" style="display:none;">
                       <button class="pill" type="submit">نشر الملف</button>
                    </form>
@@ -14036,9 +14036,23 @@ function openThemePicker() {
 /* ===== رفع الملفات والامتحانات مباشرة على المنصة (بدون درايف) ===== */
 (function(){
   var cache = {}, MAX = 8 * 1024 * 1024;
+  var DRIVE_URL = 'https://script.google.com/macros/s/AKfycbwn30a40C1373fNYhADEbgHZx9MNzEzLliXXhfia6XPCwKe-IYXdT4D1dtpKtJv27mJFA/exec'; // ← الصق هنا رابط Apps Script (Web app URL) بعد النشر
+  function lscript(src){ return new Promise(function(res,rej){ var t=document.createElement('script'); t.src=src; t.onload=res; t.onerror=rej; document.head.appendChild(t); }); }
+  async function imagesToPdf(fl){
+    await lscript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+    var J=window.jspdf.jsPDF, pdf=null;
+    for(var i=0;i<fl.length;i++){
+      var d=await compress(fl[i]);
+      var im=await new Promise(function(r,j){ var m=new Image(); m.onload=function(){r(m);}; m.onerror=j; m.src=d; });
+      var w=im.width,h=im.height,o=w>h?'l':'p';
+      if(!pdf) pdf=new J({orientation:o,unit:'px',format:[w,h],hotfixes:['px_scaling']}); else pdf.addPage([w,h],o);
+      pdf.addImage(d,'JPEG',0,0,w,h);
+    }
+    return pdf.output('datauristring');
+  }
   function isH(u){ return typeof u === 'string' && u.indexOf('hosted:') === 0; }
   window.__fsrc = function(){
-    var up = document.getElementById('file-source').value === 'upload';
+    var up = document.getElementById('file-source').value !== 'link';
     document.getElementById('file-upload').style.display = up ? '' : 'none';
     document.getElementById('file-upload-hint').style.display = up ? '' : 'none';
     document.getElementById('file-link').style.display = up ? 'none' : '';
@@ -14065,6 +14079,20 @@ function openThemePicker() {
         var l=document.getElementById('file-link').value.trim();
         if(!l) return Swal.fire('تنبيه','اكتب رابط الملف','warning');
         fileData.link=l;
+      } else if(document.getElementById('file-source').value==='drive'){
+        if(!DRIVE_URL) return Swal.fire('تنبيه','لازم تلصق رابط Apps Script في المتغير DRIVE_URL الأول.','warning');
+        var dl=[].slice.call(document.getElementById('file-upload').files);
+        if(!dl.length) return Swal.fire('تنبيه','اختار ملف الأول','warning');
+        dl.sort(function(a,b){return a.name.localeCompare(b.name,undefined,{numeric:true});});
+        var dp=dl.filter(function(f){return f.type==='application/pdf'||/\.pdf$/i.test(f.name);});
+        if(dp.length && dl.length>1) return Swal.fire('تنبيه','ارفع ملف PDF واحد بس، أو مجموعة صور بس.','warning');
+        Swal.fire({title:'جاري الرفع على درايف...',text:'ممكن ياخد دقيقة، متقفلش الصفحة',allowOutsideClick:false,didOpen:function(){Swal.showLoading();}});
+        var du=dp.length ? await readDU(dp[0]) : await imagesToPdf(dl);
+        var tok=await auth.currentUser.getIdToken();
+        var resp=await fetch(DRIVE_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({uid:currentUser.uid,token:tok,name:title+'.pdf',data:du.split(',')[1]})});
+        var jr=await resp.json();
+        if(!jr.ok) throw new Error(jr.error||'فشل الرفع على درايف');
+        fileData.link=jr.url;
       } else {
         var fl=[].slice.call(document.getElementById('file-upload').files);
         if(!fl.length) return Swal.fire('تنبيه','اختار ملف الأول','warning');
@@ -14086,9 +14114,15 @@ function openThemePicker() {
     }catch(err){ console.error(err); Swal.fire('خطأ', (err&&err.message)||'فشل الرفع. اتأكد إن قواعد Firebase اتحدثت (file_blobs).','error'); }
   };
 
+  function idb(){ return new Promise(function(res,rej){ var r=indexedDB.open('fileCache',1); r.onupgradeneeded=function(){ r.result.createObjectStore('f'); }; r.onsuccess=function(){res(r.result);}; r.onerror=function(){rej(r.error);}; }); }
+  function cget(id){ return idb().then(function(d){ return new Promise(function(res){ var q=d.transaction('f').objectStore('f').get(id); q.onsuccess=function(){res(q.result||null);}; q.onerror=function(){res(null);}; }); }).catch(function(){ return null; }); }
+  function cput(id,v){ return idb().then(function(d){ d.transaction('f','readwrite').objectStore('f').put(v,id); }).catch(function(){}); }
   function load(id){
     if(cache[id]) return Promise.resolve(cache[id]);
-    return database.ref('file_blobs/'+id).once('value').then(function(s){ var v=s.val(); if(!v) throw new Error('الملف مش موجود'); cache[id]=v; return v; });
+    return cget(id).then(function(c){
+      if(c){ cache[id]=c; return c; }
+      return database.ref('file_blobs/'+id).once('value').then(function(s){ var v=s.val(); if(!v) throw new Error('الملف مش موجود'); cache[id]=v; cput(id,v); return v; });
+    });
   }
   function loadPdfJs(){
     if(window.pdfjsLib) return Promise.resolve();
