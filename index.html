@@ -3994,6 +3994,34 @@ body[class*="theme-"] .mob-nav-item.active{color:var(--primary)!important}
   }
 </style>
 
+<style>
+.perm-hidden{display:none!important}
+.acc-wrap{display:flex;flex-direction:column;gap:18px}
+.acc-box{background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:16px}
+.acc-box h3{margin:0 0 6px;font-size:16px}
+.acc-hint{font-size:12px;color:var(--fg-soft,#94a3b8);margin:0 0 12px;line-height:1.7}
+.acc-person{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;padding:12px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);margin-bottom:10px}
+.acc-person.owner{border-color:#ffd700;background:linear-gradient(135deg,rgba(255,215,0,.12),rgba(180,83,9,.12))}
+.acc-main{flex:1;min-width:200px}
+.acc-name{font-weight:800;font-size:14px;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.acc-rank{font-size:11px;padding:2px 9px;border-radius:20px;font-weight:800}
+.acc-rank.owner{background:rgba(255,215,0,.18);color:#ffd700;border:1px solid #ffd700}
+.acc-rank.admin{background:rgba(168,85,247,.16);color:#c084fc;border:1px solid #a855f7}
+.acc-rank.leader{background:rgba(56,189,248,.15);color:#38bdf8;border:1px solid #38bdf8}
+.acc-sub{font-size:11px;color:var(--fg-soft,#94a3b8);margin-top:4px;direction:ltr;text-align:right}
+.acc-chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px}
+.acc-chip{font-size:10.5px;padding:2px 8px;border-radius:6px;background:rgba(16,185,129,.14);color:#34d399;border:1px solid rgba(16,185,129,.3)}
+.acc-chip.none{background:rgba(239,68,68,.12);color:#f87171;border-color:rgba(239,68,68,.3)}
+.acc-btns{display:flex;flex-wrap:wrap;gap:6px}
+.acc-group{border:1px solid rgba(128,128,128,.3);border-radius:10px;padding:10px;margin-bottom:10px;text-align:right}
+.acc-gh{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;font-size:14px}
+.acc-gall{font-size:11px;padding:3px 9px;border-radius:8px;border:1px solid rgba(128,128,128,.4);background:transparent;color:inherit;cursor:pointer}
+.acc-row{display:flex;align-items:center;gap:9px;padding:6px 4px;font-size:13px;cursor:pointer;text-align:right}
+.acc-row input{width:18px;height:18px;flex:none;accent-color:var(--primary,#3b82f6)}
+.acc-presets{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 12px;justify-content:center}
+.acc-preset{font-size:12px;padding:6px 11px;border-radius:20px;border:1px solid rgba(59,130,246,.5);background:rgba(59,130,246,.12);color:inherit;cursor:pointer;font-weight:700}
+.acc-audit-row{font-size:12px;padding:7px 0;border-bottom:1px dashed rgba(128,128,128,.25)}
+</style>
 </head>
 <body>
 
@@ -4682,8 +4710,8 @@ body[class*="theme-"] .mob-nav-item.active{color:var(--primary)!important}
             <div class="admin-tab active" onclick="switchAdminTab('students', this)">👥 إدارة الطلاب</div>
             <div class="admin-tab" onclick="switchAdminTab('content', this)">📚 إدارة المحتوى</div>
             <div class="admin-tab" onclick="switchAdminTab('analytics', this)">📊 الأسئلة الأصعب والمساهمات</div>
-            <div class="admin-tab" data-admin-only onclick="switchAdminTab('tools', this)">⚙️ أدوات النظام</div>
-            <div class="admin-tab" data-admin-only onclick="switchAdminTab('logs', this)">⏱️ سجل النشاط</div>
+            <div class="admin-tab" onclick="switchAdminTab('tools', this)">⚙️ أدوات النظام</div>
+            <div class="admin-tab" onclick="switchAdminTab('logs', this)">⏱️ سجل النشاط</div>
           </div>
 
           <div id="tab-students" class="admin-tab-content active">
@@ -4694,7 +4722,7 @@ body[class*="theme-"] .mob-nav-item.active{color:var(--primary)!important}
                 </h3>
                 <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
                   <button class="pill" id="students-collapse-btn" type="button" style="background: rgba(59,130,246,.18); border:1px solid rgba(59,130,246,.4); color:#60a5fa; font-size: 12px;" onclick="toggleStudentsList()">▼ عرض القائمة</button>
-                  <button class="pill" data-admin-only style="background: #10b981; font-size: 12px;" onclick="exportStudentsCSV()">📥 تصدير Excel</button>
+                  <button class="pill" style="background: #10b981; font-size: 12px;" onclick="exportStudentsCSV()">📥 تصدير Excel</button>
                 </div>
              </div>
              <div id="students-list-wrap" style="display:none;">
@@ -5189,7 +5217,7 @@ body[class*="theme-"] .mob-nav-item.active{color:var(--primary)!important}
                    </div>
                 </div>
 
-                <div class="card liquid-glass" style="background:rgba(0,0,0,.4); grid-column: 1/-1;">
+                <div class="card liquid-glass" data-perm="system.danger" style="background:rgba(0,0,0,.4); grid-column: 1/-1;">
                    <h3 style="color: var(--danger); font-size: 16px; margin-top:0;">منطقة الخطر (إجراءات حساسة)</h3>
                    <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom: 12px;">
                        <button class="pill" style="background: #10b981; color:#0f172a; font-weight:bold;" onclick="exportFullDatabaseJSON()">💾 تحميل نسخة احتياطية كاملة (JSON Backup)</button>
@@ -5568,6 +5596,41 @@ body[class*="theme-"] .mob-nav-item.active{color:var(--primary)!important}
     function isAdminUser() { try { return !!(currentStudentData && currentStudentData.isAdmin === true); } catch (e) { return false; } }
     function isLeaderUser() { try { return !!(currentStudentData && currentStudentData.isLeader === true && currentStudentData.isAdmin !== true); } catch (e) { return false; } }
     function isStaffUser() { try { return !!(currentStudentData && (currentStudentData.isAdmin === true || currentStudentData.isLeader === true)); } catch (e) { return false; } }
+    /* ===== نظام الصلاحيات: المالك + صلاحيات مخصصة لكل شخص ===== */
+    var __LEADER_DENY = ['students.edit', 'students.password', 'students.points', 'students.research', 'students.export', 'students.delete', 'system.tools', 'system.logs', 'system.danger'];
+    function isOwnerUser() { try { return !!(currentStudentData && currentStudentData.isOwner === true); } catch (e) { return false; } }
+    var __myPerms = null, __myPermsLoaded = false, __permsUid = null, __permsRef = null;
+    function attachMyPerms(uid) {
+      if (__permsUid === uid) return;
+      detachMyPerms();
+      __permsUid = uid; __permsRef = database.ref('staff_perms/' + uid);
+      const done = (v) => { __myPerms = v; __myPermsLoaded = true; try { applyStaffRoleUI(); } catch (e) { } };
+      __permsRef.on('value', (s) => done(s.val()), () => done(null));
+    }
+    function detachMyPerms() {
+      try { if (__permsRef) __permsRef.off(); } catch (e) { }
+      __permsRef = null; __permsUid = null; __myPerms = null; __myPermsLoaded = false;
+    }
+    function hasPerm(k) {
+      try {
+        const d = currentStudentData; if (!d) return false;
+        if (d.isOwner === true) return true;
+        if (!(d.isAdmin === true || d.isLeader === true)) return false;
+        if (!__myPermsLoaded) return false;
+        if (__myPerms && typeof __myPerms === 'object') return __myPerms[String(k).replace(/\./g, '_')] === true;
+        if (d.isAdmin === true) return true;
+        return __LEADER_DENY.indexOf(k) < 0;
+      } catch (e) { return false; }
+    }
+    function hasTabAccess(t) {
+      if (t === 'access') return isOwnerUser();
+      if (t === 'tools') return hasPerm('system.tools');
+      if (t === 'logs') return hasPerm('system.logs');
+      if (t === 'students') return hasPerm('students.view');
+      if (t === 'analytics') return hasPerm('analytics.view');
+      if (t === 'content') return ['subjects.manage', 'chapters.manage', 'files.upload', 'files.edit', 'files.delete', 'videos.add', 'videos.edit', 'videos.delete', 'quizzes.add', 'quizzes.edit', 'quizzes.delete', 'images.manage', 'research.manage'].some(hasPerm);
+      return true;
+    }
     function applyStaffRoleUI() {
       const adm = isAdminUser();
       document.querySelectorAll('[data-admin-only]').forEach(el => { el.style.display = adm ? '' : 'none'; });
@@ -5769,7 +5832,7 @@ body[class*="theme-"] .mob-nav-item.active{color:var(--primary)!important}
       if (user) startSession(user);
       else {
         detachAll(window._lastUid);
-        currentUser = null; currentStudentData = null; checkMaintenanceUI(); renderResearchHome();
+        currentUser = null; currentStudentData = null; detachMyPerms(); checkMaintenanceUI(); renderResearchHome();
         document.getElementById('auth-overlay').style.display = isMaintenanceActive ? 'none' : 'flex'; document.getElementById('user-greeting').innerHTML = '';
         document.getElementById('admin-panel').style.display = 'none';
       }
@@ -6053,7 +6116,7 @@ ${escText(alertBody)}
 
     function listenToUsersData() {
       database.ref('users').on('value', (snapshot) => {
-        let users = snapshot.val() || {}; allUsersList = []; for (let id in users) allUsersList.push({ uid: id, ...users[id], level: 2 });
+        let users = snapshot.val() || {}; allUsersList = []; for (let id in users) allUsersList.push({ uid: id, ...users[id], ...(users[id] && users[id].isOwner === true ? { isAdmin: true } : {}), level: 2 });
         allUsersList.sort((a, b) => (b.score || 0) - (a.score || 0));
         clearTimeout(window.__usersRenderT);
         window.__usersRenderT = setTimeout(() => { try { renderAdminResearchTable(); } catch (e) {} updateDashboardStats(); renderStudentsTable(); }, 400);
@@ -6062,7 +6125,7 @@ ${escText(alertBody)}
 
     function logAdminAction(actionTitle, detailsText) {
       if (!currentStudentData || !currentUser || !isStaffUser()) return;
-      database.ref('admin_logs').push({ adminName: currentStudentData.name + (isAdminUser() ? '' : ' (ليدر)'), role: isAdminUser() ? 'admin' : 'leader', uid: currentUser.uid, action: actionTitle, details: detailsText, timestamp: FB.database.ServerValue.TIMESTAMP });
+      database.ref('admin_logs').push({ adminName: currentStudentData.name + ((isAdminUser() || isOwnerUser()) ? (currentStudentData.rankLabel && !isOwnerUser() ? ' (' + currentStudentData.rankLabel + ')' : '') : ' (' + (currentStudentData.rankLabel || 'ليدر') + ')'), role: isOwnerUser() ? 'owner' : (isAdminUser() ? 'admin' : 'leader'), uid: currentUser.uid, action: actionTitle, details: detailsText, timestamp: FB.database.ServerValue.TIMESTAMP });
     }
 
     function listenToAdminLogs() {
@@ -6358,14 +6421,15 @@ ${escText(alertBody)}
       if (userDataRef) userDataRef.off();
       userDataRef = database.ref('users/' + uid);
       userDataRef.on('value', (snap) => {
-        currentStudentData = snap.val(); if (currentStudentData) currentStudentData.level = 2; checkMaintenanceUI();
+        currentStudentData = snap.val(); if (currentStudentData) currentStudentData.level = 2; if (currentStudentData && currentStudentData.isOwner === true) currentStudentData.isAdmin = true; checkMaintenanceUI();
+        if (currentStudentData && isStaffUser()) attachMyPerms(uid); else detachMyPerms();
         { const __a = !!(currentStudentData && isStaffUser()); if (window.__lastAdm !== __a && window.__subjectsRaw) { try { applySubjectsRaw(); } catch (err) { console.error(err); } } }
         if (currentStudentData) {
           if (currentStudentData.isBanned) { Swal.fire('محظور!', `⚠️ تم حظرك!<br>السبب: ${escText(currentStudentData.banReason)}`, 'error'); logoutStudent(); return; }
           document.getElementById('user-greeting').innerHTML = `👤 ${escText(currentStudentData.name)}`; setupPresence(uid, currentStudentData); syncLeaderboard(uid, currentStudentData);
           const adminBtn = document.getElementById('admin-toggle-btn');
           try { listenToSupport(); renderSupportList(); } catch (e) {}
-          if (isStaffUser()) { adminBtn.style.display = 'inline-flex'; applyStaffRoleUI(); if (isAdminUser()) listenToAdminLogs(); if (!adminListenersOn) { adminListenersOn = true; listenToUsersData(); listenToOnlinePresence(); } listenToAdminResearch(); listenToContributions(); updateAnalyticsSelect(); renderAdminResearchSettingsForm(); } else { adminBtn.style.display = 'none'; document.getElementById('admin-panel').style.display = 'none'; }
+          if (isStaffUser()) { adminBtn.style.display = 'inline-flex'; applyStaffRoleUI(); if (hasPerm('system.logs')) listenToAdminLogs(); if (!adminListenersOn) { adminListenersOn = true; listenToUsersData(); listenToOnlinePresence(); } listenToAdminResearch(); listenToContributions(); updateAnalyticsSelect(); renderAdminResearchSettingsForm(); } else { adminBtn.style.display = 'none'; document.getElementById('admin-panel').style.display = 'none'; }
         }
         try { __syncMyResearchFromUser(); } catch (e) {}
         updateResearchVisibilityUI();
@@ -6486,8 +6550,8 @@ ${escText(alertBody)}
         <div class="profile-row z-content"><div class="profile-row-label">البريد الإلكتروني</div><div class="profile-row-value" style="color:var(--primary); font-size:13px;">${escText(currentStudentData.email)}</div></div>
         <div class="profile-row z-content"><div class="profile-row-label">حالة الاتصال</div><div class="profile-row-value" style="font-size:13px;">${lastSeenText}</div></div>
         <div class="profile-row z-content" style="border-color:var(--gold); background:rgba(255,215,0,.05);"><div class="profile-row-label">مجموع النقاط</div><div class="profile-row-value" style="color:var(--gold);">🏆 ${currentStudentData.score || 0} نقطة</div></div>`
-        + (isLeaderUser() ? `<div class="profile-row z-content" style="border:1.5px solid #38bdf8; background:rgba(56,189,248,0.12);"><div class="profile-row-label">الرتبة في المنصة</div><div class="profile-row-value" style="color:#38bdf8; font-weight:900;">🛡️ ليدر الإدارة</div></div>` : '')
-        + (isAdminUser() ? `<div class="profile-row z-content" style="border:1.5px solid #ffd700; background:linear-gradient(135deg, rgba(255,215,0,0.15), rgba(180,83,9,0.25));"><div class="profile-row-label">الرتبة في المنصة</div><div class="profile-row-value" style="color:#ffd700; font-weight:900;">👑 مؤسس ومطور المنصة التقنية</div></div>` : '') + `` + renderBadgesHtml(currentStudentData) + renderStudentAwardBadgeHtml(currentStudentData);
+        + (isLeaderUser() ? `<div class="profile-row z-content" style="border:1.5px solid #38bdf8; background:rgba(56,189,248,0.12);"><div class="profile-row-label">الرتبة في المنصة</div><div class="profile-row-value" style="color:#38bdf8; font-weight:900;">${currentStudentData.rankLabel ? escText(currentStudentData.rankLabel) : '🛡️ ليدر الإدارة'}</div></div>` : '')
+        + (isAdminUser() ? `<div class="profile-row z-content" style="border:1.5px solid #ffd700; background:linear-gradient(135deg, rgba(255,215,0,0.15), rgba(180,83,9,0.25));"><div class="profile-row-label">الرتبة في المنصة</div><div class="profile-row-value" style="color:#ffd700; font-weight:900;">${currentStudentData.rankLabel ? escText(currentStudentData.rankLabel) : (isOwnerUser() ? '👑 مالك المنصة' : '👑 مؤسس ومطور المنصة التقنية')}</div></div>` : '') + `` + renderBadgesHtml(currentStudentData) + renderStudentAwardBadgeHtml(currentStudentData);
       document.getElementById('profile-overlay').style.display = 'flex';
     }
 
@@ -7029,7 +7093,7 @@ ${escText(alertBody)}
     function renderStudentsTable() {
       const tbody = document.getElementById('students-table-body'); if (!tbody) return;
       if (allUsersList.length === 0) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">لم يسجل أحد بعد.</td></tr>'; return; }
-      let html = ''; const adm = isAdminUser();
+      let html = ''; const adm = true; /* الأزرار بتتخفي حسب الصلاحية */
       allUsersList.forEach((u, i) => {
         const isOnline = onlineUsersMap.hasOwnProperty(u.uid); let statusHtml = '';
         if (u.isBanned) statusHtml = `<span class="status-badge status-banned">⛔ محظور</span>`;
@@ -7198,11 +7262,12 @@ ${escText(alertBody)}
     }
 
     function switchAdminTab(tabId, btnElement) {
-      if ((tabId === 'tools' || tabId === 'logs') && !isAdminUser()) return;
+      if (!hasTabAccess(tabId)) return;
       document.querySelectorAll('.admin-tab-content').forEach(el => el.classList.remove('active'));
       document.querySelectorAll('.admin-tab').forEach(el => el.classList.remove('active'));
       document.getElementById('tab-' + tabId).classList.add('active'); btnElement.classList.add('active');
       if (tabId === 'logs') listenToAdminLogs();
+      if (tabId === 'access' && window.renderAccessTab) window.renderAccessTab();
       if (tabId === 'analytics') {
         listenToContributions();
         updateAnalyticsSelect();
@@ -7904,7 +7969,7 @@ ${escText(alertBody)}
     }
 
     async function adminResetAllResearchBookings() {
-      if (!currentUser || !isAdminUser()) {
+      if (!currentUser || !hasPerm('system.danger')) {
         return Swal.fire('غير مصرح', 'هذا الإجراء متاح لمدير النظام فقط.', 'error');
       }
 
@@ -8388,7 +8453,7 @@ ${escText(alertBody)}
     }
 
     function setLevel2Restrictions(enable) {
-      if (!currentUser || !isAdminUser()) {
+      if (!currentUser || !hasPerm('system.tools')) {
         return Swal.fire('غير مصرح', 'هذا الإجراء متاح لمدير النظام فقط.', 'error');
       }
 
@@ -11293,7 +11358,7 @@ function openThemePicker() {
       const u = allUsersList.find(x => x.uid === uid);
       if (!u) return;
 
-      const __ro = !isAdminUser();
+      const __ro = !hasPerm('students.edit');
       const { value: formValues } = await Swal.fire({
         title: __ro ? 'بيانات الطالب (عرض فقط)' : 'تعديل بيانات ومستوى الطالب',
         html: `
@@ -11335,7 +11400,7 @@ function openThemePicker() {
         }
       });
 
-      if (formValues && isAdminUser()) {
+      if (formValues && hasPerm('students.edit')) {
         const up = {};
         up['users/' + uid + '/name'] = formValues.name;
         up['users/' + uid + '/email'] = formValues.email;
@@ -12768,11 +12833,11 @@ function openThemePicker() {
             <a class="pill" style="background:#0ea5e9; color:#fff; flex:1; text-decoration:none; justify-content:center;" href="tel:${digits}">📞 اتصال</a>
           </div></div>`;
       }).join('');
-      const eb = document.getElementById('support-edit-btn'); if (eb) eb.style.display = isAdminUser() ? 'block' : 'none';
+      const eb = document.getElementById('support-edit-btn'); if (eb) eb.style.display = hasPerm('system.tools') ? 'block' : 'none';
     }
     function openSupportModal() { listenToSupport(); renderSupportList(); document.getElementById('support-overlay').style.display = 'flex'; }
     async function adminEditSupport() {
-      if (!isAdminUser()) { Swal.fire('غير مصرح', 'تعديل أرقام الدعم الفني للأدمن فقط.', 'error'); return; }
+      if (!hasPerm('system.tools')) { Swal.fire('غير مصرح', 'تعديل أرقام الدعم الفني غير متاح لحسابك.', 'error'); return; }
       const row = (i) => `<div style="text-align:right; font-size:12px; margin:8px 0 2px;">الرقم ${i + 1}:</div>
         <input id="swal-sup-l${i}" class="swal2-input" value="${escText(supportContacts[i].label)}" placeholder="الاسم / الوصف (مثال: أ. محمد)" style="margin:0 0 4px;">
         <input id="swal-sup-p${i}" class="swal2-input" value="${escText(supportContacts[i].phone)}" placeholder="مثال: 201001234567" style="margin:0; direction:ltr;">`;
@@ -12892,7 +12957,7 @@ function openThemePicker() {
       // 5. Edit Button for Admin
       const editBtn = document.getElementById('founder-edit-btn');
       if (editBtn) {
-        editBtn.style.display = isAdminUser() ? 'block' : 'none';
+        editBtn.style.display = hasPerm('system.tools') ? 'block' : 'none';
       }
     }
 
@@ -12919,7 +12984,7 @@ function openThemePicker() {
     }
 
     async function adminEditFounderInfo() {
-      if (!isAdminUser()) {
+      if (!hasPerm('system.tools')) {
         Swal.fire('غير مصرح به ⛔', 'عذراً، تعديل بيانات القيادة وهوية المؤسس محمي ومخصص لمالك المنصة والإدارة فقط.', 'error');
         return;
       }
@@ -14316,6 +14381,304 @@ function openThemePicker() {
     clearTimeout(tmr2); tmr2 = setTimeout(function(){ build(true); }, 220);
   };
   window.__studentsTest = { norm: norm, ph: ph, matchQuery: matchQuery, index: index };
+})();
+</script>
+<script>
+/* ===================== قسم الصلاحيات (للمالك فقط) ===================== */
+(function(){
+  var CATALOG = [
+    {id:'students', title:'👥 الطلاب', items:[
+      ['students.view','عرض قائمة الطلاب وبياناتهم'],
+      ['students.results','عرض نتائج الطالب 📊'],
+      ['students.message','إرسال رسائل خاصة 📩'],
+      ['students.certificate','منح الشهادات 📜'],
+      ['students.edit','تعديل اسم الطالب وبياناته ومستواه ✏️'],
+      ['students.password','تغيير / استعادة باسورد الطالب 🔑'],
+      ['students.points','إضافة وخصم النقاط ⭐'],
+      ['students.ban','حظر وفك حظر الطلاب ⛔'],
+      ['students.research','تعيين بحث للطالب 🔬'],
+      ['students.export','تصدير بيانات الطلاب Excel 📥'],
+      ['students.delete','حذف حساب طالب نهائيًا 🗑️']]},
+    {id:'content', title:'📚 المحتوى', items:[
+      ['subjects.manage','إضافة وتعديل وحذف المواد'],
+      ['chapters.manage','إدارة الفصول والمحاضرات'],
+      ['files.upload','رفع ملفات جديدة'],
+      ['files.edit','تعديل الملفات (الاسم / الإخفاء / النقل / المعاينة)'],
+      ['files.delete','حذف الملفات'],
+      ['videos.add','إضافة فيديوهات'],
+      ['videos.edit','تعديل الفيديوهات'],
+      ['videos.delete','حذف الفيديوهات'],
+      ['quizzes.add','إضافة أسئلة'],
+      ['quizzes.edit','تعديل الأسئلة'],
+      ['quizzes.delete','حذف الأسئلة (وتصفير أسئلة مادة)'],
+      ['images.manage','صور المواد (جداول / إعلانات)']]},
+    {id:'research', title:'🔬 الأبحاث', items:[['research.manage','إدارة الأبحاث والحجوزات وإعدادات الموسم']]},
+    {id:'analytics', title:'📊 التحليلات', items:[['analytics.view','الأسئلة الأصعب والمساهمات والإحصائيات']]},
+    {id:'system', title:'⚙️ النظام', items:[
+      ['system.tools','أدوات النظام (التنبيهات، الصيانة، الدعم، القيود)'],
+      ['system.logs','سجل نشاط الإدارة'],
+      ['system.danger','منطقة الخطر داخل الأدوات (نسخة احتياطية، تصفير نقاط، مسح السجل)']]}
+  ];
+  var ALL_KEYS = []; var LABELS = {};
+  CATALOG.forEach(function(g){ g.items.forEach(function(it){ ALL_KEYS.push(it[0]); LABELS[it[0]] = it[1]; }); });
+  var PRESETS = {
+    files: ['files.upload'],
+    content: ['chapters.manage','files.upload','files.edit','files.delete','quizzes.add','quizzes.edit','quizzes.delete','images.manage'],
+    students: ['students.view','students.results','students.message','students.certificate','students.edit'],
+    all: ALL_KEYS.slice(),
+    none: []
+  };
+
+  function T(s){ return (typeof escText === 'function') ? escText(s == null ? '' : String(s)) : String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+  function usersAll(){ return Array.isArray(allUsersList) ? allUsersList : []; }
+  function findUser(uid){ return usersAll().filter(function(u){ return u.uid === uid; })[0]; }
+  function isTeam(u){ return !!(u.isOwner || u.isAdmin || u.isLeader); }
+  function effective(u){
+    var m = {};
+    if (u.isOwner) { ALL_KEYS.forEach(function(k){ m[k] = true; }); return m; }
+    var pp = (window.__allPerms || {})[u.uid]; if (pp && typeof pp === 'object') { ALL_KEYS.forEach(function(k){ m[k] = pp[k.replace(/\./g, '_')] === true; }); return m; }
+    ALL_KEYS.forEach(function(k){ m[k] = u.isAdmin ? true : (window.__LEADER_DENY || []).indexOf(k) < 0; });
+    return m;
+  }
+  function rankOf(u){
+    if (u.isOwner) return {txt: u.rankLabel || '👑 مالك المنصة', cls: 'owner', order: 0};
+    if (u.isAdmin) return {txt: u.rankLabel || '🛡️ أدمن', cls: 'admin', order: 1};
+    return {txt: u.rankLabel || '🛡️ ليدر', cls: 'leader', order: 2};
+  }
+  function toast(msg, icon){ if (window.Swal) Swal.fire({toast:true, position:'top', timer:2200, showConfirmButton:false, icon: icon || 'success', title: msg}); }
+  function audit(action, u, details){
+    try { database.ref('access_audit').push({ by: currentStudentData.name || '', byUid: currentUser.uid, target: (u && u.name) || '', targetUid: (u && u.uid) || '', action: action, details: details || '', ts: FB.database.ServerValue.TIMESTAMP }); } catch(e){}
+  }
+  function needOwner(){ if (!isOwnerUser()) { Swal.fire('غير مصرح', 'القسم ده للمالك فقط.', 'error'); return false; } return true; }
+
+  function ensureAccessTab(){
+    var tabs = document.querySelector('.admin-tabs'); if (!tabs) return;
+    var btn = document.getElementById('access-tab-btn'), box = document.getElementById('tab-access');
+    if (isOwnerUser()) {
+      if (!btn) { btn = document.createElement('div'); btn.className = 'admin-tab'; btn.id = 'access-tab-btn'; btn.setAttribute('onclick', "switchAdminTab('access', this)"); btn.textContent = '🔐 الصلاحيات'; tabs.appendChild(btn); }
+      if (!box) { box = document.createElement('div'); box.id = 'tab-access'; box.className = 'admin-tab-content'; var anchor = document.getElementById('tab-logs') || document.getElementById('tab-tools'); if (anchor) anchor.insertAdjacentElement('afterend', box); else tabs.parentNode.appendChild(box); }
+    } else {
+      if (btn) btn.remove();
+      if (box) box.remove();
+    }
+  }
+
+  var built = false, auditOn = false, permsOn = false;
+  function skeleton(){
+    var box = document.getElementById('tab-access'); if (!box) return;
+    box.innerHTML =
+      '<div class="acc-wrap">' +
+      '<div class="acc-box" style="border-color:#ffd700"><h3 style="color:#ffd700">🔐 التحكم في الصلاحيات</h3>' +
+      '<p class="acc-hint">القسم ده ظاهر ليك انت بس كمالك. هنا بتحدد كل شخص في الفريق يقدر يعمل إيه بالظبط، وتغيّر مسمى الرتبة بتاعته (وبتاعتك إنت كمان).</p></div>' +
+      '<div class="acc-box"><h3 style="color:#38bdf8">👥 الفريق الحالي <span id="acc-count" style="font-size:12px;color:var(--fg-soft,#94a3b8);font-weight:normal"></span></h3>' +
+      '<p class="acc-hint">مرتبين من الأعلى للأقل: المالك ← الأدمن ← الباقي.</p><div id="acc-team"></div></div>' +
+      '<div class="acc-box"><h3 style="color:#10b981">➕ منح صلاحيات لشخص</h3>' +
+      '<p class="acc-hint">ابحث بالاسم أو الإيميل أو رقم الهاتف أو الـ ID، وبعدين اختار الصلاحيات.</p>' +
+      '<input type="text" id="acc-search" class="search-box" style="width:100%;box-sizing:border-box;background:rgba(0,0,0,.4)" placeholder="🔍 ابحث عن شخص..." oninput="renderAccessResults()"><div id="acc-results" style="margin-top:10px"></div></div>' +
+      '<div class="acc-box"><h3 style="color:#f59e0b">🧾 آخر التغييرات في الصلاحيات</h3><div id="acc-audit"><div class="acc-hint">جاري التحميل...</div></div></div>' +
+      '</div>';
+    box.addEventListener('click', onClick);
+    built = true;
+  }
+  function chipsFor(u){
+    var eff = effective(u), out = '', total = 0;
+    CATALOG.forEach(function(g){
+      var n = g.items.filter(function(it){ return eff[it[0]]; }).length; total += n;
+      if (n) out += '<span class="acc-chip">' + g.title + ' ' + n + '/' + g.items.length + '</span>';
+    });
+    if (!total) out = '<span class="acc-chip none">بدون أي صلاحية</span>';
+    return {html: out, total: total};
+  }
+  function renderTeam(){
+    var el = document.getElementById('acc-team'); if (!el) return;
+    var team = usersAll().filter(isTeam).sort(function(a,b){ var d = rankOf(a).order - rankOf(b).order; return d || String(a.name||'').localeCompare(String(b.name||''), 'ar'); });
+    var c = document.getElementById('acc-count'); if (c) c.textContent = '(' + team.length + ')';
+    if (!team.length) { el.innerHTML = '<div class="acc-hint">لسه مفيش حد في الفريق.</div>'; return; }
+    el.innerHTML = team.map(function(u){
+      var r = rankOf(u), ch = chipsFor(u), me = (currentUser && u.uid === currentUser.uid);
+      var btns = u.isOwner
+        ? '<button class="btn-sm btn-edit" data-act="rank" data-uid="' + T(u.uid) + '">🏷️ تغيير الرتبة</button>'
+        : '<button class="btn-sm btn-track" data-act="perms" data-uid="' + T(u.uid) + '">⚙️ الصلاحيات</button>' +
+          '<button class="btn-sm btn-edit" data-act="rank" data-uid="' + T(u.uid) + '">🏷️ الرتبة</button>' +
+          '<button class="btn-sm btn-ban" data-act="revoke" data-uid="' + T(u.uid) + '">🚫 سحب الكل</button>';
+      return '<div class="acc-person ' + r.cls + '"><div class="acc-main"><div class="acc-name">' + T(u.name || 'بدون اسم') + (me ? ' <span style="font-size:11px;color:#94a3b8">(انت)</span>' : '') + '<span class="acc-rank ' + r.cls + '">' + T(r.txt) + '</span></div>' +
+        '<div class="acc-sub">' + T(u.email || u.phone || '') + '</div><div class="acc-chips">' + (u.isOwner ? '<span class="acc-chip">كل الصلاحيات (المالك)</span>' : ch.html) + '</div></div><div class="acc-btns">' + btns + '</div></div>';
+    }).join('');
+  }
+  function renderResults(){
+    var el = document.getElementById('acc-results'), inp = document.getElementById('acc-search'); if (!el || !inp) return;
+    var q = inp.value.trim().toLowerCase();
+    if (q.length < 2) { el.innerHTML = '<div class="acc-hint">اكتب حرفين على الأقل للبحث.</div>'; return; }
+    var qd = q.replace(/\D/g, '');
+    var hits = usersAll().filter(function(u){
+      if (isTeam(u)) return false;
+      var hay = [u.name, u.email, u.phone, u.studentId, u.uid].map(function(x){ return String(x == null ? '' : x).toLowerCase(); }).join(' | ');
+      if (hay.indexOf(q) >= 0) return true;
+      return qd.length >= 4 && String(u.phone || '').replace(/\D/g, '').indexOf(qd) >= 0;
+    }).slice(0, 10);
+    if (!hits.length) { el.innerHTML = '<div class="acc-hint">مفيش نتائج (أو الشخص ده في الفريق بالفعل).</div>'; return; }
+    el.innerHTML = hits.map(function(u){
+      return '<div class="acc-person"><div class="acc-main"><div class="acc-name">' + T(u.name || 'بدون اسم') + '</div><div class="acc-sub">' + T(u.email || '') + ' ' + T(u.phone || '') + '</div></div>' +
+        '<div class="acc-btns"><button class="btn-sm btn-track" style="background:rgba(16,185,129,.18);color:#34d399;border-color:#10b981" data-act="perms" data-uid="' + T(u.uid) + '">➕ منح صلاحيات</button></div></div>';
+    }).join('');
+  }
+  function renderAudit(snap){
+    var el = document.getElementById('acc-audit'); if (!el) return;
+    var rows = []; snap.forEach(function(ch){ rows.push(ch.val()); });
+    rows.reverse();
+    if (!rows.length) { el.innerHTML = '<div class="acc-hint">لسه مفيش تغييرات.</div>'; return; }
+    el.innerHTML = rows.map(function(r){
+      var d = r.ts ? new Date(r.ts).toLocaleString('ar-EG') : '';
+      return '<div class="acc-audit-row"><b>' + T(r.action) + '</b> — ' + T(r.target) + (r.details ? ' <span style="color:var(--fg-soft,#94a3b8)">(' + T(r.details) + ')</span>' : '') + '<div style="font-size:11px;color:var(--fg-soft,#94a3b8)">' + T(d) + '</div></div>';
+    }).join('');
+  }
+  window.renderAccessResults = renderResults;
+  window.renderAccessTab = function(){
+    if (!isOwnerUser()) return;
+    ensureAccessTab();
+    if (!built || !document.getElementById('acc-team')) skeleton();
+    renderTeam(); renderResults();
+    if (!permsOn) { permsOn = true; try { database.ref('staff_perms').on('value', function(s){ window.__allPerms = s.val() || {}; var b = document.getElementById('tab-access'); if (b && b.classList.contains('active')) renderTeam(); }); } catch(e){} }
+    if (!auditOn) { auditOn = true; try { database.ref('access_audit').limitToLast(15).on('value', renderAudit); } catch(e){} }
+  };
+
+  function onClick(e){
+    var b = e.target.closest ? e.target.closest('[data-act]') : null; if (!b) return;
+    var uid = b.getAttribute('data-uid'), act = b.getAttribute('data-act');
+    if (act === 'perms') openEditor(uid);
+    else if (act === 'rank') openRank(uid);
+    else if (act === 'revoke') revoke(uid);
+  }
+  function groupsHtml(eff){
+    return CATALOG.map(function(g){
+      return '<div class="acc-group"><div class="acc-gh"><b>' + g.title + '</b><button type="button" class="acc-gall" data-g="' + g.id + '">تحديد / إلغاء الكل</button></div>' +
+        g.items.map(function(it){ return '<label class="acc-row"><input type="checkbox" class="acc-cb" data-g="' + g.id + '" data-k="' + it[0] + '"' + (eff[it[0]] ? ' checked' : '') + '><span>' + T(it[1]) + '</span></label>'; }).join('') + '</div>';
+    }).join('');
+  }
+  function openEditor(uid){
+    if (!needOwner()) return;
+    var u = findUser(uid); if (!u) return;
+    if (u.isOwner) return openRank(uid);
+    var eff = effective(u), isNew = !isTeam(u);
+    Swal.fire({
+      title: (isNew ? 'منح صلاحيات: ' : 'صلاحيات: ') + T(u.name || ''), width: 680, showCancelButton: true, confirmButtonText: 'حفظ', cancelButtonText: 'إلغاء', focusConfirm: false,
+      html: '<div style="text-align:right;font-size:13px;margin-bottom:4px;font-weight:700">مسمى الرتبة (اختياري):</div>' +
+        '<input id="acc-label" class="swal2-input" style="margin:0 0 6px;width:100%;box-sizing:border-box" maxlength="40" placeholder="مثال: 📁 مشرف رفع ملفات" value="' + T(u.rankLabel || '') + '">' +
+        '<div class="acc-presets"><button type="button" class="acc-preset" data-p="files">📄 رفع ملفات فقط</button><button type="button" class="acc-preset" data-p="content">📚 مشرف محتوى (بدون فيديوهات)</button><button type="button" class="acc-preset" data-p="students">👥 مساعد طلاب</button><button type="button" class="acc-preset" data-p="all">✅ الكل</button><button type="button" class="acc-preset" data-p="none">⛔ لا شيء</button></div>' +
+        '<div style="max-height:46vh;overflow:auto;padding:2px">' + groupsHtml(eff) + '</div>',
+      didOpen: function(){
+        var root = Swal.getHtmlContainer();
+        root.querySelectorAll('.acc-preset').forEach(function(p){ p.addEventListener('click', function(){ var set = PRESETS[p.getAttribute('data-p')] || []; root.querySelectorAll('.acc-cb').forEach(function(cb){ cb.checked = set.indexOf(cb.getAttribute('data-k')) >= 0; }); }); });
+        root.querySelectorAll('.acc-gall').forEach(function(btn){ btn.addEventListener('click', function(){ var g = btn.getAttribute('data-g'); var cbs = root.querySelectorAll('.acc-cb[data-g="' + g + '"]'); var allOn = Array.prototype.every.call(cbs, function(c){ return c.checked; }); cbs.forEach(function(c){ c.checked = !allOn; }); }); });
+      },
+      preConfirm: function(){
+        var root = Swal.getHtmlContainer(), perms = {};
+        root.querySelectorAll('.acc-cb').forEach(function(cb){ perms[cb.getAttribute('data-k')] = cb.checked; });
+        return { perms: perms, label: (root.querySelector('#acc-label').value || '').trim() };
+      }
+    }).then(function(res){
+      if (!res.isConfirmed) return;
+      if (!needOwner()) return;
+      var upd = { rankLabel: res.value.label || null };
+      if (!u.isAdmin) upd.isLeader = true;
+      var pm = {}; ALL_KEYS.forEach(function(k){ pm[k.replace(/\./g, '_')] = !!res.value.perms[k]; });
+      var n = ALL_KEYS.filter(function(k){ return res.value.perms[k]; }).length;
+      database.ref('staff_perms/' + uid).set(pm).then(function(){ return database.ref('users/' + uid).update(upd); }).then(function(){
+        audit(isNew ? 'منح صلاحيات' : 'تعديل صلاحيات', u, n + ' من ' + ALL_KEYS.length + (res.value.label ? ' — ' + res.value.label : ''));
+        toast('اتحفظت الصلاحيات');
+      }).catch(function(err){ Swal.fire('خطأ', err.message, 'error'); });
+    });
+  }
+  function openRank(uid){
+    if (!needOwner()) return;
+    var u = findUser(uid); if (!u) return;
+    Swal.fire({ title: 'مسمى الرتبة: ' + T(u.name || ''), input: 'text', inputValue: u.rankLabel || '', inputAttributes: { maxlength: 40 }, inputPlaceholder: u.isOwner ? '👑 مالك المنصة' : 'اتركه فاضي للمسمى الافتراضي', showCancelButton: true, confirmButtonText: 'حفظ', cancelButtonText: 'إلغاء' }).then(function(r){
+      if (!r.isConfirmed) return;
+      var v = (r.value || '').trim();
+      database.ref('users/' + uid + '/rankLabel').set(v || null).then(function(){ audit('تغيير مسمى الرتبة', u, v || 'الافتراضي'); toast('اتغيرت الرتبة'); }).catch(function(err){ Swal.fire('خطأ', err.message, 'error'); });
+    });
+  }
+  function revoke(uid){
+    if (!needOwner()) return;
+    var u = findUser(uid); if (!u || u.isOwner) return;
+    if (currentUser && uid === currentUser.uid) return;
+    Swal.fire({ title: 'سحب كل الصلاحيات؟', html: T(u.name || '') + ' هيرجع طالب عادي ومش هيشوف لوحة الإدارة.', icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'اسحب', cancelButtonText: 'إلغاء' }).then(function(r){
+      if (!r.isConfirmed) return;
+      database.ref('users/' + uid).update({ isAdmin: null, isLeader: null, rankLabel: null }).then(function(){ return database.ref('staff_perms/' + uid).remove(); }).then(function(){ audit('سحب كل الصلاحيات', u, ''); toast('اتسحبت الصلاحيات'); }).catch(function(err){ Swal.fire('خطأ', err.message, 'error'); });
+    });
+  }
+
+  function byType(a){ a = String(a || ''); if (/video/i.test(a)) return 'videos.edit'; if (/quiz/i.test(a)) return 'quizzes.edit'; return 'files.edit'; }
+  var RULES = {
+    trackStudent:'students.results', sendPrivateAlert:'students.message', adminOpenCertificateIssuer:'students.certificate', adminConfirmIssueCertificate:'students.certificate',
+    adminChangeStudentPassword:'students.password', adminSendPasswordReset:'students.password', adminAddPoints:'students.points',
+    banStudent:'students.ban', unbanStudent:'students.ban', adminAssignResearch:'students.research', exportStudentsCSV:'students.export', adminDeleteUserSafe:'students.delete',
+    addSubject:'subjects.manage', deleteSubject:'subjects.manage', editSubjectInfo:'subjects.manage',
+    addChapters:'chapters.manage', deleteChapter:'chapters.manage', setChapterParent:'chapters.manage',
+    addFile:'files.upload', editFile:'files.edit', toggleFilePreview:'files.edit', deleteFile:'files.delete',
+    toggleItemHidden: byType, moveItemToChapter: byType,
+    addSubjectVideo:'videos.add', editSubjectVideo:'videos.edit', deleteSubjectVideo:'videos.delete',
+    addAIQuizzes:'quizzes.add', addQuiz:'quizzes.add', editQuiz:'quizzes.edit', deleteQuiz:'quizzes.delete', deleteAllQuizzesFromSubject:'quizzes.delete', resetSubjectQuizzes:'quizzes.delete', deleteChapterQuizzes:'quizzes.delete',
+    addSubjectImage:'images.manage', deleteSubjectImage:'images.manage',
+    adminSaveResearchSettings:'research.manage', addBulkResearchTopics:'research.manage', addResearchTopic:'research.manage', adminDeleteResearchTopic:'research.manage', adminFreeResearch:'research.manage', adminOnResearchStatusChange:'research.manage',
+    adminResetAllResearchBookings:'system.danger',
+    updateAlert:'system.tools', clearGlobalAlert:'system.tools', postTargetedAnnouncement:'system.tools', deleteAnnouncement:'system.tools', deletePoll:'system.tools', deleteGroupLink:'system.tools', setMaintenance:'system.tools', setLevel2Restrictions:'system.tools', adminEditSupport:'system.tools', adminEditFounderInfo:'system.tools',
+    resetAllScores:'system.danger', clearAdminLogs:'system.danger', exportFullDatabaseJSON:'system.danger', syncAllLeaderboard:'system.danger'
+  };
+  function permFor(fn, a0){ var r = RULES[fn]; return typeof r === 'function' ? r(a0) : r; }
+  var CALL = /^\s*(?:return\s+)?(?:window\.)?([A-Za-z_$][\w$]*)\s*\(\s*(?:\\?['"]([^'"\\]*))?/;
+  function scan(){
+    if (!isStaffUser()) return;
+    var els = document.querySelectorAll('[onclick],form[onsubmit],[data-perm]');
+    for (var i = 0; i < els.length; i++) {
+      var el = els[i], dn = null, target = el;
+      var dp = el.getAttribute('data-perm');
+      if (dp) dn = !hasPerm(dp);
+      else {
+        var a = el.tagName === 'FORM' ? el.getAttribute('onsubmit') : el.getAttribute('onclick');
+        var m = a && CALL.exec(a); if (!m) continue;
+        var p = permFor(m[1], m[2]); if (!p) continue;
+        dn = !hasPerm(p);
+        if (el.tagName === 'FORM') target = el.closest('.card') || el;
+      }
+      if (dn) target.classList.add('perm-hidden'); else target.classList.remove('perm-hidden');
+    }
+  }
+  function applyPermUI(){
+    if (!isStaffUser()) return;
+    ensureAccessTab();
+    var firstOk = null, activeBad = false;
+    document.querySelectorAll('.admin-tab').forEach(function(t){
+      var m = /switchAdminTab\('([^']+)'/.exec(t.getAttribute('onclick') || ''); if (!m) return;
+      var ok = hasTabAccess(m[1]); t.style.display = ok ? '' : 'none';
+      if (ok && !firstOk) firstOk = {el: t, id: m[1]};
+      if (!ok && t.classList.contains('active')) activeBad = true;
+    });
+    if (activeBad && firstOk) { try { switchAdminTab(firstOk.id, firstOk.el); } catch(e){} }
+    scan();
+  }
+  var __apply = window.applyStaffRoleUI;
+  window.applyStaffRoleUI = function(){ try { if (typeof __apply === 'function') __apply(); } catch(e){} applyPermUI(); var b = document.getElementById('tab-access'); if (isOwnerUser() && b && b.classList.contains('active')) { try { renderTeam(); } catch(e){} } };
+
+  function denyMsg(p){ Swal.fire('غير مصرح', 'ليس لديك صلاحية: ' + T(LABELS[p] || p), 'warning'); }
+  Object.keys(RULES).forEach(function(fn){
+    var orig = window[fn]; if (typeof orig !== 'function') return;
+    window[fn] = function(){
+      var a0 = arguments[0], p = permFor(fn, typeof a0 === 'string' ? a0 : undefined);
+      if (p && isStaffUser() && !hasPerm(p)) { if (a0 && typeof a0.preventDefault === 'function') a0.preventDefault(); denyMsg(p); return; }
+      return orig.apply(this, arguments);
+    };
+  });
+
+  var mt = null;
+  try { new MutationObserver(function(){ if (mt) return; mt = setTimeout(function(){ mt = null; scan(); }, 90); }).observe(document.body, {childList: true, subtree: true}); } catch(e){}
+
+  var __rst = window.renderStudentsTable, rt = null;
+  window.renderStudentsTable = function(){
+    var r = typeof __rst === 'function' ? __rst.apply(this, arguments) : undefined;
+    if (isOwnerUser()) { clearTimeout(rt); rt = setTimeout(function(){ var b = document.getElementById('tab-access'); if (b && b.classList.contains('active')) { renderTeam(); renderResults(); } }, 400); }
+    return r;
+  };
 })();
 </script>
 </body>
