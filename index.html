@@ -4786,6 +4786,7 @@ body[class*="theme-"] .mob-nav-item.active{color:var(--primary)!important}
                        <input class="input-group" id="file-upload" type="file" accept="application/pdf,image/*" multiple>
                        <div id="file-upload-hint" style="font-size:11px; color:var(--fg-faint); line-height:1.7;">ملف PDF واحد أو صور متعددة للامتحان (الصور بتتحول PDF واحد وبتترتب تلقائيًا بالاسم).</div>
                        <input class="input-group" id="file-link" type="url" placeholder="رابط الملف (درايف/ميديافاير)" style="display:none;">
+                      <label style="display:flex; align-items:center; gap:8px; font-size:13px; cursor:pointer; padding:4px 2px;"><input type="checkbox" id="file-allow-preview" checked style="width:18px; height:18px; accent-color:var(--primary);"> إظهار زر المعاينة 👁️ للطلاب على هذا الملف</label>
                       <button class="pill" type="submit">نشر الملف</button>
                    </form>
                 </div>
@@ -7220,7 +7221,7 @@ ${escText(alertBody)}
     }
 
     function addSubject(e) { e.preventDefault(); const id = "subj-" + Date.now(); const n = document.getElementById("new-subj-name").value; database.ref('subjects/'+id).set({ level: parseInt(document.getElementById("new-subj-level").value, 10), name: n, desc: document.getElementById("new-subj-desc").value, cover: (document.getElementById("new-subj-cover").value || '').trim() || null }).then(() => { e.target.reset(); logAdminAction('إضافة مادة جديدة', `المادة: ${n}`); Swal.fire('تم', "تمت إضافة المادة!", 'success'); }); }
-    function addFile(e) { e.preventDefault(); const form = e.target; const title = document.getElementById("file-title").value; const sId = document.getElementById("file-subj-select").value; const ch = getChapterChoice('file-subj-select','file-chapter-select'); if (!ch.ok) return; const subj = db.find(x=>x.id===sId); const fileData = { title: title, link: document.getElementById("file-link").value, category: document.getElementById("file-category").value }; if (ch.cid) fileData.chapter = ch.cid; database.ref('subjects/'+sId+'/files').push(fileData).then(() => { resetFormKeepTarget(form,'file-subj-select','file-chapter-select'); logAdminAction('رفع ملف', `عنوان الملف: ${title} | المادة: ${subj?subj.name:''}`); Swal.fire('تم', "تم الرفع بنجاح!", 'success'); }); }
+    function addFile(e) { e.preventDefault(); const form = e.target; const title = document.getElementById("file-title").value; const sId = document.getElementById("file-subj-select").value; const ch = getChapterChoice('file-subj-select','file-chapter-select'); if (!ch.ok) return; const subj = db.find(x=>x.id===sId); const fileData = { title: title, link: document.getElementById("file-link").value, category: document.getElementById("file-category").value }; if (ch.cid) fileData.chapter = ch.cid; { const _ap = document.getElementById("file-allow-preview"); if (_ap && !_ap.checked) fileData.noPreview = true; } database.ref('subjects/'+sId+'/files').push(fileData).then(() => { resetFormKeepTarget(form,'file-subj-select','file-chapter-select'); logAdminAction('رفع ملف', `عنوان الملف: ${title} | المادة: ${subj?subj.name:''}`); Swal.fire('تم', "تم الرفع بنجاح!", 'success'); }); }
 
     function addSubjectImage(e) {
         e.preventDefault();
@@ -8768,7 +8769,7 @@ function openThemePicker() {
           actionBtns = `<button class="pill" style="height:32px; font-size:12px; background:rgba(239,68,68,.12); border:1px solid rgba(239,68,68,.3); color:#fca5a5; cursor:pointer;" onclick="showLevel2RestrictionAlert('الملفات والمحاضرات')">🔒 متاح للمستوى 2 فقط</button>`;
         } else {
           actionBtns = `
-            <button class="pill" style="height:32px; font-size:12px; background:var(--primary);" onclick="openPdfViewer('${escapeHtml(f.title)}', '${escapeHtml(fileUrl)}')">معاينة 👁️</button>
+            ${f.noPreview ? '' : `<button class="pill" style="height:32px; font-size:12px; background:var(--primary);" onclick="openPdfViewer('${escapeHtml(f.title)}', '${escapeHtml(fileUrl)}')">معاينة 👁️</button>`}
             <a href="${escText(fileUrl)}" target="_blank" rel="noopener noreferrer" class="pill" style="height:32px; font-size:12px; background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.2); color:var(--fg);">فتح ↗</a>
           `;
         }
@@ -8782,6 +8783,7 @@ function openThemePicker() {
             ${actionBtns}
             ${isAdmin ? `
             <button class="btn-sm btn-edit" onclick="editFile('${subjId}','${f.key}','${escapeHtml(f.title)}','${escapeHtml(fileUrl)}','${escapeHtml(f.category || 'محاضرات')}')">✏️</button>
+            <button class="btn-sm btn-edit" title="${f.noPreview ? 'تفعيل زر المعاينة' : 'إلغاء زر المعاينة'}" onclick="toggleFilePreview('${subjId}','${f.key}',${f.noPreview ? 'false' : 'true'})">${f.noPreview ? '🚫👁️' : '👁️‍🗨️'}</button>
             <button class="btn-sm btn-edit" title="${f.hidden ? 'إظهار للطلاب' : 'إخفاء عن الطلاب'}" onclick="toggleItemHidden('files','${subjId}','${f.key}',${f.hidden ? 'false' : 'true'})">${f.hidden ? '👁️ إظهار' : '🙈 إخفاء'}</button>
             <button class="btn-sm btn-edit" title="نقل لفصل" onclick="moveItemToChapter('files','${subjId}','${f.key}')">📂</button>
             <button class="btn-sm btn-ban" onclick="deleteFile('${subjId}','${f.key}','${escapeHtml(f.title)}')">🗑️</button>` : ''}
@@ -9060,6 +9062,20 @@ function openThemePicker() {
         ['files', 'videos', 'quizzes'].forEach(t => { (subj[t] || []).forEach(it => { if (it.chapter === cid) up['subjects/' + sId + '/' + t + '/' + it.key + '/chapter'] = null; }); });
         database.ref().update(up).then(() => { logAdminAction('حذف فصل/محاضرة', `${name} | المادة: ${subj.name}`); if (currentChapterId === cid) currentChapterId = null; });
       });
+    }
+
+    function isPreviewOff(sId, key) {
+      const s = db.find(x => x.id === sId);
+      const f = s && (s.files || []).find(x => x.key === key);
+      return !!(f && f.noPreview);
+    }
+    function toggleFilePreview(sId, key, turnOff) {
+      const s = db.find(x => x.id === sId);
+      const f = s && (s.files || []).find(x => x.key === key);
+      database.ref('subjects/' + sId + '/files/' + key + '/noPreview').set(turnOff ? true : null).then(() => {
+        logAdminAction(turnOff ? 'إلغاء المعاينة لملف' : 'تفعيل المعاينة لملف', `الملف: ${f ? f.title : ''} | المادة: ${s ? s.name : ''}`);
+        if (window.Swal) Swal.fire({ toast: true, position: 'top', timer: 1800, showConfirmButton: false, icon: 'success', title: turnOff ? 'اتشال زر المعاينة من الملف' : 'رجع زر المعاينة للملف' });
+      }).catch(err => Swal.fire('خطأ', err.message, 'error'));
     }
 
     function toggleItemHidden(type, sId, key, hide) {
@@ -10441,6 +10457,7 @@ function openThemePicker() {
 
     /* ===== ب) تعديل الملفات والأسئلة دون حذفها للأدمن ===== */
     function editFile(sId, fKey, currentTitle, currentLink, currentCategory) {
+      const _prevOff = isPreviewOff(sId, fKey);
       Swal.fire({
         title: 'تعديل الملف / المحاضرة',
         html: `
@@ -10453,7 +10470,8 @@ function openThemePicker() {
              <option value="محاضرات" ${currentCategory === 'محاضرات' ? 'selected' : ''}>محاضرات نظري</option>
              <option value="سكاشن" ${currentCategory === 'سكاشن' ? 'selected' : ''}>سكاشن وتطبيقات</option>
              <option value="امتحانات" ${currentCategory === 'امتحانات' ? 'selected' : ''}>امتحانات سابقة</option>
-          </select>`,
+          </select>
+          <label style="display:flex; align-items:center; gap:8px; font-size:13px; cursor:pointer; margin-top:14px; justify-content:flex-end;"><span>إظهار زر المعاينة 👁️ للطلاب</span><input type="checkbox" id="edit-file-allow-preview" ${_prevOff ? '' : 'checked'} style="width:18px; height:18px;"></label>`,
         showCancelButton: true,
         confirmButtonText: 'حفظ التعديل',
         cancelButtonText: 'إلغاء',
@@ -10465,7 +10483,8 @@ function openThemePicker() {
             Swal.showValidationMessage('اكتب عنوان ورابط الملف');
             return false;
           }
-          return { title, link, category };
+          const allowPrev = document.getElementById('edit-file-allow-preview').checked;
+          return { title, link, category, noPreview: allowPrev ? null : true };
         }
       }).then(res => {
         if (res.isConfirmed) {
@@ -11673,7 +11692,7 @@ function openThemePicker() {
               <div style="font-weight:bold; font-size:14px; margin-top:4px;">📄 ${escText(f.title)}</div>
            </div>
            <div style="display:flex; gap:6px;">
-              <button class="pill" style="height:30px; font-size:11px;" onclick="openPdfViewer('${escapeHtml(f.title)}','${escapeHtml(safeUrl(f.link))}')">معاينة 👁️</button>
+              ${isPreviewOff(f.subjId, f.key) ? '' : `<button class="pill" style="height:30px; font-size:11px;" onclick="openPdfViewer('${escapeHtml(f.title)}','${escapeHtml(safeUrl(f.link))}')">معاينة 👁️</button>`}
               <a href="${escText(safeUrl(f.link))}" target="_blank" rel="noopener" class="pill" style="height:30px; font-size:11px; background:var(--primary);">تحميل ⬇️</a>
               <button class="btn-sm btn-ban" title="إزالة" onclick="toggleFileBookmark('${f.subjId}','${f.key}','${escapeHtml(f.title)}','${escapeHtml(f.link)}',''); openBookmarksModal();">✕</button>
            </div>
@@ -13759,7 +13778,7 @@ function openThemePicker() {
         actionBtns = '<button class="pill" style="height:32px; font-size:12px; background:rgba(239,68,68,.12); border:1px solid rgba(239,68,68,.3); color:#fca5a5; cursor:pointer;" onclick="showLevel2RestrictionAlert(\'الملفات والمحاضرات\')">🔒 متاح للمستوى 2 فقط</button>';
       } else {
         actionBtns =
-          '<button class="pill" style="height:34px; font-size:12px; background:var(--primary);" onclick="openPdfViewerAndTrack(\'' + subjId + '\', \'' + f.key + '\', \'' + escapeHtml(f.title) + '\', \'' + escapeHtml(fileUrl) + '\')">معاينة 👁️</button>' +
+          (f.noPreview ? '' : '<button class="pill" style="height:34px; font-size:12px; background:var(--primary);" onclick="openPdfViewerAndTrack(\'' + subjId + '\', \'' + f.key + '\', \'' + escapeHtml(f.title) + '\', \'' + escapeHtml(fileUrl) + '\')">معاينة 👁️</button>') +
           '<button class="pill" style="height:34px; font-size:12px; background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.2); color:var(--fg);" onclick="openExternalFileAndTrack(\'' + subjId + '\', \'' + f.key + '\', \'' + escapeHtml(f.title) + '\', \'' + escapeHtml(fileUrl) + '\')">فتح ↗</button>' +
           '<button class="pill" style="height:34px; font-size:12px; background:rgba(139,92,246,.18); border:1px solid rgba(139,92,246,.4) !important; color:#c4b5fd;" onclick="openFileCommentsModal(\'' + subjId + '\', \'' + f.key + '\', \'' + escapeHtml(f.title) + '\')">💬 الآراء (' + metrics.commentsCount + ')</button>';
       }
@@ -13786,6 +13805,7 @@ function openThemePicker() {
           actionBtns +
           (isAdmin ?
             '<button class="btn-sm btn-edit" onclick="editFile(\'' + subjId + '\',\'' + f.key + '\',\'' + escapeHtml(f.title) + '\',\'' + escapeHtml(fileUrl) + '\',\'' + escapeHtml(f.category || 'محاضرات') + '\')">✏️</button>' +
+            '<button class="btn-sm btn-edit" title="' + (f.noPreview ? 'تفعيل زر المعاينة' : 'إلغاء زر المعاينة') + '" onclick="toggleFilePreview(\'' + subjId + '\',\'' + f.key + '\',' + (f.noPreview ? 'false' : 'true') + ')">' + (f.noPreview ? '🚫👁️' : '👁️‍🗨️') + '</button>' +
             '<button class="btn-sm btn-edit" title="' + (f.hidden ? 'إظهار للطلاب' : 'إخفاء عن الطلاب') + '" onclick="toggleItemHidden(\'files\',\'' + subjId + '\',\'' + f.key + '\',' + (f.hidden ? 'false' : 'true') + ')">' + (f.hidden ? '👁️ إظهار' : '🙈 إخفاء') + '</button>' +
             '<button class="btn-sm btn-edit" title="نقل لفصل" onclick="moveItemToChapter(\'files\',\'' + subjId + '\',\'' + f.key + '\')">📂</button>' +
             '<button class="btn-sm btn-ban" onclick="deleteFile(\'' + subjId + '\',\'' + f.key + '\',\'' + escapeHtml(f.title) + '\')">🗑️</button>'
@@ -14074,6 +14094,7 @@ function openThemePicker() {
     var subj=db.find(function(x){return x.id===sId;});
     var fileData={ title:title, category:document.getElementById('file-category').value };
     if(ch.cid) fileData.chapter=ch.cid;
+    var _ap=document.getElementById('file-allow-preview'); if(_ap && !_ap.checked) fileData.noPreview=true;
     try{
       if(document.getElementById('file-source').value==='link'){
         var l=document.getElementById('file-link').value.trim();
