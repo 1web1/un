@@ -7122,6 +7122,7 @@ ${escText(alertBody)}
              <button class="btn-sm btn-edit" onclick="editStudentProfile('${u.uid}')">✏️ تعديل</button>
              ${adm ? `<button class="btn-sm btn-track" style="background: rgba(20,184,166,.15); color:#2dd4bf; border-color:#14b8a6;" onclick="adminAssignResearch('${u.uid}','${escapeHtml(u.name)}')">🔬 تعيين بحث</button>` : ''}
              ${banBtn}
+             ${(!u.isAdmin && !u.isLeader && !u.isOwner && !(currentUser && u.uid === currentUser.uid)) ? `<button class="btn-sm btn-ban" onclick="adminDeleteUserSafe('${u.uid}','${escapeHtml(u.name)}')">🗑️ حذف الحساب</button>` : ''}
         </div></td></tr>`;
       });
       tbody.innerHTML = html;
@@ -10925,9 +10926,11 @@ function openThemePicker() {
     }
 
     function adminDeleteUserSafe(uid, name) {
+      const __t = allUsersList.find(x => x.uid === uid);
+      if ((__t && (__t.isAdmin || __t.isLeader || __t.isOwner)) || (currentUser && uid === currentUser.uid)) { Swal.fire('غير مسموح', 'لا يمكن حذف حساب من فريق الإدارة أو حسابك الشخصي من هنا.', 'warning'); return; }
       Swal.fire({
         title: `حذف حساب ${name} نهائياً؟`,
-        text: 'سيتم مسح بيانات الطالب من قاعدة البيانات ولوحة الشرف فوراً لتوفير مساحة في Firebase.',
+        text: 'سيتم مسح بيانات الطالب من قاعدة البيانات ولوحة الشرف فوراً. ملحوظة: حساب تسجيل الدخول نفسه (Authentication) يفضل موجود ولا يتحذف من هنا.',
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#ef4444',
@@ -10947,7 +10950,7 @@ function openThemePicker() {
           database.ref().update(up).then(() => {
             logAdminAction('تنظيف قاعدة البيانات', `تم حذف الحساب: ${name} (${uid})`);
             Swal.fire('تم الحذف', 'تم حذف الحساب وتنظيف البيانات.', 'success');
-            scanInactiveAccounts();
+            { const _c = document.getElementById('maintenance-scan-results'); if (_c && _c.style.display === 'block') scanInactiveAccounts(); }
           }).catch(err => Swal.fire('خطأ', escText(err.message), 'error'));
         }
       });
@@ -14620,13 +14623,13 @@ function openThemePicker() {
     addSubjectVideo:'videos.add', editSubjectVideo:'videos.edit', deleteSubjectVideo:'videos.delete',
     addAIQuizzes:'quizzes.add', addQuiz:'quizzes.add', editQuiz:'quizzes.edit', deleteQuiz:'quizzes.delete', deleteAllQuizzesFromSubject:'quizzes.delete', resetSubjectQuizzes:'quizzes.delete', deleteChapterQuizzes:'quizzes.delete',
     addSubjectImage:'images.manage', deleteSubjectImage:'images.manage',
-    adminSaveResearchSettings:'research.manage', addBulkResearchTopics:'research.manage', addResearchTopic:'research.manage', adminDeleteResearchTopic:'research.manage', adminFreeResearch:'research.manage', adminOnResearchStatusChange:'research.manage',
+    adminSaveResearchSettings:'research.manage', addBulkResearchTopics:'research.manage', addResearchTopic:'research.manage', adminDeleteResearchTopic:'research.manage', adminFreeResearch:'research.manage',
     adminResetAllResearchBookings:'system.danger',
     updateAlert:'system.tools', clearGlobalAlert:'system.tools', postTargetedAnnouncement:'system.tools', deleteAnnouncement:'system.tools', deletePoll:'system.tools', deleteGroupLink:'system.tools', setMaintenance:'system.tools', setLevel2Restrictions:'system.tools', adminEditSupport:'system.tools', adminEditFounderInfo:'system.tools',
     resetAllScores:'system.danger', clearAdminLogs:'system.danger', exportFullDatabaseJSON:'system.danger', syncAllLeaderboard:'system.danger'
   };
   function permFor(fn, a0){ var r = RULES[fn]; return typeof r === 'function' ? r(a0) : r; }
-  var CALL = /^\s*(?:return\s+)?(?:window\.)?([A-Za-z_$][\w$]*)\s*\(\s*(?:\\?['"]([^'"\\]*))?/;
+  var CALL = /^\s*(?:event\.stopPropagation\(\);\s*)?(?:return\s+)?(?:window\.)?([A-Za-z_$][\w$]*)\s*\(\s*(?:\\?['"]([^'"\\]*))?/;
   function scan(){
     if (!isStaffUser()) return;
     var els = document.querySelectorAll('[onclick],form[onsubmit],[data-perm]');
@@ -14665,7 +14668,7 @@ function openThemePicker() {
     var orig = window[fn]; if (typeof orig !== 'function') return;
     window[fn] = function(){
       var a0 = arguments[0], p = permFor(fn, typeof a0 === 'string' ? a0 : undefined);
-      if (p && isStaffUser() && !hasPerm(p)) { if (a0 && typeof a0.preventDefault === 'function') a0.preventDefault(); denyMsg(p); return; }
+      if (p && isStaffUser() && __myPermsLoaded && !hasPerm(p)) { if (a0 && typeof a0.preventDefault === 'function') a0.preventDefault(); denyMsg(p); return; }
       return orig.apply(this, arguments);
     };
   });
