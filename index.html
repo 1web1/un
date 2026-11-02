@@ -5604,7 +5604,8 @@ body[class*="theme-"] .mob-nav-item.active{color:var(--primary)!important}
       if (__permsUid === uid) return;
       detachMyPerms();
       __permsUid = uid; __permsRef = database.ref('staff_perms/' + uid);
-      const done = (v) => { __myPerms = v; __myPermsLoaded = true; try { applyStaffRoleUI(); } catch (e) { } };
+      try { const c = localStorage.getItem('sp_' + uid); if (c !== null) { __myPerms = JSON.parse(c); __myPermsLoaded = true; } } catch (e) { }
+      const done = (v) => { __myPerms = v; __myPermsLoaded = true; try { localStorage.setItem('sp_' + uid, JSON.stringify(v)); } catch (e) { } try { applyStaffRoleUI(); } catch (e) { } };
       __permsRef.on('value', (s) => done(s.val()), () => done(null));
     }
     function detachMyPerms() {
@@ -14466,6 +14467,33 @@ function openThemePicker() {
     }
   }
 
+  /* ---- مسجّل الرسائل المنبثقة (للتشخيص): بيحفظ آخر الرسائل اللي ظهرت وإيه اللي طلّعها ---- */
+  var SLOG = [];
+  try { SLOG = JSON.parse(sessionStorage.getItem('__swalLog') || '[]') || []; } catch(e){}
+  try {
+    var __fire = Swal.fire;
+    Swal.fire = function(){
+      try {
+        var o = arguments[0], isObj = o && typeof o === 'object';
+        var title = isObj ? (o.title || '') : String(o == null ? '' : o);
+        var text = isObj ? (o.text || (typeof o.html === 'string' ? o.html.replace(/<[^>]*>/g, ' ') : '')) : String(arguments[1] == null ? '' : arguments[1]);
+        var src = (new Error().stack || '').split('\n').slice(1, 7).map(function(l){ var m = /^\s*(?:at\s+(?:async\s+)?)?([^\s@(]+)/.exec(l); return m ? m[1] : ''; }).filter(function(x){ return x && x !== 'Swal.fire' && x !== 'Error'; }).slice(0, 3).join(' ← ');
+        SLOG.push({ t: Date.now(), title: String(title).replace(/\s+/g, ' ').slice(0, 90), text: String(text).replace(/\s+/g, ' ').slice(0, 140), src: src, toast: !!(isObj && o.toast) });
+        if (SLOG.length > 25) SLOG.shift();
+        try { sessionStorage.setItem('__swalLog', JSON.stringify(SLOG)); } catch(e){}
+      } catch(e){}
+      return __fire.apply(this, arguments);
+    };
+  } catch(e){}
+  function renderSwalLog(){
+    var el = document.getElementById('acc-swal'); if (!el) return;
+    if (!SLOG.length) { el.innerHTML = '<div class="acc-hint">لسه ما ظهرتش أي رسالة في الجلسة دي.</div>'; return; }
+    el.innerHTML = SLOG.slice().reverse().map(function(r){
+      var tm = new Date(r.t).toLocaleTimeString('ar-EG');
+      return '<div class="acc-audit-row"><b>' + T(r.title || '(بدون عنوان)') + '</b>' + (r.toast ? ' <span style="font-size:10px;color:#94a3b8">(إشعار سريع)</span>' : '') + (r.text ? ' — ' + T(r.text) : '') + '<div style="font-size:11px;color:var(--fg-soft,#94a3b8);direction:ltr;text-align:right">' + T(tm) + (r.src ? '  •  ' + T(r.src) : '') + '</div></div>';
+    }).join('');
+  }
+
   var built = false, auditOn = false, permsOn = false;
   function skeleton(){
     var box = document.getElementById('tab-access'); if (!box) return;
@@ -14479,6 +14507,7 @@ function openThemePicker() {
       '<p class="acc-hint">ابحث بالاسم أو الإيميل أو رقم الهاتف أو الـ ID، وبعدين اختار الصلاحيات.</p>' +
       '<input type="text" id="acc-search" class="search-box" style="width:100%;box-sizing:border-box;background:rgba(0,0,0,.4)" placeholder="🔍 ابحث عن شخص..." oninput="renderAccessResults()"><div id="acc-results" style="margin-top:10px"></div></div>' +
       '<div class="acc-box"><h3 style="color:#f59e0b">🧾 آخر التغييرات في الصلاحيات</h3><div id="acc-audit"><div class="acc-hint">جاري التحميل...</div></div></div>' +
+      '<div class="acc-box"><h3 style="color:#a78bfa">🐞 آخر الرسائل اللي ظهرت (للتشخيص)</h3><p class="acc-hint">أي رسالة بتظهر وتختفي بسرعة بتتسجل هنا مع الدالة اللي طلّعتها. افتح الصفحة، استنى لحد ما الرسالة تظهر وتروح، وبعدين ارجع هنا.</p><div class="acc-btns" style="margin-bottom:10px"><button class="btn-sm btn-track" data-act="swalrefresh">🔄 تحديث</button><button class="btn-sm btn-ban" data-act="swalclear">🧹 مسح</button></div><div id="acc-swal"></div></div>' +
       '</div>';
     box.addEventListener('click', onClick);
     built = true;
@@ -14540,7 +14569,7 @@ function openThemePicker() {
     if (!isOwnerUser()) return;
     ensureAccessTab();
     if (!built || !document.getElementById('acc-team')) skeleton();
-    renderTeam(); renderResults();
+    renderTeam(); renderResults(); renderSwalLog();
     if (!permsOn) { permsOn = true; try { database.ref('staff_perms').on('value', function(s){ window.__allPerms = s.val() || {}; var b = document.getElementById('tab-access'); if (b && b.classList.contains('active')) renderTeam(); }); } catch(e){} }
     if (!auditOn) { auditOn = true; try { database.ref('access_audit').limitToLast(15).on('value', renderAudit); } catch(e){} }
   };
@@ -14548,6 +14577,8 @@ function openThemePicker() {
   function onClick(e){
     var b = e.target.closest ? e.target.closest('[data-act]') : null; if (!b) return;
     var uid = b.getAttribute('data-uid'), act = b.getAttribute('data-act');
+    if (act === 'swalrefresh') { renderSwalLog(); return; }
+    if (act === 'swalclear') { SLOG.length = 0; try { sessionStorage.removeItem('__swalLog'); } catch(e){} renderSwalLog(); return; }
     if (act === 'perms') openEditor(uid);
     else if (act === 'rank') openRank(uid);
     else if (act === 'revoke') revoke(uid);
