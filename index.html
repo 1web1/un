@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
+<link rel="preconnect" href="https://university-platform-f51a1-default-rtdb.firebaseio.com" crossorigin>
+<link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://securetoken.googleapis.com" crossorigin>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>El dof3aa Btzaker | قسم المساحة ونظم المعلومات</title>
@@ -11,11 +15,13 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="El dof3aa Btzaker">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com">
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script defer src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
 <style>
   :root {
@@ -1547,6 +1553,19 @@
     box-shadow: none !important;
   }
 
+
+
+  /* ===== تخفيف إضافي لوضع التوفير / الأجهزة الضعيفة ===== */
+  body.data-saver *, body.data-saver *::before, body.data-saver *::after {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    animation-iteration-count: 1 !important;
+    text-shadow: none !important;
+  }
+  body.data-saver .noise-overlay, body.data-saver .support-fab::after { display: none !important; }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-iteration-count: 1 !important; scroll-behavior: auto !important; }
+  }
 
   /* ===== الهيدر العلوي المطور (Enhanced Chrome Header) ===== */
   .chrome {
@@ -4700,7 +4719,9 @@ body[class*="theme-"] .mob-nav-item.active{color:var(--primary)!important}
             <div class="admin-stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));">
               <div class="admin-stat-box"><div class="admin-stat-num" id="stat-students">0</div><div class="admin-stat-label">إجمالي الطلاب</div></div>
               <div class="admin-stat-box" style="border-color: rgba(192,132,252,.3);"><div class="admin-stat-num" style="color:#c084fc;" id="stat-lvl2">0</div><div class="admin-stat-label">المستوى الثاني 🚀</div></div>
-              <div class="admin-stat-box" id="stat-online-box" style="cursor:pointer;" onclick="toggleOnlineFilter()" title="اضغط لعرض المتصلين فقط"><div class="admin-stat-num" style="color:#4ade80;" id="stat-online">0</div><div class="admin-stat-label">متصل الآن 👆</div></div>
+              <div class="admin-stat-box" id="stat-online-box" style="cursor:pointer;" onclick="toggleOnlineFilter()" title="اضغط لعرض المتصلين فقط"><div class="admin-stat-num" style="color:#4ade80;" id="stat-online">0</div><div class="admin-stat-label">متصل الآن 👆</div>
+                <button id="presence-mode-btn" onclick="event.stopPropagation(); togglePresenceMode()" style="margin-top:6px; border:0; color:#fff; border-radius:8px; padding:4px 8px; font-size:11px; font-weight:bold; cursor:pointer; background:#475569;">💰 توفير (اضغط للدقيق)</button>
+                <div id="presence-mode-note" style="font-size:10px; opacity:.7; margin-top:3px;"></div></div>
               <div class="admin-stat-box"><div class="admin-stat-num" style="color:#fbbf24;" id="stat-subjects">0</div><div class="admin-stat-label">المواد الدراسية</div></div>
               <div class="admin-stat-box"><div class="admin-stat-num" style="color:#f472b6;" id="stat-questions">0</div><div class="admin-stat-label">بنك الأسئلة</div></div>
             </div>
@@ -4844,7 +4865,7 @@ body[class*="theme-"] .mob-nav-item.active{color:var(--primary)!important}
                          </select>
                       </div>
                       <input class="input-group" id="video-title" placeholder="عنوان الفيديو (مثال: شرح عملي لبرنامج ArcGIS - المحاضرة 4)" required>
-                      <input class="input-group" id="video-link" type="url" placeholder="رابط فيديو اليوتيوب أو قائمة التشغيل Playlist" required>
+                      <input class="input-group" id="video-link" type="url" placeholder="رابط فيديو يوتيوب / Playlist أو ملف فيديو من جوجل درايف" required>
                       <button class="pill" type="submit" style="background: #ec4899; width: fit-content;">نشر الفيديو للمادة 🚀</button>
                    </form>
                 </div>
@@ -5494,13 +5515,15 @@ body[class*="theme-"] .mob-nav-item.active{color:var(--primary)!important}
       <div class="z-content flex-between" style="margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,.1); padding-bottom: 10px;">
         <h3 id="video-player-title" style="margin: 0; font-size: 16px; color: #ec4899; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">مشاهدة الشرح</h3>
         <div style="display: flex; gap: 8px;">
-          <a id="video-player-ext-link" href="#" target="_blank" rel="noopener" class="pill" style="height: 30px; font-size: 12px; background: rgba(255,255,255,.1);">يوتيوب ↗</a>
+          <a id="video-player-ext-link" href="#" target="_blank" rel="noopener" class="pill" style="display:none !important; height: 30px; font-size: 12px; background: rgba(255,255,255,.1);">يوتيوب ↗</a>
           <button class="pill" style="height: 30px; font-size: 12px; background: rgba(239,68,68,.2); color: #f87171;" onclick="closeVideoPlayer()">✕ إغلاق</button>
         </div>
       </div>
       <div style="position: relative; width: 100%; padding-bottom: 56.25%; height: 0; border-radius: 10px; overflow: hidden; background: #000;">
-        <iframe id="video-player-frame" src="" style="position: absolute; top:0; left:0; width: 100%; height: 100%; border: none;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        <iframe id="video-player-frame" src="" style="position: absolute; top:0; left:0; width: 100%; height: 100%; border: none;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+        <div id="video-drive-blocker" style="display:none; position:absolute; top:0; right:0; width:70px; height:70px; z-index:5; background:transparent;" title=""></div>
       </div>
+      <div id="video-debug" dir="ltr" style="display:none; margin-top:8px; font-size:10px; opacity:.6; word-break:break-all;"></div>
     </div>
   </div>
 
@@ -5638,7 +5661,16 @@ body[class*="theme-"] .mob-nav-item.active{color:var(--primary)!important}
       if (!adm) { const act = document.querySelector('.admin-tab.active'); if (act && act.hasAttribute('data-admin-only')) { const first = document.querySelector('.admin-tab:not([data-admin-only])'); if (first) switchAdminTab('students', first); } }
     }
     function __isAdmin() { return isStaffUser(); }
-    function __goOffline() { if (__offline || __isAdmin() || isRegistering) return; try { database.goOffline(); __offline = true; } catch (e) {} }
+    var __presenceExact = false; try { __presenceExact = localStorage.getItem('presence_mode') === 'exact'; } catch (e) {}
+    function __applyPresenceMode(exact) {
+      exact = !!exact; if (exact === __presenceExact) { updatePresenceModeUI(); return; }
+      __presenceExact = exact; try { localStorage.setItem('presence_mode', exact ? 'exact' : 'eco'); } catch (e) {}
+      clearTimeout(__idleT);
+      if (exact) { if (__offline) { try { database.goOnline(); } catch (e) {} __offline = false; } }
+      else { __idleT = setTimeout(__goOffline, IDLE_MS); }
+      updatePresenceModeUI();
+    }
+    function __goOffline() { if (__offline || __presenceExact || __isAdmin() || isRegistering) return; try { database.goOffline(); __offline = true; } catch (e) {} }
     function __wake() {
       clearTimeout(__idleT);
       var g = document.getElementById('research-grid'); var onResearch = g && g.offsetParent !== null;
@@ -5707,6 +5739,7 @@ body[class*="theme-"] .mob-nav-item.active{color:var(--primary)!important}
       const i = document.getElementById('auth-pass'), a = document.getElementById('pass-eye');
       const show = i.type === 'password'; i.type = show ? 'text' : 'password'; a.innerText = show ? '🙈 إخفاء كلمة المرور' : '👁️ إظهار كلمة المرور';
     }
+    try { const __n = localStorage.getItem('last_user_name'); const __g = document.getElementById('user-greeting'); if (__n && __g && !__g.innerHTML) __g.innerHTML = '👤 ' + escText(__n); } catch (e) {}
     if (FB_OK) { try { auth.setPersistence(FB.auth.Auth.Persistence.LOCAL).catch(() => auth.setPersistence(FB.auth.Auth.Persistence.SESSION).catch(() => {})); } catch (e) {} }
 
     const quizOrder = {};
@@ -5814,8 +5847,12 @@ body[class*="theme-"] .mob-nav-item.active{color:var(--primary)!important}
       Swal.fire('تم التحديث', enable ? 'تم إغلاق الموقع عن الطلاب وتفعيل الصيانة.' : 'تم فتح الموقع للجميع بنجاح.', 'success');
     }
 
+    function __startPublicListeners() {
+      if (window._listenersReady) return; window._listenersReady = true;
+      try { listenToAlerts(); listenToAnnouncements(); listenToSubjects(); listenToLeaderboard(); listenToResearchTopics(); listenToCommunityLinks(); listenToExams(); listenToPolls(); updateBookmarksBadge(); __fetchFeedbackCfg(); } catch (e) { console.error(e); }
+    }
     function startSession(user) {
-      window._lastUid = user.uid; ensureOnline();
+      window._lastUid = user.uid; ensureOnline(); __startPublicListeners();
       withTimeout(database.ref('users/' + user.uid).once('value'), 40000, 'السيرفر اتأخر في الرد وإنت داخل. اتأكد من الإنترنت وحاول تاني.').then((snap) => {
         const val = snap.val(); window._ssRetry = 0;
         if (!val) { Swal.fire('حسابك غير مكتمل', 'الحساب اتعمل بس بياناته ماكتملتش (غالبًا النت قطع وقت التسجيل). اضغط "إنشاء حساب جديد" واكتب نفس الإيميل والباسورد وبياناتك وهيتكمل.', 'warning'); auth.signOut(); return; }
@@ -5834,7 +5871,7 @@ body[class*="theme-"] .mob-nav-item.active{color:var(--primary)!important}
       else {
         detachAll(window._lastUid);
         currentUser = null; currentStudentData = null; detachMyPerms(); checkMaintenanceUI(); renderResearchHome();
-        document.getElementById('auth-overlay').style.display = isMaintenanceActive ? 'none' : 'flex'; document.getElementById('user-greeting').innerHTML = '';
+        document.getElementById('auth-overlay').style.display = isMaintenanceActive ? 'none' : 'flex'; document.getElementById('user-greeting').innerHTML = ''; try { localStorage.removeItem('last_user_name'); } catch (e) {}
         document.getElementById('admin-panel').style.display = 'none';
       }
     });
@@ -6055,9 +6092,37 @@ ${escText(alertBody)}
       privateAlertListening = true;
     }
 
+    var __pmPoll = null;
+    async function __fetchPresenceMode() {
+      try {
+        if (!currentUser) return;
+        const t = await currentUser.getIdToken();
+        const r = await fetch(__DB + '/settings/presenceMode.json?auth=' + encodeURIComponent(t), { cache: 'no-store' });
+        if (r.ok) { const v = await r.json(); __applyPresenceMode(v === 'exact'); }
+      } catch (e) {}
+    }
+    function startPresenceModeWatch() {
+      if (__pmPoll) return;
+      __fetchPresenceMode();
+      __pmPoll = setInterval(__fetchPresenceMode, 45000);
+      try { database.ref('settings/presenceMode').on('value', s => __applyPresenceMode(s.val() === 'exact')); } catch (e) {}
+    }
+    function togglePresenceMode() {
+      const next = !__presenceExact;
+      database.ref('settings/presenceMode').set(next ? 'exact' : 'eco').then(() => {
+        __applyPresenceMode(next);
+        Swal.fire({ toast: true, position: 'top', timer: 3500, showConfirmButton: false, icon: 'success',
+          title: next ? 'الوضع الدقيق شغال: كل الطلاب هيفضلوا متصلين (خلال دقيقة تقريبًا)' : 'رجع وضع التوفير' });
+      }).catch(e => Swal.fire('خطأ', escText(e.message || e), 'error'));
+    }
+    function updatePresenceModeUI() {
+      const b = document.getElementById('presence-mode-btn'), l = document.getElementById('presence-mode-note');
+      if (b) { b.innerText = __presenceExact ? '🎯 دقيق (اضغط للتوفير)' : '💰 توفير (اضغط للدقيق)'; b.style.background = __presenceExact ? '#16a34a' : '#475569'; }
+      if (l) l.innerText = __presenceExact ? 'العدد دقيق — بيستهلك اتصالات (حد 100)' : 'العدد تقريبي — الخاملين بيتفصلوا';
+    }
     function setupPresence(uid, userData) {
       const myStatusRef = database.ref('online_users/' + uid); const userLastSeenRef = database.ref('users/' + uid + '/lastSeen');
-      if (presenceInitialized) return; presenceInitialized = true;
+      if (presenceInitialized) return; presenceInitialized = true; startPresenceModeWatch();
       database.ref('.info/connected').on('value', (snap) => {
         if (snap.val() === true) {
           myStatusRef.onDisconnect().remove(); userLastSeenRef.onDisconnect().set(FB.database.ServerValue.TIMESTAMP);
@@ -6113,7 +6178,14 @@ ${escText(alertBody)}
        if (pill2) pill2.innerText = lvl2Count;
     }
 
-    function listenToOnlinePresence() { database.ref('online_users').on('value', (snap) => { onlineUsersMap = snap.val() || {}; updateDashboardStats(); renderStudentsTable(); }); }
+    var __opT = null;
+    function __opRefresh() { clearTimeout(__opT); __opT = setTimeout(() => { updateDashboardStats(); renderStudentsTable(); }, 500); }
+    function listenToOnlinePresence() {
+      onlineUsersMap = {}; const r = database.ref('online_users');
+      r.on('child_added', s => { onlineUsersMap[s.key] = s.val() || {}; __opRefresh(); });
+      r.on('child_changed', s => { onlineUsersMap[s.key] = s.val() || {}; __opRefresh(); });
+      r.on('child_removed', s => { delete onlineUsersMap[s.key]; __opRefresh(); });
+    }
 
     function listenToUsersData() {
       database.ref('users').on('value', (snapshot) => {
@@ -6427,7 +6499,7 @@ ${escText(alertBody)}
         { const __a = !!(currentStudentData && isStaffUser()); if (window.__lastAdm !== __a && window.__subjectsRaw) { try { applySubjectsRaw(); } catch (err) { console.error(err); } } }
         if (currentStudentData) {
           if (currentStudentData.isBanned) { Swal.fire('محظور!', `⚠️ تم حظرك!<br>السبب: ${escText(currentStudentData.banReason)}`, 'error'); logoutStudent(); return; }
-          document.getElementById('user-greeting').innerHTML = `👤 ${escText(currentStudentData.name)}`; setupPresence(uid, currentStudentData); syncLeaderboard(uid, currentStudentData);
+          document.getElementById('user-greeting').innerHTML = `👤 ${escText(currentStudentData.name)}`; try { localStorage.setItem('last_user_name', currentStudentData.name || ''); } catch (e) {} setupPresence(uid, currentStudentData); syncLeaderboard(uid, currentStudentData);
           const adminBtn = document.getElementById('admin-toggle-btn');
           try { listenToSupport(); renderSupportList(); } catch (e) {}
           if (isStaffUser()) { adminBtn.style.display = 'inline-flex'; applyStaffRoleUI(); if (hasPerm('system.logs')) listenToAdminLogs(); if (!adminListenersOn) { adminListenersOn = true; listenToUsersData(); listenToOnlinePresence(); } listenToAdminResearch(); listenToContributions(); updateAnalyticsSelect(); renderAdminResearchSettingsForm(); } else { adminBtn.style.display = 'none'; document.getElementById('admin-panel').style.display = 'none'; }
@@ -6436,13 +6508,13 @@ ${escText(alertBody)}
         updateResearchVisibilityUI();
         renderResearchHome();
       });
-      if (!window._listenersReady) { window._listenersReady = true; listenToAlerts(); listenToAnnouncements(); listenToSubjects(); listenToLeaderboard(); listenToResearchTopics(); listenToCommunityLinks(); listenToExams(); listenToPolls(); updateBookmarksBadge(); __fetchFeedbackCfg(); }
+      __startPublicListeners();
     }
 
     function logoutStudent() {
       if (heartbeatInterval) { clearInterval(heartbeatInterval); heartbeatInterval = null; }
       presenceInitialized = false;
-      const done = () => { auth.signOut(); };
+      const done = () => { try { localStorage.removeItem('last_user_name'); } catch (e) {} auth.signOut(); };
       if (currentUser) {
         ensureOnline();
         withTimeout(Promise.all([ database.ref('users/' + currentUser.uid + '/lastSeen').set(FB.database.ServerValue.TIMESTAMP), database.ref('online_users/' + currentUser.uid).remove() ]), 4000).then(done, done);
@@ -8783,7 +8855,7 @@ function openThemePicker() {
           <div class="subject-card liquid-glass" style="${isLvl2Preview ? 'border-color: rgba(245,158,11,0.35);' : ''}">
             <div class="subject-card-cover" onclick="openSubject('${subj.id}')" style="background:${vis.gradient};">
               <div class="subject-cover-pattern pattern-${vis.pattern}"></div>
-              ${saver ? '' : `<img class="subject-card-cover-img" src="${vis.image}" alt="${escText(subj.name)}" loading="lazy" onerror="this.style.opacity='0'">`}
+              ${saver ? '' : `<img class="subject-card-cover-img" src="${vis.image}" alt="${escText(subj.name)}" loading="lazy" decoding="async" onerror="this.style.opacity='0'">`}
               <div class="subject-cover-overlay"></div>
               <div class="subject-cover-top">
                 <span class="subject-cover-tag" style="border-color:${vis.accent};">${vis.icon} ${vis.tag}</span>
@@ -9598,6 +9670,14 @@ function openThemePicker() {
         if (saved === '1') dataSaverEnabled = true;
         if (navigator.connection && navigator.connection.saveData) {
           dataSaverEnabled = true;
+        }
+        /* كشف تلقائي للأجهزة/الشبكات الضعيفة (ما لم يقرر المستخدم صراحةً إيقاف الوضع) */
+        if (saved !== '0') {
+          const c = navigator.connection || {};
+          const weakNet = /(^|slow-)2g|3g/.test(c.effectiveType || '');
+          const weakCpu = (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4);
+          const weakRam = (navigator.deviceMemory && navigator.deviceMemory <= 4);
+          if (weakNet || weakRam || weakCpu) dataSaverEnabled = true;
         }
       } catch(e) {}
       applyDataSaver();
@@ -10616,34 +10696,61 @@ function openThemePicker() {
     /* ===== ج) شروحات الفيديو والسكاشن المسجلة (Video Hub) ===== */
     function getYoutubeEmbedUrl(rawUrl) {
       if (!rawUrl) return '';
-      let url = rawUrl.trim();
+      const url = rawUrl.trim();
+      const YT = 'https://www.youtube.com/embed/';
+      let q = 'rel=0&modestbranding=1&playsinline=1&fs=1&iv_load_policy=3&enablejsapi=1';
+      // يوتيوب لازم يعرف الدومين اللي شغال منه المشغل (غير كده بيطلع خطأ 153)
+      if (/^https?:$/.test(location.protocol)) q += '&origin=' + encodeURIComponent(location.origin);
 
-      // Playlist
-      const plMatch = url.match(/[?&]list=([a-zA-Z0-9_-]+)/);
-      if (plMatch && plMatch[1]) {
-        return `https://www.youtube-nocookie.com/embed/videoseries?list=${plMatch[1]}`;
-      }
+      // ----- Google Drive -----
+      const dFile = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
+      if (dFile) return 'https://drive.google.com/file/d/' + dFile[1] + '/preview';
+      const dId = url.match(/drive\.google\.com\/(?:open|uc)\?(?:[^#]*&)?id=([a-zA-Z0-9_-]+)/);
+      if (dId) return 'https://drive.google.com/file/d/' + dId[1] + '/preview';
 
-      // Video ID from youtu.be
-      const shortMatch = url.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/);
-      if (shortMatch && shortMatch[1]) {
-        return `https://www.youtube-nocookie.com/embed/${shortMatch[1]}`;
-      }
+      // ----- YouTube -----
+      const vid = url.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/) ||
+                  url.match(/[?&]v=([a-zA-Z0-9_-]{11})/) ||
+                  url.match(/youtube(?:-nocookie)?\.com\/(?:embed|shorts|live|v)\/([a-zA-Z0-9_-]{11})/);
+      const pl = url.match(/[?&]list=([a-zA-Z0-9_-]+)/);
+      if (vid && pl) return YT + vid[1] + '?list=' + pl[1] + '&' + q;
+      if (vid) return YT + vid[1] + '?' + q;
+      if (pl) return YT + 'videoseries?list=' + pl[1] + '&' + q;
 
-      // Video ID from youtube.com/watch?v=...
-      const longMatch = url.match(/[?&]v=([a-zA-Z0-9_-]{11})/);
-      if (longMatch && longMatch[1]) {
-        return `https://www.youtube-nocookie.com/embed/${longMatch[1]}`;
-      }
-
-      // Video ID from embed URL
-      const embedMatch = url.match(/\/embed\/([a-zA-Z0-9_-]{11})/);
-      if (embedMatch && embedMatch[1]) {
-        return `https://www.youtube-nocookie.com/embed/${embedMatch[1]}`;
-      }
-
-      return url;
+      return '';   // رابط غير مدعوم
     }
+
+    function isDriveEmbed(u) { return /^https:\/\/drive\.google\.com\/file\/d\//.test(u || ''); }
+    // يغطي زر "فتح في نافذة جديدة" بتاع درايف عشان الطالب يفضل جوه المنصة
+    function syncVideoBlocker(embedUrl) {
+      const b = document.getElementById('video-drive-blocker');
+      if (b) b.style.display = isDriveEmbed(embedUrl) ? 'block' : 'none';
+    }
+
+    /* تشخيص مشغل الفيديو (يظهر للإدارة فقط) */
+    const VIDEO_PLAYER_BUILD = 'v3';
+    function videoDebug(embedUrl, extra) {
+      const el = document.getElementById('video-debug');
+      if (!el) return;
+      let staff = false; try { staff = isStaffUser(); } catch (e) {}
+      if (!staff) { el.style.display = 'none'; return; }
+      el.style.display = 'block';
+      el.textContent = 'build ' + VIDEO_PLAYER_BUILD + ' | page: ' + location.origin + ' | ' + (extra ? extra + ' | ' : '') + (embedUrl || '').slice(0, 90);
+    }
+    window.addEventListener('message', function (ev) {
+      const f = document.getElementById('video-player-frame');
+      if (!f || ev.source !== f.contentWindow || typeof ev.data !== 'string') return;
+      try {
+        const d = JSON.parse(ev.data);
+        if (d.event === 'onError') videoDebug(f.src, 'YouTube error ' + d.info);
+      } catch (e) {}
+    });
+    document.addEventListener('DOMContentLoaded', function () {
+      const f = document.getElementById('video-player-frame');
+      if (f) f.addEventListener('load', function () {
+        try { f.contentWindow.postMessage(JSON.stringify({ event: 'listening', id: 1 }), '*'); } catch (e) {}
+      });
+    });
 
     function addSubjectVideo(e) {
       e.preventDefault();
@@ -10728,9 +10835,20 @@ function openThemePicker() {
       const extLink = document.getElementById('video-player-ext-link');
       if (!overlay || !frame) return;
 
+      const embedUrl = getYoutubeEmbedUrl(rawUrl);
+      if (location.protocol === 'file:' && /youtube\.com/.test(embedUrl)) {
+        Swal.fire('لازم الموقع يتفتح من رابط', 'يوتيوب مش بيشغّل الفيديو لو الصفحة مفتوحة كملف من الجهاز (خطأ 153). ارفع الموقع على استضافة (https) أو شغّله على localhost.', 'info');
+        return;
+      }
+      if (!embedUrl) {
+        Swal.fire('رابط غير مدعوم', 'الرابط لازم يكون فيديو يوتيوب أو ملف فيديو على جوجل درايف.', 'warning');
+        return;
+      }
       titleEl.innerText = title || 'مشاهدة الشرح';
       extLink.href = safeUrl(rawUrl);
-      frame.src = getYoutubeEmbedUrl(rawUrl);
+      syncVideoBlocker(embedUrl);
+      videoDebug(embedUrl);
+      frame.src = embedUrl;
       overlay.style.display = 'flex';
     }
 
@@ -10739,6 +10857,7 @@ function openThemePicker() {
       const overlay = document.getElementById('video-player-overlay');
       const frame = document.getElementById('video-player-frame');
       if (frame) frame.src = '';
+      syncVideoBlocker('');
       if (overlay) overlay.style.display = 'none';
     }
 
@@ -13139,7 +13258,7 @@ function openThemePicker() {
         +'<div style="font-weight:800;font-size:16px;line-height:1.5;">'+esc(c.name)+'</div>'
         +'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:auto;align-items:center;">'
         +'<button type="button" class="pill" style="background:#f97316;" onclick="openCourse(\''+c.id+'\')">▶ مشاهدة</button>'
-        +'<a class="pill" style="background:rgba(255,255,255,.1);" target="_blank" rel="noopener" href="'+esc(safeUrl(c.url))+'">فتح ↗</a>'+del
+        +(staff()?'<a class="pill" style="background:rgba(255,255,255,.1);" target="_blank" rel="noopener" href="'+esc(safeUrl(c.url))+'">فتح ↗</a>':'')+del
         +'</div></div></div>';
     }).join('');
   }
@@ -13185,7 +13304,7 @@ function openThemePicker() {
     var c=courses.filter(function(x){return x.id===id;})[0];if(!c)return;
     var o=document.getElementById('video-player-overlay'),f=document.getElementById('video-player-frame'),t=document.getElementById('video-player-title'),e=document.getElementById('video-player-ext-link');
     if(!o||!f)return;
-    t.innerText=c.name;e.href=safeUrl(c.url);f.src=embed(c.url);o.style.display='flex';
+    var eu=embed(c.url);if(!eu){Swal.fire('رابط غير مدعوم','الرابط لازم يكون يوتيوب أو جوجل درايف.','warning');return;}t.innerText=c.name;e.href=safeUrl(c.url);try{syncVideoBlocker(eu);videoDebug(eu);}catch(_){}f.src=eu;o.style.display='flex';
   };
 })();
 </script>
@@ -13511,7 +13630,7 @@ function openThemePicker() {
       }).observe(qGrid, { childList: true });
     }
 
-    setInterval(refreshStudentHeroStats, 3000);
+    setInterval(function() { if (!document.hidden) refreshStudentHeroStats(); }, 3000);
   }
 
   if (document.readyState === 'loading') {
@@ -13723,17 +13842,32 @@ function openThemePicker() {
   var currentCommentFileTitle = '';
   var currentFcRating = 5;
 
-  function startFileTrackingListeners() {
-    if (fileListenersStarted || typeof database === 'undefined') return;
-    fileListenersStarted = true;
+  var __fileFullMode = false, __fileSubjRefs = {};
 
+  function __onFileStats(id, snap) {
+    window.fileStatsMap[id] = snap.val() || {};
+    refreshVisibleFilesUI();
+  }
+  function __onFileComments(id, snap) {
+    window.fileCommentsMap[id] = snap.val() || {};
+    refreshVisibleFilesUI();
+    if (currentCommentSubjId && currentCommentFileKey) {
+      renderFileCommentsList(currentCommentSubjId, currentCommentFileKey);
+    }
+  }
+
+  /* وضع الستاف (الأصلي): الاستماع للعقدة كاملة لأن لوحة الإحصائيات تحتاجها */
+  function startFullFileListeners() {
+    if (__fileFullMode) return;
+    __fileFullMode = true;
+    Object.keys(__fileSubjRefs).forEach(function(k) { try { __fileSubjRefs[k].s.off(); __fileSubjRefs[k].c.off(); } catch (e) {} });
+    __fileSubjRefs = {};
     try {
       database.ref('file_stats').on('value', function(snap) {
         window.fileStatsMap = snap.val() || {};
         refreshVisibleFilesUI();
       }, function(err) { console.error('file_stats:', err); });
     } catch (e) {}
-
     try {
       database.ref('file_comments').on('value', function(snap) {
         window.fileCommentsMap = snap.val() || {};
@@ -13744,6 +13878,41 @@ function openThemePicker() {
       }, function(err) { console.error('file_comments:', err); });
     } catch (e) {}
   }
+
+  /* وضع الطالب: الاستماع لمادة واحدة فقط (المادة المفتوحة) بدل تحميل كل المواد */
+  function listenFilesForSubject(id) {
+    if (__fileFullMode || !id || typeof database === 'undefined') return;
+    id = String(id);
+    if (__fileSubjRefs[id]) return;
+    Object.keys(__fileSubjRefs).forEach(function(k) {
+      try { __fileSubjRefs[k].s.off(); __fileSubjRefs[k].c.off(); } catch (e) {}
+      delete __fileSubjRefs[k];
+    });
+    try {
+      var sRef = database.ref('file_stats/' + id), cRef = database.ref('file_comments/' + id);
+      sRef.on('value', function(snap) { __onFileStats(id, snap); }, function(err) { console.error('file_stats:', err); });
+      cRef.on('value', function(snap) { __onFileComments(id, snap); }, function(err) { console.error('file_comments:', err); });
+      __fileSubjRefs[id] = { s: sRef, c: cRef };
+    } catch (e) {}
+  }
+
+  function startFileTrackingListeners() {
+    if (fileListenersStarted || typeof database === 'undefined') return;
+    fileListenersStarted = true;
+    if (typeof isStaffUser === 'function' && isStaffUser()) { startFullFileListeners(); return; }
+    if (typeof currentSubjectId !== 'undefined' && currentSubjectId) listenFilesForSubject(currentSubjectId);
+  }
+
+  /* ربط فتح المادة بالاستماع لها (بدون تغيير سلوك openSubject الأصلي) */
+  (function() {
+    var __origOpen = window.openSubject;
+    if (typeof __origOpen !== 'function' || __origOpen.__fileWrapped) return;
+    window.openSubject = function(id) {
+      try { if (fileListenersStarted) listenFilesForSubject(id); } catch (e) {}
+      return __origOpen.apply(this, arguments);
+    };
+    window.openSubject.__fileWrapped = true;
+  })();
 
   function refreshVisibleFilesUI() {
     try {
@@ -14106,9 +14275,14 @@ function openThemePicker() {
   };
 
   // تشغيل المستمعين عند جاهزية الصفحة أو تسجيل الدخول
-  setInterval(function() {
-    if (typeof currentUser !== 'undefined' && currentUser && !fileListenersStarted) {
-      startFileTrackingListeners();
+  var __ftTries = 0;
+  var __ftTimer = setInterval(function() {
+    if (typeof currentUser === 'undefined' || !currentUser) return;
+    var ready = (typeof currentStudentData !== 'undefined' && currentStudentData);
+    if (!fileListenersStarted && (ready || ++__ftTries > 10)) startFileTrackingListeners();
+    if (fileListenersStarted && ready) {
+      if (!__fileFullMode && typeof isStaffUser === 'function' && isStaffUser()) startFullFileListeners();
+      clearInterval(__ftTimer);
     }
   }, 1200);
 
