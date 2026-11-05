@@ -4744,6 +4744,8 @@ body[class*="theme-"] .mob-nav-item.active{color:var(--primary)!important}
                 <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
                   <button class="pill" id="students-collapse-btn" type="button" style="background: rgba(59,130,246,.18); border:1px solid rgba(59,130,246,.4); color:#60a5fa; font-size: 12px;" onclick="toggleStudentsList()">▼ عرض القائمة</button>
                   <button class="pill" style="background: #10b981; font-size: 12px;" onclick="exportStudentsCSV()">📥 تصدير Excel</button>
+                  <button class="pill" id="users-refresh-btn" type="button" style="background: rgba(59,130,246,.18); border:1px solid rgba(59,130,246,.4); color:#60a5fa; font-size: 12px;" onclick="refreshUsersNow()">🔄 تحديث الآن</button>
+                  <button class="pill" id="users-live-btn" type="button" style="font-size: 12px;" onclick="toggleUsersLive()">⚪ تحديث لحظي: متوقف</button>
                 </div>
              </div>
              <div id="students-list-wrap" style="display:none;">
@@ -5628,7 +5630,7 @@ body[class*="theme-"] .mob-nav-item.active{color:var(--primary)!important}
       detachMyPerms();
       __permsUid = uid; __permsRef = database.ref('staff_perms/' + uid);
       try { const c = localStorage.getItem('sp_' + uid); if (c !== null) { __myPerms = JSON.parse(c); __myPermsLoaded = true; } } catch (e) { }
-      const done = (v) => { __myPerms = v; __myPermsLoaded = true; try { localStorage.setItem('sp_' + uid, JSON.stringify(v)); } catch (e) { } try { applyStaffRoleUI(); } catch (e) { } };
+      const done = (v) => { __myPerms = v; __myPermsLoaded = true; try { localStorage.setItem('sp_' + uid, JSON.stringify(v)); } catch (e) { } try { applyStaffRoleUI(); } catch (e) { } try { if (window.__enforceUsersLive) window.__enforceUsersLive(); } catch (e) { } };
       __permsRef.on('value', (s) => done(s.val()), () => done(null));
     }
     function detachMyPerms() {
@@ -5808,7 +5810,7 @@ body[class*="theme-"] .mob-nav-item.active{color:var(--primary)!important}
 
     function escapeHtml(str) { if (str === null || str === undefined) return ''; return String(str).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\r?\n/g, '\\n').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
     function escText(str) { if (str === null || str === undefined) return ''; return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
-    function safeUrl(u) { try { if (typeof u === 'string' && u.indexOf('hosted:') === 0) return u; const x = new URL(u); return (x.protocol === 'https:' || x.protocol === 'http:') ? x.href : '#'; } catch (e) { return '#'; } }
+    function safeUrl(u) { try { const x = new URL(u); return (x.protocol === 'https:' || x.protocol === 'http:') ? x.href : '#'; } catch (e) { return '#'; } }
 
     function getStudentShortId(uid, customId) { if (customId && customId.trim() !== '') return customId; return uid ? uid.substring(0,6).toUpperCase() : 'غير متوفر'; }
 
@@ -6188,12 +6190,73 @@ ${escText(alertBody)}
     }
 
     function listenToUsersData() {
-      database.ref('users').on('value', (snapshot) => {
+      /* قائمة الطلبة للستاف: وضعين
+         - يدوي (الافتراضي): تحميل مرة واحدة + زر "تحديث الآن" (بيوفر تحميل)
+         - لحظي: اتصال حي. متاح فقط للمالك أو لمن منحه المالك صلاحية "students.live" من قسم الصلاحيات. */
+      const KEY = 'admin_users_live', ref = database.ref('users');
+      const handle = (snapshot) => {
         let users = snapshot.val() || {}; allUsersList = []; for (let id in users) allUsersList.push({ uid: id, ...users[id], ...(users[id] && users[id].isOwner === true ? { isAdmin: true } : {}), level: 2 });
         allUsersList.sort((a, b) => (b.score || 0) - (a.score || 0));
         clearTimeout(window.__usersRenderT);
         window.__usersRenderT = setTimeout(() => { try { renderAdminResearchTable(); } catch (e) {} updateDashboardStats(); renderStudentsTable(); }, 400);
-      });
+      };
+      const canLive = () => {
+        try {
+          if (isOwnerUser()) return true;
+          return !!(__myPermsLoaded && __myPerms && typeof __myPerms === 'object' && __myPerms['students_live'] === true);
+        } catch (e) { return false; }
+      };
+      const wanted = () => { try { return localStorage.getItem(KEY) === '1'; } catch (e) { return false; } };
+      if (window.__usersCb) { try { ref.off('value', window.__usersCb); } catch (e) {} }
+      window.__usersCb = handle;
+      window.__usersLive = false;
+      const paint = () => {
+        const b = document.getElementById('users-live-btn'); if (!b) return;
+        if (!canLive()) {
+          b.textContent = '🔒 تحديث لحظي (بصلاحية المالك)';
+          b.style.background = 'rgba(255,255,255,.05)'; b.style.border = '1px solid rgba(255,255,255,.15)'; b.style.color = 'var(--fg-soft)';
+          return;
+        }
+        b.textContent = window.__usersLive ? '🟢 تحديث لحظي: يعمل' : '⚪ تحديث لحظي: متوقف';
+        b.style.background = window.__usersLive ? 'rgba(16,185,129,.25)' : 'rgba(255,255,255,.08)';
+        b.style.border = window.__usersLive ? '1px solid rgba(16,185,129,.6)' : '1px solid rgba(255,255,255,.2)';
+        b.style.color = window.__usersLive ? '#34d399' : 'inherit';
+      };
+      window.refreshUsersNow = () => {
+        const rb = document.getElementById('users-refresh-btn'); if (rb) rb.textContent = '⏳ جاري التحديث...';
+        return ref.once('value').then(handle).catch(e => console.error('users:', e))
+          .then(() => { if (rb) rb.textContent = '🔄 تحديث الآن'; });
+      };
+      window.setUsersLive = (on, save) => {
+        if (on && !canLive()) on = false;
+        window.__usersLive = !!on;
+        if (save !== false) { try { localStorage.setItem(KEY, on ? '1' : '0'); } catch (e) {} }
+        try { ref.off('value', handle); } catch (e) {}
+        if (on) ref.on('value', handle); else window.refreshUsersNow();
+        paint();
+      };
+      window.toggleUsersLive = () => {
+        if (!canLive()) { try { Swal.fire('غير متاح', 'التحديث اللحظي متاح بصلاحية من المالك. اطلبها منه لو محتاجها.', 'info'); } catch (e) {} return; }
+        window.setUsersLive(!window.__usersLive);
+      };
+      /* بعد تحميل الصلاحيات أو تغييرها: نفعّل اللحظي لو مسموح ومطلوب، ونوقفه فوراً لو الصلاحية اتسحبت */
+      window.__enforceUsersLive = () => {
+        if (window.__usersLive && !canLive()) window.setUsersLive(false);
+        else if (!window.__usersLive && canLive() && wanted()) window.setUsersLive(true, false);
+        else paint();
+      };
+      /* في الوضع اليدوي: بعد أي إجراء أدمن (حظر/نقاط/تعديل...) نحدّث القائمة تلقائياً */
+      if (!window.__laWrapped && typeof window.logAdminAction === 'function') {
+        window.__laWrapped = true;
+        const orig = window.logAdminAction;
+        window.logAdminAction = function () {
+          const r = orig.apply(this, arguments);
+          if (!window.__usersLive) { clearTimeout(window.__usersAutoT); window.__usersAutoT = setTimeout(() => { try { window.refreshUsersNow(); } catch (e) {} }, 1500); }
+          return r;
+        };
+      }
+      window.setUsersLive(canLive() && wanted(), false);
+      paint();
     }
 
     function logAdminAction(actionTitle, detailsText) {
@@ -6495,7 +6558,7 @@ ${escText(alertBody)}
       userDataRef = database.ref('users/' + uid);
       userDataRef.on('value', (snap) => {
         currentStudentData = snap.val(); if (currentStudentData) currentStudentData.level = 2; if (currentStudentData && currentStudentData.isOwner === true) currentStudentData.isAdmin = true; checkMaintenanceUI();
-        if (currentStudentData && isStaffUser()) attachMyPerms(uid); else detachMyPerms();
+        if (currentStudentData && isStaffUser()) { attachMyPerms(uid); try { if (window.__subjectsGoLive) window.__subjectsGoLive(); } catch (e) {} } else detachMyPerms();
         { const __a = !!(currentStudentData && isStaffUser()); if (window.__lastAdm !== __a && window.__subjectsRaw) { try { applySubjectsRaw(); } catch (err) { console.error(err); } } }
         if (currentStudentData) {
           if (currentStudentData.isBanned) { Swal.fire('محظور!', `⚠️ تم حظرك!<br>السبب: ${escText(currentStudentData.banReason)}`, 'error'); logoutStudent(); return; }
@@ -7298,7 +7361,48 @@ ${escText(alertBody)}
     }
 
     function listenToSubjects() {
-      database.ref('subjects').on('value', (snap) => { window.__subjectsRaw = snap.val() || {}; applySubjectsRaw(); });
+      /* الطلبة: بيسمعوا لرقم نسخة صغير جداً (settings/subjectsVersion) ومش بينزّلوا المواد غير لما الرقم يتغير.
+         الستاف: اتصال حي على المواد، وأي تعديل منهم بيحدّث رقم النسخة فالطلبة يشوفوه خلال ثواني. */
+      const SAFE_TTL = 6 * 60 * 60 * 1000, VER_KEY = 'fast_cache_subjects_ver', TS_KEY = 'fast_cache_subjects_ts';
+      const ref = database.ref('subjects'), verRef = database.ref('settings/subjectsVersion');
+      let live = false, busy = false, lastFetch = 0, timer = null, firstLive = true, bumpT = null;
+      const hasCache = () => !!(window.__subjectsRaw && Object.keys(window.__subjectsRaw).length > 0);
+      const store = (k, v) => { try { localStorage.setItem(k, String(v)); } catch (e) {} };
+      const read = (k) => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+      const fetchOnce = (ver) => {
+        if (live || busy) return; busy = true; lastFetch = Date.now();
+        ref.once('value').then(snap => { window.__subjectsRaw = snap.val() || {}; store(TS_KEY, Date.now()); store(VER_KEY, ver); applySubjectsRaw(); })
+          .catch(e => console.error('subjects:', e)).then(() => { busy = false; });
+      };
+      const schedule = (ver, now) => {
+        clearTimeout(timer);
+        const wait = now ? 0 : Math.max(1000 + Math.random() * 4000, 30000 - (Date.now() - lastFetch));
+        timer = setTimeout(() => fetchOnce(ver), wait);
+      };
+      if (window.__subjVerOff) { try { window.__subjVerOff(); } catch (e) {} }
+      const verCb = (snap) => {
+        if (live) return;
+        const v = snap.val() || 0;
+        /* نستنى تحميل الكاش من IndexedDB الأول عشان نعرف عندنا نسخة ولا لأ */
+        (window.__subjectsCacheReady || Promise.resolve()).then(() => {
+          if (live) return;
+          const stale = (Date.now() - (+read(TS_KEY) || 0)) > SAFE_TTL;
+          if (!hasCache()) schedule(v, true);
+          else if (read(VER_KEY) !== String(v) || stale) schedule(v, false);
+        });
+      };
+      verRef.on('value', verCb, e => console.error('subjectsVersion:', e));
+      window.__subjVerOff = () => { try { verRef.off('value', verCb); } catch (e) {} };
+      window.__subjectsGoLive = () => {
+        if (live) return; live = true; clearTimeout(timer); window.__subjVerOff();
+        ref.on('value', snap => {
+          window.__subjectsRaw = snap.val() || {}; store(TS_KEY, Date.now()); applySubjectsRaw();
+          if (firstLive) { firstLive = false; return; }
+          clearTimeout(bumpT);
+          bumpT = setTimeout(() => { try { verRef.set(FB.database.ServerValue.TIMESTAMP).catch(() => {}); } catch (e) {} }, 3000);
+        });
+      };
+      if (currentStudentData && isStaffUser()) window.__subjectsGoLive();
     }
     function applySubjectsRaw() {
         const val = window.__subjectsRaw || {};
@@ -13796,26 +13900,32 @@ function openThemePicker() {
   /* =========================================================================
      1. تسريع فتح المنصة عبر الكاش الفوري (Instant LocalStorage Cache) + تأجيل الفيديو
      ========================================================================= */
-  try {
-    var cachedSubj = localStorage.getItem('fast_cache_subjects_v3');
-    if (cachedSubj && (typeof db === 'undefined' || db.length === 0)) {
-      window.__subjectsRaw = JSON.parse(cachedSubj);
-      setTimeout(function() {
-        try { if (typeof applySubjectsRaw === 'function') applySubjectsRaw(); } catch(e){}
-      }, 10);
+  /* كاش المواد في IndexedDB (مفيش حد 5MB زي localStorage). لو فيه كاش قديم في localStorage بيتنقل تلقائياً. */
+  var __IDB = {
+    open: function() { return new Promise(function(res, rej) { try { var r = indexedDB.open('fast_cache', 1); r.onupgradeneeded = function() { r.result.createObjectStore('kv'); }; r.onsuccess = function() { res(r.result); }; r.onerror = function() { rej(r.error); }; } catch (e) { rej(e); } }); },
+    get: function(k) { return this.open().then(function(d) { return new Promise(function(res, rej) { var q = d.transaction('kv').objectStore('kv').get(k); q.onsuccess = function() { res(q.result); }; q.onerror = function() { rej(q.error); }; }); }).catch(function() { return null; }); },
+    set: function(k, v) { return this.open().then(function(d) { return new Promise(function(res, rej) { var t = d.transaction('kv', 'readwrite'); t.objectStore('kv').put(v, k); t.oncomplete = function() { res(true); }; t.onerror = function() { rej(t.error); }; }); }).catch(function() { return false; }); }
+  };
+  window.__subjectsCacheReady = __IDB.get('subjects_raw').then(function(cached) {
+    var fromOld = false;
+    if (!cached) { try { var old = localStorage.getItem('fast_cache_subjects_v3'); if (old) { cached = JSON.parse(old); fromOld = true; } } catch (e) {} }
+    if (cached && typeof cached === 'object' && Object.keys(cached).length) {
+      if (!window.__subjectsRaw || !Object.keys(window.__subjectsRaw).length) window.__subjectsRaw = cached;
+      if (typeof db === 'undefined' || db.length === 0) { try { if (typeof applySubjectsRaw === 'function') applySubjectsRaw(); } catch (e) {} }
+      if (fromOld) { return __IDB.set('subjects_raw', cached).then(function(ok) { if (ok) { try { localStorage.removeItem('fast_cache_subjects_v3'); } catch (e) {} } }); }
     }
-  } catch (e) {}
+  }).catch(function() {});
 
-  // حفظ المواد تلقائياً في الكاش عند تحديثها لتفتح فوراً في المرات القادمة
+  // حفظ المواد تلقائياً في الكاش عند تحديثها (مع تأخير بسيط عشان ما نكتبش كتير)
+  var __subjSaveT = null;
   var origApplySubjectsRaw = window.applySubjectsRaw;
   if (typeof origApplySubjectsRaw === 'function') {
     window.applySubjectsRaw = function() {
       origApplySubjectsRaw.apply(this, arguments);
-      try {
-        if (window.__subjectsRaw && Object.keys(window.__subjectsRaw).length > 0) {
-          localStorage.setItem('fast_cache_subjects_v3', JSON.stringify(window.__subjectsRaw));
-        }
-      } catch (e) {}
+      clearTimeout(__subjSaveT);
+      __subjSaveT = setTimeout(function() {
+        try { if (window.__subjectsRaw && Object.keys(window.__subjectsRaw).length > 0) __IDB.set('subjects_raw', window.__subjectsRaw); } catch (e) {}
+      }, 1500);
     };
   }
 
@@ -14298,7 +14408,7 @@ function openThemePicker() {
 <script>
 /* ===== رفع الملفات والامتحانات مباشرة على المنصة (بدون درايف) ===== */
 (function(){
-  var cache = {}, MAX = 8 * 1024 * 1024;
+  var MAX = 8 * 1024 * 1024;
   var DRIVE_URL = 'https://script.google.com/macros/s/AKfycbwn30a40C1373fNYhADEbgHZx9MNzEzLliXXhfia6XPCwKe-IYXdT4D1dtpKtJv27mJFA/exec'; // ← الصق هنا رابط Apps Script (Web app URL) بعد النشر
   function lscript(src){ return new Promise(function(res,rej){ var t=document.createElement('script'); t.src=src; t.onload=res; t.onerror=rej; document.head.appendChild(t); }); }
   async function imagesToPdf(fl){
@@ -14313,7 +14423,6 @@ function openThemePicker() {
     }
     return pdf.output('datauristring');
   }
-  function isH(u){ return typeof u === 'string' && u.indexOf('hosted:') === 0; }
   window.__fsrc = function(){
     var up = document.getElementById('file-source').value !== 'link';
     document.getElementById('file-upload').style.display = up ? '' : 'none';
@@ -14357,119 +14466,18 @@ function openThemePicker() {
         var jr=await resp.json();
         if(!jr.ok) throw new Error(jr.error||'فشل الرفع على درايف');
         fileData.link=jr.url;
-      } else {
-        var fl=[].slice.call(document.getElementById('file-upload').files);
-        if(!fl.length) return Swal.fire('تنبيه','اختار ملف الأول','warning');
-        fl.sort(function(a,b){return a.name.localeCompare(b.name,undefined,{numeric:true});});
-        var pdfs=fl.filter(function(f){return f.type==='application/pdf'||/\.pdf$/i.test(f.name);});
-        if(pdfs.length && fl.length>1) return Swal.fire('تنبيه','ارفع ملف PDF واحد بس، أو مجموعة صور بس (مش الاتنين مع بعض).','warning');
-        Swal.fire({title:'جاري الرفع...',text:'متقفلش الصفحة',allowOutsideClick:false,didOpen:function(){Swal.showLoading();}});
-        var blob={ name:fl[0].name, by:currentUser.uid, at:Date.now() };
-        if(pdfs.length){ blob.kind='pdf'; blob.data=await readDU(pdfs[0]); }
-        else { blob.kind='images'; blob.pages=[]; for(var i=0;i<fl.length;i++) blob.pages.push(await compress(fl[i])); }
-        if(JSON.stringify(blob).length>MAX) throw new Error('الملف كبير. صغّره (مثلاً من ilovepdf.com) أو قلل عدد الصفحات. الحد حوالي 6MB.');
-        var ref=await database.ref('file_blobs').push(blob);
-        fileData.link='hosted:'+ref.key; fileData.hosted=true; fileData.kind=blob.kind;
-      }
+} else { throw new Error('اختار طريقة الرفع: درايف أو رابط خارجي'); }
       await database.ref('subjects/'+sId+'/files').push(fileData);
       resetFormKeepTarget(form,'file-subj-select','file-chapter-select');
       logAdminAction('رفع ملف','عنوان الملف: '+title+' | المادة: '+(subj?subj.name:''));
       Swal.fire('تم','تم الرفع بنجاح!','success');
-    }catch(err){ console.error(err); Swal.fire('خطأ', (err&&err.message)||'فشل الرفع. اتأكد إن قواعد Firebase اتحدثت (file_blobs).','error'); }
-  };
-
-  function idb(){ return new Promise(function(res,rej){ var r=indexedDB.open('fileCache',1); r.onupgradeneeded=function(){ r.result.createObjectStore('f'); }; r.onsuccess=function(){res(r.result);}; r.onerror=function(){rej(r.error);}; }); }
-  function cget(id){ return idb().then(function(d){ return new Promise(function(res){ var q=d.transaction('f').objectStore('f').get(id); q.onsuccess=function(){res(q.result||null);}; q.onerror=function(){res(null);}; }); }).catch(function(){ return null; }); }
-  function cput(id,v){ return idb().then(function(d){ d.transaction('f','readwrite').objectStore('f').put(v,id); }).catch(function(){}); }
-  function load(id){
-    if(cache[id]) return Promise.resolve(cache[id]);
-    return cget(id).then(function(c){
-      if(c){ cache[id]=c; return c; }
-      return database.ref('file_blobs/'+id).once('value').then(function(s){ var v=s.val(); if(!v) throw new Error('الملف مش موجود'); cache[id]=v; cput(id,v); return v; });
-    });
-  }
-  function loadPdfJs(){
-    if(window.pdfjsLib) return Promise.resolve();
-    return new Promise(function(res,rej){ var s=document.createElement('script');
-      s.src='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
-      s.onload=function(){ pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'; res(); };
-      s.onerror=rej; document.head.appendChild(s); });
-  }
-  function toBytes(du){ var b=atob(du.split(',')[1]), a=new Uint8Array(b.length); for(var i=0;i<b.length;i++) a[i]=b.charCodeAt(i); return a; }
-  function hostEl(frame){
-    var h=document.getElementById('hosted-viewer');
-    if(!h){ h=document.createElement('div'); h.id='hosted-viewer';
-      h.style.cssText='position:absolute;inset:0;overflow:auto;z-index:3;background:#18181b;padding:8px;text-align:center;-webkit-overflow-scrolling:touch;';
-      ['contextmenu','dragstart','copy','cut','selectstart'].forEach(function(ev){ h.addEventListener(ev,function(e){e.preventDefault();}); });
-      h.style.userSelect='none'; h.style.webkitUserSelect='none'; h.style.webkitTouchCallout='none';
-      frame.parentNode.appendChild(h); }
-    return h;
-  }
-  async function renderPdf(host,data){
-    await loadPdfJs();
-    var pdf=await pdfjsLib.getDocument({data:toBytes(data)}).promise;
-    for(var p=1;p<=pdf.numPages;p++){
-      var pg=await pdf.getPage(p), v0=pg.getViewport({scale:1});
-      var sc=Math.min(2,(host.clientWidth-16)/v0.width*(window.devicePixelRatio||1));
-      var vp=pg.getViewport({scale:sc}), c=document.createElement('canvas');
-      c.width=vp.width; c.height=vp.height; c.style.cssText='width:100%;max-width:900px;background:#fff;margin:0 auto 10px;display:block;border-radius:6px;';
-      host.appendChild(c); await pg.render({canvasContext:c.getContext('2d'),viewport:vp}).promise;
-    }
-  }
-
-  function tog(hide){
-    var ex=document.getElementById('pdf-viewer-external-link'), cp=document.querySelector('#pdf-viewer-overlay button[onclick="copyCurrentPdfLink()"]');
-    if(ex) ex.style.display=hide?'none':''; if(cp) cp.style.display=hide?'none':'';
-  }
-  var st=document.createElement('style'); st.textContent='@media print{#hosted-viewer,#pdf-viewer-overlay{display:none!important}}'; document.head.appendChild(st);
-  document.addEventListener('keydown',function(e){
-    var h=document.getElementById('hosted-viewer');
-    if(h && h.style.display==='block' && (e.ctrlKey||e.metaKey) && /^[sp]$/i.test(e.key)) e.preventDefault();
-  });
-  var origOpen=window.openPdfViewer, origClose=window.closePdfViewer;
-  window.openPdfViewer=function(title,url){
-    var h0=document.getElementById('hosted-viewer'); if(h0) h0.style.display='none';
-    if(!isH(url)){ tog(false); return origOpen(title,url); }
-    tog(true);
-    var cs=db.find(function(s){return s.id===currentSubjectId;});
-    if(isRestrictedLevel2(cs)) return showLevel2RestrictionAlert('معاينة الملفات والمحاضرات');
-    var ov=document.getElementById('pdf-viewer-overlay'), fr=document.getElementById('pdf-viewer-frame'), sp=document.getElementById('pdf-loading-spinner');
-    document.getElementById('pdf-viewer-title').innerText=title||'معاينة الملف';
-    document.getElementById('pdf-viewer-external-link').href='#';
-    try{ currentViewingPdfUrl=location.href; }catch(e){}
-    fr.src=''; var host=hostEl(fr); host.innerHTML=''; host.style.display='block';
-    if(sp) sp.style.display='flex'; ov.style.display='flex';
-    load(url.slice(7)).then(async function(b){
-      try{
-        if(b.kind==='pdf'){
-          try{ await renderPdf(host,b.data); }
-          catch(er){ console.warn(er); host.innerHTML='<div style="color:#f87171;padding:30px;">تعذر عرض الملف. حدّث الصفحة وحاول تاني.</div>'; return; }
-        } else {
-          (b.pages||[]).forEach(function(d){ var c=document.createElement('canvas'); c.style.cssText='width:100%;max-width:900px;display:block;margin:0 auto 10px;border-radius:6px;background:#fff;'; host.appendChild(c); var im=new Image(); im.onload=function(){ c.width=im.width; c.height=im.height; c.getContext('2d').drawImage(im,0,0); }; im.src=d; });
-        }
-      } finally { if(sp) sp.style.display='none'; }
-    }).catch(function(er){ if(sp) sp.style.display='none'; host.innerHTML='<div style="color:#f87171;padding:30px;">تعذر تحميل الملف: '+(er.message||'')+'</div>'; });
-  };
-  window.closePdfViewer=function(e){
-    if(e && e.target && e.target.id!=='pdf-viewer-overlay' && e.target.tagName!=='BUTTON') return;
-    var h=document.getElementById('hosted-viewer'); if(h){ h.innerHTML=''; h.style.display='none'; }
-    origClose(e);
-  };
-
-  var origExt=window.openExternalFileAndTrack;
-  window.openExternalFileAndTrack=function(subjId,fileKey,title,url){
-    if(!isH(url)) return origExt(subjId,fileKey,title,url);
-    try{ recordFileAccess(subjId,fileKey,title); }catch(e){}
-    window.openPdfViewer(title,url);
+    }catch(err){ console.error(err); Swal.fire('خطأ', (err&&err.message)||'فشل الرفع. حاول تاني.','error'); }
   };
 
   window.deleteFile=function(s,f,name){
-    var sub=db.find(function(x){return x.id===s;}), fl=sub&&sub.files.find(function(x){return x.key===f;});
-    var bid=(fl&&isH(fl.link))?fl.link.slice(7):null;
     Swal.fire({title:'حذف الملف؟',showCancelButton:true,confirmButtonColor:'#ef4444'}).then(function(r){
       if(!r.isConfirmed) return;
       database.ref('subjects/'+s+'/files/'+f).remove();
-      if(bid){ database.ref('file_blobs/'+bid).remove(); delete cache[bid]; }
       logAdminAction('حذف ملف','الملف: '+name);
     });
   };
@@ -14576,6 +14584,7 @@ function openThemePicker() {
       ['students.ban','حظر وفك حظر الطلاب ⛔'],
       ['students.research','تعيين بحث للطالب 🔬'],
       ['students.export','تصدير بيانات الطلاب Excel 📥'],
+      ['students.live','تفعيل التحديث اللحظي لقائمة الطلاب ⚡ (بيستهلك تحميل أكتر)'],
       ['students.delete','حذف حساب طالب نهائيًا 🗑️']]},
     {id:'content', title:'📚 المحتوى', items:[
       ['subjects.manage','إضافة وتعديل وحذف المواد'],
@@ -14616,6 +14625,7 @@ function openThemePicker() {
     if (u.isOwner) { ALL_KEYS.forEach(function(k){ m[k] = true; }); return m; }
     var pp = (window.__allPerms || {})[u.uid]; if (pp && typeof pp === 'object') { ALL_KEYS.forEach(function(k){ m[k] = pp[k.replace(/\./g, '_')] === true; }); return m; }
     ALL_KEYS.forEach(function(k){ m[k] = u.isAdmin ? true : (window.__LEADER_DENY || []).indexOf(k) < 0; });
+    m['students.live'] = false; /* صلاحية التحديث اللحظي: بتتمنح صراحةً من المالك فقط */
     return m;
   }
   function rankOf(u){
