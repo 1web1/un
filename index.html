@@ -358,6 +358,27 @@
   .overlay-bg { position: fixed; inset: 0; background: rgba(0,0,0,.85); backdrop-filter: blur(10px); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 16px; overflow-y: auto; }
   /* مشغل الفيديو: ملء الشاشة (حقيقي أو بديل CSS للآيفون) */
   #video-stage:fullscreen, #video-stage:-webkit-full-screen { width: 100vw !important; height: 100vh !important; padding-bottom: 0 !important; border-radius: 0 !important; background: #000; }
+  /* الموبايل: مشغّل بعرض الشاشة كلها + أزرار كبيرة سهلة اللمس */
+  @media (max-width: 640px) {
+    #video-player-overlay { padding: 0 !important; align-items: flex-start !important; overflow-y: auto; }
+    #video-modal { width: 100vw !important; max-width: 100vw !important; max-height: none !important; padding: 8px 0 max(14px, env(safe-area-inset-bottom)) !important; border-radius: 0 !important; border-left: 0 !important; border-right: 0 !important; }
+    #video-modal-head { margin: 0 12px 8px !important; padding-bottom: 8px !important; }
+    #video-modal-head h3 { font-size: 14px !important; }
+    #video-stage { border-radius: 0 !important; }
+    #video-controls { margin: 10px 12px 0 !important; gap: 8px !important; }
+    #video-yt-controls { flex: 1 1 100%; flex-wrap: nowrap !important; gap: 8px !important; }
+    #video-controls .vc-btn { height: 44px !important; flex: 1 1 0; min-width: 0; font-size: 13px !important; white-space: nowrap; padding: 0 6px !important; margin: 0 !important; justify-content: center; }
+    .video-speed-group, .video-speed-btn { display: none !important; }
+    #video-speed-cycle { display: inline-flex !important; }
+    #video-drive-hint { flex: 1 1 100%; font-size: 11.5px !important; }
+    #video-controls > .vc-btn { flex: 1 1 100%; }
+  }
+  /* ملء الشاشة البديل والموبايل واقف: يتلف الفيديو أفقي عشان يملا الشاشة */
+  @media (orientation: portrait) {
+    #video-player-overlay #video-stage.video-fake-fs { inset: auto !important; top: 0 !important; left: 100vw !important; width: 100vh !important; width: 100dvh !important; height: 100vw !important; transform-origin: top left; transform: rotate(90deg); }
+  }
+  #video-player-overlay.video-fs-active, #video-player-overlay.video-fs-active #video-modal { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; transform: none !important; filter: none !important; overflow: visible !important; contain: none !important; will-change: auto !important; animation: none !important; }
+  #video-player-overlay.video-fs-active #video-modal > *:not(#video-stage) { visibility: hidden; }
   #video-stage.video-fake-fs #video-fake-fs-exit { display: block !important; }
   #video-stage.video-fake-fs { position: fixed !important; inset: 0; width: 100vw !important; height: 100vh !important; padding-bottom: 0 !important; border-radius: 0 !important; z-index: 2147483000; }
   .modal-box { width: 100%; max-width: 450px; border-radius: 18px; padding: 26px 20px; max-height: 92vh; overflow-y: auto; }
@@ -5518,12 +5539,12 @@ body[class*="theme-"] .mob-nav-item.active{color:var(--primary)!important}
 
   <!-- نافذة مشغل الفيديو المدمج -->
   <div id="video-player-overlay" class="overlay-bg" style="display: none;" onclick="closeVideoPlayer(event)">
-    <div class="modal-box liquid-glass" onclick="event.stopPropagation()" style="max-width: 900px; width: 95vw; padding: 16px; border-radius: 16px;">
-      <div class="z-content flex-between" style="margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,.1); padding-bottom: 10px;">
-        <h3 id="video-player-title" style="margin: 0; font-size: 16px; color: #ec4899; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">مشاهدة الشرح</h3>
-        <div style="display: flex; gap: 8px;">
+    <div id="video-modal" class="modal-box liquid-glass" onclick="event.stopPropagation()" style="max-width: 900px; width: 95vw; padding: 16px; border-radius: 16px;">
+      <div class="z-content flex-between" id="video-modal-head" style="margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,.1); padding-bottom: 10px; gap: 8px; flex-wrap: nowrap;">
+        <h3 id="video-player-title" style="margin: 0; min-width: 0; flex: 1; font-size: 16px; color: #ec4899; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">مشاهدة الشرح</h3>
+        <div style="display: flex; gap: 8px; flex-shrink: 0;">
           <a id="video-player-ext-link" href="#" target="_blank" rel="noopener" class="pill" style="display:none !important; height: 30px; font-size: 12px; background: rgba(255,255,255,.1);">يوتيوب ↗</a>
-          <button class="pill" style="height: 30px; font-size: 12px; background: rgba(239,68,68,.2); color: #f87171;" onclick="closeVideoPlayer()">✕ إغلاق</button>
+          <button class="pill" style="height: 32px; font-size: 13px; white-space: nowrap; background: rgba(239,68,68,.2); color: #f87171;" onclick="closeVideoPlayer()">✕ إغلاق</button>
         </div>
       </div>
       <div id="video-stage" style="position: relative; width: 100%; padding-bottom: 56.25%; height: 0; border-radius: 10px; overflow: hidden; background: #000;">
@@ -5534,9 +5555,10 @@ body[class*="theme-"] .mob-nav-item.active{color:var(--primary)!important}
       </div>
       <div id="video-controls" dir="rtl" style="display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin-top:10px;">
         <span id="video-yt-controls" style="display:none; flex-wrap:wrap; align-items:center; gap:6px;">
-          <button type="button" class="pill" style="height:30px; font-size:12px; background:rgba(255,255,255,.12);" onclick="videoSeekBy(-10)">⏪ 10 ث</button>
-          <button type="button" class="pill" style="height:30px; font-size:12px; background:rgba(255,255,255,.12);" onclick="videoSeekBy(10)">10 ث ⏩</button>
-          <span style="font-size:12px; opacity:.7; margin:0 4px;">السرعة:</span>
+          <button type="button" class="pill vc-btn" style="height:30px; font-size:12px; background:rgba(255,255,255,.12);" onclick="videoSeekBy(-10)">⏪ 10 ث</button>
+          <button type="button" class="pill vc-btn" style="height:30px; font-size:12px; background:rgba(255,255,255,.12);" onclick="videoSeekBy(10)">10 ث ⏩</button>
+          <button type="button" id="video-speed-cycle" class="pill vc-btn" style="display:none; height:30px; font-size:12px; background:rgba(255,255,255,.12);" onclick="videoCycleSpeed()">⚡ 1x</button>
+          <span class="video-speed-group" style="font-size:12px; opacity:.7; margin:0 4px;">السرعة:</span>
           <button type="button" class="pill video-speed-btn" data-rate="0.5" style="height:30px; font-size:12px; background:rgba(255,255,255,.12);" onclick="videoSetSpeed(0.5)">0.5x</button>
           <button type="button" class="pill video-speed-btn" data-rate="1" style="height:30px; font-size:12px; background:rgba(255,255,255,.12);" onclick="videoSetSpeed(1)">1x</button>
           <button type="button" class="pill video-speed-btn" data-rate="1.25" style="height:30px; font-size:12px; background:rgba(255,255,255,.12);" onclick="videoSetSpeed(1.25)">1.25x</button>
@@ -5544,7 +5566,7 @@ body[class*="theme-"] .mob-nav-item.active{color:var(--primary)!important}
           <button type="button" class="pill video-speed-btn" data-rate="2" style="height:30px; font-size:12px; background:rgba(255,255,255,.12);" onclick="videoSetSpeed(2)">2x</button>
         </span>
         <span id="video-drive-hint" style="display:none; font-size:12px; opacity:.7;">⚙️ لتغيير السرعة افتح إعدادات المشغّل (الترس) ← سرعة التشغيل</span>
-        <button type="button" class="pill" style="height:30px; font-size:12px; background:var(--primary); color:#fff; margin-inline-start:auto;" onclick="videoToggleFullscreen()">⛶ ملء الشاشة</button>
+        <button type="button" class="pill vc-btn" style="height:30px; font-size:12px; background:var(--primary); color:#fff; margin-inline-start:auto;" onclick="videoToggleFullscreen()">⛶ ملء الشاشة</button>
       </div>
       <div id="video-debug" dir="ltr" style="display:none; margin-top:8px; font-size:10px; opacity:.6; word-break:break-all;"></div>
     </div>
@@ -10895,11 +10917,18 @@ function openThemePicker() {
       try { f.contentWindow.postMessage(JSON.stringify({ event: 'command', func: func, args: args || [] }), '*'); } catch (e) {}
     }
     function markSpeedButtons() {
+      const cyc = document.getElementById('video-speed-cycle');
+      if (cyc) cyc.textContent = '⚡ ' + ytState.rate + 'x';
       document.querySelectorAll('#video-yt-controls .video-speed-btn').forEach(b => {
         const on = Math.abs(parseFloat(b.dataset.rate) - ytState.rate) < 0.01;
         b.style.background = on ? 'var(--primary)' : 'rgba(255,255,255,.12)';
         b.style.color = on ? '#fff' : '';
       });
+    }
+    const VIDEO_RATES = [0.5, 1, 1.25, 1.5, 2];
+    function videoCycleSpeed() {
+      const i = VIDEO_RATES.findIndex(x => Math.abs(x - ytState.rate) < 0.01);
+      videoSetSpeed(VIDEO_RATES[(i + 1) % VIDEO_RATES.length]);
     }
     function videoSetSpeed(r) { ytCommand('setPlaybackRate', [r]); ytState.rate = r; markSpeedButtons(); }
     function videoSeekBy(sec) { ytCommand('seekTo', [Math.max(0, (ytState.time || 0) + sec), true]); ytState.time = Math.max(0, (ytState.time || 0) + sec); }
@@ -10913,12 +10942,25 @@ function openThemePicker() {
       if (req) {
         try {
           const p = req.call(stage);
-          if (p && p.catch) p.catch(() => stage.classList.toggle('video-fake-fs'));
+          if (p && p.then) p.then(() => {
+            // على الأندرويد: قفل الشاشة أفقي أثناء ملء الشاشة
+            try { if (screen.orientation && screen.orientation.lock) screen.orientation.lock('landscape').catch(() => {}); } catch (e) {}
+          }, () => stage.classList.toggle('video-fake-fs'));
         } catch (e) { stage.classList.toggle('video-fake-fs'); }
       } else {
         stage.classList.toggle('video-fake-fs');   // iOS Safari: ملء شاشة بالـCSS
       }
     }
+    // لما يشتغل ملء الشاشة البديل: نشيل أي تأثير (blur/transform) من الحاويات اللي بتحبس العنصر جواها
+    document.addEventListener('DOMContentLoaded', function () {
+      const stage = document.getElementById('video-stage'), ov = document.getElementById('video-player-overlay');
+      if (!stage || !ov || !window.MutationObserver) return;
+      new MutationObserver(function () { ov.classList.toggle('video-fs-active', stage.classList.contains('video-fake-fs')); })
+        .observe(stage, { attributes: true, attributeFilter: ['class'] });
+    });
+    document.addEventListener('fullscreenchange', function () {
+      if (!document.fullscreenElement) { try { if (screen.orientation && screen.orientation.unlock) screen.orientation.unlock(); } catch (e) {} }
+    });
     document.addEventListener('keydown', function (ev) {
       if (ev.key !== 'Escape') return;
       const s = document.getElementById('video-stage');
