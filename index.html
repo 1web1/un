@@ -356,6 +356,10 @@
   @media (max-width: 640px) { .support-fab { left: 12px; bottom: 12px; padding: 12px; } .support-fab-txt { display: none; } .support-fab-ico { font-size: 22px; } }
   @media (prefers-reduced-motion: reduce) { .support-fab::after, .support-fab-ico { animation: none; } }
   .overlay-bg { position: fixed; inset: 0; background: rgba(0,0,0,.85); backdrop-filter: blur(10px); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 16px; overflow-y: auto; }
+  /* مشغل الفيديو: ملء الشاشة (حقيقي أو بديل CSS للآيفون) */
+  #video-stage:fullscreen, #video-stage:-webkit-full-screen { width: 100vw !important; height: 100vh !important; padding-bottom: 0 !important; border-radius: 0 !important; background: #000; }
+  #video-stage.video-fake-fs #video-fake-fs-exit { display: block !important; }
+  #video-stage.video-fake-fs { position: fixed !important; inset: 0; width: 100vw !important; height: 100vh !important; padding-bottom: 0 !important; border-radius: 0 !important; z-index: 2147483000; }
   .modal-box { width: 100%; max-width: 450px; border-radius: 18px; padding: 26px 20px; max-height: 92vh; overflow-y: auto; }
   .modal-box.large { max-width: 600px; }
 
@@ -4868,6 +4872,7 @@ body[class*="theme-"] .mob-nav-item.active{color:var(--primary)!important}
                       </div>
                       <input class="input-group" id="video-title" placeholder="عنوان الفيديو (مثال: شرح عملي لبرنامج ArcGIS - المحاضرة 4)" required>
                       <input class="input-group" id="video-link" type="url" placeholder="رابط فيديو يوتيوب / Playlist أو ملف فيديو من جوجل درايف" required>
+                      <label style="display:flex; align-items:center; gap:8px; font-size:13px; cursor:pointer; padding:4px 2px;"><input type="checkbox" id="video-show-ext" style="width:18px; height:18px; accent-color:var(--primary);"> إظهار زر "فتح خارجي ↗" للطلاب (لو مش متعلّم يبقى الفيديو يتشغل جوه المنصة بس)</label>
                       <button class="pill" type="submit" style="background: #ec4899; width: fit-content;">نشر الفيديو للمادة 🚀</button>
                    </form>
                 </div>
@@ -5521,9 +5526,25 @@ body[class*="theme-"] .mob-nav-item.active{color:var(--primary)!important}
           <button class="pill" style="height: 30px; font-size: 12px; background: rgba(239,68,68,.2); color: #f87171;" onclick="closeVideoPlayer()">✕ إغلاق</button>
         </div>
       </div>
-      <div style="position: relative; width: 100%; padding-bottom: 56.25%; height: 0; border-radius: 10px; overflow: hidden; background: #000;">
+      <div id="video-stage" style="position: relative; width: 100%; padding-bottom: 56.25%; height: 0; border-radius: 10px; overflow: hidden; background: #000;">
         <iframe id="video-player-frame" src="" style="position: absolute; top:0; left:0; width: 100%; height: 100%; border: none;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
         <div id="video-drive-blocker" style="display:none; position:absolute; top:0; right:0; width:70px; height:70px; z-index:5; background:transparent;" title=""></div>
+        <button type="button" id="video-fake-fs-exit" onclick="videoToggleFullscreen()" style="display:none; position:absolute; top:10px; left:10px; z-index:7; background:rgba(0,0,0,.65); color:#fff; border:1px solid rgba(255,255,255,.4); border-radius:999px; padding:6px 14px; font-size:13px; cursor:pointer;">✕ خروج من ملء الشاشة</button>
+        <div id="video-error-box" style="display:none; position:absolute; inset:0; z-index:6; background:#0b0b10; color:#fff; flex-direction:column; align-items:center; justify-content:center; gap:10px; text-align:center; padding:20px; font-size:14px; line-height:1.7;"></div>
+      </div>
+      <div id="video-controls" dir="rtl" style="display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin-top:10px;">
+        <span id="video-yt-controls" style="display:none; flex-wrap:wrap; align-items:center; gap:6px;">
+          <button type="button" class="pill" style="height:30px; font-size:12px; background:rgba(255,255,255,.12);" onclick="videoSeekBy(-10)">⏪ 10 ث</button>
+          <button type="button" class="pill" style="height:30px; font-size:12px; background:rgba(255,255,255,.12);" onclick="videoSeekBy(10)">10 ث ⏩</button>
+          <span style="font-size:12px; opacity:.7; margin:0 4px;">السرعة:</span>
+          <button type="button" class="pill video-speed-btn" data-rate="0.5" style="height:30px; font-size:12px; background:rgba(255,255,255,.12);" onclick="videoSetSpeed(0.5)">0.5x</button>
+          <button type="button" class="pill video-speed-btn" data-rate="1" style="height:30px; font-size:12px; background:rgba(255,255,255,.12);" onclick="videoSetSpeed(1)">1x</button>
+          <button type="button" class="pill video-speed-btn" data-rate="1.25" style="height:30px; font-size:12px; background:rgba(255,255,255,.12);" onclick="videoSetSpeed(1.25)">1.25x</button>
+          <button type="button" class="pill video-speed-btn" data-rate="1.5" style="height:30px; font-size:12px; background:rgba(255,255,255,.12);" onclick="videoSetSpeed(1.5)">1.5x</button>
+          <button type="button" class="pill video-speed-btn" data-rate="2" style="height:30px; font-size:12px; background:rgba(255,255,255,.12);" onclick="videoSetSpeed(2)">2x</button>
+        </span>
+        <span id="video-drive-hint" style="display:none; font-size:12px; opacity:.7;">⚙️ لتغيير السرعة افتح إعدادات المشغّل (الترس) ← سرعة التشغيل</span>
+        <button type="button" class="pill" style="height:30px; font-size:12px; background:var(--primary); color:#fff; margin-inline-start:auto;" onclick="videoToggleFullscreen()">⛶ ملء الشاشة</button>
       </div>
       <div id="video-debug" dir="ltr" style="display:none; margin-top:8px; font-size:10px; opacity:.6; word-break:break-all;"></div>
     </div>
@@ -6892,6 +6913,8 @@ ${escText(alertBody)}
     }
 
     function openPdfViewer(title, url) {
+      // لو الرابط فيديو يوتيوب → يتشغل في مشغل المنصة (عارض الـPDF مبيشغّلش يوتيوب)
+      if (typeof isYouTubeLink === 'function' && isYouTubeLink(url)) { openVideoPlayer(title, url); return; }
       const currSubj = db.find(s => s.id === currentSubjectId);
       if (isRestrictedLevel2(currSubj)) {
         showLevel2RestrictionAlert('معاينة الملفات والمحاضرات');
@@ -9321,6 +9344,15 @@ function openThemePicker() {
       }).catch(err => Swal.fire('خطأ', err.message, 'error'));
     }
 
+    function toggleVideoExt(sId, key, show) {
+      const s = db.find(x => x.id === sId);
+      const v = s && (s.videos || []).find(x => x.key === key);
+      database.ref('subjects/' + sId + '/videos/' + key + '/showExt').set(show ? true : null).then(() => {
+        logAdminAction(show ? 'إظهار زر الفتح الخارجي للفيديو' : 'إخفاء زر الفتح الخارجي للفيديو', `الفيديو: ${v ? v.title : ''} | المادة: ${s ? s.name : ''}`);
+        if (window.Swal) Swal.fire({ toast: true, position: 'top', timer: 1800, showConfirmButton: false, icon: 'success', title: show ? 'زر الفتح الخارجي ظهر للطلاب' : 'الفيديو بقى يتشغل بالمنصة فقط' });
+      }).catch(err => Swal.fire('خطأ', err.message, 'error'));
+    }
+
     function toggleItemHidden(type, sId, key, hide) {
       const subj = db.find(x => x.id === sId);
       const item = subj && (subj[type] || []).find(x => x.key === key);
@@ -9525,7 +9557,7 @@ function openThemePicker() {
             } else {
               videoBtns = `
                 <button class="pill" style="height:34px; font-size:12px; background:#ec4899; flex:1;" onclick="openVideoPlayer('${escapeHtml(v.title)}', '${escapeHtml(v.url)}')">مشاهدة 🎬</button>
-                <a href="${escText(safeUrl(v.url))}" target="_blank" rel="noopener" class="pill" style="height:34px; font-size:12px; background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.2); color:var(--fg);">يوتيوب ↗</a>
+                ${v.showExt ? `<a href="${escText(safeUrl(v.url))}" target="_blank" rel="noopener" class="pill" style="height:34px; font-size:12px; background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.2); color:var(--fg);">${isYouTubeLink(v.url) ? 'يوتيوب' : 'فتح خارجي'} ↗</a>` : ''}
               `;
             }
 
@@ -9535,6 +9567,7 @@ function openThemePicker() {
                     <span style="font-size:11px; background:rgba(236,72,153,.2); color:#f472b6; padding:2px 8px; border-radius:6px; font-weight:bold;">${escText(v.category || 'شرح')}</span>
                     ${isAdmin ? `<div style="display:flex; gap:4px;">
                        <button class="btn-sm btn-edit" onclick="editSubjectVideo('${subj.id}','${v.key}','${escapeHtml(v.title)}','${escapeHtml(v.url)}','${escapeHtml(v.category||'شروحات نظري')}')">✏️</button>
+                       <button class="btn-sm btn-edit" title="${v.showExt ? 'إخفاء زر الفتح الخارجي (تشغيل بالمنصة فقط)' : 'إظهار زر الفتح الخارجي للطلاب'}" onclick="toggleVideoExt('${subj.id}','${v.key}',${v.showExt ? 'false' : 'true'})">${v.showExt ? '🔗' : '⛔'}</button>
                        <button class="btn-sm btn-edit" title="${v.hidden ? 'إظهار للطلاب' : 'إخفاء عن الطلاب'}" onclick="toggleItemHidden('videos','${subj.id}','${v.key}',${v.hidden ? 'false' : 'true'})">${v.hidden ? '👁️' : '🙈'}</button>
                        <button class="btn-sm btn-edit" title="نقل لفصل" onclick="moveItemToChapter('videos','${subj.id}','${v.key}')">📂</button>
                        <button class="btn-sm btn-ban" onclick="deleteSubjectVideo('${subj.id}','${v.key}','${escapeHtml(v.title)}')">🗑️</button>
@@ -10806,10 +10839,11 @@ function openThemePicker() {
       // يوتيوب لازم يعرف الدومين اللي شغال منه المشغل (غير كده بيطلع خطأ 153)
       if (/^https?:$/.test(location.protocol)) q += '&origin=' + encodeURIComponent(location.origin);
 
-      // ----- Google Drive -----
-      const dFile = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
+      // ----- Google Drive (كل أشكال الروابط: /file/d/ID و /file/u/0/d/ID و open?id= و uc?id= و usercontent) -----
+      const dFile = url.match(/(?:drive|docs)\.google\.com\/file\/(?:u\/\d+\/)?d\/([a-zA-Z0-9_-]+)/);
       if (dFile) return 'https://drive.google.com/file/d/' + dFile[1] + '/preview';
-      const dId = url.match(/drive\.google\.com\/(?:open|uc)\?(?:[^#]*&)?id=([a-zA-Z0-9_-]+)/);
+      const dId = url.match(/(?:drive|docs)\.google\.com\/(?:open|uc)\?(?:[^#]*&)?id=([a-zA-Z0-9_-]+)/) ||
+                  url.match(/drive\.usercontent\.google\.com\/[a-z]+\?(?:[^#]*&)?id=([a-zA-Z0-9_-]+)/);
       if (dId) return 'https://drive.google.com/file/d/' + dId[1] + '/preview';
 
       // ----- YouTube -----
@@ -10817,11 +10851,24 @@ function openThemePicker() {
                   url.match(/[?&]v=([a-zA-Z0-9_-]{11})/) ||
                   url.match(/youtube(?:-nocookie)?\.com\/(?:embed|shorts|live|v)\/([a-zA-Z0-9_-]{11})/);
       const pl = url.match(/[?&]list=([a-zA-Z0-9_-]+)/);
-      if (vid && pl) return YT + vid[1] + '?list=' + pl[1] + '&' + q;
-      if (vid) return YT + vid[1] + '?' + q;
+      // وقت البداية (t=90 أو t=1m30s أو start=90)
+      let startSec = 0;
+      const tm = url.match(/[?&#](?:t|start)=([0-9hms]+)/);
+      if (tm) {
+        const hms = tm[1].match(/^(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s?)?$/);
+        if (hms) startSec = (+hms[1] || 0) * 3600 + (+hms[2] || 0) * 60 + (+hms[3] || 0);
+      }
+      const st = startSec > 0 ? '&start=' + startSec : '';
+      if (vid && pl) return YT + vid[1] + '?list=' + pl[1] + '&' + q + st;
+      if (vid) return YT + vid[1] + '?' + q + st;
       if (pl) return YT + 'videoseries?list=' + pl[1] + '&' + q;
 
       return '';   // رابط غير مدعوم
+    }
+
+    // هل الرابط فيديو يوتيوب؟ (عشان نشغّله في مشغل المنصة بدل عارض الـPDF)
+    function isYouTubeLink(u) {
+      return /^https:\/\/www\.youtube\.com\/embed\//.test(getYoutubeEmbedUrl(u));
     }
 
     function isDriveEmbed(u) { return /^https:\/\/drive\.google\.com\/file\/d\//.test(u || ''); }
@@ -10841,12 +10888,64 @@ function openThemePicker() {
       el.style.display = 'block';
       el.textContent = 'build ' + VIDEO_PLAYER_BUILD + ' | page: ' + location.origin + ' | ' + (extra ? extra + ' | ' : '') + (embedUrl || '').slice(0, 90);
     }
+    const ytState = { time: 0, rate: 1 };
+    function ytCommand(func, args) {
+      const f = document.getElementById('video-player-frame');
+      if (!f || !f.contentWindow || !/youtube\.com/.test(f.src)) return;
+      try { f.contentWindow.postMessage(JSON.stringify({ event: 'command', func: func, args: args || [] }), '*'); } catch (e) {}
+    }
+    function markSpeedButtons() {
+      document.querySelectorAll('#video-yt-controls .video-speed-btn').forEach(b => {
+        const on = Math.abs(parseFloat(b.dataset.rate) - ytState.rate) < 0.01;
+        b.style.background = on ? 'var(--primary)' : 'rgba(255,255,255,.12)';
+        b.style.color = on ? '#fff' : '';
+      });
+    }
+    function videoSetSpeed(r) { ytCommand('setPlaybackRate', [r]); ytState.rate = r; markSpeedButtons(); }
+    function videoSeekBy(sec) { ytCommand('seekTo', [Math.max(0, (ytState.time || 0) + sec), true]); ytState.time = Math.max(0, (ytState.time || 0) + sec); }
+    function videoToggleFullscreen() {
+      const stage = document.getElementById('video-stage');
+      if (!stage) return;
+      if (stage.classList.contains('video-fake-fs')) { stage.classList.remove('video-fake-fs'); return; }
+      const fsEl = document.fullscreenElement || document.webkitFullscreenElement;
+      if (fsEl) { (document.exitFullscreen || document.webkitExitFullscreen).call(document); return; }
+      const req = stage.requestFullscreen || stage.webkitRequestFullscreen;
+      if (req) {
+        try {
+          const p = req.call(stage);
+          if (p && p.catch) p.catch(() => stage.classList.toggle('video-fake-fs'));
+        } catch (e) { stage.classList.toggle('video-fake-fs'); }
+      } else {
+        stage.classList.toggle('video-fake-fs');   // iOS Safari: ملء شاشة بالـCSS
+      }
+    }
+    document.addEventListener('keydown', function (ev) {
+      if (ev.key !== 'Escape') return;
+      const s = document.getElementById('video-stage');
+      if (s && s.classList.contains('video-fake-fs')) s.classList.remove('video-fake-fs');
+    });
+    function showVideoError(html) {
+      const b = document.getElementById('video-error-box');
+      if (!b) return;
+      b.innerHTML = html; b.style.display = 'flex';
+    }
     window.addEventListener('message', function (ev) {
       const f = document.getElementById('video-player-frame');
       if (!f || ev.source !== f.contentWindow || typeof ev.data !== 'string') return;
       try {
         const d = JSON.parse(ev.data);
-        if (d.event === 'onError') videoDebug(f.src, 'YouTube error ' + d.info);
+        if (d.event === 'onError') {
+          videoDebug(f.src, 'YouTube error ' + d.info);
+          if ([100, 101, 150].indexOf(Number(d.info)) !== -1) {
+            showVideoError('<div style="font-size:34px;">🚫</div><div>صاحب الفيديو منع تشغيله خارج يوتيوب (أو الفيديو محذوف/خاص).</div><div style="opacity:.7;font-size:12px;">فعّل خيار "السماح بالتضمين" للفيديو من YouTube Studio، أو ارفعه على جوجل درايف.</div>');
+          } else if (Number(d.info) === 153) {
+            showVideoError('<div style="font-size:34px;">⚠️</div><div>يوتيوب مش قادر يعرف الموقع اللي بيشغّل الفيديو (خطأ 153).</div><div style="opacity:.7;font-size:12px;">افتح المنصة من رابطها على الإنترنت (https) مش كملف من الجهاز.</div>');
+          }
+        }
+        if (d.event === 'infoDelivery' && d.info) {
+          if (typeof d.info.currentTime === 'number') ytState.time = d.info.currentTime;
+          if (typeof d.info.playbackRate === 'number' && d.info.playbackRate !== ytState.rate) { ytState.rate = d.info.playbackRate; markSpeedButtons(); }
+        }
       } catch (e) {}
     });
     document.addEventListener('DOMContentLoaded', function () {
@@ -10869,6 +10968,7 @@ function openThemePicker() {
       const form = e.target;
       const videoData = { title: title, url: link, category: category, createdAt: Date.now() };
       if (chV.cid) videoData.chapter = chV.cid;
+      const _se = document.getElementById('video-show-ext'); if (_se && _se.checked) videoData.showExt = true;
 
       database.ref('subjects/' + sId + '/videos').push(videoData).then(() => {
         resetFormKeepTarget(form, 'video-subj-select', 'video-chapter-select');
@@ -10895,6 +10995,8 @@ function openThemePicker() {
     }
 
     function editSubjectVideo(sId, vKey, currentTitle, currentUrl, currentCategory) {
+      const _s = db.find(x => x.id === sId), _v = _s && (_s.videos || []).find(x => x.key === vKey);
+      const _showExt = !!(_v && _v.showExt);
       Swal.fire({
         title: 'تعديل فيديو الشرح',
         html: `
@@ -10907,7 +11009,8 @@ function openThemePicker() {
              <option value="شروحات نظري" ${currentCategory === 'شروحات نظري' ? 'selected' : ''}>شروحات نظري</option>
              <option value="سكاشن وتطبيقات عملية" ${currentCategory === 'سكاشن وتطبيقات عملية' ? 'selected' : ''}>سكاشن وتطبيقات عملية</option>
              <option value="مراجعات وحل امتحانات" ${currentCategory === 'مراجعات وحل امتحانات' ? 'selected' : ''}>مراجعات وحل امتحانات</option>
-          </select>`,
+          </select>
+          <label style="display:flex; align-items:center; gap:8px; font-size:13px; cursor:pointer; margin-top:14px; justify-content:flex-end;"><span>إظهار زر "فتح خارجي ↗" للطلاب</span><input type="checkbox" id="edit-video-show-ext" ${_showExt ? 'checked' : ''} style="width:18px; height:18px;"></label>`,
         showCancelButton: true,
         confirmButtonText: 'حفظ التعديل',
         cancelButtonText: 'إلغاء',
@@ -10915,7 +11018,8 @@ function openThemePicker() {
           const title = document.getElementById('edit-video-title').value.trim();
           const url = document.getElementById('edit-video-url').value.trim();
           const category = document.getElementById('edit-video-cat').value;
-          return { title, url, category };
+          const showExt = document.getElementById('edit-video-show-ext').checked ? true : null;
+          return { title, url, category, showExt };
         }
       }).then(res => {
         if (res.isConfirmed && res.value.title && res.value.url) {
@@ -10952,6 +11056,13 @@ function openThemePicker() {
       extLink.href = safeUrl(rawUrl);
       syncVideoBlocker(embedUrl);
       videoDebug(embedUrl);
+      // تجهيز الأزرار حسب نوع الفيديو (يوتيوب: سرعة وتقديم/تأخير — درايف: تلميح الترس)
+      const isYT = /youtube\.com/.test(embedUrl);
+      const ytc = document.getElementById('video-yt-controls'), dh = document.getElementById('video-drive-hint'), eb = document.getElementById('video-error-box');
+      if (ytc) ytc.style.display = isYT ? 'flex' : 'none';
+      if (dh) dh.style.display = isYT ? 'none' : 'inline';
+      if (eb) { eb.style.display = 'none'; eb.innerHTML = ''; }
+      ytState.time = 0; ytState.rate = 1; markSpeedButtons();
       frame.src = embedUrl;
       overlay.style.display = 'flex';
     }
@@ -10960,6 +11071,8 @@ function openThemePicker() {
       if (e && e.target && e.target.id !== 'video-player-overlay' && e.target.tagName !== 'BUTTON') return;
       const overlay = document.getElementById('video-player-overlay');
       const frame = document.getElementById('video-player-frame');
+      try { if (document.fullscreenElement) document.exitFullscreen(); } catch (err) {}
+      const stage = document.getElementById('video-stage'); if (stage) stage.classList.remove('video-fake-fs');
       if (frame) frame.src = '';
       syncVideoBlocker('');
       if (overlay) overlay.style.display = 'none';
@@ -13408,7 +13521,7 @@ function openThemePicker() {
     var c=courses.filter(function(x){return x.id===id;})[0];if(!c)return;
     var o=document.getElementById('video-player-overlay'),f=document.getElementById('video-player-frame'),t=document.getElementById('video-player-title'),e=document.getElementById('video-player-ext-link');
     if(!o||!f)return;
-    var eu=embed(c.url);if(!eu){Swal.fire('رابط غير مدعوم','الرابط لازم يكون يوتيوب أو جوجل درايف.','warning');return;}t.innerText=c.name;e.href=safeUrl(c.url);try{syncVideoBlocker(eu);videoDebug(eu);}catch(_){}f.src=eu;o.style.display='flex';
+    openVideoPlayer(c.name,c.url);
   };
 })();
 </script>
@@ -14061,6 +14174,8 @@ function openThemePicker() {
 
   window.openExternalFileAndTrack = function(subjId, fileKey, fileTitle, fileUrl) {
     recordFileAccess(subjId, fileKey, fileTitle);
+    // فيديو يوتيوب → يتشغل جوه المنصة بدل ما يفتح تاب خارجي
+    if (typeof isYouTubeLink === 'function' && isYouTubeLink(fileUrl)) { openVideoPlayer(fileTitle, fileUrl); return; }
     window.open(fileUrl, '_blank', 'noopener,noreferrer');
   };
 
@@ -14835,7 +14950,7 @@ function openThemePicker() {
     addChapters:'chapters.manage', deleteChapter:'chapters.manage', setChapterParent:'chapters.manage',
     addFile:'files.upload', editFile:'files.edit', toggleFilePreview:'files.edit', deleteFile:'files.delete',
     toggleItemHidden: byType, moveItemToChapter: byType,
-    addSubjectVideo:'videos.add', editSubjectVideo:'videos.edit', deleteSubjectVideo:'videos.delete',
+    addSubjectVideo:'videos.add', editSubjectVideo:'videos.edit', toggleVideoExt:'videos.edit', deleteSubjectVideo:'videos.delete',
     addAIQuizzes:'quizzes.add', addQuiz:'quizzes.add', editQuiz:'quizzes.edit', deleteQuiz:'quizzes.delete', deleteAllQuizzesFromSubject:'quizzes.delete', resetSubjectQuizzes:'quizzes.delete', deleteChapterQuizzes:'quizzes.delete',
     addSubjectImage:'images.manage', deleteSubjectImage:'images.manage',
     adminSaveResearchSettings:'research.manage', addBulkResearchTopics:'research.manage', addResearchTopic:'research.manage', adminDeleteResearchTopic:'research.manage', adminFreeResearch:'research.manage',
