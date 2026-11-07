@@ -1,0 +1,8 @@
+{
+  "redirects": [
+    { "source": "/level1", "destination": "/?level=1", "permanent": false },
+    { "source": "/level2", "destination": "/?level=2", "permanent": false },
+    { "source": "/l1", "destination": "/?level=1", "permanent": false },
+    { "source": "/l2", "destination": "/?level=2", "permanent": false }
+  ]
+}
