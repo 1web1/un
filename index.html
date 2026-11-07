@@ -21,6 +21,8 @@
   if (!lv) { var m = location.pathname.match(/\/(?:level|l)([12])\/?$/i); if (m) lv = +m[1]; }
   try { saved = localStorage.getItem('platform_level'); } catch (e) {}
   if (!lv && (saved === '1' || saved === '2')) lv = +saved;
+  /* جاي من رابط استعادة الباسورد على جهاز جديد: ما نعرضش شاشة اختيار المستوى فوق نافذة الباسورد (السيرفر بيعرف المستوى من الرابط) */
+  if (!lv) { try { if (new URLSearchParams(location.search).get('mode') === 'resetPassword') lv = 2; } catch (e) {} }
   /* طالب قديم من قبل التحديث (الجهاز عليه بيانات المنصة القديمة) = المستوى الثاني، من غير ما نسأله */
   if (!lv) { try { if (localStorage.getItem('last_user_name') || localStorage.getItem('fast_cache_subjects_ver') || localStorage.getItem('theme')) lv = 2; } catch (e) {} }
   if (lv) { try { localStorage.setItem('platform_level', String(lv)); } catch (e) {} }
@@ -29,7 +31,7 @@
   /* فصل الكاش المحلي لكل مستوى عشان مواد مستوى ما تظهرش في التاني.
      المستوى التاني بيفضل بنفس المفاتيح القديمة (الكاش الموجود عند الطلبة يفضل شغال). */
   if (lv === 1) {
-    var SHARED = { platform_level: 1, theme: 1, siteTheme: 1 };
+    var SHARED = { platform_level: 1, theme: 1, siteTheme: 1, lvl_visible_1: 1, lvl_visible_2: 1 };
     try {
       var P = Storage.prototype, g = P.getItem, s = P.setItem, r = P.removeItem;
       var k = function (st, key) { return (st === window.localStorage && !SHARED[key]) ? 'L1:' + key : key; };
@@ -5683,6 +5685,7 @@ body[class*="theme-"] .mob-nav-item.active{color:var(--primary)!important}
   <div id="auth-overlay" class="overlay-bg" style="display: none;">
     <div class="modal-box liquid-glass">
       <h2 id="auth-title" class="z-content" style="text-align: center; margin-top:0; color: var(--primary); font-size: 20px;">تسجيل دخول الطالب</h2>
+      <div id="auth-level-note" class="z-content" style="display:none; text-align:center; margin:-4px 0 14px; padding:10px 12px; border-radius:12px; background:rgba(245,158,11,.12); border:1px solid rgba(245,158,11,.35); font-size:13.5px; line-height:1.8;"></div>
       <form class="upload-form z-content" onsubmit="handleAuth(event)">
         <div class="input-group" id="name-group"><label>الاسم الكامل</label><input type="text" id="auth-name" placeholder="الاسم رباعي" autocomplete="name"></div>
         <div class="input-group" id="phone-group"><label>رقم الهاتف</label><input type="tel" id="auth-phone" placeholder="01xxxxxxxxx" autocomplete="tel"></div>
@@ -5769,19 +5772,179 @@ body[class*="theme-"] .mob-nav-item.active{color:var(--primary)!important}
       if (t1) t1.classList.toggle('active', L === 1); if (t2) t2.classList.toggle('active', L === 2);
       const h = document.getElementById('current-level-heading'); if (h) h.innerText = 'مواد ' + levelName(L);
       document.title = document.title + ' | ' + levelName(L);
+      /* شاشة الدخول (توضيح المستوى + زرار للمستوى التاني) بتترسم في __applyLevelVisibilityUI */
+      /* جاي من المستوى التاني بعد ما اكتشفنا إن حسابه هنا: نكتب الإيميل بداله */
+      try {
+        const xe = sessionStorage.getItem('xfer_email');
+        if (xe) {
+          sessionStorage.removeItem('xfer_email'); const ei = document.getElementById('auth-email'); if (ei) ei.value = xe;
+          setTimeout(() => { try { Swal.fire({ toast: true, position: 'top', icon: 'success', timer: 6000, showConfirmButton: false, title: 'انت دلوقتي في منصة ' + levelName(L) + ' — اكتب الباسورد وادخل' }); const p = document.getElementById('auth-pass'); if (p) p.focus(); } catch (e) {} }, 1200);
+        }
+      } catch (e) {}
     })();
+
+    /* لو الإيميل والباسورد مش موجودين في المستوى ده، نجرب المستوى التاني (من غير ما نسجل دخول فيه فعلياً).
+       لو لقيناه هناك، الطالب بيختار:
+         - يدخل المستوى ده بنفس حسابه ← بنعمله حساب هنا بنفس الإيميل والباسورد والاسم والتليفون تلقائي
+         - أو يروح لمستواه
+       لو جاي قاصد من زرار المستوى (xfer_want) بنعمل الحساب على طول من غير سؤال. */
+    async function __accountInOtherLevel(email, pass) {
+      const L = PLATFORM_LEVEL, O = L === 1 ? 2 : 1;
+      if (!FB_OK || !levelAvailable(O) || !email || !pass) return false;
+      let app = null, found = false, prof = null;
+      try {
+        app = FB.initializeApp(LEVEL_FIREBASE[O], 'probe_' + Date.now());
+        const a = app.auth();
+        try { await a.setPersistence(FB.auth.Auth.Persistence.NONE); } catch (e) {}
+        const cred = await a.signInWithEmailAndPassword(email, pass);
+        found = true;
+        try {
+          const s = await withTimeout(app.database().ref('users/' + cred.user.uid).once('value'), 12000);
+          const v = s.val() || {};
+          prof = { name: String(v.name || '').trim().replace(/\s+/g, ' '), phone: String(v.phone || '').trim(), banned: v.isBanned === true };
+        } catch (e) { prof = null; }
+        try { await a.signOut(); } catch (e) {}
+      } catch (e) { found = false; }
+      finally { try { if (app) app.delete(); } catch (e) {} }
+      if (!found) return false;
+
+      if (prof && prof.banned) { Swal.fire('محظور!', 'حسابك محظور في ' + levelName(O) + '. كلّم الإدارة.', 'error'); return true; }
+      let want = false; try { want = sessionStorage.getItem('xfer_want') === String(L); sessionStorage.removeItem('xfer_want'); } catch (e) {}
+      if (!want) {
+        const canGo = levelVisible(O);
+        const r = await Swal.fire({
+          icon: 'info', title: 'حسابك موجود في ' + levelName(O) + (O === 1 ? ' 🎓' : ' 🚀'),
+          html: 'تقدر تدخل <b>' + levelName(L) + '</b> بنفس الإيميل والباسورد، وهنعملك حساب هنا ببياناتك تلقائي.' + (canGo ? '<br>أو ترجع لـ ' + levelName(O) + '.' : ''),
+          showConfirmButton: true, confirmButtonText: '✅ ادخل ' + levelName(L) + ' بنفس حسابي', confirmButtonColor: '#16a34a',
+          showDenyButton: canGo, denyButtonText: 'ارجع لـ ' + levelName(O), denyButtonColor: '#f59e0b',
+          showCancelButton: true, cancelButtonText: 'إلغاء', allowOutsideClick: false
+        });
+        if (r.isDenied) { try { sessionStorage.setItem('xfer_email', email); } catch (e) {} goToLevel(O); return true; }
+        if (!r.isConfirmed) return true;
+      }
+      /* بيانات ناقصة أو قديمة: نفتح فورم التسجيل مكتوب فيه اللي عندنا والطالب يكمّل */
+      const okName = prof && prof.name.split(' ').filter(Boolean).length >= 4, okPhone = prof && /^01[0125]\d{8}$/.test(prof.phone);
+      if (!okName || !okPhone) {
+        if (!isRegisterMode) toggleAuthMode();
+        document.getElementById('auth-email').value = email; document.getElementById('auth-pass').value = pass;
+        if (prof) { document.getElementById('auth-name').value = prof.name; document.getElementById('auth-phone').value = prof.phone; }
+        window.__skipProbeOnce = true;
+        Swal.fire('كمّل بياناتك', 'محتاجين ' + (!okName ? 'اسمك الرباعي' : '') + (!okName && !okPhone ? ' و' : '') + (!okPhone ? 'رقم تليفونك' : '') + ' عشان نعملك الحساب، وبعدين دوس "تسجيل حساب".', 'info');
+        return true;
+      }
+      await doRegister(email, pass, prof.name, L, prof.phone, { copied: true });
+      return true;
+    }
 
     /* الانتقال لمنصة المستوى التاني (كل مستوى ليه قاعدة بيانات وحسابات منفصلة) */
     function confirmGoToLevel(n) {
       if (n === PLATFORM_LEVEL) return;
-      if (!levelAvailable(n)) { if (window.Swal) Swal.fire('قريبًا ⏳', 'منصة ' + levelName(n) + ' لسه بتتجهز.', 'info'); return; }
+      if (!levelAvailable(n) || (!levelVisible(n) && !isOwnerUser())) { if (window.Swal) Swal.fire('قريبًا ⏳', 'منصة ' + levelName(n) + ' لسه بتتجهز.', 'info'); return; }
       const staff = (typeof isStaffUser === 'function') && isStaffUser();
-      if (!currentUser || staff || !window.Swal) { goToLevel(n); return; }
+      /* طالب مسجل دخول رايح للمستوى التاني: نكتبله إيميله هناك، ولو مالوش حساب هناك بيتعمل تلقائي ببياناته */
+      const go = () => {
+        try {
+          const em = (currentStudentData && currentStudentData.email) || (currentUser && currentUser.email) || '';
+          if (currentUser && em) { sessionStorage.setItem('xfer_email', em); sessionStorage.setItem('xfer_want', String(n)); }
+        } catch (e) {}
+        goToLevel(n);
+      };
+      if (!currentUser || staff || !window.Swal) { go(); return; }
       Swal.fire({
         title: 'الانتقال إلى ' + levelName(n) + '؟',
-        html: 'كل مستوى ليه حسابات منفصلة، فلو أول مرة تدخل هتحتاج تعمل حساب هناك.',
+        html: 'ادخل بنفس الإيميل والباسورد بتوعك.<br>لو أول مرة، هنعملك حساب هناك ببياناتك تلقائي.<br><small style="opacity:.7">النقاط والأسئلة اللي حليتها بتتحسب لكل مستوى لوحده.</small>',
         icon: 'question', showCancelButton: true, confirmButtonText: 'انتقل', cancelButtonText: 'خليني هنا', confirmButtonColor: '#f59e0b'
-      }).then(r => { if (r.isConfirmed) goToLevel(n); });
+      }).then(r => { if (r.isConfirmed) go(); });
+    }
+
+    /* ===================== إظهار / إخفاء المستوى الأول (للمالك بس) =====================
+       العلامة محفوظة في قاعدة بيانات المستوى نفسه: public/visible (false = مخفي).
+       بتتقري من غير تسجيل دخول (REST صغير جداً) عشان شاشة اختيار المستوى والمستوى التاني يعرفوها.
+       وهو مخفي:
+         - كارت المستوى في شاشة الاختيار بيبقى "قريبًا"، وزراره بيختفي من الصفحة الرئيسية (المالك بيشوفه مكتوب جنبه "مخفي")
+         - أي طالب يدخل رابطه بيشوف "المنصة لسه مقفولة"، والمالك والفريق بيدخلوا عادي يجهزوا المحتوى */
+    const TOGGLABLE_LEVELS = [1];
+    function levelVisible(n) { try { return localStorage.getItem('lvl_visible_' + n) !== '0'; } catch (e) { return true; } }
+    function __setLevelVisibleCache(n, v) { try { localStorage.setItem('lvl_visible_' + n, v ? '1' : '0'); } catch (e) {} }
+    function __refreshLevelVisibility() {
+      TOGGLABLE_LEVELS.forEach(n => {
+        const c = LEVEL_FIREBASE[n]; if (!c) return;
+        fetch(c.databaseURL + '/public/visible.json', { cache: 'no-store' })
+          .then(r => r.ok ? r.json() : null)
+          .then(v => { const vis = v !== false; if (vis !== levelVisible(n)) { __setLevelVisibleCache(n, vis); __applyLevelVisibilityUI(); } })
+          .catch(() => {});
+      });
+    }
+    function __applyLevelVisibilityUI() {
+      const L = PLATFORM_LEVEL, owner = isOwnerUser();
+      /* شاشة اختيار المستوى */
+      const pk = document.getElementById('level-picker');
+      if (pk) { pk.remove(); showLevelPicker({ 1: levelAvailable(1) && levelVisible(1), 2: levelAvailable(2) && levelVisible(2) }); }
+      if (!L) return;
+      /* أزرار المستويات في الرئيسية */
+      [1, 2].forEach(n => {
+        const t = document.getElementById('tab-lvl-' + n); if (!t) return;
+        const vis = levelVisible(n);
+        t.innerText = levelName(n) + (n === 1 ? ' 🎓' : ' 🚀') + (!vis && owner ? ' (مخفي 🙈)' : '');
+        t.style.display = (n === L || (levelAvailable(n) && (vis || owner))) ? '' : 'none';
+      });
+      const bar = document.querySelector('.level-tabs');
+      if (bar) bar.style.display = [1, 2].some(n => n !== L && levelAvailable(n) && (levelVisible(n) || owner)) ? '' : 'none';
+      /* شاشة الدخول */
+      const O = L === 1 ? 2 : 1, note = document.getElementById('auth-level-note');
+      if (note) {
+        const canGo = levelAvailable(O) && levelVisible(O);
+        note.innerHTML = '📍 انت في منصة <b>' + levelName(L) + (L === 1 ? ' 🎓' : ' 🚀') + '</b>' +
+          (!levelVisible(L) ? '<br><span style="color:#fbbf24;">⏳ المنصة دي لسه مقفولة للطلبة</span>' : '') +
+          (canGo ? '<br>مش مستواك؟ <a href="javascript:void(0)" onclick="confirmGoToLevel(' + O + ')" style="color:var(--gold,#ffd700); font-weight:bold; text-decoration:underline;">ادخل ' + levelName(O) + (O === 1 ? ' 🎓' : ' 🚀') + '</a>' : '');
+        note.style.display = (canGo || !levelVisible(L)) ? 'block' : 'none';
+      }
+      __enforceLevelClosed();
+      __renderVisibilityToggle();
+    }
+    /* طالب (مش من الفريق) فاتح مستوى مقفول */
+    function __enforceLevelClosed() {
+      const L = PLATFORM_LEVEL; let el = document.getElementById('level-closed');
+      const closed = !!(L && !levelVisible(L) && currentUser && currentStudentData && !isStaffUser());
+      if (!closed) { if (el) el.remove(); return; }
+      if (el) return;
+      const O = L === 1 ? 2 : 1, canGo = levelAvailable(O) && levelVisible(O);
+      el = document.createElement('div'); el.id = 'level-closed'; el.setAttribute('dir', 'rtl');
+      el.style.cssText = 'position:fixed;inset:0;z-index:2147482000;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(10,9,8,.97);color:#fff;font-family:Cairo,system-ui,sans-serif;text-align:center';
+      el.innerHTML = '<div style="max-width:420px"><div style="font-size:52px">⏳</div>' +
+        '<h2 style="margin:10px 0 8px;font-size:22px">منصة ' + levelName(L) + ' لسه مقفولة</h2>' +
+        '<p style="opacity:.75;margin:0 0 22px;line-height:1.8">هتفتح قريب إن شاء الله. حسابك متسجل وهتقدر تدخل أول ما تفتح.</p>' +
+        (canGo ? '<button type="button" onclick="goToLevel(' + O + ')" style="all:unset;cursor:pointer;display:block;margin:0 auto 10px;padding:12px 22px;border-radius:12px;background:#f59e0b;color:#111;font-weight:800">ادخل ' + levelName(O) + '</button>' : '') +
+        '<button type="button" onclick="document.getElementById(\'level-closed\').remove(); logoutStudent();" style="all:unset;cursor:pointer;display:block;margin:0 auto;padding:10px 22px;border-radius:12px;border:1px solid rgba(255,255,255,.25)">تسجيل خروج</button></div>';
+      document.body.appendChild(el);
+    }
+    /* زرار المالك في لوحة التحكم */
+    function __renderVisibilityToggle() {
+      const host = document.querySelector('#admin-panel .admin-dashboard-container'); if (!host) return;
+      let c = document.getElementById('level-vis-card');
+      if (!(TOGGLABLE_LEVELS.indexOf(PLATFORM_LEVEL) >= 0 && isOwnerUser())) { if (c) c.remove(); return; }
+      if (!c) { c = document.createElement('div'); c.id = 'level-vis-card'; host.insertBefore(c, host.firstChild); }
+      const vis = levelVisible(PLATFORM_LEVEL);
+      c.style.cssText = 'display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;margin-bottom:16px;border-radius:14px;border:1px solid ' + (vis ? 'rgba(34,197,94,.4)' : 'rgba(245,158,11,.5)') + ';background:' + (vis ? 'rgba(34,197,94,.1)' : 'rgba(245,158,11,.12)');
+      c.innerHTML = '<div style="flex:1;min-width:200px"><div style="font-weight:800;font-size:15px">' + (vis ? '👁️ ' + levelName(PLATFORM_LEVEL) + ' ظاهر للطلبة' : '🙈 ' + levelName(PLATFORM_LEVEL) + ' مخفي عن الطلبة') + '</div>' +
+        '<div style="font-size:12.5px;opacity:.75;margin-top:4px">' + (vis ? 'الطلبة شايفين المستوى ده ويقدروا يدخلوه.' : 'محدش من الطلبة شايفه ولا يقدر يدخله. انت والفريق بتدخلوا عادي.') + ' (الزرار ده للمالك بس)</div></div>' +
+        '<button type="button" class="pill" onclick="toggleLevelVisibility()" style="height:40px;padding:0 18px;background:' + (vis ? '#f59e0b' : '#16a34a') + ';color:#fff;border:0">' + (vis ? '🙈 إخفاء المستوى' : '👁️ إظهار المستوى') + '</button>';
+    }
+    function toggleLevelVisibility() {
+      if (!isOwnerUser()) return Swal.fire('غير مصرح', 'الزرار ده للمالك بس.', 'error');
+      const L = PLATFORM_LEVEL, next = !levelVisible(L);
+      Swal.fire({
+        title: next ? 'إظهار ' + levelName(L) + '؟' : 'إخفاء ' + levelName(L) + '؟',
+        html: next ? 'الطلبة هيشوفوا المستوى ده ويقدروا يدخلوه ويسجلوا فيه.' : 'المستوى ده هيختفي من المنصة، وأي طالب يفتح رابطه هيشوف إن المنصة لسه مقفولة.<br>انت والفريق هتدخلوا عادي.',
+        icon: 'question', showCancelButton: true, confirmButtonText: next ? 'إظهار 👁️' : 'إخفاء 🙈', cancelButtonText: 'تراجع', confirmButtonColor: next ? '#16a34a' : '#f59e0b'
+      }).then(r => {
+        if (!r.isConfirmed) return;
+        database.ref('public/visible').set(next).then(() => {
+          __setLevelVisibleCache(L, next); __applyLevelVisibilityUI();
+          try { logAdminAction(next ? 'إظهار المستوى' : 'إخفاء المستوى', levelName(L)); } catch (e) {}
+          Swal.fire('تم ✅', next ? levelName(L) + ' بقى ظاهر للطلبة.' : levelName(L) + ' اتخفى عن الطلبة.', 'success');
+        }).catch(e => Swal.fire('خطأ', 'اتأكد إنك لزقت ملف القواعد الجديد (firebase-rules.json) في Firebase.<br><small>' + escText(e.message || e) + '</small>', 'error'));
+      });
     }
     let adminLogsListening = false, isMaintenanceActive = false, privateAlertListening = false;
     let db = [], currentSubjectId = null, userDataRef = null, searchTimeout = null;
@@ -5870,8 +6033,9 @@ body[class*="theme-"] .mob-nav-item.active{color:var(--primary)!important}
       if (document.hidden) { clearTimeout(__idleT); __idleT = setTimeout(__goOffline, HIDDEN_MS); } else { __wake(); }
     });
     __wake();
-    if (!PLATFORM_LEVEL) { showLevelPicker({ 1: levelAvailable(1), 2: levelAvailable(2) }); }
+    if (!PLATFORM_LEVEL) { showLevelPicker({ 1: levelAvailable(1) && levelVisible(1), 2: levelAvailable(2) && levelVisible(2) }); }
     else if (!FB_OK) { document.getElementById('fb-error').style.display = 'flex'; console.error('Firebase library failed to load'); }
+    try { __applyLevelVisibilityUI(); __refreshLevelVisibility(); } catch (e) { console.error(e); }
 
     window.addEventListener('unhandledrejection', e => { const m = (e.reason && e.reason.message) || String(e.reason); if (window.Swal) Swal.fire('حصل خطأ', escText(m), 'error'); });
     let isRegistering = false, authReady = false, leaderboardSynced = '', adminListenersOn = false, lbQuery = null;
@@ -6354,7 +6518,7 @@ ${escText(alertBody)}
 
        if (elTotal) elTotal.innerText = totalStudents;
        if (elLvl1) elLvl1.innerText = lvl1Count;
-       if (elLvl2) elLvl2.innerText = lvl2Count;
+       if (elLvl2) { elLvl2.innerText = totalStudents; const lb = elLvl2.nextElementSibling; if (lb) lb.innerText = levelName(PLATFORM_LEVEL || 2) + (PLATFORM_LEVEL === 1 ? ' 🎓' : ' 🚀'); }
        if (elOnline) elOnline.innerText = Object.keys(onlineUsersMap).length;
        if (elSubj) elSubj.innerText = db.length;
 
@@ -6608,14 +6772,21 @@ ${escText(alertBody)}
         if (__isBad(err) && pass !== pass.trim() && pass.trim()) {
           try { await auth.signInWithEmailAndPassword(email, pass.trim()); return; } catch (e2) { err = e2; }
         }
-        Swal.fire('تعذّر تسجيل الدخول', authErrMsg(err), 'error');
+        if (__isBad(err) && await __accountInOtherLevel(email, pass)) return;
+        const O = PLATFORM_LEVEL === 1 ? 2 : 1;
+        const hint = (__isBad(err) && levelAvailable(O)) ? '<br><br>📍 انت دلوقتي في منصة <b>' + levelName(PLATFORM_LEVEL) + '</b>. لو حسابك في ' + levelName(O) + '، ادخل من الزرار اللي فوق في شاشة الدخول.' : '';
+        Swal.fire({ title: 'تعذّر تسجيل الدخول', html: escText(authErrMsg(err)) + hint, icon: 'error' });
       }
     }
 
-    async function doRegister(email, pass, name, level, phone) {
+    async function doRegister(email, pass, name, level, phone, opts) {
+      const copied = !!(opts && opts.copied);
       if (name.split(' ').filter(Boolean).length < 4) return Swal.fire('تنبيه', 'لازم تكتب اسمك الرباعي كامل (4 أسماء على الأقل).', 'warning');
       if (!/^01[0125]\d{8}$/.test(phone)) return Swal.fire('تنبيه', 'رقم الهاتف غير صحيح (مثال: 01012345678).', 'warning');
       if (pass.length < 6) return Swal.fire('تنبيه', 'كلمة المرور 6 حروف على الأقل.', 'warning');
+      /* طالب عنده حساب في المستوى التاني: نسأله يدخل هنا بنفس حسابه ولا يروح لمستواه */
+      const skip = copied || window.__skipProbeOnce; window.__skipProbeOnce = false;
+      if (!skip && await __accountInOtherLevel(email, pass)) return;
       isRegistering = true;
       let user = null, isNew = false, ok = false, phoneReserved = false;
       try {
@@ -6657,6 +6828,7 @@ ${escText(alertBody)}
     }
 
     async function adminChangeStudentPassword(uid, studentName, studentEmail) {
+      window.__lastPwSync = null;
       const { value: newPassword } = await Swal.fire({
         title: `تعيين كلمة مرور لـ: ${studentName}`,
         html: `
@@ -6693,6 +6865,7 @@ ${escText(alertBody)}
             });
             const data = await response.json();
             if (!response.ok) throw new Error(data.error || 'فشل التغيير');
+            window.__lastPwSync = data;
             return pass;
           } catch (err) {
             Swal.showValidationMessage(err.message);
@@ -6708,7 +6881,8 @@ ${escText(alertBody)}
           html: `
             <div style="text-align:right; font-size:14px; line-height:1.7;">
               تم تغيير كلمة المرور للطالب (<b>${studentName}</b>).<br>
-              الباسورد الجديد: <b style="color:#ffd700; font-size:16px;">${newPassword}</b><br><br>
+              الباسورد الجديد: <b style="color:#ffd700; font-size:16px;">${escText(newPassword)}</b><br>
+              ${(window.__lastPwSync && window.__lastPwSync.synced) ? '✅ واتغير كمان في حسابه في <b>' + levelName(window.__lastPwSync.syncedLevel) + '</b>.' : (window.__lastPwSync && window.__lastPwSync.syncReason === 'staff' ? '⚠️ حسابه في المستوى التاني تبع الإدارة، فما اتغيرش هناك.' : '')}<br>
               انسخ الباسورد وأرسله للطالب ليدخل به فوراً.
             </div>
           `,
@@ -6730,13 +6904,34 @@ ${escText(alertBody)}
         preConfirm: async () => {
           const raw = (document.getElementById('rp-link').value || '').trim(), pw = document.getElementById('rp-pass').value;
           const m = raw.match(/oobCode=([^&\s#]+)/i); const code = m ? decodeURIComponent(m[1]) : '';
+          const k = raw.match(/apiKey=([^&\s#]+)/i); const key = k ? decodeURIComponent(k[1]) : '';
           if (!code) { Swal.showValidationMessage('الرابط مش صحيح. لازم يكون فيه oobCode='); return false; }
           if (!pw || pw.length < 6) { Swal.showValidationMessage('اكتب 6 أحرف على الأقل'); return false; }
-          try { await auth.confirmPasswordReset(code, pw); return true; }
+          try { return await __confirmResetBothLevels(code, pw, key); }
           catch (e) { Swal.showValidationMessage(__resetErrMsg(e)); return false; }
         }
       });
-      if (v) Swal.fire('تم ✅', 'اتغيرت كلمة المرور. سجّل دخول بيها دلوقتي.', 'success');
+      if (v) Swal.fire('تم ✅', __resetDoneMsg(v), 'success');
+    }
+
+    /* تغيير الباسورد برابط الاستعادة: السيرفر بيغيّره في المستوى بتاع الرابط وفي المستوى التاني (لو فيه حساب بنفس الإيميل).
+       لو السيرفر مش متاح بنغيّره هنا بس زي الأول. */
+    async function __confirmResetBothLevels(code, pw, apiKey) {
+      let r = null;
+      try {
+        r = await fetch('/api/reset-password-link', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ oobCode: code, newPassword: pw, apiKey: apiKey || '', level: PLATFORM_LEVEL || 2 }) });
+      } catch (e) { r = null; }
+      if (r && r.status < 500 && r.status !== 404) {
+        const j = await r.json().catch(() => ({}));
+        if (r.ok) return j;
+        const err = new Error(j.error || ''); err.code = j.code || ''; throw err;
+      }
+      await auth.confirmPasswordReset(code, pw);
+      return { success: true, synced: false };
+    }
+    function __resetDoneMsg(j) {
+      return (j && j.synced) ? 'اتغيرت كلمة المرور في حسابك في المستويين. سجّل دخول بيها دلوقتي.' : 'اتغيرت كلمة المرور. سجّل دخول بيها دلوقتي.';
     }
 
     async function handleForgotPassword() {
@@ -6749,7 +6944,7 @@ ${escText(alertBody)}
       if (userDataRef) userDataRef.off();
       userDataRef = database.ref('users/' + uid);
       userDataRef.on('value', (snap) => {
-        currentStudentData = snap.val(); if (currentStudentData) currentStudentData.level = PLATFORM_LEVEL; if (currentStudentData && currentStudentData.isOwner === true) currentStudentData.isAdmin = true; checkMaintenanceUI();
+        currentStudentData = snap.val(); if (currentStudentData) currentStudentData.level = PLATFORM_LEVEL; if (currentStudentData && currentStudentData.isOwner === true) currentStudentData.isAdmin = true; checkMaintenanceUI(); try { __applyLevelVisibilityUI(); } catch (e) {}
         if (currentStudentData && isStaffUser()) { attachMyPerms(uid); try { if (window.__subjectsGoLive) window.__subjectsGoLive(); } catch (e) {} } else detachMyPerms();
         { const __a = !!(currentStudentData && isStaffUser()); if (window.__lastAdm !== __a && window.__subjectsRaw) { try { applySubjectsRaw(); } catch (err) { console.error(err); } } }
         if (currentStudentData) {
@@ -10020,7 +10215,7 @@ function openThemePicker() {
     }
     function handleAuthActionLink() {
       let p; try { p = new URLSearchParams(location.search); } catch (e) { return; }
-      const mode = p.get('mode'), code = p.get('oobCode');
+      const mode = p.get('mode'), code = p.get('oobCode'), linkKey = p.get('apiKey') || '';
       if (mode !== 'resetPassword' || !code) return;
       try { history.replaceState(null, '', location.pathname.replace(/\/usermgmt\/?$/, '/')); } catch (e) {}
       Swal.fire({
@@ -10029,10 +10224,10 @@ function openThemePicker() {
         confirmButtonText: 'حفظ', allowOutsideClick: false, allowEscapeKey: false, showLoaderOnConfirm: true,
         preConfirm: async (pw) => {
           if (!pw || pw.length < 6) { Swal.showValidationMessage('اكتب 6 أحرف على الأقل'); return false; }
-          try { await auth.confirmPasswordReset(code, pw); return true; }
+          try { return await __confirmResetBothLevels(code, pw, linkKey); }
           catch (e) { Swal.showValidationMessage(__resetErrMsg(e)); return false; }
         }
-      }).then(r => { if (r.isConfirmed) Swal.fire('تم ✅', 'اتغيرت كلمة المرور. سجّل دخول بيها دلوقتي.', 'success'); });
+      }).then(r => { if (r.isConfirmed) Swal.fire('تم ✅', __resetDoneMsg(r.value), 'success'); });
     }
 
 
