@@ -7,6 +7,72 @@
 <link rel="preconnect" href="https://securetoken.googleapis.com" crossorigin>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script>
+/* =====================================================================
+   منصة واحدة برابط واحد لكل المستويات
+   - كل مستوى ليه مشروع Firebase مستقل (باقة مجانية مستقلة: 100 اتصال + 10GB لكل مستوى)
+   - نفس الكود ونفس الرابط، والمستوى بيتحدد كده:
+       ?level=1 في الرابط  ←  آخر مستوى اتفتح على الجهاز  ←  شاشة "اختار مستواك"
+   - إعدادات Firebase لكل مستوى موجودة تحت في LEVEL_FIREBASE
+   ===================================================================== */
+(function () {
+  var lv = 0, saved = null;
+  try { var q = new URLSearchParams(location.search).get('level'); if (q === '1' || q === '2') lv = +q; } catch (e) {}
+  if (!lv) { var m = location.pathname.match(/\/(?:level|l)([12])\/?$/i); if (m) lv = +m[1]; }
+  try { saved = localStorage.getItem('platform_level'); } catch (e) {}
+  if (!lv && (saved === '1' || saved === '2')) lv = +saved;
+  /* طالب قديم من قبل التحديث (الجهاز عليه بيانات المنصة القديمة) = المستوى الثاني، من غير ما نسأله */
+  if (!lv) { try { if (localStorage.getItem('last_user_name') || localStorage.getItem('fast_cache_subjects_ver') || localStorage.getItem('theme')) lv = 2; } catch (e) {} }
+  if (lv) { try { localStorage.setItem('platform_level', String(lv)); } catch (e) {} }
+  window.PLATFORM_LEVEL = lv;
+
+  /* فصل الكاش المحلي لكل مستوى عشان مواد مستوى ما تظهرش في التاني.
+     المستوى التاني بيفضل بنفس المفاتيح القديمة (الكاش الموجود عند الطلبة يفضل شغال). */
+  if (lv === 1) {
+    var SHARED = { platform_level: 1, theme: 1, siteTheme: 1 };
+    try {
+      var P = Storage.prototype, g = P.getItem, s = P.setItem, r = P.removeItem;
+      var k = function (st, key) { return (st === window.localStorage && !SHARED[key]) ? 'L1:' + key : key; };
+      P.getItem = function (key) { return g.call(this, k(this, key)); };
+      P.setItem = function (key, v) { return s.call(this, k(this, key), v); };
+      P.removeItem = function (key) { return r.call(this, k(this, key)); };
+    } catch (e) {}
+  }
+
+  window.levelName = function (n) { return n === 1 ? 'المستوى الأول' : 'المستوى الثاني'; };
+  window.goToLevel = function (n) {
+    try { localStorage.setItem('platform_level', String(n)); } catch (e) {}
+    location.href = location.pathname.replace(/\/(?:level|l)[12]\/?$/i, '/') + '?level=' + n;
+  };
+
+  /* شاشة اختيار المستوى (بتظهر لأول مرة بس، أو لو المستوى لسه مالوش مشروع) */
+  window.showLevelPicker = function (avail) {
+    avail = avail || { 1: true, 2: true };
+    var card = function (n, icon, sub) {
+      var on = !!avail[n];
+      return '<button type="button" ' + (on ? 'onclick="goToLevel(' + n + ')"' : 'disabled') +
+        ' style="all:unset;box-sizing:border-box;cursor:' + (on ? 'pointer' : 'not-allowed') + ';flex:1 1 220px;min-width:0;padding:26px 20px;border-radius:22px;' +
+        'background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);text-align:center;opacity:' + (on ? 1 : .45) + ';transition:transform .2s,background .2s"' +
+        (on ? ' onmouseover="this.style.background=\'rgba(245,158,11,.14)\';this.style.transform=\'translateY(-3px)\'" onmouseout="this.style.background=\'rgba(255,255,255,.06)\';this.style.transform=\'none\'"' : '') + '>' +
+        '<div style="font-size:44px;line-height:1">' + icon + '</div>' +
+        '<div style="font-size:21px;font-weight:900;margin-top:12px">' + levelName(n) + '</div>' +
+        '<div style="font-size:13px;opacity:.7;margin-top:6px">' + (on ? sub : 'قريبًا ⏳') + '</div></button>';
+    };
+    var el = document.createElement('div');
+    el.id = 'level-picker';
+    el.setAttribute('dir', 'rtl');
+    el.style.cssText = 'position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;padding:16px;' +
+      'background:radial-gradient(circle at 50% 0%,#1f1a10 0%,#0a0908 60%);color:#fff;font-family:Cairo,system-ui,sans-serif;overflow:auto';
+    el.innerHTML = '<div style="width:100%;max-width:560px;text-align:center">' +
+      '<div style="font-size:13px;letter-spacing:.5px;color:#f59e0b;font-weight:700">قسم المساحة ونظم المعلومات</div>' +
+      '<h1 style="margin:8px 0 6px;font-size:28px;font-weight:900">El dof3aa Btzaker</h1>' +
+      '<p style="margin:0 0 26px;opacity:.75;font-size:15px">اختار مستواك عشان تدخل على موادك</p>' +
+      '<div style="display:flex;flex-wrap:wrap;gap:14px">' + card(1, '🎓', 'طلاب الفرقة الأولى') + card(2, '🚀', 'طلاب الفرقة الثانية') + '</div>' +
+      '<p style="margin:22px 0 0;opacity:.5;font-size:12px">تقدر تغيّر المستوى في أي وقت من أزرار المستويات في الصفحة الرئيسية</p></div>';
+    (document.body || document.documentElement).appendChild(el);
+  };
+})();
+</script>
 <title>El dof3aa Btzaker | قسم المساحة ونظم المعلومات</title>
 <meta name="description" content="El dof3aa Btzaker - قسم المساحة ونظم المعلومات: ملخصات وبنك أسئلة ولوحة شرف">
 <meta name="theme-color" content="#0a0908">
@@ -4331,7 +4397,7 @@ body[class*="theme-"] .mob-nav-item.active{color:var(--primary)!important}
               <input type="text" id="search-box" class="search-box" placeholder="ابحث عن اسم مادة، ملخص، أو سكشن..." oninput="onSearchBoxInput()">
               <button type="button" id="search-clear-btn" class="search-clear-btn" onclick="clearSearchBox()">✕</button>
             </div>
-            <div class="level-tabs liquid-glass" style="display:none;">
+            <div class="level-tabs liquid-glass">
               <button class="level-tab-btn z-content" id="tab-lvl-1" onclick="switchLevel(1)">المستوى الأول 🎓</button>
               <button class="level-tab-btn z-content active" id="tab-lvl-2" onclick="switchLevel(2)">المستوى الثاني 🚀</button>
             </div>
@@ -5680,10 +5746,43 @@ body[class*="theme-"] .mob-nav-item.active{color:var(--primary)!important}
   <script>
     const ADMIN_WHATSAPP_NUMBER = "201006109851";
     let feedbackCfg = { enabled: true, number: '' };
-    const firebaseConfig = { apiKey: "AIzaSyB6FXWiprXlv6eoLhRIDrwyzKmR9cf3F8Y", authDomain: "university-platform-f51a1.firebaseapp.com", databaseURL: "https://university-platform-f51a1-default-rtdb.firebaseio.com", projectId: "university-platform-f51a1", storageBucket: "university-platform-f51a1.firebasestorage.app", messagingSenderId: "160054277275", appId: "1:160054277275:web:79482938bc46e33c52c23e" };
+    /* ===== مشروع Firebase لكل مستوى =====
+       المستوى الأول: اعمل مشروع Firebase جديد وحط إعداداته مكان null
+       (Project settings ← Your apps ← Web app ← firebaseConfig) */
+    const LEVEL_FIREBASE = {
+      1: { apiKey: "AIzaSyAD8cWslM7S60HghPr_qA1Eh2UG04fxQtI", authDomain: "airo-uni-youth-care-v2.firebaseapp.com", databaseURL: "https://airo-uni-youth-care-v2-default-rtdb.firebaseio.com", projectId: "airo-uni-youth-care-v2", storageBucket: "airo-uni-youth-care-v2.firebasestorage.app", messagingSenderId: "704653422061", appId: "1:704653422061:web:032121a9024203162d0be4" },
+      2: { apiKey: "AIzaSyB6FXWiprXlv6eoLhRIDrwyzKmR9cf3F8Y", authDomain: "university-platform-f51a1.firebaseapp.com", databaseURL: "https://university-platform-f51a1-default-rtdb.firebaseio.com", projectId: "university-platform-f51a1", storageBucket: "university-platform-f51a1.firebasestorage.app", messagingSenderId: "160054277275", appId: "1:160054277275:web:79482938bc46e33c52c23e" }
+    };
+    if (PLATFORM_LEVEL && !LEVEL_FIREBASE[PLATFORM_LEVEL]) { window.PLATFORM_LEVEL = 0; try { localStorage.removeItem('platform_level'); } catch (e) {} }
+    const firebaseConfig = LEVEL_FIREBASE[PLATFORM_LEVEL] || LEVEL_FIREBASE[2];
+    function levelAvailable(n) { return !!LEVEL_FIREBASE[n]; }
 
     /* ===== كل المتغيرات معرّفة في الأعلى قبل أي استخدام ===== */
-    let currentUser = null, currentStudentData = null, isRegisterMode = false, activeLevel = 2, allUsersList = [], onlineUsersMap = {};
+    let currentUser = null, currentStudentData = null, isRegisterMode = false, activeLevel = PLATFORM_LEVEL || 2, allUsersList = [], onlineUsersMap = {};
+
+    /* ===== تجهيز الواجهة حسب مستوى المنصة ===== */
+    (function applyPlatformLevelUI() {
+      const L = PLATFORM_LEVEL; if (!L) return;
+      const opt = '<option value="' + L + '">' + levelName(L) + '</option>';
+      ['auth-level', 'new-subj-level'].forEach(id => { const s = document.getElementById(id); if (s) s.innerHTML = opt; });
+      const t1 = document.getElementById('tab-lvl-1'), t2 = document.getElementById('tab-lvl-2');
+      if (t1) t1.classList.toggle('active', L === 1); if (t2) t2.classList.toggle('active', L === 2);
+      const h = document.getElementById('current-level-heading'); if (h) h.innerText = 'مواد ' + levelName(L);
+      document.title = document.title + ' | ' + levelName(L);
+    })();
+
+    /* الانتقال لمنصة المستوى التاني (كل مستوى ليه قاعدة بيانات وحسابات منفصلة) */
+    function confirmGoToLevel(n) {
+      if (n === PLATFORM_LEVEL) return;
+      if (!levelAvailable(n)) { if (window.Swal) Swal.fire('قريبًا ⏳', 'منصة ' + levelName(n) + ' لسه بتتجهز.', 'info'); return; }
+      const staff = (typeof isStaffUser === 'function') && isStaffUser();
+      if (!currentUser || staff || !window.Swal) { goToLevel(n); return; }
+      Swal.fire({
+        title: 'الانتقال إلى ' + levelName(n) + '؟',
+        html: 'كل مستوى ليه حسابات منفصلة، فلو أول مرة تدخل هتحتاج تعمل حساب هناك.',
+        icon: 'question', showCancelButton: true, confirmButtonText: 'انتقل', cancelButtonText: 'خليني هنا', confirmButtonColor: '#f59e0b'
+      }).then(r => { if (r.isConfirmed) goToLevel(n); });
+    }
     let adminLogsListening = false, isMaintenanceActive = false, privateAlertListening = false;
     let db = [], currentSubjectId = null, userDataRef = null, searchTimeout = null;
     let currentChapterId = null; // الفصل المفتوح حالياً داخل المادة (null = شاشة الفصول)
@@ -5693,7 +5792,7 @@ body[class*="theme-"] .mob-nav-item.active{color:var(--primary)!important}
     let currentViewingPdfUrl = '';
 
     /* ===== تهيئة Firebase بأمان ===== */
-    const FB_OK = !!(window.firebase && window.firebase.auth && window.firebase.database);
+    const FB_OK = !!(PLATFORM_LEVEL && window.firebase && window.firebase.auth && window.firebase.database);
     function makeStub() { const p = new Proxy(function(){}, { get: (t, k) => (k === 'then' ? (() => p) : p), apply: () => p }); return p; }
     const FB = FB_OK ? window.firebase : makeStub();
     if (FB_OK) { if (!FB.apps.length) FB.initializeApp(firebaseConfig); }
@@ -5771,7 +5870,8 @@ body[class*="theme-"] .mob-nav-item.active{color:var(--primary)!important}
       if (document.hidden) { clearTimeout(__idleT); __idleT = setTimeout(__goOffline, HIDDEN_MS); } else { __wake(); }
     });
     __wake();
-    if (!FB_OK) { document.getElementById('fb-error').style.display = 'flex'; console.error('Firebase library failed to load'); }
+    if (!PLATFORM_LEVEL) { showLevelPicker({ 1: levelAvailable(1), 2: levelAvailable(2) }); }
+    else if (!FB_OK) { document.getElementById('fb-error').style.display = 'flex'; console.error('Firebase library failed to load'); }
 
     window.addEventListener('unhandledrejection', e => { const m = (e.reason && e.reason.message) || String(e.reason); if (window.Swal) Swal.fire('حصل خطأ', escText(m), 'error'); });
     let isRegistering = false, authReady = false, leaderboardSynced = '', adminListenersOn = false, lbQuery = null;
@@ -5838,12 +5938,12 @@ body[class*="theme-"] .mob-nav-item.active{color:var(--primary)!important}
       db = []; allUsersList = []; onlineUsersMap = {};
     }
     function _seenNow(e) { if (!currentUser) return; if (e && e.type === 'visibilitychange' && document.visibilityState !== 'hidden') return; database.ref('users/' + currentUser.uid + '/lastSeen').set(FB.database.ServerValue.TIMESTAMP); }
-    function syncLeaderboard(uid, d) { if (!d || d.isBanned) return; const sig = d.name + '|' + (d.score || 0) + '|' + (d.level || 1); if (sig === leaderboardSynced) return; leaderboardSynced = sig; database.ref('leaderboard/' + uid).update({ name: d.name, score: d.score || 0, level: d.level || 1 }); }
-    function listenToLeaderboard() { lbQuery = database.ref('leaderboard').orderByChild('score').limitToLast(60); lbQuery.on('value', snap => { const a = []; snap.forEach(c => { if (c.val() && c.val().name) a.push({ uid: c.key, ...c.val(), level: 2 }); }); a.sort((x, y) => (y.score || 0) - (x.score || 0)); window._lastLeaderboardRaw = a; renderLeaderboard(a); }); }
+    function syncLeaderboard(uid, d) { if (!d || d.isBanned) return; const sig = d.name + '|' + (d.score || 0) + '|' + PLATFORM_LEVEL; if (sig === leaderboardSynced) return; leaderboardSynced = sig; database.ref('leaderboard/' + uid).update({ name: d.name, score: d.score || 0, level: PLATFORM_LEVEL }); }
+    function listenToLeaderboard() { lbQuery = database.ref('leaderboard').orderByChild('score').limitToLast(60); lbQuery.on('value', snap => { const a = []; snap.forEach(c => { if (c.val() && c.val().name) a.push({ uid: c.key, ...c.val(), level: PLATFORM_LEVEL }); }); a.sort((x, y) => (y.score || 0) - (x.score || 0)); window._lastLeaderboardRaw = a; renderLeaderboard(a); }); }
     function syncAllLeaderboard() {
       const up = {};
       allUsersList.forEach(u => {
-        up['leaderboard/' + u.uid] = u.isBanned ? null : { name: u.name, score: u.score || 0, level: 2 };
+        up['leaderboard/' + u.uid] = u.isBanned ? null : { name: u.name, score: u.score || 0, level: PLATFORM_LEVEL };
         const p = String(u.phone || '').replace(/\D/g, ''); if (p) up['phones/' + p] = u.uid;
         const sv = u.solvedQuizzes || {}; Object.keys(sv).forEach(k => { const x = sv[k]; if (x === true || (x && x.status === 'correct')) up['users/' + u.uid + '/scoredQuizzes/' + k] = true; });
       });
@@ -5937,14 +6037,21 @@ body[class*="theme-"] .mob-nav-item.active{color:var(--primary)!important}
       if (window._listenersReady) return; window._listenersReady = true;
       try { listenToAlerts(); listenToAnnouncements(); listenToSubjects(); listenToLeaderboard(); listenToResearchTopics(); listenToCommunityLinks(); listenToExams(); listenToPolls(); updateBookmarksBadge(); __fetchFeedbackCfg(); } catch (e) { console.error(e); }
     }
+    /* توفير: بيانات الطالب كانت بتتحمّل مرتين عند كل دخول (مرة للتأكد من الحساب ومرة للاستماع).
+       بنمسك المرجع مفتوح لحظة عشان التحميل التاني ياخد من نفس النسخة من غير ما ينزل تاني */
+    function __holdUserRef(uid) {
+      const r = database.ref('users/' + uid), f = () => {};
+      try { r.on('value', f, () => {}); setTimeout(() => { try { r.off('value', f); } catch (e) {} }, 60000); } catch (e) {}
+      return r;
+    }
     function startSession(user) {
       window._lastUid = user.uid; ensureOnline(); __startPublicListeners();
-      withTimeout(database.ref('users/' + user.uid).once('value'), 40000, 'السيرفر اتأخر في الرد وإنت داخل. اتأكد من الإنترنت وحاول تاني.').then((snap) => {
+      withTimeout(__holdUserRef(user.uid).once('value'), 40000, 'السيرفر اتأخر في الرد وإنت داخل. اتأكد من الإنترنت وحاول تاني.').then((snap) => {
         const val = snap.val(); window._ssRetry = 0;
         if (!val) { Swal.fire('حسابك غير مكتمل', 'الحساب اتعمل بس بياناته ماكتملتش (غالبًا النت قطع وقت التسجيل). اضغط "إنشاء حساب جديد" واكتب نفس الإيميل والباسورد وبياناتك وهيتكمل.', 'warning'); auth.signOut(); return; }
         if (val.isBanned) { Swal.fire('محظور!', `⚠️ تم حظرك!<br>السبب: ${escText(val.banReason)}`, 'error'); logoutStudent(); return; }
         currentUser = user; document.getElementById('auth-overlay').style.display = 'none';
-        if (!window._lvlSet) { window._lvlSet = true; switchLevel(val.level == 2 ? 2 : 1, false); }
+        if (!window._lvlSet) { window._lvlSet = true; switchLevel(PLATFORM_LEVEL, false); }
         try { database.ref('settings/maintenanceMode').off(); listenToMaintenance(); } catch (e) {}
         try { listenToLevelRestrictions(); } catch (e) {}
         loadStudentData(user.uid); listenToPrivateAlerts(user.uid);
@@ -6279,7 +6386,7 @@ ${escText(alertBody)}
          - لحظي: اتصال حي. متاح فقط للمالك أو لمن منحه المالك صلاحية "students.live" من قسم الصلاحيات. */
       const KEY = 'admin_users_live', ref = database.ref('users');
       const handle = (snapshot) => {
-        let users = snapshot.val() || {}; allUsersList = []; for (let id in users) allUsersList.push({ uid: id, ...users[id], ...(users[id] && users[id].isOwner === true ? { isAdmin: true } : {}), level: 2 });
+        let users = snapshot.val() || {}; allUsersList = []; for (let id in users) allUsersList.push({ uid: id, ...users[id], ...(users[id] && users[id].isOwner === true ? { isAdmin: true } : {}), level: PLATFORM_LEVEL });
         allUsersList.sort((a, b) => (b.score || 0) - (a.score || 0));
         clearTimeout(window.__usersRenderT);
         window.__usersRenderT = setTimeout(() => { try { renderAdminResearchTable(); } catch (e) {} updateDashboardStats(); renderStudentsTable(); }, 400);
@@ -6580,7 +6687,8 @@ ${escText(alertBody)}
               },
               body: JSON.stringify({
                 targetUid: uid,
-                newPassword: pass
+                newPassword: pass,
+                level: PLATFORM_LEVEL
               })
             });
             const data = await response.json();
@@ -6641,7 +6749,7 @@ ${escText(alertBody)}
       if (userDataRef) userDataRef.off();
       userDataRef = database.ref('users/' + uid);
       userDataRef.on('value', (snap) => {
-        currentStudentData = snap.val(); if (currentStudentData) currentStudentData.level = 2; if (currentStudentData && currentStudentData.isOwner === true) currentStudentData.isAdmin = true; checkMaintenanceUI();
+        currentStudentData = snap.val(); if (currentStudentData) currentStudentData.level = PLATFORM_LEVEL; if (currentStudentData && currentStudentData.isOwner === true) currentStudentData.isAdmin = true; checkMaintenanceUI();
         if (currentStudentData && isStaffUser()) { attachMyPerms(uid); try { if (window.__subjectsGoLive) window.__subjectsGoLive(); } catch (e) {} } else detachMyPerms();
         { const __a = !!(currentStudentData && isStaffUser()); if (window.__lastAdm !== __a && window.__subjectsRaw) { try { applySubjectsRaw(); } catch (err) { console.error(err); } } }
         if (currentStudentData) {
@@ -6649,7 +6757,7 @@ ${escText(alertBody)}
           document.getElementById('user-greeting').innerHTML = `👤 ${escText(currentStudentData.name)}`; try { localStorage.setItem('last_user_name', currentStudentData.name || ''); } catch (e) {} setupPresence(uid, currentStudentData); syncLeaderboard(uid, currentStudentData);
           const adminBtn = document.getElementById('admin-toggle-btn');
           try { listenToSupport(); renderSupportList(); } catch (e) {}
-          if (isStaffUser()) { adminBtn.style.display = 'inline-flex'; applyStaffRoleUI(); if (hasPerm('system.logs')) listenToAdminLogs(); if (!adminListenersOn) { adminListenersOn = true; listenToUsersData(); listenToOnlinePresence(); } listenToAdminResearch(); listenToContributions(); updateAnalyticsSelect(); renderAdminResearchSettingsForm(); } else { adminBtn.style.display = 'none'; document.getElementById('admin-panel').style.display = 'none'; }
+          if (isStaffUser()) { adminBtn.style.display = 'inline-flex'; applyStaffRoleUI(); if (hasPerm('system.logs')) listenToAdminLogs(); if (window.__adminPanelOpened) __startAdminData(); listenToAdminResearch(); listenToContributions(); updateAnalyticsSelect(); renderAdminResearchSettingsForm(); } else { adminBtn.style.display = 'none'; document.getElementById('admin-panel').style.display = 'none'; }
         }
         try { __syncMyResearchFromUser(); } catch (e) {}
         updateResearchVisibilityUI();
@@ -7038,7 +7146,7 @@ ${escText(alertBody)}
             if (db && db.length > 0) {
               const subj = db.find(s => s.id === sId);
               if (subj) {
-                if (subj.level && subj.level !== activeLevel) {
+                if (false) { /* كل مستوى في منصته، مفيش تبديل مستوى داخل نفس القاعدة */
                   activeLevel = subj.level;
                   document.getElementById('tab-lvl-1').classList.toggle('active', activeLevel === 1);
                   document.getElementById('tab-lvl-2').classList.toggle('active', activeLevel === 2);
@@ -7451,50 +7559,118 @@ ${escText(alertBody)}
          الستاف: اتصال حي على المواد، وأي تعديل منهم بيحدّث رقم النسخة فالطلبة يشوفوه خلال ثواني. */
       /* توفير: كل تعديل من الأدمن كان بيخلي كل طالب فاتح المنصة يعيد تحميل كل المواد (بالأسئلة) كل 30 ثانية.
          دلوقتي: أول ما الطالب يفتح المنصة بياخد آخر نسخة، وبعد كده أقصى مرة كل 10 دقايق، ومش وهو التاب في الخلفية. */
-      const SAFE_TTL = 24 * 60 * 60 * 1000, MIN_GAP = 10 * 60 * 1000, VER_KEY = 'fast_cache_subjects_ver', TS_KEY = 'fast_cache_subjects_ts';
-      const ref = database.ref('subjects'), verRef = database.ref('settings/subjectsVersion');
-      let live = false, busy = false, lastFetch = 0, timer = null, firstLive = true, bumpT = null;
+      /* توفير (نسخة 2) — السبب الأكبر للاستهلاك كان هنا:
+         قبل كده أي تعديل من الأدمن (حتى سؤال واحد) كان بيخلي كل طالب ينزّل كل المواد بكل الأسئلة من الأول،
+         وكمان كل طالب كان بينزّلها كلها مرة كل 24 ساعة حتى لو مفيش تعديل.
+         دلوقتي: خريطة صغيرة settings/subjectsVersions = { idالمادة: وقت آخر تعديل } (أو 0 = اتمسحت)
+           ← الطالب بينزّل المادة اللي اتعدلت بس، وبحد أقصى مرة كل 5 دقايق.
+         لو الخريطة مش متاحة (مثلاً قواعد Firebase مانعاها) بيرجع تلقائياً للطريقة القديمة. */
+      const SAFE_TTL = 7 * 24 * 60 * 60 * 1000, MIN_GAP = 10 * 60 * 1000, PART_GAP = 5 * 60 * 1000;
+      const VER_KEY = 'fast_cache_subjects_ver', TS_KEY = 'fast_cache_subjects_ts', VERS_KEY = 'fast_cache_subjects_vers';
+      const ref = database.ref('subjects'), verRef = database.ref('settings/subjectsVersion'), versRef = database.ref('settings/subjectsVersions');
+      const TS = FB.database.ServerValue.TIMESTAMP;
+      let live = false, busy = false, lastFetch = 0, lastPart = 0, timer = null, kickT = null, firstLive = true, bumpT = null, pending = false;
+      let remoteVer = null, gotVer = false, remoteVers = undefined; // undefined = لسه ماوصلتش، null = مش موجودة/ممنوعة
       const hasCache = () => !!(window.__subjectsRaw && Object.keys(window.__subjectsRaw).length > 0);
       const store = (k, v) => { try { localStorage.setItem(k, String(v)); } catch (e) {} };
       const read = (k) => { try { return localStorage.getItem(k); } catch (e) { return null; } };
-      let pendingVer = null;
-      const fetchOnce = (ver) => {
+      const readVers = () => { try { const v = JSON.parse(read(VERS_KEY) || 'null'); return (v && typeof v === 'object') ? v : null; } catch (e) { return null; } };
+      /* نحفظ المواد في IndexedDB الأول، وبعدها نسجّل أرقام النسخ (عشان لو الصفحة اتقفلت في النص ما نفتكرش إننا محدّثين) */
+      const afterSave = (fn) => Promise.resolve(window.__saveSubjectsNow ? window.__saveSubjectsNow() : true).catch(() => {}).then(fn);
+
+      const fullFetch = () => {
         if (live || busy) return;
-        if (document.hidden && hasCache()) { pendingVer = ver; return; }   // التاب في الخلفية: نأجّل لحد ما يرجع
-        pendingVer = null; busy = true; lastFetch = Date.now();
-        ref.once('value').then(snap => { window.__subjectsRaw = snap.val() || {}; store(TS_KEY, Date.now()); store(VER_KEY, ver); applySubjectsRaw(); })
-          .catch(e => console.error('subjects:', e)).then(() => { busy = false; });
+        if (document.hidden && hasCache()) { pending = true; return; }
+        pending = false; busy = true; lastFetch = Date.now();
+        const v = remoteVer, vs = remoteVers;
+        ref.once('value').then(snap => {
+          window.__subjectsRaw = snap.val() || {}; applySubjectsRaw();
+          return afterSave(() => { store(TS_KEY, Date.now()); store(VER_KEY, v); store(VERS_KEY, JSON.stringify(vs || {})); });
+        }).catch(e => console.error('subjects:', e)).then(() => { busy = false; kick(); });
       };
-      const schedule = (ver, now) => {
+      const fullSoon = (now) => {
         clearTimeout(timer);
         const wait = now ? 0 : Math.max(1000 + Math.random() * 4000, (lastFetch ? MIN_GAP : 0) - (Date.now() - lastFetch));
-        timer = setTimeout(() => fetchOnce(ver), wait);
+        timer = setTimeout(fullFetch, wait);
       };
-      document.addEventListener('visibilitychange', () => {
-        if (!document.hidden && pendingVer !== null && !live) schedule(pendingVer, false);
-      });
+      const partialFetch = (ids) => {
+        if (live || busy) return;
+        if (!remoteVers) { kick(); return; }
+        if (document.hidden) { pending = true; return; }
+        pending = false; busy = true; lastPart = Date.now();
+        const vs = remoteVers, v = remoteVer, raw = Object.assign({}, window.__subjectsRaw || {});
+        Promise.all(ids.map(id => vs[id]
+          ? database.ref('subjects/' + id).once('value').then(s => { if (s.exists()) raw[id] = s.val(); else delete raw[id]; })
+          : (delete raw[id], null)))
+          .then(() => {
+            window.__subjectsRaw = raw; applySubjectsRaw();
+            return afterSave(() => {
+              const local = readVers() || {};
+              ids.forEach(id => { local[id] = vs[id]; });
+              store(VERS_KEY, JSON.stringify(local)); store(VER_KEY, v);
+            });
+          })
+          .catch(e => console.error('subjects (partial):', e)).then(() => { busy = false; kick(); });
+      };
+      const sync = () => {
+        if (live || busy || !gotVer || remoteVers === undefined) return;
+        if (!hasCache()) return fullSoon(true);
+        const local = readVers();
+        const stale = (Date.now() - (+read(TS_KEY) || 0)) > SAFE_TTL;
+        const verSame = read(VER_KEY) === String(remoteVer);
+        if (remoteVers && local && !stale && (remoteVers._all || 0) === (local._all || 0)) {
+          const ids = Object.keys(remoteVers).filter(k => k !== '_all' && remoteVers[k] !== local[k]);
+          if (ids.length) {
+            clearTimeout(timer);
+            const wait = Math.max(1000 + Math.random() * 3000, (lastPart ? PART_GAP : 0) - (Date.now() - lastPart));
+            timer = setTimeout(() => partialFetch(ids), wait);
+            return;
+          }
+          if (!verSame) fullSoon(false);   // تعديل اتعمل من نسخة قديمة من الموقع من غير الخريطة
+          return;
+        }
+        if (!remoteVers && !local && verSame && !stale) { store(VERS_KEY, '{}'); return; } // الكاش الحالي سليم: نبدأ منه
+        if (!verSame || stale || remoteVers) fullSoon(false);
+      };
+      /* الحدثين (الرقم العام + الخريطة) بيوصلوا مع بعض، فنستنى لحظة ونقرر مرة واحدة.
+         ونستنى كاش IndexedDB يتحمّل الأول عشان نعرف عندنا نسخة ولا لأ */
+      function kick() { clearTimeout(kickT); kickT = setTimeout(() => { (window.__subjectsCacheReady || Promise.resolve()).then(sync); }, 300); }
+      window.__subjVisKick = () => { if (!document.hidden && pending) kick(); };
+      if (!window.__subjVisBound) { window.__subjVisBound = true; document.addEventListener('visibilitychange', () => { try { window.__subjVisKick(); } catch (e) {} }); }
+
       if (window.__subjVerOff) { try { window.__subjVerOff(); } catch (e) {} }
-      const verCb = (snap) => {
-        if (live) return;
-        const v = snap.val() || 0;
-        /* نستنى تحميل الكاش من IndexedDB الأول عشان نعرف عندنا نسخة ولا لأ */
-        (window.__subjectsCacheReady || Promise.resolve()).then(() => {
-          if (live) return;
-          const stale = (Date.now() - (+read(TS_KEY) || 0)) > SAFE_TTL;
-          if (!hasCache()) schedule(v, true);
-          else if (read(VER_KEY) !== String(v) || stale) schedule(v, false);
-        });
-      };
+      const verCb = (snap) => { remoteVer = snap.val() || 0; gotVer = true; kick(); };
+      const versCb = (snap) => { const v = snap.val(); remoteVers = (v && typeof v === 'object') ? v : null; kick(); };
       verRef.on('value', verCb, e => console.error('subjectsVersion:', e));
-      window.__subjVerOff = () => { try { verRef.off('value', verCb); } catch (e) {} };
+      versRef.on('value', versCb, () => { remoteVers = null; kick(); });
+      window.__subjVerOff = () => { try { verRef.off('value', verCb); versRef.off('value', versCb); } catch (e) {} };
+
+      /* الستاف: اتصال حي على المواد. بنقارن كل مادة بنسختها اللي قبلها عشان نعرف بالظبط إيه اللي اتغير */
+      const dirty = {};
+      const flushBump = () => {
+        bumpT = null;
+        const ids = Object.keys(dirty); if (!ids.length) return;
+        const up = { 'settings/subjectsVersion': TS };
+        ids.forEach(id => { up['settings/subjectsVersions/' + id] = dirty[id] ? TS : 0; delete dirty[id]; });
+        database.ref().update(up).catch(() => { try { verRef.set(TS).catch(() => {}); } catch (e) {} });
+      };
       window.__subjectsGoLive = () => {
         if (live) return; live = true; clearTimeout(timer); window.__subjVerOff();
+        let prev = null;
         ref.on('value', snap => {
-          window.__subjectsRaw = snap.val() || {}; store(TS_KEY, Date.now()); applySubjectsRaw();
+          const val = snap.val() || {};
+          window.__subjectsRaw = val; store(TS_KEY, Date.now()); applySubjectsRaw();
+          const cur = {}; Object.keys(val).forEach(id => { cur[id] = JSON.stringify(val[id]); });
+          if (prev) {
+            Object.keys(cur).forEach(id => { if (cur[id] !== prev[id]) dirty[id] = 1; });
+            Object.keys(prev).forEach(id => { if (!(id in cur)) dirty[id] = 0; });
+          }
+          prev = cur;
           if (firstLive) { firstLive = false; return; }
           clearTimeout(bumpT);
-          bumpT = setTimeout(() => { try { verRef.set(FB.database.ServerValue.TIMESTAMP).catch(() => {}); } catch (e) {} }, 3000);
+          bumpT = setTimeout(flushBump, 3000);
         });
+        window.addEventListener('pagehide', () => { if (bumpT) { clearTimeout(bumpT); flushBump(); } });
       };
       if (currentStudentData && isStaffUser()) window.__subjectsGoLive();
     }
@@ -7548,7 +7724,16 @@ ${escText(alertBody)}
       }
     }
 
-    function toggleAdminPanel() { if (!isStaffUser()) { Swal.fire('تنبيه','غير مصرح لك.','warning'); return; } const p = document.getElementById("admin-panel"); const vis = p.style.display === "block"; p.style.display = vis ? "none" : "block"; if (!vis) { updateAdminSelects(); updateLevelRestrictionsUI(); p.scrollIntoView({behavior:'smooth'}); } }
+    /* توفير: بيانات لوحة التحكم التقيلة (كل الطلبة + إحصائيات كل الملفات + كل التعليقات)
+       كانت بتتحمّل مع كل فتحة للموقع لأي أدمن أو ليدر حتى لو ما فتحش لوحة التحكم.
+       دلوقتي بتتحمّل أول مرة تفتح فيها لوحة التحكم بس. */
+    function __startAdminData() {
+      window.__adminPanelOpened = true;
+      if (!currentStudentData || !isStaffUser()) return;
+      if (!adminListenersOn) { adminListenersOn = true; listenToUsersData(); listenToOnlinePresence(); }
+      try { if (window.__startFullFileListeners) window.__startFullFileListeners(); } catch (e) {}
+    }
+    function toggleAdminPanel() { if (!isStaffUser()) { Swal.fire('تنبيه','غير مصرح لك.','warning'); return; } const p = document.getElementById("admin-panel"); const vis = p.style.display === "block"; p.style.display = vis ? "none" : "block"; if (!vis) { __startAdminData(); updateAdminSelects(); updateLevelRestrictionsUI(); p.scrollIntoView({behavior:'smooth'}); } }
     function updateAlert(e) { e.preventDefault(); let text = document.getElementById("alert-input").value; database.ref('alert').set(text); e.target.reset(); logAdminAction('نشر تنبيه للدفعة', text); Swal.fire('تم', 'تم نشر التنبيه بنجاح', 'success'); }
 
     function updateAdminSelects() {
@@ -7948,18 +8133,26 @@ ${escText(alertBody)}
       try {
         const t = await currentUser.getIdToken();
         const r = await fetch(__DB + '/research_topics.json?auth=' + encodeURIComponent(t), { cache: 'no-store' });
-        if (r.ok) __applyTopics(await r.json());
+        if (r.ok) { __lastTopicsAt = Date.now(); __applyTopics(await r.json()); }
         await __fetchMyRequest(t);
       } catch (e) {}
     }
+    /* توفير: قبل كده كل طالب مالوش بحث كان بينزّل قايمة الأبحاث كلها كل 7-35 ثانية طول ما المنصة مفتوحة،
+       حتى لو مش في صفحة الأبحاث وحتى لو قسم الأبحاث مقفول.
+       دلوقتي: تحديث سريع (كل ~10 ثواني) بس وهو جوه صفحة الأبحاث والتسجيل مفتوح،
+       جوه الصفحة والتسجيل مقفول كل دقيقة، وبره الصفحة مرة كل 15 دقيقة. ولو القسم مقفول: ولا تحميل.
+       (الحجز نفسه بيتأكد من السيرفر، فلو حد سبقك بتعرف فوراً) */
+    var __lastTopicsAt = 0;
+    function __onResearchPage() { const v = document.getElementById('view-research'); return !!(v && v.style.display === 'block'); }
     function __pollResearch() {
       clearTimeout(__pollT);
-      const next = () => {
-        const locked = !__isAdmin() && !researchRegistrationOpen();
-        __pollT = setTimeout(__pollResearch, locked ? 25000 + Math.random() * 10000 : 7000 + Math.random() * 3000);
-      };
-      if (document.hidden || !currentUser || myResearch() || __isAdmin()) { next(); return; }
-      __fetchTopics().then(next, next);
+      const onPage = __onResearchPage(), fast = onPage && researchRegistrationOpen();
+      __pollT = setTimeout(__pollResearch, fast ? 9000 + Math.random() * 4000 : 30000); // التايمر مش بيستهلك، التحميل هو اللي بيستهلك
+      if (document.hidden || !currentUser || __isAdmin() || myResearch()) return;
+      if (researchSettings.enabled === false || !isResearchAllowedForStudent()) return;
+      const need = fast ? 8000 : (onPage ? 60000 : 15 * 60000);
+      if (__lastTopicsAt && Date.now() - __lastTopicsAt < need) return;
+      __fetchTopics();
     }
     async function __healStaleTopic() {
       try {
@@ -8609,6 +8802,7 @@ ${escText(alertBody)}
       switchResearchTab(tab || 'pick', false);
       renderResearchHome();
       renderMyRequest();
+      try { if (!__isAdmin()) __pollResearch(); } catch (e) {} // أول ما يدخل الصفحة: نحدّث القايمة لو قديمة
       if (updateHash && !isHashNavigationInProgress) {
         const hash = '#research' + (tab ? '/' + tab : '');
         if (window.location.hash !== hash) {
@@ -8785,7 +8979,8 @@ ${escText(alertBody)}
     }
 
     function switchLevel(lvl, updateHash = true) {
-      lvl = 2;
+      lvl = parseInt(lvl, 10) || PLATFORM_LEVEL;
+      if (lvl !== PLATFORM_LEVEL) { confirmGoToLevel(lvl); return; }
       activeLevel = lvl;
       document.getElementById('tab-lvl-1').classList.toggle('active', lvl===1);
       document.getElementById('tab-lvl-2').classList.toggle('active', lvl===2);
@@ -14245,7 +14440,7 @@ function openThemePicker() {
      ========================================================================= */
   /* كاش المواد في IndexedDB (مفيش حد 5MB زي localStorage). لو فيه كاش قديم في localStorage بيتنقل تلقائياً. */
   var __IDB = {
-    open: function() { return new Promise(function(res, rej) { try { var r = indexedDB.open('fast_cache', 1); r.onupgradeneeded = function() { r.result.createObjectStore('kv'); }; r.onsuccess = function() { res(r.result); }; r.onerror = function() { rej(r.error); }; } catch (e) { rej(e); } }); },
+    open: function() { return new Promise(function(res, rej) { try { var r = indexedDB.open(window.PLATFORM_LEVEL === 1 ? 'fast_cache_l1' : 'fast_cache', 1); r.onupgradeneeded = function() { r.result.createObjectStore('kv'); }; r.onsuccess = function() { res(r.result); }; r.onerror = function() { rej(r.error); }; } catch (e) { rej(e); } }); },
     get: function(k) { return this.open().then(function(d) { return new Promise(function(res, rej) { var q = d.transaction('kv').objectStore('kv').get(k); q.onsuccess = function() { res(q.result); }; q.onerror = function() { rej(q.error); }; }); }).catch(function() { return null; }); },
     set: function(k, v) { return this.open().then(function(d) { return new Promise(function(res, rej) { var t = d.transaction('kv', 'readwrite'); t.objectStore('kv').put(v, k); t.oncomplete = function() { res(true); }; t.onerror = function() { rej(t.error); }; }); }).catch(function() { return false; }); }
   };
@@ -14259,6 +14454,11 @@ function openThemePicker() {
     }
   }).catch(function() {});
 
+  // حفظ فوري (بيستخدمه listenToSubjects قبل ما يسجّل رقم النسخة)
+  window.__saveSubjectsNow = function() {
+    try { if (window.__subjectsRaw && Object.keys(window.__subjectsRaw).length > 0) return __IDB.set('subjects_raw', window.__subjectsRaw); } catch (e) {}
+    return Promise.resolve(false);
+  };
   // حفظ المواد تلقائياً في الكاش عند تحديثها (مع تأخير بسيط عشان ما نكتبش كتير)
   var __subjSaveT = null;
   var origApplySubjectsRaw = window.applySubjectsRaw;
@@ -14348,6 +14548,11 @@ function openThemePicker() {
       var sRef = database.ref('file_stats/' + id), cRef = database.ref('file_comments/' + id);
       cRef.on('value', function(snap) { __onFileComments(id, snap); }, function(err) { console.error('file_comments:', err); });
       __fileSubjRefs[id] = { s: sRef, c: cRef };
+      /* الستاف قبل ما يفتح لوحة التحكم: إحصائيات المادة المفتوحة بس (بالأسماء)، مش كل المواد */
+      if (typeof isStaffUser === 'function' && isStaffUser()) {
+        sRef.on('value', function(snap) { __onFileStats(id, snap); }, function(err) { console.error('file_stats:', err); });
+        return;
+      }
     } catch (e) {}
     loadStudentViewCounts(id);
   }
@@ -14381,9 +14586,10 @@ function openThemePicker() {
   function startFileTrackingListeners() {
     if (fileListenersStarted || typeof database === 'undefined') return;
     fileListenersStarted = true;
-    if (typeof isStaffUser === 'function' && isStaffUser()) { startFullFileListeners(); return; }
+    if (window.__adminPanelOpened && typeof isStaffUser === 'function' && isStaffUser()) { startFullFileListeners(); return; }
     if (typeof currentSubjectId !== 'undefined' && currentSubjectId) listenFilesForSubject(currentSubjectId);
   }
+  window.__startFullFileListeners = startFullFileListeners;
 
   /* ربط فتح المادة بالاستماع لها (بدون تغيير سلوك openSubject الأصلي) */
   (function() {
@@ -14777,7 +14983,7 @@ function openThemePicker() {
     var ready = (typeof currentStudentData !== 'undefined' && currentStudentData);
     if (!fileListenersStarted && (ready || ++__ftTries > 10)) startFileTrackingListeners();
     if (fileListenersStarted && ready) {
-      if (!__fileFullMode && typeof isStaffUser === 'function' && isStaffUser()) startFullFileListeners();
+      if (!__fileFullMode && window.__adminPanelOpened && typeof isStaffUser === 'function' && isStaffUser()) startFullFileListeners();
       clearInterval(__ftTimer);
     }
   }, 1200);
