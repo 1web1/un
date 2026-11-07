@@ -92,6 +92,25 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <style>
+  /* سويتش المستويين في البار اللي فوق */
+  .lvl-switch { display:inline-flex; align-items:center; gap:2px; padding:3px; border-radius:999px; background:rgba(0,0,0,.35); border:1px solid rgba(255,255,255,.14); flex-shrink:0; }
+  .lvl-sw-btn { all:unset; cursor:pointer; padding:6px 12px; border-radius:999px; font-size:13px; font-weight:800; color:rgba(255,255,255,.7); white-space:nowrap; transition:background .2s, color .2s; }
+  .lvl-sw-btn:hover { color:#fff; }
+  .lvl-sw-btn.active { background:#f59e0b; color:#111; }
+  .lvl-sw-btn.lvl-hidden { opacity:.55; }
+  body.light-mode .lvl-switch { background:rgba(0,0,0,.06); border-color:rgba(0,0,0,.12); }
+  body.light-mode .lvl-sw-btn { color:rgba(0,0,0,.6); }
+  body.light-mode .lvl-sw-btn.active { color:#111; }
+  @media (max-width: 700px) { .lvl-sw-txt { display:none; } .lvl-sw-btn { padding:6px 10px; font-size:15px; } }
+  /* اختيار المستوى في فورم التسجيل */
+  .auth-lvl-pick { display:flex; gap:8px; width:100%; }
+  .auth-lvl-btn { all:unset; box-sizing:border-box; flex:1; text-align:center; cursor:pointer; padding:11px 8px; border-radius:12px; border:1px solid rgba(255,255,255,.18); background:rgba(255,255,255,.05); font-weight:800; font-size:14px; }
+  .auth-lvl-btn.active { background:rgba(245,158,11,.18); border-color:#f59e0b; color:#fbbf24; }
+  .auth-lvl-btn[disabled] { opacity:.45; cursor:not-allowed; }
+  .lvl-badge { padding:2px 7px; border-radius:6px; font-size:10.5px; margin-right:6px; font-weight:700; white-space:nowrap; }
+  .lvl-badge.l1 { background:rgba(59,130,246,.15); color:#60a5fa; }
+  .lvl-badge.l2 { background:rgba(168,85,247,.15); color:#c084fc; }
+  .lvl-badge.guest { outline:1px dashed currentColor; }
   :root {
     --fg: #ffffff; --fg-soft: rgba(255,255,255,.9); --fg-faint: rgba(255,255,255,.6);
     --shade: #0a0908; --ease: cubic-bezier(.22,.61,.36,1);
@@ -4195,6 +4214,10 @@ body[class*="theme-"] .mob-nav-item.active{color:var(--primary)!important}
         <button type="button" class="header-nav-link" id="hnav-leaderboard" onclick="neoGoLeaderboard()"><span>🏆</span><span>لوحة الشرف</span></button>
       </div>
       <nav class="nav z-content">
+        <div class="lvl-switch" id="lvl-switch" style="display:none;" role="group" aria-label="تبديل المستوى">
+          <button type="button" class="lvl-sw-btn" id="lvl-sw-1" onclick="switchLevel(1)" title="المستوى الأول">🎓<span class="lvl-sw-txt"> الأول</span></button>
+          <button type="button" class="lvl-sw-btn" id="lvl-sw-2" onclick="switchLevel(2)" title="المستوى الثاني">🚀<span class="lvl-sw-txt"> الثاني</span></button>
+        </div>
         <button class="pill theme-btn nav-desktop-only" id="theme-toggle-btn" onclick="toggleTheme()" title="تبديل الوضع">🌞</button>
         <button class="pill theme-btn nav-desktop-only" id="sound-toggle-btn" onclick="toggleSound()" title="كتم/تشغيل المؤثرات الصوتية">🔊</button>
         <button class="pill theme-btn nav-desktop-only" id="data-saver-btn" onclick="toggleDataSaver()" title="وضع توفير البيانات (إيقاف الفيديو والتأثيرات)">📶</button>
@@ -4399,7 +4422,7 @@ body[class*="theme-"] .mob-nav-item.active{color:var(--primary)!important}
               <input type="text" id="search-box" class="search-box" placeholder="ابحث عن اسم مادة، ملخص، أو سكشن..." oninput="onSearchBoxInput()">
               <button type="button" id="search-clear-btn" class="search-clear-btn" onclick="clearSearchBox()">✕</button>
             </div>
-            <div class="level-tabs liquid-glass">
+            <div class="level-tabs liquid-glass" id="home-level-tabs" style="display:none;">
               <button class="level-tab-btn z-content" id="tab-lvl-1" onclick="switchLevel(1)">المستوى الأول 🎓</button>
               <button class="level-tab-btn z-content active" id="tab-lvl-2" onclick="switchLevel(2)">المستوى الثاني 🚀</button>
             </div>
@@ -4828,12 +4851,21 @@ body[class*="theme-"] .mob-nav-item.active{color:var(--primary)!important}
             <h2 style="color: var(--primary); margin: 0; font-size: 24px; display:flex; align-items:center; gap:8px;"><span>👑</span> لوحة تحكم الإدارة</h2>
             <div class="admin-stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));">
               <div class="admin-stat-box"><div class="admin-stat-num" id="stat-students">0</div><div class="admin-stat-label">إجمالي الطلاب</div></div>
-              <div class="admin-stat-box" style="border-color: rgba(192,132,252,.3);"><div class="admin-stat-num" style="color:#c084fc;" id="stat-lvl2">0</div><div class="admin-stat-label">المستوى الثاني 🚀</div></div>
-              <div class="admin-stat-box" id="stat-online-box" style="cursor:pointer;" onclick="toggleOnlineFilter()" title="اضغط لعرض المتصلين فقط"><div class="admin-stat-num" style="color:#4ade80;" id="stat-online">0</div><div class="admin-stat-label">متصل الآن 👆</div>
+              <div class="admin-stat-box" style="border-color: rgba(96,165,250,.3);"><div class="admin-stat-num" style="color:#60a5fa;" id="stat-lvl1">0</div><div class="admin-stat-label">طلاب المستوى الأول 🎓</div></div>
+              <div class="admin-stat-box" style="border-color: rgba(192,132,252,.3);"><div class="admin-stat-num" style="color:#c084fc;" id="stat-lvl2">0</div><div class="admin-stat-label">طلاب المستوى الثاني 🚀</div></div>
+              <div class="admin-stat-box" id="stat-online-box" style="cursor:pointer;" onclick="toggleOnlineFilter()" title="اضغط لعرض المتصلين فقط"><div class="admin-stat-num" style="color:#4ade80;" id="stat-online">0</div><div class="admin-stat-label">متصل الآن 👆</div><div id="stat-online-split" style="font-size:11px; opacity:.85; margin-top:2px;"></div>
                 <button id="presence-mode-btn" onclick="event.stopPropagation(); togglePresenceMode()" style="margin-top:6px; border:0; color:#fff; border-radius:8px; padding:4px 8px; font-size:11px; font-weight:bold; cursor:pointer; background:#475569;">💰 توفير (اضغط للدقيق)</button>
                 <div id="presence-mode-note" style="font-size:10px; opacity:.7; margin-top:3px;"></div></div>
               <div class="admin-stat-box"><div class="admin-stat-num" style="color:#fbbf24;" id="stat-subjects">0</div><div class="admin-stat-label">المواد الدراسية</div></div>
               <div class="admin-stat-box"><div class="admin-stat-num" style="color:#f472b6;" id="stat-questions">0</div><div class="admin-stat-label">بنك الأسئلة</div></div>
+            </div>
+            <!-- أرقام المنصتين مع بعض (بتتجاب من السيرفر) -->
+            <div id="levels-overview" style="margin-top:14px; padding:14px 16px; border-radius:14px; border:1px solid rgba(255,255,255,.12); background:rgba(0,0,0,.25);">
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:10px;">
+                <b style="font-size:15px;">📊 المنصتين مع بعض</b>
+                <button type="button" class="pill" onclick="loadLevelsOverview(true)" style="font-size:12px; height:32px; padding:0 12px; background:rgba(59,130,246,.18); border:1px solid rgba(59,130,246,.4); color:#60a5fa;">🔄 تحديث</button>
+              </div>
+              <div id="levels-overview-body" style="font-size:13px; opacity:.85;">بيتحمّل لما تفتح لوحة الإدارة...</div>
             </div>
           </div>
 
@@ -4864,6 +4896,7 @@ body[class*="theme-"] .mob-nav-item.active{color:var(--primary)!important}
              <div class="z-content flex-between" style="flex-wrap: wrap; gap: 10px; margin-bottom: 12px;">
                 <div class="level-tabs" style="margin-bottom: 0; padding: 3px; background: rgba(0,0,0,.35); flex: 1; max-width: 480px;">
                    <button type="button" class="level-tab-btn active" id="admin-filter-all" style="padding: 6px 12px; font-size: 13px;" onclick="setAdminLevelFilter('all')">الكل (<span id="count-pill-all">0</span>)</button>
+                   <button type="button" class="level-tab-btn" id="admin-filter-1" style="padding: 6px 12px; font-size: 13px;" onclick="setAdminLevelFilter(1)">المستوى الأول 🎓 (<span id="count-pill-1">0</span>)</button>
                    <button type="button" class="level-tab-btn" id="admin-filter-2" style="padding: 6px 12px; font-size: 13px;" onclick="setAdminLevelFilter(2)">المستوى الثاني 🚀 (<span id="count-pill-2">0</span>)</button>
                 </div>
                 <div style="flex: 1; min-width: 240px;">
@@ -5773,6 +5806,17 @@ body[class*="theme-"] .mob-nav-item.active{color:var(--primary)!important}
       const h = document.getElementById('current-level-heading'); if (h) h.innerText = 'مواد ' + levelName(L);
       document.title = document.title + ' | ' + levelName(L);
       /* شاشة الدخول (توضيح المستوى + زرار للمستوى التاني) بتترسم في __applyLevelVisibilityUI */
+      /* جاي من فورم التسجيل في المستوى التاني بعد ما اختار المستوى ده: نفتح التسجيل ونكتب بياناته */
+      try {
+        const xr = sessionStorage.getItem('xfer_register');
+        if (xr) {
+          sessionStorage.removeItem('xfer_register');
+          const d = JSON.parse(xr) || {};
+          if (!isRegisterMode) toggleAuthMode();
+          [['auth-name', d.name], ['auth-phone', d.phone], ['auth-email', d.email]].forEach(([id, v]) => { const e = document.getElementById(id); if (e && v) e.value = v; });
+          setTimeout(() => { try { Swal.fire({ toast: true, position: 'top', icon: 'info', timer: 5000, showConfirmButton: false, title: 'انت دلوقتي بتعمل حساب في ' + levelName(L) }); } catch (e) {} }, 1000);
+        }
+      } catch (e) {}
       /* جاي من المستوى التاني بعد ما اكتشفنا إن حسابه هنا: نكتب الإيميل بداله */
       try {
         const xe = sessionStorage.getItem('xfer_email');
@@ -5801,7 +5845,7 @@ body[class*="theme-"] .mob-nav-item.active{color:var(--primary)!important}
         try {
           const s = await withTimeout(app.database().ref('users/' + cred.user.uid).once('value'), 12000);
           const v = s.val() || {};
-          prof = { name: String(v.name || '').trim().replace(/\s+/g, ' '), phone: String(v.phone || '').trim(), banned: v.isBanned === true };
+          prof = { name: String(v.name || '').trim().replace(/\s+/g, ' '), phone: String(v.phone || '').trim(), banned: v.isBanned === true, homeLevel: parseInt(v.homeLevel, 10) || 0 };
         } catch (e) { prof = null; }
         try { await a.signOut(); } catch (e) {}
       } catch (e) { found = false; }
@@ -5828,11 +5872,11 @@ body[class*="theme-"] .mob-nav-item.active{color:var(--primary)!important}
         if (!isRegisterMode) toggleAuthMode();
         document.getElementById('auth-email').value = email; document.getElementById('auth-pass').value = pass;
         if (prof) { document.getElementById('auth-name').value = prof.name; document.getElementById('auth-phone').value = prof.phone; }
-        window.__skipProbeOnce = true;
+        window.__skipProbeOnce = true; window.__pendingHomeLevel = O;
         Swal.fire('كمّل بياناتك', 'محتاجين ' + (!okName ? 'اسمك الرباعي' : '') + (!okName && !okPhone ? ' و' : '') + (!okPhone ? 'رقم تليفونك' : '') + ' عشان نعملك الحساب، وبعدين دوس "تسجيل حساب".', 'info');
         return true;
       }
-      await doRegister(email, pass, prof.name, L, prof.phone, { copied: true });
+      await doRegister(email, pass, prof.name, L, prof.phone, { copied: true, homeLevel: (prof.homeLevel && prof.homeLevel !== L) ? prof.homeLevel : O });
       return true;
     }
 
@@ -5855,6 +5899,38 @@ body[class*="theme-"] .mob-nav-item.active{color:var(--primary)!important}
         html: 'ادخل بنفس الإيميل والباسورد بتوعك.<br>لو أول مرة، هنعملك حساب هناك ببياناتك تلقائي.<br><small style="opacity:.7">النقاط والأسئلة اللي حليتها بتتحسب لكل مستوى لوحده.</small>',
         icon: 'question', showCancelButton: true, confirmButtonText: 'انتقل', cancelButtonText: 'خليني هنا', confirmButtonColor: '#f59e0b'
       }).then(r => { if (r.isConfirmed) go(); });
+    }
+
+    /* الأدمن بيصلّح المستوى الأصلي لطالب (مثلاً حساب اتنقل قبل ما العلامة دي تتضاف) */
+    async function __fixHomeLevel(uid) {
+      if (!isAdminUser()) return;
+      const u = (allUsersList || []).find(x => x.uid === uid); if (!u) return;
+      const r = await Swal.fire({
+        title: 'المستوى الأصلي لـ ' + escText(u.name || ''), input: 'radio',
+        inputOptions: { 1: '🎓 المستوى الأول', 2: '🚀 المستوى الثاني' }, inputValue: String(u.level || PLATFORM_LEVEL),
+        html: '<div style="font-size:13px;opacity:.8">ده المستوى اللي الطالب أصلاً فيه، وبيظهر جنب اسمه وفي العدّ.</div>',
+        showCancelButton: true, confirmButtonText: 'حفظ', cancelButtonText: 'إلغاء'
+      });
+      if (!r.isConfirmed) return;
+      const hl = parseInt(r.value, 10), guest = hl !== PLATFORM_LEVEL;
+      try {
+        await database.ref('users/' + uid + '/homeLevel').set(guest ? hl : null);
+        try { await database.ref('guests/' + uid).set(guest ? hl : null); } catch (e) {}
+        u.level = hl; try { renderStudentsTable(); updateDashboardStats(); } catch (e) {}
+        try { logAdminAction('تعديل المستوى الأصلي', (u.name || '') + ' ← ' + levelName(hl)); } catch (e) {}
+        Swal.fire({ toast: true, position: 'top', icon: 'success', timer: 2200, showConfirmButton: false, title: 'اتحفظ' });
+      } catch (e) { Swal.fire('خطأ', escText(e.message || e), 'error'); }
+    }
+
+    /* الطالب اختار مستوى تاني وهو بيعمل حساب: ننقله لفورم التسجيل هناك ومعاه اللي كتبه (من غير الباسورد) */
+    function __registerInLevel(n) {
+      if (n === PLATFORM_LEVEL) return;
+      if (!levelAvailable(n) || (!levelVisible(n) && !isOwnerUser())) { if (window.Swal) Swal.fire('قريبًا ⏳', 'منصة ' + levelName(n) + ' لسه بتتجهز.', 'info'); return; }
+      try {
+        const g = (id) => { const e = document.getElementById(id); return e ? e.value : ''; };
+        sessionStorage.setItem('xfer_register', JSON.stringify({ name: g('auth-name'), phone: g('auth-phone'), email: g('auth-email') }));
+      } catch (e) {}
+      goToLevel(n);
     }
 
     /* ===================== إظهار / إخفاء المستوى الأول (للمالك بس) =====================
@@ -5881,17 +5957,34 @@ body[class*="theme-"] .mob-nav-item.active{color:var(--primary)!important}
       const pk = document.getElementById('level-picker');
       if (pk) { pk.remove(); showLevelPicker({ 1: levelAvailable(1) && levelVisible(1), 2: levelAvailable(2) && levelVisible(2) }); }
       if (!L) return;
-      /* أزرار المستويات في الرئيسية */
-      [1, 2].forEach(n => {
-        const t = document.getElementById('tab-lvl-' + n); if (!t) return;
-        const vis = levelVisible(n);
-        t.innerText = levelName(n) + (n === 1 ? ' 🎓' : ' 🚀') + (!vis && owner ? ' (مخفي 🙈)' : '');
-        t.style.display = (n === L || (levelAvailable(n) && (vis || owner))) ? '' : 'none';
-      });
-      const bar = document.querySelector('.level-tabs');
-      if (bar) bar.style.display = [1, 2].some(n => n !== L && levelAvailable(n) && (levelVisible(n) || owner)) ? '' : 'none';
+      const O = L === 1 ? 2 : 1;
+      const otherOpen = levelAvailable(O) && (levelVisible(O) || owner);
+      /* سويتش المستويين في البار اللي فوق (بيختفي لو المستوى التاني مخفي، إلا للمالك) */
+      const sw = document.getElementById('lvl-switch');
+      if (sw) {
+        sw.style.display = otherOpen ? 'inline-flex' : 'none';
+        [1, 2].forEach(n => {
+          const b = document.getElementById('lvl-sw-' + n); if (!b) return;
+          b.classList.toggle('active', n === L);
+          const hid = n !== L && !levelVisible(n);
+          b.classList.toggle('lvl-hidden', hid);
+          b.title = levelName(n) + (hid ? ' (مخفي عن الطلبة 🙈)' : '');
+        });
+      }
+      /* اختيار المستوى في فورم إنشاء الحساب */
+      const lg = document.getElementById('level-group');
+      if (lg) {
+        const opt = (n) => {
+          const can = n === L || (levelAvailable(n) && (levelVisible(n) || owner));
+          return '<button type="button" class="auth-lvl-btn' + (n === L ? ' active' : '') + '"' + (can ? '' : ' disabled') +
+            ' onclick="__registerInLevel(' + n + ')">' + (n === 1 ? '🎓 ' : '🚀 ') + levelName(n) + (can ? '' : ' (قريبًا)') + '</button>';
+        };
+        lg.innerHTML = '<label>هتعمل حساب في:</label><div class="auth-lvl-pick">' + opt(1) + opt(2) + '</div>' +
+          '<select id="auth-level" style="display:none"><option value="' + L + '">' + levelName(L) + '</option></select>';
+        lg.style.flexDirection = 'column';
+      }
       /* شاشة الدخول */
-      const O = L === 1 ? 2 : 1, note = document.getElementById('auth-level-note');
+      const note = document.getElementById('auth-level-note');
       if (note) {
         const canGo = levelAvailable(O) && levelVisible(O);
         note.innerHTML = '📍 انت في منصة <b>' + levelName(L) + (L === 1 ? ' 🎓' : ' 🚀') + '</b>' +
@@ -6483,7 +6576,7 @@ ${escText(alertBody)}
       database.ref('.info/connected').on('value', (snap) => {
         if (snap.val() === true) {
           myStatusRef.onDisconnect().remove(); userLastSeenRef.onDisconnect().set(FB.database.ServerValue.TIMESTAMP);
-          myStatusRef.set({ name: userData.name, email: userData.email || '', loginTime: FB.database.ServerValue.TIMESTAMP });
+          myStatusRef.set({ name: userData.name, email: userData.email || '', loginTime: FB.database.ServerValue.TIMESTAMP, hl: (parseInt(userData.homeLevel, 10) || PLATFORM_LEVEL || 2) });
           userLastSeenRef.set(FB.database.ServerValue.TIMESTAMP);
         }
       });
@@ -6518,7 +6611,18 @@ ${escText(alertBody)}
 
        if (elTotal) elTotal.innerText = totalStudents;
        if (elLvl1) elLvl1.innerText = lvl1Count;
-       if (elLvl2) { elLvl2.innerText = totalStudents; const lb = elLvl2.nextElementSibling; if (lb) lb.innerText = levelName(PLATFORM_LEVEL || 2) + (PLATFORM_LEVEL === 1 ? ' 🎓' : ' 🚀'); }
+       if (elLvl2) elLvl2.innerText = lvl2Count;
+       /* المتصلين على المنصة دي حسب مستواهم الأصلي */
+       const elSplit = document.getElementById('stat-online-split');
+       if (elSplit) {
+         let on1 = 0, on2 = 0;
+         Object.keys(onlineUsersMap).forEach(uid => {
+           const o = onlineUsersMap[uid] || {}, u = allUsersList.find(x => x.uid === uid);
+           const hl = parseInt(o.hl, 10) || (u && Number(u.level)) || PLATFORM_LEVEL;
+           if (hl === 1) on1++; else on2++;
+         });
+         elSplit.innerText = (on1 || on2) ? ('🎓 ' + on1 + ' · 🚀 ' + on2) : '';
+       }
        if (elOnline) elOnline.innerText = Object.keys(onlineUsersMap).length;
        if (elSubj) elSubj.innerText = db.length;
 
@@ -6550,7 +6654,7 @@ ${escText(alertBody)}
          - لحظي: اتصال حي. متاح فقط للمالك أو لمن منحه المالك صلاحية "students.live" من قسم الصلاحيات. */
       const KEY = 'admin_users_live', ref = database.ref('users');
       const handle = (snapshot) => {
-        let users = snapshot.val() || {}; allUsersList = []; for (let id in users) allUsersList.push({ uid: id, ...users[id], ...(users[id] && users[id].isOwner === true ? { isAdmin: true } : {}), level: PLATFORM_LEVEL });
+        let users = snapshot.val() || {}; allUsersList = []; for (let id in users) allUsersList.push({ uid: id, ...users[id], ...(users[id] && users[id].isOwner === true ? { isAdmin: true } : {}), level: ((users[id] && parseInt(users[id].homeLevel, 10)) || PLATFORM_LEVEL) });
         allUsersList.sort((a, b) => (b.score || 0) - (a.score || 0));
         clearTimeout(window.__usersRenderT);
         window.__usersRenderT = setTimeout(() => { try { renderAdminResearchTable(); } catch (e) {} updateDashboardStats(); renderStudentsTable(); }, 400);
@@ -6745,7 +6849,7 @@ ${escText(alertBody)}
       document.getElementById('phone-group').style.display = isRegisterMode ? 'flex' : 'none';
       document.getElementById('level-group').style.display = isRegisterMode ? 'flex' : 'none';
       document.getElementById('forgot-pass-wrap').style.display = isRegisterMode ? 'none' : 'block';
-      document.getElementById('auth-title').innerText = isRegisterMode ? 'إنشاء حساب طالب جديد' : 'تسجيل دخول الطالب';
+      document.getElementById('auth-title').innerText = isRegisterMode ? ('إنشاء حساب جديد' + (PLATFORM_LEVEL ? ' — ' + levelName(PLATFORM_LEVEL) + (PLATFORM_LEVEL === 1 ? ' 🎓' : ' 🚀') : '')) : 'تسجيل دخول الطالب';
       document.getElementById('auth-pass').setAttribute('autocomplete', isRegisterMode ? 'new-password' : 'current-password');
       document.getElementById('auth-submit-btn').innerText = isRegisterMode ? 'تسجيل حساب' : 'دخول';
       document.getElementById('auth-switch-text').innerText = isRegisterMode ? 'لديك حساب بالفعل؟' : 'ليس لديك حساب؟';
@@ -6786,6 +6890,8 @@ ${escText(alertBody)}
       if (pass.length < 6) return Swal.fire('تنبيه', 'كلمة المرور 6 حروف على الأقل.', 'warning');
       /* طالب عنده حساب في المستوى التاني: نسأله يدخل هنا بنفس حسابه ولا يروح لمستواه */
       const skip = copied || window.__skipProbeOnce; window.__skipProbeOnce = false;
+      /* المستوى الأصلي للطالب (لو حسابه متنقل من المستوى التاني) */
+      const homeLv = parseInt((opts && opts.homeLevel) || window.__pendingHomeLevel || 0, 10) || 0; window.__pendingHomeLevel = 0;
       if (!skip && await __accountInOtherLevel(email, pass)) return;
       isRegistering = true;
       let user = null, isNew = false, ok = false, phoneReserved = false;
@@ -6806,7 +6912,11 @@ ${escText(alertBody)}
           user = null; return Swal.fire('خطأ', 'رقم الهاتف ده مسجل به حساب تاني بالفعل!', 'error');
         }
         const lvl = parseInt(level) || 1;
-        await withTimeout(database.ref().update({ ['users/' + user.uid]: { name, phone, email, level: lvl, score: 0, isBanned: false, createdAt: Date.now() }, ['leaderboard/' + user.uid]: { name, score: 0, level: lvl } }), 15000);
+        const guest = homeLv && homeLv !== PLATFORM_LEVEL;
+        const rec = { name, phone, email, level: lvl, score: 0, isBanned: false, createdAt: Date.now() };
+        if (guest) rec.homeLevel = homeLv;
+        await withTimeout(database.ref().update({ ['users/' + user.uid]: rec, ['leaderboard/' + user.uid]: { name, score: 0, level: lvl } }), 15000);
+        if (guest) { try { await database.ref('guests/' + user.uid).set(homeLv); } catch (e) {} } // فهرس صغير لعدّ الطلبة الجايين من المستوى التاني
         ok = true;
       } catch (err) {
         if (user) {
@@ -7626,9 +7736,10 @@ ${escText(alertBody)}
         else { const fallbackTime = u.lastSeen || u.createdAt; statusHtml = `<span class="status-badge status-offline">⚪ آخر ظهور: ${formatLastSeen(fallbackTime)}</span>`; }
         const banBtn = u.isBanned ? `<button class="btn-sm btn-unban" onclick="unbanStudent('${u.uid}', '${escapeHtml(u.name)}')">فك حظر</button>` : `<button class="btn-sm btn-ban" onclick="banStudent('${u.uid}', '${escapeHtml(u.name)}')">حظر</button>`;
         const studentId = escText(getStudentShortId(u.uid, u.studentId));
-        const levelBadge = u.level == 2
-            ? `<span style="background: rgba(168,85,247,.15); color: #c084fc; padding: 2px 6px; border-radius: 4px; font-size: 10px; margin-right: 6px;">Lvl 2</span>`
-            : `<span style="background: rgba(59,130,246,.15); color: #60a5fa; padding: 2px 6px; border-radius: 4px; font-size: 10px; margin-right: 6px;">Lvl 1</span>`;
+        /* علامة المستوى الأصلي للطالب (اللي جاي من المستوى التاني بيبان بإطار متقطع) */
+        const __guest = PLATFORM_LEVEL && Number(u.level) !== PLATFORM_LEVEL;
+        const __canFix = isAdminUser();
+        const levelBadge = `<span class="lvl-badge ${u.level == 2 ? 'l2' : 'l1'}${__guest ? ' guest' : ''}"${__canFix ? ` onclick="__fixHomeLevel('${u.uid}')" style="cursor:pointer"` : ''} title="${__guest ? 'طالب ' + levelName(Number(u.level)) + ' داخل منصة ' + levelName(PLATFORM_LEVEL) : 'طالب ' + levelName(Number(u.level) || 1)}${__canFix ? ' — اضغط للتعديل' : ''}">${u.level == 2 ? '🚀 المستوى الثاني' : '🎓 المستوى الأول'}</span>`;
         html += `<tr data-level="${u.level == 2 ? 2 : 1}" data-online="${isOnline ? 1 : 0}"><td>${i+1}</td>
         <td><div style="font-weight:bold; color:var(--fg); margin-bottom:4px; display:flex; align-items:center; flex-wrap:wrap;">${escText(u.name)} ${levelBadge}</div>${statusHtml}${u.researchTopicName ? `<div style="font-size:11px; color:#2dd4bf; margin-top:4px;">🔬 ${escText(u.researchTopicName)}</div>` : ''}</td>
         <td>
@@ -7927,6 +8038,44 @@ ${escText(alertBody)}
       if (!currentStudentData || !isStaffUser()) return;
       if (!adminListenersOn) { adminListenersOn = true; listenToUsersData(); listenToOnlinePresence(); }
       try { if (window.__startFullFileListeners) window.__startFullFileListeners(); } catch (e) {}
+      try { loadLevelsOverview(false); } catch (e) {}
+      if (!window.__lvlOvT) window.__lvlOvT = setInterval(() => {
+        const p = document.getElementById('admin-panel');
+        if (p && p.style.display === 'block' && !document.hidden) { try { loadLevelsOverview(false); } catch (e) {} }
+      }, 3 * 60 * 1000);
+    }
+
+    /* أرقام المنصتين: طلاب كل مستوى، الداخلين من المستوى التاني، والمتصلين (من السيرفر عشان يشوف المشروعين) */
+    let __lvlOvAt = 0, __lvlOvBusy = false;
+    async function loadLevelsOverview(force) {
+      const box = document.getElementById('levels-overview-body'); if (!box || !currentUser) return;
+      if (__lvlOvBusy || (!force && Date.now() - __lvlOvAt < 60 * 1000)) return;
+      __lvlOvBusy = true; if (force) box.style.opacity = '.5';
+      try {
+        const r = await fetch('/api/level-stats', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + await currentUser.getIdToken() }, body: JSON.stringify({ level: PLATFORM_LEVEL }) });
+        const j = await r.json().catch(() => ({}));
+        if (!r.ok) throw new Error(j.error || ('HTTP ' + r.status));
+        __lvlOvAt = Date.now();
+        const L = j.levels || {}, a = L[1], b = L[2];
+        const num = (x, k) => (x && !x.error && x[k] != null) ? x[k] : '—';
+        const col = (x, n) => '<td style="padding:6px 8px; text-align:center; font-weight:800; font-size:16px; color:' + (n === 1 ? '#60a5fa' : '#c084fc') + '">' + x + '</td>';
+        const row = (label, f1, f2) => '<tr><td style="padding:6px 8px; opacity:.85">' + label + '</td>' + col(f1, 1) + col(f2, 2) + '</tr>';
+        const onl = (x) => (x && !x.error) ? (x.online + (x.onlineGuest ? ' <span style="font-size:11px; opacity:.75">(' + x.onlineNative + ' + ' + x.onlineGuest + ' زائر)</span>' : '')) : '—';
+        const totalOn = ((a && a.online) || 0) + ((b && b.online) || 0);
+        box.innerHTML =
+          '<div style="overflow-x:auto"><table style="width:100%; border-collapse:collapse; min-width:300px">' +
+          '<tr><th></th><th style="padding:6px 8px; color:#60a5fa">منصة الأول 🎓</th><th style="padding:6px 8px; color:#c084fc">منصة الثاني 🚀</th></tr>' +
+          row('طلاب المستوى نفسه', num(a, 'natives'), num(b, 'natives')) +
+          row('داخلين من المستوى التاني', num(a, 'guests'), num(b, 'guests')) +
+          row('إجمالي الحسابات', num(a, 'total'), num(b, 'total')) +
+          row('🟢 متصل دلوقتي', onl(a), onl(b)) +
+          '</table></div>' +
+          '<div style="margin-top:8px; font-size:12.5px">🟢 إجمالي المتصلين على المنصتين: <b>' + totalOn + '</b>' +
+          ' <span style="opacity:.6">— العدد تقريبي في وضع التوفير (الخامل بيتفصل)</span></div>' +
+          '<div style="margin-top:4px; font-size:11.5px; opacity:.6">"داخلين من المستوى التاني" = طلاب عملوا حساب في المنصة دي بحسابهم من المستوى التاني. آخر تحديث: ' + new Date(__lvlOvAt).toLocaleTimeString('ar-EG') + '</div>';
+      } catch (e) {
+        box.innerHTML = '<span style="color:#fbbf24">مقدرناش نجيب أرقام المنصتين: ' + escText(e.message || e) + '</span>';
+      } finally { __lvlOvBusy = false; box.style.opacity = '1'; }
     }
     function toggleAdminPanel() { if (!isStaffUser()) { Swal.fire('تنبيه','غير مصرح لك.','warning'); return; } const p = document.getElementById("admin-panel"); const vis = p.style.display === "block"; p.style.display = vis ? "none" : "block"; if (!vis) { __startAdminData(); updateAdminSelects(); updateLevelRestrictionsUI(); p.scrollIntoView({behavior:'smooth'}); } }
     function updateAlert(e) { e.preventDefault(); let text = document.getElementById("alert-input").value; database.ref('alert').set(text); e.target.reset(); logAdminAction('نشر تنبيه للدفعة', text); Swal.fire('تم', 'تم نشر التنبيه بنجاح', 'success'); }
@@ -14038,9 +14187,10 @@ function openThemePicker() {
 
     window.onload = () => {
       try { handleAuthActionLink(); } catch (e) {}
-      document.getElementById('name-group').style.display = 'none';
-      document.getElementById('phone-group').style.display = 'none';
-      document.getElementById('level-group').style.display = 'none';
+      const __rm = isRegisterMode ? 'flex' : 'none'; // لو جاي من فورم التسجيل في المستوى التاني، نسيب خانات التسجيل ظاهرة
+      document.getElementById('name-group').style.display = __rm;
+      document.getElementById('phone-group').style.display = __rm;
+      document.getElementById('level-group').style.display = __rm;
       listenToFounderInfo();
       listenToResearchSettings(); listenToLevelRestrictions();
       initTheme();
@@ -15605,6 +15755,22 @@ function openThemePicker() {
         g.items.map(function(it){ return '<label class="acc-row"><input type="checkbox" class="acc-cb" data-g="' + g.id + '" data-k="' + it[0] + '"' + (eff[it[0]] ? ' checked' : '') + '><span>' + T(it[1]) + '</span></label>'; }).join('') + '</div>';
     }).join('');
   }
+  /* ===== الصلاحيات في المستوى التاني (عن طريق السيرفر، للمالك بس) ===== */
+  function otherLvl(){ return PLATFORM_LEVEL === 1 ? 2 : 1; }
+  function canOther(){ return typeof levelAvailable === 'function' && levelAvailable(otherLvl()); }
+  function remoteAccess(u, action, pm, label){
+    return currentUser.getIdToken().then(function(tok){
+      return fetch('/api/staff-access', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + tok },
+        body: JSON.stringify({ level: PLATFORM_LEVEL, targetEmail: u.email || '', action: action, perms: pm || {}, label: label || '' }) });
+    }).then(function(r){ return r.json().catch(function(){ return {}; }).then(function(j){ if (!r.ok) throw new Error(j.error || ('HTTP ' + r.status)); return j; }); });
+  }
+  function scopeHtml(){
+    if (!canOther()) return '';
+    var O = otherLvl(), opts = [['here', '📍 ' + levelName(PLATFORM_LEVEL) + ' بس'], ['other', (O === 1 ? '🎓 ' : '🚀 ') + levelName(O) + ' بس'], ['both', '🔗 المستويين']];
+    return '<div style="text-align:right;font-size:13px;margin:6px 0 4px;font-weight:700">الصلاحيات دي تتطبق في:</div><div class="acc-presets" style="margin-bottom:8px">' +
+      opts.map(function(x, i){ return '<label class="acc-preset" style="display:inline-flex;gap:6px;align-items:center;cursor:pointer"><input type="radio" name="acc-scope" value="' + x[0] + '"' + (i === 0 ? ' checked' : '') + '>' + x[1] + '</label>'; }).join('') +
+      '</div><div class="acc-hint" style="margin-bottom:8px">للمستوى التاني: لازم الشخص يكون عنده حساب هناك بنفس الإيميل.</div>';
+  }
   function openEditor(uid){
     if (!needOwner()) return;
     var u = findUser(uid); if (!u) return;
@@ -15613,7 +15779,7 @@ function openThemePicker() {
     Swal.fire({
       title: (isNew ? 'منح صلاحيات: ' : 'صلاحيات: ') + T(u.name || ''), width: 680, showCancelButton: true, confirmButtonText: 'حفظ', cancelButtonText: 'إلغاء', focusConfirm: false,
       html: '<div style="text-align:right;font-size:13px;margin-bottom:4px;font-weight:700">مسمى الرتبة (اختياري):</div>' +
-        '<input id="acc-label" class="swal2-input" style="margin:0 0 6px;width:100%;box-sizing:border-box" maxlength="40" placeholder="مثال: 📁 مشرف رفع ملفات" value="' + T(u.rankLabel || '') + '">' +
+        '<input id="acc-label" class="swal2-input" style="margin:0 0 6px;width:100%;box-sizing:border-box" maxlength="40" placeholder="مثال: 📁 مشرف رفع ملفات" value="' + T(u.rankLabel || '') + '">' + scopeHtml() +
         '<div class="acc-presets"><button type="button" class="acc-preset" data-p="files">📄 رفع ملفات فقط</button><button type="button" class="acc-preset" data-p="content">📚 مشرف محتوى (بدون فيديوهات)</button><button type="button" class="acc-preset" data-p="students">👥 مساعد طلاب</button><button type="button" class="acc-preset" data-p="all">✅ الكل</button><button type="button" class="acc-preset" data-p="none">⛔ لا شيء</button></div>' +
         '<div style="max-height:46vh;overflow:auto;padding:2px">' + groupsHtml(eff) + '</div>',
       didOpen: function(){
@@ -15624,18 +15790,29 @@ function openThemePicker() {
       preConfirm: function(){
         var root = Swal.getHtmlContainer(), perms = {};
         root.querySelectorAll('.acc-cb').forEach(function(cb){ perms[cb.getAttribute('data-k')] = cb.checked; });
-        return { perms: perms, label: (root.querySelector('#acc-label').value || '').trim() };
+        var sc = root.querySelector('input[name="acc-scope"]:checked');
+        return { perms: perms, label: (root.querySelector('#acc-label').value || '').trim(), scope: sc ? sc.value : 'here' };
       }
     }).then(function(res){
       if (!res.isConfirmed) return;
       if (!needOwner()) return;
+      var scope = res.value.scope || 'here', O = otherLvl();
       var upd = { rankLabel: res.value.label || null };
       if (!u.isAdmin) upd.isLeader = true;
       var pm = {}; ALL_KEYS.forEach(function(k){ pm[k.replace(/\./g, '_')] = !!res.value.perms[k]; });
       var n = ALL_KEYS.filter(function(k){ return res.value.perms[k]; }).length;
-      database.ref('staff_perms/' + uid).set(pm).then(function(){ return database.ref('users/' + uid).update(upd); }).then(function(){
+      var here = scope === 'other' ? Promise.resolve(false) : database.ref('staff_perms/' + uid).set(pm).then(function(){ return database.ref('users/' + uid).update(upd); }).then(function(){
         audit(isNew ? 'منح صلاحيات' : 'تعديل صلاحيات', u, n + ' من ' + ALL_KEYS.length + (res.value.label ? ' — ' + res.value.label : ''));
-        toast('اتحفظت الصلاحيات');
+        return true;
+      });
+      here.then(function(doneHere){
+        if (scope === 'here') { toast('اتحفظت الصلاحيات'); return; }
+        return remoteAccess(u, 'grant', pm, res.value.label).then(function(){
+          audit('منح صلاحيات في ' + levelName(O), u, n + ' من ' + ALL_KEYS.length);
+          toast(scope === 'both' ? 'اتحفظت في المستويين' : 'اتحفظت في ' + levelName(O));
+        }).catch(function(err){
+          Swal.fire(doneHere ? 'اتحفظت هنا بس' : 'ما اتحفظتش', levelName(O) + ': ' + T(err.message), 'warning');
+        });
       }).catch(function(err){ Swal.fire('خطأ', err.message, 'error'); });
     });
   }
@@ -15652,9 +15829,18 @@ function openThemePicker() {
     if (!needOwner()) return;
     var u = findUser(uid); if (!u || u.isOwner) return;
     if (currentUser && uid === currentUser.uid) return;
-    Swal.fire({ title: 'سحب كل الصلاحيات؟', html: T(u.name || '') + ' هيرجع طالب عادي ومش هيشوف لوحة الإدارة.', icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'اسحب', cancelButtonText: 'إلغاء' }).then(function(r){
+    var O = otherLvl(), opts = canOther() ? { here: 'من ' + levelName(PLATFORM_LEVEL) + ' بس', both: 'من المستويين' } : null;
+    Swal.fire({ title: 'سحب كل الصلاحيات؟', html: T(u.name || '') + ' هيرجع طالب عادي ومش هيشوف لوحة الإدارة.', icon: 'warning',
+      input: opts ? 'radio' : undefined, inputOptions: opts || undefined, inputValue: 'here',
+      showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'اسحب', cancelButtonText: 'إلغاء' }).then(function(r){
       if (!r.isConfirmed) return;
-      database.ref('users/' + uid).update({ isAdmin: null, isLeader: null, rankLabel: null }).then(function(){ return database.ref('staff_perms/' + uid).remove(); }).then(function(){ audit('سحب كل الصلاحيات', u, ''); toast('اتسحبت الصلاحيات'); }).catch(function(err){ Swal.fire('خطأ', err.message, 'error'); });
+      var both = r.value === 'both';
+      database.ref('users/' + uid).update({ isAdmin: null, isLeader: null, rankLabel: null }).then(function(){ return database.ref('staff_perms/' + uid).remove(); }).then(function(){
+        audit('سحب كل الصلاحيات', u, both ? 'من المستويين' : '');
+        if (!both) { toast('اتسحبت الصلاحيات'); return; }
+        return remoteAccess(u, 'revoke').then(function(){ toast('اتسحبت من المستويين'); })
+          .catch(function(err){ Swal.fire('اتسحبت هنا بس', levelName(O) + ': ' + T(err.message), 'warning'); });
+      }).catch(function(err){ Swal.fire('خطأ', err.message, 'error'); });
     });
   }
 
