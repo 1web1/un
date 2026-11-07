@@ -1,4 +1,4 @@
-const CACHE_NAME = 'monasa-cache-v3';
+const CACHE_NAME = 'monasa-cache-v4'; // v4: منصة واحدة للمستويين
 const STATIC_ASSETS = [
   './',
   './index.html',
