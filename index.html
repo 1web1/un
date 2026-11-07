@@ -102,6 +102,30 @@
   body.light-mode .lvl-sw-btn { color:rgba(0,0,0,.6); }
   body.light-mode .lvl-sw-btn.active { color:#111; }
   @media (max-width: 700px) { .lvl-sw-txt { display:none; } .lvl-sw-btn { padding:6px 10px; font-size:15px; } }
+  /* ترتيب البار اللي فوق: ولا كلمة تنزل سطرين، وكل ما الشاشة تضيق الحاجات بتصغر بالترتيب */
+  .header-nav-link, .nav .pill, .lvl-sw-btn { white-space: nowrap; }
+  .header-nav-center { flex-shrink: 1; min-width: 0; }
+  @media (min-width: 769px) and (max-width: 1750px) {
+    .header-nav-link { padding: 6px 10px !important; gap: 4px !important; }
+    .chrome .nav { gap: 6px !important; }
+  }
+  @media (min-width: 769px) and (max-width: 1560px) {
+    .lvl-sw-txt { display: none; }
+    .lvl-sw-btn { padding: 6px 10px; font-size: 15px; }
+    #bookmarks-nav-btn .btn-txt, #admin-toggle-btn .btn-txt, #research-nav-btn .btn-txt { display: none !important; }
+    .chrome .nav .user-greeting-btn { max-width: 120px; }
+  }
+  @media (min-width: 769px) and (max-width: 1000px) {
+    .chrome .nav .btn-txt { display: none !important; }
+    .chrome .nav { gap: 4px !important; }
+    .chrome .nav .pill { padding-left: 10px !important; padding-right: 10px !important; }
+    .chrome .nav .user-greeting-btn { max-width: 90px !important; }
+  }
+  @media (min-width: 900px) and (max-width: 1320px) {
+    .header-nav-link > span + span { display: none; }
+    .header-nav-link { padding: 7px 11px !important; font-size: 16px !important; }
+    .chrome .nav .user-greeting-btn { max-width: 100px; }
+  }
   /* اختيار المستوى في فورم التسجيل */
   .auth-lvl-pick { display:flex; gap:8px; width:100%; }
   .auth-lvl-btn { all:unset; box-sizing:border-box; flex:1; text-align:center; cursor:pointer; padding:11px 8px; border-radius:12px; border:1px solid rgba(255,255,255,.18); background:rgba(255,255,255,.05); font-weight:800; font-size:14px; }
@@ -4206,12 +4230,12 @@ body[class*="theme-"] .mob-nav-item.active{color:var(--primary)!important}
         <span class="mark-text">El dof3aa Btzaker</span>
       </div>
       <div class="header-nav-center z-content" id="header-nav-center">
-        <button type="button" class="header-nav-link active" id="hnav-home" onclick="navigateTo('#home')"><span>🏠</span><span>الرئيسية</span></button>
-        <button type="button" class="header-nav-link" id="hnav-subjects" onclick="neoGoSubjects()"><span>📚</span><span>المواد</span></button>
-        <button type="button" class="header-nav-link" id="hnav-research" onclick="navigateTo('#research')"><span>🔬</span><span>الأبحاث</span></button>
-        <button type="button" class="header-nav-link" id="hnav-courses" onclick="navigateTo('#courses')"><span>🎬</span><span>كورس</span></button>
-        <button type="button" class="header-nav-link" id="hnav-gpa" onclick="navigateTo('#gpa')"><span>🧮</span><span>حاسبة GPA</span></button>
-        <button type="button" class="header-nav-link" id="hnav-leaderboard" onclick="neoGoLeaderboard()"><span>🏆</span><span>لوحة الشرف</span></button>
+        <button type="button" class="header-nav-link active" id="hnav-home" onclick="navigateTo('#home')" title="الرئيسية"><span>🏠</span><span>الرئيسية</span></button>
+        <button type="button" class="header-nav-link" id="hnav-subjects" onclick="neoGoSubjects()" title="المواد"><span>📚</span><span>المواد</span></button>
+        <button type="button" class="header-nav-link" id="hnav-research" onclick="navigateTo('#research')" title="الأبحاث"><span>🔬</span><span>الأبحاث</span></button>
+        <button type="button" class="header-nav-link" id="hnav-courses" onclick="navigateTo('#courses')" title="كورس"><span>🎬</span><span>كورس</span></button>
+        <button type="button" class="header-nav-link" id="hnav-gpa" onclick="navigateTo('#gpa')" title="حاسبة GPA"><span>🧮</span><span>حاسبة GPA</span></button>
+        <button type="button" class="header-nav-link" id="hnav-leaderboard" onclick="neoGoLeaderboard()" title="لوحة الشرف"><span>🏆</span><span>لوحة الشرف</span></button>
       </div>
       <nav class="nav z-content">
         <div class="lvl-switch" id="lvl-switch" style="display:none;" role="group" aria-label="تبديل المستوى">
