@@ -380,6 +380,23 @@
   #video-player-overlay.video-fs-active, #video-player-overlay.video-fs-active #video-modal { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; transform: none !important; filter: none !important; overflow: visible !important; contain: none !important; will-change: auto !important; animation: none !important; }
   #video-player-overlay.video-fs-active #video-modal > *:not(#video-stage) { visibility: hidden; }
   #video-stage.video-fake-fs #video-fake-fs-exit { display: block !important; }
+  /* تحكم الموبايل الخفيف (بدل طبقة يوتيوب الغامقة اللي بتغطي الفيديو) */
+  #yt-touch { display: none; position: absolute; inset: 0; z-index: 4; touch-action: manipulation; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; }
+  #video-stage.ytt-active #yt-touch { display: block; }
+  #yt-touch .ytt-ui { position: absolute; inset: 0; opacity: 0; transition: opacity .2s ease; pointer-events: none; }
+  #video-stage.ytt-show #yt-touch .ytt-ui { opacity: 1; }
+  #video-stage.ytt-show #yt-touch .ytt-ui button, #video-stage.ytt-show #yt-touch .ytt-ui input { pointer-events: auto; }
+  #yt-touch .ytt-scrim { position: absolute; left: 0; right: 0; bottom: 0; height: 42%; background: linear-gradient(to bottom, transparent, rgba(0,0,0,.55)); pointer-events: none; }
+  #yt-touch .ytt-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 54px; height: 54px; border-radius: 50%; border: 0; background: rgba(0,0,0,.38); color: #fff; font-size: 17px; font-weight: 900; letter-spacing: -2px; display: grid; place-items: center; backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
+  #yt-touch .ytt-bottom { position: absolute; left: 10px; right: 10px; bottom: 6px; pointer-events: none; }
+  #yt-touch .ytt-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; color: #fff; font-size: 12px; font-weight: 700; text-shadow: 0 1px 3px rgba(0,0,0,.6); }
+  #yt-touch .ytt-btns { display: flex; gap: 6px; }
+  #yt-touch .ytt-btns button { height: 30px; min-width: 44px; padding: 0 9px; border-radius: 999px; border: 0; background: rgba(0,0,0,.4); color: #fff; font-size: 12px; font-weight: 800; font-family: inherit; }
+  #yt-touch #ytt-seek { width: 100%; margin: 6px 0 0; height: 22px; accent-color: #ec4899; background: transparent; }
+  #yt-touch .ytt-ripple { position: absolute; top: 50%; transform: translateY(-50%); padding: 10px 16px; border-radius: 999px; background: rgba(0,0,0,.45); color: #fff; font-size: 14px; font-weight: 800; opacity: 0; transition: opacity .25s; pointer-events: none; }
+  #yt-touch .ytt-ripple.on { opacity: 1; }
+  #video-stage.ytt-active #video-fake-fs-exit { opacity: 0; pointer-events: none; transition: opacity .2s ease; }
+  #video-stage.ytt-active.ytt-show #video-fake-fs-exit { opacity: 1; pointer-events: auto; }
   #video-stage.video-fake-fs { position: fixed !important; inset: 0; width: 100vw !important; height: 100vh !important; padding-bottom: 0 !important; border-radius: 0 !important; z-index: 2147483000; }
   .modal-box { width: 100%; max-width: 450px; border-radius: 18px; padding: 26px 20px; max-height: 92vh; overflow-y: auto; }
   .modal-box.large { max-width: 600px; }
@@ -4816,7 +4833,12 @@ body[class*="theme-"] .mob-nav-item.active{color:var(--primary)!important}
                       <select class="input-group" id="new-subj-level" required><option value="2">المستوى الثاني</option></select>
                       <input class="input-group" id="new-subj-name" placeholder="اسم المادة" required>
                       <input class="input-group" id="new-subj-desc" placeholder="وصف قصير للمادة" required style="grid-column: 1/-1;">
-                      <input class="input-group" id="new-subj-cover" type="url" dir="ltr" placeholder="🖼️ رابط صورة خلفية المادة (اختياري) https://..." style="grid-column: 1/-1;">
+                      <div style="grid-column: 1/-1; display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+                        <input class="input-group" id="new-subj-cover" type="url" dir="ltr" placeholder="🖼️ رابط صورة خلفية المادة (اختياري) https://..." style="flex:1; min-width:220px;">
+                        <button type="button" class="pill" style="background:#3b82f6;" onclick="document.getElementById('new-subj-cover-file').click()">📤 رفع صورة على درايف</button>
+                        <input type="file" id="new-subj-cover-file" accept="image/*" style="display:none;" onchange="newSubjectCoverUpload(this)">
+                        <span id="new-subj-cover-status" style="flex-basis:100%; font-size:12px;"></span>
+                      </div>
                    </div>
                    <button class="pill" type="submit" style="background: #f59e0b; width: fit-content;">إضافة المادة</button>
                 </form>
@@ -5550,6 +5572,25 @@ body[class*="theme-"] .mob-nav-item.active{color:var(--primary)!important}
       <div id="video-stage" style="position: relative; width: 100%; padding-bottom: 56.25%; height: 0; border-radius: 10px; overflow: hidden; background: #000;">
         <iframe id="video-player-frame" src="" style="position: absolute; top:0; left:0; width: 100%; height: 100%; border: none;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
         <div id="video-drive-blocker" style="display:none; position:absolute; top:0; right:0; width:70px; height:70px; z-index:5; background:transparent;" title=""></div>
+        <!-- أزرار تحكم خفيفة للموبايل بدل طبقة يوتيوب الغامقة -->
+        <div id="yt-touch" aria-label="التحكم في الفيديو">
+          <div class="ytt-ui">
+            <div class="ytt-scrim"></div>
+            <button type="button" class="ytt-center" id="ytt-play" aria-label="تشغيل / إيقاف">❚❚</button>
+            <div class="ytt-bottom" dir="ltr">
+              <div class="ytt-row">
+                <span id="ytt-time">0:00 / 0:00</span>
+                <span class="ytt-btns">
+                  <button type="button" data-a="back">⏪ 10</button>
+                  <button type="button" data-a="fwd">10 ⏩</button>
+                  <button type="button" data-a="speed" id="ytt-speed">1x</button>
+                </span>
+              </div>
+              <input type="range" id="ytt-seek" min="0" max="1000" value="0" step="1" aria-label="مكان الفيديو">
+            </div>
+          </div>
+          <div class="ytt-ripple" id="ytt-ripple"></div>
+        </div>
         <button type="button" id="video-fake-fs-exit" onclick="videoToggleFullscreen()" style="display:none; position:absolute; top:10px; left:10px; z-index:7; background:rgba(0,0,0,.65); color:#fff; border:1px solid rgba(255,255,255,.4); border-radius:999px; padding:6px 14px; font-size:13px; cursor:pointer;">✕ خروج من ملء الشاشة</button>
         <div id="video-error-box" style="display:none; position:absolute; inset:0; z-index:6; background:#0b0b10; color:#fff; flex-direction:column; align-items:center; justify-content:center; gap:10px; text-align:center; padding:20px; font-size:14px; line-height:1.7;"></div>
       </div>
@@ -7408,22 +7449,30 @@ ${escText(alertBody)}
     function listenToSubjects() {
       /* الطلبة: بيسمعوا لرقم نسخة صغير جداً (settings/subjectsVersion) ومش بينزّلوا المواد غير لما الرقم يتغير.
          الستاف: اتصال حي على المواد، وأي تعديل منهم بيحدّث رقم النسخة فالطلبة يشوفوه خلال ثواني. */
-      const SAFE_TTL = 6 * 60 * 60 * 1000, VER_KEY = 'fast_cache_subjects_ver', TS_KEY = 'fast_cache_subjects_ts';
+      /* توفير: كل تعديل من الأدمن كان بيخلي كل طالب فاتح المنصة يعيد تحميل كل المواد (بالأسئلة) كل 30 ثانية.
+         دلوقتي: أول ما الطالب يفتح المنصة بياخد آخر نسخة، وبعد كده أقصى مرة كل 10 دقايق، ومش وهو التاب في الخلفية. */
+      const SAFE_TTL = 24 * 60 * 60 * 1000, MIN_GAP = 10 * 60 * 1000, VER_KEY = 'fast_cache_subjects_ver', TS_KEY = 'fast_cache_subjects_ts';
       const ref = database.ref('subjects'), verRef = database.ref('settings/subjectsVersion');
       let live = false, busy = false, lastFetch = 0, timer = null, firstLive = true, bumpT = null;
       const hasCache = () => !!(window.__subjectsRaw && Object.keys(window.__subjectsRaw).length > 0);
       const store = (k, v) => { try { localStorage.setItem(k, String(v)); } catch (e) {} };
       const read = (k) => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+      let pendingVer = null;
       const fetchOnce = (ver) => {
-        if (live || busy) return; busy = true; lastFetch = Date.now();
+        if (live || busy) return;
+        if (document.hidden && hasCache()) { pendingVer = ver; return; }   // التاب في الخلفية: نأجّل لحد ما يرجع
+        pendingVer = null; busy = true; lastFetch = Date.now();
         ref.once('value').then(snap => { window.__subjectsRaw = snap.val() || {}; store(TS_KEY, Date.now()); store(VER_KEY, ver); applySubjectsRaw(); })
           .catch(e => console.error('subjects:', e)).then(() => { busy = false; });
       };
       const schedule = (ver, now) => {
         clearTimeout(timer);
-        const wait = now ? 0 : Math.max(1000 + Math.random() * 4000, 30000 - (Date.now() - lastFetch));
+        const wait = now ? 0 : Math.max(1000 + Math.random() * 4000, (lastFetch ? MIN_GAP : 0) - (Date.now() - lastFetch));
         timer = setTimeout(() => fetchOnce(ver), wait);
       };
+      document.addEventListener('visibilitychange', () => {
+        if (!document.hidden && pendingVer !== null && !live) schedule(pendingVer, false);
+      });
       if (window.__subjVerOff) { try { window.__subjVerOff(); } catch (e) {} }
       const verCb = (snap) => {
         if (live) return;
@@ -8755,7 +8804,15 @@ ${escText(alertBody)}
 
     function filterSubjects() { clearTimeout(searchTimeout); searchTimeout = setTimeout(() => { renderHome(document.getElementById('search-box').value.toLowerCase()); }, 300); }
 
-function subjCoverUrl(u) { try { const x = new URL(String(u || '').trim()); if (x.protocol !== 'https:' && x.protocol !== 'http:') return ''; return x.href.replace(/'/g, '%27').replace(/"/g, '%22').replace(/\(/g, '%28').replace(/\)/g, '%29'); } catch (e) { return ''; } }
+// رابط درايف (file/d/ID أو open?id= أو uc?id=) → رابط صورة مباشر يشتغل في <img> وكخلفية
+function driveImageUrl(u) {
+  const s = String(u || '').trim();
+  const m = s.match(/(?:drive|docs)\.google\.com\/file\/(?:u\/\d+\/)?d\/([a-zA-Z0-9_-]{10,})/) ||
+            s.match(/(?:drive|docs)\.google\.com\/(?:open|uc|thumbnail)\?(?:[^#]*&)?id=([a-zA-Z0-9_-]{10,})/) ||
+            s.match(/drive\.usercontent\.google\.com\/[a-z]+\?(?:[^#]*&)?id=([a-zA-Z0-9_-]{10,})/);
+  return m ? 'https://lh3.googleusercontent.com/d/' + m[1] + '=w1600' : s;
+}
+function subjCoverUrl(u) { try { const x = new URL(driveImageUrl(u)); if (x.protocol !== 'https:' && x.protocol !== 'http:') return ''; return x.href.replace(/'/g, '%27').replace(/"/g, '%22').replace(/\(/g, '%28').replace(/\)/g, '%29'); } catch (e) { return ''; } }
 function getSubjectThematicVisual(name, level) {
   const n = (name || '').trim();
   let key = 'general';
@@ -8866,7 +8923,7 @@ function neoProgressHtml(subj, vis) {
 function neoRenderSubjectHero(subj) {
   const card = document.getElementById('subject-hero-card'); if (!card) return;
   const vis = getSubjectThematicVisual(subj.name, subj.level);
-  const __cv = subjCoverUrl(subj.cover); if (__cv && !(typeof __NEO_SUBJECT_COVERS !== 'undefined' && __NEO_SUBJECT_COVERS[vis.key])) vis.image = __cv;
+  const __cv = subjCoverUrl(subj.cover); if (__cv) vis.image = __cv;   // صورة الأدمن ليها الأولوية على الصور الجاهزة
   const saver = false;
   const img = saver ? '' : `, url('${vis.image}') center/cover no-repeat`;
   card.style.setProperty('background', `linear-gradient(180deg, rgba(0,0,0,.35) 0%, rgba(0,0,0,.82) 100%)${img}, ${vis.gradient}`, 'important');
@@ -8996,7 +9053,7 @@ function openThemePicker() {
         const quizzesCount = subj.quizzes ? subj.quizzes.length : 0;
 
         const vis = getSubjectThematicVisual(subj.name, subj.level);
-        const __cv = subjCoverUrl(subj.cover); if (__cv && !(typeof __NEO_SUBJECT_COVERS !== 'undefined' && __NEO_SUBJECT_COVERS[vis.key])) vis.image = __cv;
+        const __cv = subjCoverUrl(subj.cover); if (__cv) vis.image = __cv;   // صورة الأدمن ليها الأولوية على الصور الجاهزة
         const saver = false;
         const progressHtml = neoProgressHtml(subj, vis);
 
@@ -9026,6 +9083,7 @@ function openThemePicker() {
                   ${isAdmin ? `
                     <button class="btn-sm btn-track" style="font-size:10px;" title="ترتيب المادة" onclick="event.stopPropagation(); reorderSubject('${subj.id}', ${subj.order || 0})">📌 ${subj.order || 0}</button>
                     <button class="btn-sm btn-edit" title="تعديل المادة" onclick="event.stopPropagation(); editSubjectInfo('${subj.id}')">✏️</button>
+                    <button class="btn-sm btn-edit" title="تغيير صورة المادة" onclick="event.stopPropagation(); editSubjectInfo('${subj.id}', true)">🖼️</button>
                     <button class="btn-sm btn-ban" onclick="event.stopPropagation(); deleteSubject('${subj.id}','${escapeHtml(subj.name)}')">🗑️</button>` : ''}
                 </div>
               </div>
@@ -9572,14 +9630,23 @@ function openThemePicker() {
         if (videosList.length === 0) {
           videosContainer.innerHTML = '<div class="empty-state z-content" style="grid-column: 1/-1;">لا توجد شروحات فيديو مضافة لهذه المادة بعد.</div>';
         } else {
+          // عداد المشاهدات (نفس نظام إحصائيات الملفات)
+          const vMetric = k => (typeof window.getFileMetrics === 'function') ? window.getFileMetrics(subj.id, k) : { views: 0, uniqueViewers: 0 };
+          const maxVViews = videosList.reduce((m, x) => Math.max(m, vMetric(x.key).views), 0);
           videosContainer.innerHTML = videosList.map(v => {
+            const vm = vMetric(v.key);
+            const isTopVideo = vm.views > 0 && vm.views === maxVViews && videosList.length > 1;
+            const viewsBadge = `<div class="file-meta-badges z-content" style="margin:-4px 0 12px;">
+                <span class="file-stat-pill" title="عدد مرات تشغيل الطلاب للفيديو" ${isAdmin ? `style="cursor:pointer;" onclick="showFileViewersList('${subj.id}','${v.key}','${escapeHtml(v.title)}')"` : ''}>▶️ ${vm.views} شغّلوا الفيديو${isAdmin && vm.uniqueViewers ? ` (${vm.uniqueViewers} طالب)` : ''}</span>
+                ${isTopVideo ? '<span class="file-hot-pill">🔥 الأكثر مشاهدة</span>' : ''}
+              </div>`;
             let videoBtns = '';
             if (isRestrictedToLevel2) {
               videoBtns = `<button class="pill" style="height:34px; font-size:12px; background:rgba(239,68,68,.12); border:1px solid rgba(239,68,68,.3); color:#fca5a5; width:100%; cursor:pointer;" onclick="showLevel2RestrictionAlert('شروحات الفيديو')">🔒 المشاهدة مقيدة لطلاب المستوى الثاني</button>`;
             } else {
               videoBtns = `
-                <button class="pill" style="height:34px; font-size:12px; background:#ec4899; flex:1;" onclick="openVideoPlayer('${escapeHtml(v.title)}', '${escapeHtml(v.url)}')">مشاهدة 🎬</button>
-                ${v.showExt ? `<a href="${escText(safeUrl(v.url))}" target="_blank" rel="noopener" class="pill" style="height:34px; font-size:12px; background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.2); color:var(--fg);">${isYouTubeLink(v.url) ? 'يوتيوب' : 'فتح خارجي'} ↗</a>` : ''}
+                <button class="pill" style="height:34px; font-size:12px; background:#ec4899; flex:1;" onclick="openVideoAndTrack('${subj.id}','${v.key}','${escapeHtml(v.title)}', '${escapeHtml(v.url)}')">مشاهدة 🎬</button>
+                ${v.showExt ? `<a href="${escText(safeUrl(v.url))}" target="_blank" rel="noopener" onclick="try{recordFileAccess('${subj.id}','${v.key}')}catch(e){}" class="pill" style="height:34px; font-size:12px; background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.2); color:var(--fg);">${isYouTubeLink(v.url) ? 'يوتيوب' : 'فتح خارجي'} ↗</a>` : ''}
               `;
             }
 
@@ -9596,6 +9663,7 @@ function openThemePicker() {
                     </div>` : ''}
                  </div>
                  <h4 class="z-content" style="margin:0 0 12px; font-size:14px; font-weight:bold; color:var(--fg); line-height:1.5;">🎬 ${escText(v.title)}${v.hidden ? ' <span style="font-size:11px; background:rgba(245,158,11,.2); color:#fbbf24; border:1px solid rgba(245,158,11,.4); padding:1px 8px; border-radius:6px; white-space:nowrap;">🙈 مخفي</span>' : ''}</h4>
+                 ${viewsBadge}
                  <div class="z-content" style="display:flex; gap:8px; margin-top:auto;">
                     ${videoBtns}
                  </div>
@@ -10719,11 +10787,13 @@ function openThemePicker() {
       });
     }
 
-    function editSubjectInfo(sId) {
+    function editSubjectInfo(sId, focusCover) {
       const subj = db.find(s => s.id === sId);
       if (!subj) return;
+      const defImg = getSubjectThematicVisual(subj.name, subj.level).image;   // الصورة الحالية لو مفيش صورة مخصصة
+      const curImg = subjCoverUrl(subj.cover) || defImg;
       Swal.fire({
-        title: 'تعديل بيانات المادة',
+        title: focusCover ? '🖼️ تغيير صورة المادة' : 'تعديل بيانات المادة',
         html: `
           <div style="text-align:right; font-size:12px; margin-bottom:4px;">اسم المادة:</div>
           <input id="edit-subj-name" class="swal2-input" value="${escText(subj.name)}" style="margin-top:0;">
@@ -10733,12 +10803,49 @@ function openThemePicker() {
           <select id="edit-subj-lvl" class="swal2-input" style="margin-top:0;">
                           <option value="2" ${subj.level == 2 ? 'selected' : ''}>المستوى الثاني</option>
           </select>
-          <div style="text-align:right; font-size:12px; margin:8px 0 4px;">🖼️ رابط خلفية المادة (اتركه فاضي للرجوع للخلفية الافتراضية):</div>
-          <input id="edit-subj-cover" type="url" dir="ltr" class="swal2-input" placeholder="https://..." value="${escText(subj.cover || '')}" style="margin-top:0;">
-          <div id="edit-subj-cover-preview" style="margin-top:8px; height:90px; border-radius:10px; background:#0f172a center/cover no-repeat; ${subjCoverUrl(subj.cover) ? `background-image:url('${subjCoverUrl(subj.cover)}');` : ''}"></div>`,
+          <div style="text-align:right; font-size:12px; margin:8px 0 4px;">🖼️ صورة خلفية المادة:</div>
+          <div id="edit-subj-cover-preview" style="height:130px; border-radius:12px; background:#0f172a center/cover no-repeat; background-image:url('${curImg}'); position:relative; overflow:hidden; border:1px solid rgba(255,255,255,.12);">
+            <span id="edit-subj-cover-badge" style="position:absolute; bottom:8px; right:8px; font-size:11px; font-weight:800; padding:3px 10px; border-radius:999px; background:rgba(0,0,0,.65); color:#fff;">${subjCoverUrl(subj.cover) ? 'صورة مخصصة' : 'الصورة الافتراضية'}</span>
+          </div>
+          <div style="display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;">
+            <button type="button" id="edit-subj-cover-upload" class="swal2-confirm swal2-styled" style="margin:0; flex:1; min-width:150px; background:#3b82f6; font-size:13px;">📤 رفع صورة من الجهاز</button>
+            <button type="button" id="edit-subj-cover-reset" class="swal2-cancel swal2-styled" style="margin:0; flex:1; min-width:120px; font-size:13px;">↩️ الصورة الافتراضية</button>
+          </div>
+          <input type="file" id="edit-subj-cover-file" accept="image/*" style="display:none;">
+          <div id="edit-subj-cover-status" style="font-size:12px; margin-top:8px; min-height:18px; text-align:right;"></div>
+          <div style="text-align:right; font-size:11.5px; margin:6px 0 4px; opacity:.75;">أو الصق رابط صورة (يقبل رابط درايف عادي):</div>
+          <input id="edit-subj-cover" type="url" dir="ltr" class="swal2-input" placeholder="https://..." value="${escText(subj.cover || '')}" style="margin-top:0;">`,
         didOpen: () => {
           const inp = document.getElementById('edit-subj-cover'), pv = document.getElementById('edit-subj-cover-preview');
-          inp.addEventListener('input', () => { const u = subjCoverUrl(inp.value); pv.style.backgroundImage = u ? `url('${u}')` : 'none'; });
+          const badge = document.getElementById('edit-subj-cover-badge'), st = document.getElementById('edit-subj-cover-status');
+          const fileInp = document.getElementById('edit-subj-cover-file'), upBtn = document.getElementById('edit-subj-cover-upload');
+          const refresh = () => {
+            const u = subjCoverUrl(inp.value);
+            pv.style.backgroundImage = `url('${u || defImg}')`;
+            badge.textContent = u ? 'صورة مخصصة' : 'الصورة الافتراضية';
+          };
+          inp.addEventListener('input', refresh);
+          document.getElementById('edit-subj-cover-reset').addEventListener('click', () => { inp.value = ''; refresh(); st.textContent = 'هترجع الصورة الافتراضية بعد الحفظ.'; st.style.color = '#fbbf24'; });
+          upBtn.addEventListener('click', () => fileInp.click());
+          fileInp.addEventListener('change', async () => {
+            const f = fileInp.files && fileInp.files[0];
+            fileInp.value = '';
+            if (!f) return;
+            if (!/^image\//.test(f.type)) { st.textContent = '❌ اختار ملف صورة (JPG / PNG / WEBP).'; st.style.color = '#f87171'; return; }
+            if (typeof window.uploadImageToDrive !== 'function') { st.textContent = '❌ خدمة الرفع على درايف مش متاحة.'; st.style.color = '#f87171'; return; }
+            const cb = Swal.getConfirmButton();
+            upBtn.disabled = true; if (cb) cb.disabled = true;
+            st.style.color = '#93c5fd'; st.textContent = '⏳ جاري ضغط الصورة ورفعها على درايف... متقفلش النافذة';
+            try {
+              const r = await window.uploadImageToDrive(f, 'غلاف - ' + subj.name);
+              inp.value = r.url; refresh();
+              if (r.loaded) { st.style.color = '#4ade80'; st.textContent = '✅ اترفعت على درايف. دوس "حفظ التعديلات" عشان تتطبق.'; }
+              else { st.style.color = '#fbbf24'; st.textContent = '⚠️ الصورة اترفعت بس مش بتظهر. اتأكد إن ملفات فولدر الرفع على درايف متشاركة "أي حد معاه الرابط".'; }
+            } catch (err) {
+              st.style.color = '#f87171'; st.textContent = '❌ ' + ((err && err.message) || 'فشل الرفع. حاول تاني.');
+            } finally { upBtn.disabled = false; if (cb) cb.disabled = false; }
+          });
+          if (focusCover) setTimeout(() => pv.scrollIntoView({ block: 'center' }), 50);
         },
         showCancelButton: true,
         confirmButtonText: 'حفظ التعديلات',
@@ -10748,7 +10855,7 @@ function openThemePicker() {
             name: document.getElementById('edit-subj-name').value.trim(),
             desc: document.getElementById('edit-subj-desc').value.trim(),
             level: parseInt(document.getElementById('edit-subj-lvl').value, 10) || 1,
-            cover: subjCoverUrl(document.getElementById('edit-subj-cover').value) || null
+            cover: (subjCoverUrl(document.getElementById('edit-subj-cover').value) ? document.getElementById('edit-subj-cover').value.trim() : null)
           };
         }
       }).then(res => {
@@ -10853,11 +10960,16 @@ function openThemePicker() {
     }
 
     /* ===== ج) شروحات الفيديو والسكاشن المسجلة (Video Hub) ===== */
+    function isTouchVideoUI() {
+      try { return !!(window.matchMedia && matchMedia('(pointer: coarse)').matches); } catch (e) { return false; }
+    }
     function getYoutubeEmbedUrl(rawUrl) {
       if (!rawUrl) return '';
       const url = rawUrl.trim();
       const YT = 'https://www.youtube.com/embed/';
       let q = 'rel=0&modestbranding=1&playsinline=1&fs=1&iv_load_policy=3&enablejsapi=1';
+      // على الموبايل: نخفي أزرار يوتيوب (طبقتها الغامقة بتغطي الفيديو) ونستخدم أزرار المنصة الخفيفة
+      if (isTouchVideoUI()) q += '&controls=0';
       // يوتيوب لازم يعرف الدومين اللي شغال منه المشغل (غير كده بيطلع خطأ 153)
       if (/^https?:$/.test(location.protocol)) q += '&origin=' + encodeURIComponent(location.origin);
 
@@ -10966,6 +11078,74 @@ function openThemePicker() {
       const s = document.getElementById('video-stage');
       if (s && s.classList.contains('video-fake-fs')) s.classList.remove('video-fake-fs');
     });
+    /* ===== أزرار الموبايل الخفيفة فوق فيديو يوتيوب =====
+       قبل أول تشغيل: الطبقة مقفولة عشان الطالب يدوس زرار يوتيوب الأحمر بنفسه (شرط الآيفون).
+       بعد ما الفيديو يشتغل: لمسة = إظهار/إخفاء الأزرار، لمستين يمين/شمال = تقديم/تأخير 10 ثواني. */
+    const ytt = { enabled: false, hideT: null, lastTap: 0, tapT: null, dragging: false };
+    function fmtTime(s) { s = Math.max(0, Math.floor(s || 0)); const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), x = s % 60; return (h ? h + ':' + String(m).padStart(2, '0') : m) + ':' + String(x).padStart(2, '0'); }
+    function yttStage() { return document.getElementById('video-stage'); }
+    function yttShow(keep) {
+      const s = yttStage(); if (!s) return;
+      s.classList.add('ytt-show');
+      clearTimeout(ytt.hideT);
+      if (!keep && ytState.state === 1) ytt.hideT = setTimeout(() => { if (!ytt.dragging) s.classList.remove('ytt-show'); }, 2500);
+    }
+    function yttHide() { const s = yttStage(); clearTimeout(ytt.hideT); if (s) s.classList.remove('ytt-show'); }
+    function yttReset(enabled) {
+      const s = yttStage(); if (!s) return;
+      ytt.enabled = !!enabled; clearTimeout(ytt.hideT); clearTimeout(ytt.tapT);
+      ytState.state = -1; ytState.dur = 0;
+      s.classList.remove('ytt-active', 'ytt-show');
+      const sk = document.getElementById('ytt-seek'); if (sk) sk.value = 0;
+      const tm = document.getElementById('ytt-time'); if (tm) tm.textContent = '0:00 / 0:00';
+    }
+    function yttRender() {
+      const s = yttStage(); if (!s || !ytt.enabled) return;
+      if (!s.classList.contains('ytt-active') && (ytState.state === 1 || ytState.state === 2 || ytState.state === 3)) { s.classList.add('ytt-active'); }
+      const pb = document.getElementById('ytt-play');
+      if (pb) pb.textContent = ytState.state === 1 || ytState.state === 3 ? '❚❚' : (ytState.state === 0 ? '↻' : '▶');
+      const tm = document.getElementById('ytt-time'); if (tm) tm.textContent = fmtTime(ytState.time) + ' / ' + fmtTime(ytState.dur);
+      const sk = document.getElementById('ytt-seek'); if (sk && !ytt.dragging && ytState.dur > 0) sk.value = Math.round(ytState.time / ytState.dur * 1000);
+      const sp = document.getElementById('ytt-speed'); if (sp) sp.textContent = ytState.rate + 'x';
+      if (ytState.state !== 1) { if (s.classList.contains('ytt-active')) yttShow(true); }
+    }
+    function yttFlash(txt, rightSide) {
+      const r = document.getElementById('ytt-ripple'); if (!r) return;
+      r.textContent = txt; r.style.left = rightSide ? 'auto' : '12%'; r.style.right = rightSide ? '12%' : 'auto';
+      r.classList.add('on'); clearTimeout(r._t); r._t = setTimeout(() => r.classList.remove('on'), 500);
+    }
+    document.addEventListener('DOMContentLoaded', function () {
+      const layer = document.getElementById('yt-touch'); if (!layer) return;
+      layer.addEventListener('click', function (e) {
+        const btn = e.target.closest('button');
+        if (btn) {
+          const a = btn.dataset.a;
+          if (btn.id === 'ytt-play') {
+            if (ytState.state === 1 || ytState.state === 3) ytCommand('pauseVideo');
+            else { if (ytState.state === 0) ytCommand('seekTo', [0, true]); ytCommand('playVideo'); }
+          } else if (a === 'back') { videoSeekBy(-10); yttFlash('⏪ 10', false); }
+          else if (a === 'fwd') { videoSeekBy(10); yttFlash('10 ⏩', true); }
+          else if (a === 'speed') { videoCycleSpeed(); yttRender(); }
+          yttShow();
+          return;
+        }
+        if (e.target !== layer) return;
+        const right = e.offsetX > layer.clientWidth / 2;
+        const now = Date.now();
+        if (now - ytt.lastTap < 300) {            // لمستين = تقديم/تأخير
+          clearTimeout(ytt.tapT); ytt.lastTap = 0;
+          videoSeekBy(right ? 10 : -10); yttFlash(right ? '10 ⏩' : '⏪ 10', right);
+          return;
+        }
+        ytt.lastTap = now;
+        ytt.tapT = setTimeout(() => { yttStage().classList.contains('ytt-show') ? yttHide() : yttShow(); }, 280);
+      });
+      const sk = document.getElementById('ytt-seek');
+      if (sk) {
+        sk.addEventListener('input', () => { ytt.dragging = true; yttShow(true); const t = ytState.dur * sk.value / 1000; const tm = document.getElementById('ytt-time'); if (tm) tm.textContent = fmtTime(t) + ' / ' + fmtTime(ytState.dur); });
+        sk.addEventListener('change', () => { const t = ytState.dur * sk.value / 1000; ytCommand('seekTo', [t, true]); ytState.time = t; ytt.dragging = false; yttShow(); });
+      }
+    });
     function showVideoError(html) {
       const b = document.getElementById('video-error-box');
       if (!b) return;
@@ -10986,6 +11166,12 @@ function openThemePicker() {
         }
         if (d.event === 'infoDelivery' && d.info) {
           if (typeof d.info.currentTime === 'number') ytState.time = d.info.currentTime;
+          if (typeof d.info.duration === 'number' && d.info.duration > 0) ytState.dur = d.info.duration;
+          if (typeof d.info.playerState === 'number') {
+            const prev = ytState.state; ytState.state = d.info.playerState;
+            if (prev !== 1 && ytState.state === 1 && ytt.enabled) { const s = yttStage(); if (s && s.classList.contains('ytt-show')) yttShow(); }
+          }
+          yttRender();
           if (typeof d.info.playbackRate === 'number' && d.info.playbackRate !== ytState.rate) { ytState.rate = d.info.playbackRate; markSpeedButtons(); }
         }
       } catch (e) {}
@@ -11105,6 +11291,7 @@ function openThemePicker() {
       if (dh) dh.style.display = isYT ? 'none' : 'inline';
       if (eb) { eb.style.display = 'none'; eb.innerHTML = ''; }
       ytState.time = 0; ytState.rate = 1; markSpeedButtons();
+      yttReset(isYT && isTouchVideoUI());
       frame.src = embedUrl;
       overlay.style.display = 'flex';
     }
@@ -11115,6 +11302,7 @@ function openThemePicker() {
       const frame = document.getElementById('video-player-frame');
       try { if (document.fullscreenElement) document.exitFullscreen(); } catch (err) {}
       const stage = document.getElementById('video-stage'); if (stage) stage.classList.remove('video-fake-fs');
+      yttReset(false);
       if (frame) frame.src = '';
       syncVideoBlocker('');
       if (overlay) overlay.style.display = 'none';
@@ -14154,11 +14342,40 @@ function openThemePicker() {
       delete __fileSubjRefs[k];
     });
     try {
+      /* توفير: الطالب مش محتاج أسماء كل اللي فتحوا الملفات (دي للأدمن بس).
+         بدل اتصال حي بـ file_stats كله (أسماء + أوقات لكل طالب على كل ملف)، بنقرأ رقم المشاهدات بس
+         لكل ملف/فيديو مرة واحدة عند فتح المادة (وكل 5 دقايق بحد أقصى) */
       var sRef = database.ref('file_stats/' + id), cRef = database.ref('file_comments/' + id);
-      sRef.on('value', function(snap) { __onFileStats(id, snap); }, function(err) { console.error('file_stats:', err); });
       cRef.on('value', function(snap) { __onFileComments(id, snap); }, function(err) { console.error('file_comments:', err); });
       __fileSubjRefs[id] = { s: sRef, c: cRef };
     } catch (e) {}
+    loadStudentViewCounts(id);
+  }
+
+  var __viewCountsAt = {};
+  function loadStudentViewCounts(id, force) {
+    if (__fileFullMode || !id || typeof database === 'undefined') return;
+    if (!force && Date.now() - (__viewCountsAt[id] || 0) < 5 * 60 * 1000) return;
+    var s = (typeof db !== 'undefined' ? db : []).find(function(x) { return x.id === id; });
+    if (!s) return;
+    __viewCountsAt[id] = Date.now();
+    var keys = (s.files || []).map(function(f) { return f.key; }).concat((s.videos || []).map(function(v) { return v.key; }));
+    if (!keys.length) return;
+    Promise.all(keys.map(function(k) {
+      return database.ref('file_stats/' + id + '/' + k + '/views').once('value')
+        .then(function(sn) { return [k, sn.val()]; })
+        .catch(function() { return [k, null]; });
+    })).then(function(rows) {
+      var m = window.fileStatsMap[id] || {};
+      var changed = false;
+      rows.forEach(function(r) {
+        var v = Number(r[1]) || 0, old = (m[r[0]] && m[r[0]].views) || 0;
+        if (v !== old) changed = true;
+        m[r[0]] = { views: Math.max(v, old) };
+      });
+      window.fileStatsMap[id] = m;
+      if (changed) refreshVisibleFilesUI();
+    });
   }
 
   function startFileTrackingListeners() {
@@ -14172,8 +14389,8 @@ function openThemePicker() {
   (function() {
     var __origOpen = window.openSubject;
     if (typeof __origOpen !== 'function' || __origOpen.__fileWrapped) return;
-    window.openSubject = function(id) {
-      try { if (fileListenersStarted) listenFilesForSubject(id); } catch (e) {}
+    window.openSubject = function(id, silent) {
+      try { if (fileListenersStarted) { listenFilesForSubject(id); if (!silent) loadStudentViewCounts(String(id)); } } catch (e) {}
       return __origOpen.apply(this, arguments);
     };
     window.openSubject.__fileWrapped = true;
@@ -14203,6 +14420,11 @@ function openThemePicker() {
         sessionStorage.setItem(sessionKey, '1');
         database.ref('file_stats/' + subjId + '/' + fileKey + '/views')
           .set(FB.database.ServerValue.increment(1));
+        // الطالب مش متصل حي بالإحصائيات، فنزوّد العداد عنده محلياً
+        if (!__fileFullMode) {
+          var mm = window.fileStatsMap[subjId] = window.fileStatsMap[subjId] || {};
+          mm[fileKey] = mm[fileKey] || {}; mm[fileKey].views = (Number(mm[fileKey].views) || 0) + 1;
+        }
       }
       if (typeof currentUser !== 'undefined' && currentUser && currentUser.uid) {
         var uName = (typeof currentStudentData !== 'undefined' && currentStudentData && currentStudentData.name) ? currentStudentData.name : 'طالب';
@@ -14219,6 +14441,12 @@ function openThemePicker() {
     // فيديو يوتيوب → يتشغل جوه المنصة بدل ما يفتح تاب خارجي
     if (typeof isYouTubeLink === 'function' && isYouTubeLink(fileUrl)) { openVideoPlayer(fileTitle, fileUrl); return; }
     window.open(fileUrl, '_blank', 'noopener,noreferrer');
+  };
+
+  // تشغيل فيديو من شروحات المادة + تسجيل المشاهدة (بيتخزن في نفس مكان إحصائيات الملفات)
+  window.openVideoAndTrack = function(subjId, videoKey, title, url) {
+    recordFileAccess(subjId, videoKey, title);
+    openVideoPlayer(title, url);
   };
 
   window.openPdfViewerAndTrack = function(subjId, fileKey, fileTitle, fileUrl) {
@@ -14254,6 +14482,7 @@ function openThemePicker() {
       avgRating: avgRating
     };
   }
+  window.getFileMetrics = getFileMetrics;   // يستخدمها عداد مشاهدات الفيديوهات
 
   // استبدال دالة عرض الملفات داخل المادة لتشمل عداد الزيارات + شارة الأكثر إقبالاً + زر الكومنتات والمشاكل
   window.renderFilesCategory = function(filesList, categoryName, icon, isAdmin, subjId) {
@@ -14594,6 +14823,51 @@ function openThemePicker() {
       var x=c.getContext('2d'); x.fillStyle='#fff'; x.fillRect(0,0,c.width,c.height); x.drawImage(im,0,0,c.width,c.height);
       URL.revokeObjectURL(u); res(c.toDataURL('image/jpeg',0.72)); };
     im.onerror=function(){ rej(new Error('تعذر قراءة إحدى الصور')); }; im.src=u; }); }
+
+  /* رفع صورة (غلاف مادة) على درايف عن طريق نفس Apps Script بتاع رفع الملفات
+     بيرجع { url: رابط درايف, img: رابط الصورة المباشر, loaded: هل الصورة بتفتح فعلاً } */
+  function compressCover(f){ return new Promise(function(res,rej){
+    var u=URL.createObjectURL(f), im=new Image();
+    im.onload=function(){ var k=Math.min(1,1600/Math.max(im.width,im.height)), c=document.createElement('canvas');
+      c.width=Math.round(im.width*k); c.height=Math.round(im.height*k);
+      var x=c.getContext('2d'); x.fillStyle='#0f172a'; x.fillRect(0,0,c.width,c.height); x.drawImage(im,0,0,c.width,c.height);
+      URL.revokeObjectURL(u); res(c.toDataURL('image/jpeg',0.85)); };
+    im.onerror=function(){ URL.revokeObjectURL(u); rej(new Error('تعذر قراءة الصورة، جرّب صورة تانية')); }; im.src=u; }); }
+  function imageLoads(src, ms){ return new Promise(function(res){
+    var im=new Image(), done=false, t=setTimeout(function(){ if(!done){ done=true; res(false); } }, ms||20000);
+    im.onload=function(){ if(!done){ done=true; clearTimeout(t); res(im.naturalWidth>0); } };
+    im.onerror=function(){ if(!done){ done=true; clearTimeout(t); res(false); } };
+    im.src=src; }); }
+  window.uploadImageToDrive = async function(file, title){
+    if(!DRIVE_URL) throw new Error('لازم تلصق رابط Apps Script في المتغير DRIVE_URL الأول.');
+    if(!auth.currentUser || !currentUser) throw new Error('لازم تكون مسجّل دخول كأدمن.');
+    var du=await compressCover(file);
+    if(du.length > MAX*1.37) throw new Error('الصورة كبيرة جداً حتى بعد الضغط.');
+    var tok=await auth.currentUser.getIdToken();
+    var safeName=String(title||'cover').replace(/[\\\/:*?"<>|]+/g,' ').trim().slice(0,80)+'.jpg';
+    var resp=await fetch(DRIVE_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({uid:currentUser.uid,token:tok,name:safeName,mimeType:'image/jpeg',data:du.split(',')[1]})});
+    var jr=await resp.json();
+    if(!jr.ok) throw new Error(jr.error||'فشل الرفع على درايف');
+    var img=subjCoverUrl(jr.url);
+    try{ logAdminAction('رفع صورة على درايف', safeName); }catch(e){}
+    return { url: jr.url, img: img, loaded: img ? await imageLoads(img) : false };
+  };
+
+  // زر "رفع صورة على درايف" في فورم إضافة مادة جديدة
+  window.newSubjectCoverUpload = async function(inpFile){
+    var f=inpFile.files&&inpFile.files[0]; inpFile.value='';
+    var st=document.getElementById('new-subj-cover-status'), inp=document.getElementById('new-subj-cover');
+    if(!f) return;
+    if(!/^image\//.test(f.type)){ st.style.color='#f87171'; st.textContent='❌ اختار ملف صورة (JPG / PNG / WEBP).'; return; }
+    st.style.color='#93c5fd'; st.textContent='⏳ جاري رفع الصورة على درايف...';
+    try{
+      var n=(document.getElementById('new-subj-name').value||'').trim();
+      var r=await window.uploadImageToDrive(f,'غلاف - '+(n||'مادة جديدة'));
+      inp.value=r.url;
+      st.style.color=r.loaded?'#4ade80':'#fbbf24';
+      st.textContent=r.loaded?'✅ اترفعت، وهتبقى خلفية المادة بعد ما تدوس "إضافة المادة".':'⚠️ اترفعت بس مش بتظهر. اتأكد إن فولدر الرفع على درايف متشارك "أي حد معاه الرابط".';
+    }catch(err){ st.style.color='#f87171'; st.textContent='❌ '+((err&&err.message)||'فشل الرفع'); }
+  };
 
   window.addFile = async function(e){
     e.preventDefault();
