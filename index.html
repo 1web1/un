@@ -101,7 +101,13 @@
   body.light-mode .lvl-switch { background:rgba(0,0,0,.06); border-color:rgba(0,0,0,.12); }
   body.light-mode .lvl-sw-btn { color:rgba(0,0,0,.6); }
   body.light-mode .lvl-sw-btn.active { color:#111; }
-  @media (max-width: 700px) { .lvl-sw-txt { display:none; } .lvl-sw-btn { padding:6px 10px; font-size:15px; } }
+  /* كلام السويتش: كامل على الشاشات الكبيرة، "مستوى 1/2" على المتوسطة، والرقم بس على الموبايل — عمره ما يبقى أيقونة لوحدها */
+  .lvl-sw-short, .lvl-sw-num { display:none; }
+  @media (max-width: 1560px) { .lvl-sw-full { display:none; } .lvl-sw-short { display:inline; } }
+  @media (max-width: 768px) { .lvl-sw-short { display:none; } .lvl-sw-num { display:inline; font-weight:900; } .lvl-sw-btn { padding:6px 10px; font-size:14px; } }
+  /* اسم المستخدم في البار: يفضل جوه الإطار، ولو طويل يخلص بـ "…" */
+  .chrome .nav .user-greeting-btn { display:inline-block !important; line-height:34px; overflow:hidden !important; text-overflow:ellipsis !important; white-space:nowrap !important; vertical-align:middle; box-sizing:border-box; unicode-bidi:plaintext; text-align:start; }
+  @media (max-width: 768px) { header.chrome .nav .user-greeting-btn { max-width: 110px !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; height: 36px !important; line-height: 34px !important; padding: 0 8px !important; } }
   /* ترتيب البار اللي فوق: ولا كلمة تنزل سطرين، وكل ما الشاشة تضيق الحاجات بتصغر بالترتيب */
   .header-nav-link, .nav .pill, .lvl-sw-btn { white-space: nowrap; }
   .header-nav-center { flex-shrink: 1; min-width: 0; }
@@ -110,10 +116,9 @@
     .chrome .nav { gap: 6px !important; }
   }
   @media (min-width: 769px) and (max-width: 1560px) {
-    .lvl-sw-txt { display: none; }
-    .lvl-sw-btn { padding: 6px 10px; font-size: 15px; }
+    .lvl-sw-btn { padding: 6px 10px; }
     #bookmarks-nav-btn .btn-txt, #admin-toggle-btn .btn-txt, #research-nav-btn .btn-txt { display: none !important; }
-    .chrome .nav .user-greeting-btn { max-width: 120px; }
+    .chrome .nav .user-greeting-btn { max-width: 150px; }
   }
   @media (min-width: 769px) and (max-width: 1000px) {
     .chrome .nav .btn-txt { display: none !important; }
@@ -4239,8 +4244,8 @@ body[class*="theme-"] .mob-nav-item.active{color:var(--primary)!important}
       </div>
       <nav class="nav z-content">
         <div class="lvl-switch" id="lvl-switch" style="display:none;" role="group" aria-label="تبديل المستوى">
-          <button type="button" class="lvl-sw-btn" id="lvl-sw-1" onclick="switchLevel(1)" title="المستوى الأول">🎓<span class="lvl-sw-txt"> الأول</span></button>
-          <button type="button" class="lvl-sw-btn" id="lvl-sw-2" onclick="switchLevel(2)" title="المستوى الثاني">🚀<span class="lvl-sw-txt"> الثاني</span></button>
+          <button type="button" class="lvl-sw-btn" id="lvl-sw-1" onclick="switchLevel(1)" title="المستوى الأول">🎓 <span class="lvl-sw-full">المستوى الأول</span><span class="lvl-sw-short">مستوى 1</span><span class="lvl-sw-num">1</span></button>
+          <button type="button" class="lvl-sw-btn" id="lvl-sw-2" onclick="switchLevel(2)" title="المستوى الثاني">🚀 <span class="lvl-sw-full">المستوى الثاني</span><span class="lvl-sw-short">مستوى 2</span><span class="lvl-sw-num">2</span></button>
         </div>
         <button class="pill theme-btn nav-desktop-only" id="theme-toggle-btn" onclick="toggleTheme()" title="تبديل الوضع">🌞</button>
         <button class="pill theme-btn nav-desktop-only" id="sound-toggle-btn" onclick="toggleSound()" title="كتم/تشغيل المؤثرات الصوتية">🔊</button>
