@@ -1,43 +1,11 @@
-const { initializeApp, cert, getApps, getApp } = require('firebase-admin/app');
-const { getAuth } = require('firebase-admin/auth');
-const { getDatabase } = require('firebase-admin/database');
-
-/* كل مستوى له مشروع Firebase مستقل.
-   متغيرات البيئة في Vercel:
-     FIREBASE_SERVICE_ACCOUNT      ← مفتاح مشروع المستوى الثاني (الموجود حالياً)
-     FIREBASE_SERVICE_ACCOUNT_L1   ← مفتاح مشروع المستوى الأول (الجديد)
-   رابط قاعدة البيانات بيتاخد تلقائي من project_id اللي جوه المفتاح. */
-const LEVELS = {
-  1: { env: 'FIREBASE_SERVICE_ACCOUNT_L1' },
-  2: { env: 'FIREBASE_SERVICE_ACCOUNT', databaseURL: 'https://university-platform-f51a1-default-rtdb.firebaseio.com' }
-};
-
-function appFor(level) {
-  const cfg = LEVELS[level];
-  if (!cfg) throw Object.assign(new Error('مستوى غير معروف'), { status: 400 });
-  const name = 'level' + level;
-  if (getApps().some(a => a.name === name)) return getApp(name);
-  const raw = process.env[cfg.env];
-  if (!raw) throw Object.assign(new Error('مفتاح Firebase للمستوى ' + level + ' مش متضاف في Vercel (' + cfg.env + ')'), { status: 500 });
-  const sa = JSON.parse(raw);
-  return initializeApp({
-    credential: cert(sa),
-    databaseURL: cfg.databaseURL || ('https://' + sa.project_id + '-default-rtdb.firebaseio.com')
-  }, name);
-}
+/* تغيير باسورد طالب من لوحة الإدارة.
+   بيتغير في المستوى اللي الأدمن فيه، وكمان في المستوى التاني لو الطالب عنده حساب هناك بنفس الإيميل. */
+const { appFor, syncPasswordToOtherLevel, cors, getAuth, getDatabase } = require('../lib/levels');
 
 module.exports = async (req, res) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
+  cors(res);
+  if (req.method === 'OPTIONS') return res.status(200).end();
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   try {
     const token = (req.headers.authorization || '').replace('Bearer ', '');
@@ -50,7 +18,7 @@ module.exports = async (req, res) => {
     const auth = getAuth(app);
     const db = getDatabase(app);
 
-    // التوكن لازم يكون من نفس مشروع المستوى، والأدمن لازم يكون أدمن في المستوى ده
+    // التوكن لازم يكون من نفس مشروع المستوى، واللي بيغيّر لازم يكون أدمن أو مالك في المستوى ده
     const decoded = await auth.verifyIdToken(token);
     const [adminCheck, ownerCheck] = await Promise.all([
       db.ref(`users/${decoded.uid}/isAdmin`).once('value'),
@@ -65,7 +33,21 @@ module.exports = async (req, res) => {
     }
 
     await auth.updateUser(targetUid, { password: newPassword });
-    return res.status(200).json({ success: true, message: 'تم تغيير الباسورد بنجاح' });
+
+    // نفس الطالب في المستوى التاني (لو عنده حساب هناك بنفس الإيميل)
+    let sync = { synced: false };
+    try {
+      const target = await auth.getUser(targetUid);
+      sync = await syncPasswordToOtherLevel(level, target.email, newPassword, { skipStaff: true });
+    } catch (e) { sync = { synced: false, reason: 'error' }; }
+
+    return res.status(200).json({
+      success: true,
+      message: 'تم تغيير الباسورد بنجاح',
+      synced: !!sync.synced,
+      syncedLevel: sync.level || null,
+      syncReason: sync.reason || null
+    });
   } catch (err) {
     return res.status(err.status || 500).json({ error: err.message || 'خطأ بالسيرفر' });
   }
