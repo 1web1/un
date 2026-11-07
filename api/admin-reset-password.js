@@ -52,8 +52,11 @@ module.exports = async (req, res) => {
 
     // التوكن لازم يكون من نفس مشروع المستوى، والأدمن لازم يكون أدمن في المستوى ده
     const decoded = await auth.verifyIdToken(token);
-    const adminCheck = await db.ref(`users/${decoded.uid}/isAdmin`).once('value');
-    if (adminCheck.val() !== true) {
+    const [adminCheck, ownerCheck] = await Promise.all([
+      db.ref(`users/${decoded.uid}/isAdmin`).once('value'),
+      db.ref(`users/${decoded.uid}/isOwner`).once('value')
+    ]);
+    if (adminCheck.val() !== true && ownerCheck.val() !== true) {
       return res.status(403).json({ error: 'مخصص للمدير فقط' });
     }
 
