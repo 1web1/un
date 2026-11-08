@@ -4903,9 +4903,7 @@ body[class*="theme-"] .mob-nav-item.active{color:var(--primary)!important}
             <div class="admin-tab" onclick="switchAdminTab('content', this)">📚 إدارة المحتوى</div>
             <div class="admin-tab" onclick="switchAdminTab('analytics', this)">📊 الأسئلة الأصعب والمساهمات</div>
             <div class="admin-tab" onclick="switchAdminTab('tools', this)">⚙️ أدوات النظام</div>
-            <div class="admin-tab" onclick="switchAdminTab('logs', this)">⏱️ سجل النشاط</div>
-            <div class="admin-tab" onclick="switchAdminTab('usage', this)">📈 الاستهلاك</div>
-          </div>
+            <div class="admin-tab" onclick="switchAdminTab('logs', this)">⏱️ سجل النشاط</div>          </div>
 
           <div id="tab-students" class="admin-tab-content active">
              <div class="flex-between mb-4" style="flex-wrap: wrap; gap: 8px;">
@@ -5431,21 +5429,6 @@ body[class*="theme-"] .mob-nav-item.active{color:var(--primary)!important}
                    </div>
                 </div>
              </div>
-          </div>
-
-          <!-- تاب الاستهلاك: أرقام Firebase للمستويين (للمالك ولمن معاه صلاحية "متابعة الاستهلاك") -->
-          <div id="tab-usage" class="admin-tab-content">
-            <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:12px;">
-              <div>
-                <h3 style="margin:0; font-size:18px;">📈 استهلاك Firebase</h3>
-                <div style="font-size:12.5px; opacity:.75; margin-top:4px;">نفس أرقام صفحة Usage في Firebase. الحد المجاني لكل مستوى 10GB تحميل في الشهر، وبيتجدد أول كل شهر.</div>
-              </div>
-              <button type="button" class="pill" onclick="loadUsageTab(true)" style="font-size:12px; height:34px; padding:0 14px; background:rgba(59,130,246,.18); border:1px solid rgba(59,130,246,.4); color:#60a5fa;">🔄 تحديث</button>
-            </div>
-            <div id="usage-body" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); gap:14px;">
-              <div style="opacity:.7; font-size:13px;">بيتحمّل...</div>
-            </div>
-            <div id="usage-foot" style="font-size:11.5px; opacity:.6; margin-top:10px;"></div>
           </div>
 
           <div id="tab-logs" class="admin-tab-content">
@@ -6154,8 +6137,6 @@ body[class*="theme-"] .mob-nav-item.active{color:var(--primary)!important}
     }
     function hasTabAccess(t) {
       if (t === 'access') return isOwnerUser();
-      /* الاستهلاك: المالك، أو حد المالك اداله الصلاحية دي بالاسم (مش بتيجي تلقائي لأي أدمن أو ليدر) */
-      if (t === 'usage') return isOwnerUser() || !!(__myPermsLoaded && __myPerms && typeof __myPerms === 'object' && __myPerms['usage_view'] === true);
       if (t === 'tools') return hasPerm('system.tools');
       if (t === 'logs') return hasPerm('system.logs');
       if (t === 'students') return hasPerm('students.view');
@@ -8125,9 +8106,7 @@ ${escText(alertBody)}
       document.querySelectorAll('.admin-tab').forEach(el => el.classList.remove('active'));
       document.getElementById('tab-' + tabId).classList.add('active'); btnElement.classList.add('active');
       if (tabId === 'logs') listenToAdminLogs();
-      if (tabId === 'access' && window.renderAccessTab) window.renderAccessTab();
-      if (tabId === 'usage') { try { loadUsageTab(false); } catch (e) { console.error(e); } }
-      if (tabId === 'analytics') {
+      if (tabId === 'access' && window.renderAccessTab) window.renderAccessTab();      if (tabId === 'analytics') {
         listenToContributions();
         updateAnalyticsSelect();
         renderHardestQuestionsTable();
@@ -8144,101 +8123,10 @@ ${escText(alertBody)}
       if (!adminListenersOn) { adminListenersOn = true; listenToUsersData(); listenToOnlinePresence(); }
       try { if (window.__startFullFileListeners) window.__startFullFileListeners(); } catch (e) {}
       try { loadLevelsOverview(false); } catch (e) {}
-      /* تنبيه الاستهلاك للي معاه الصلاحية (بعد ما الصلاحيات تتحمّل) */
-      setTimeout(() => { try { if (hasTabAccess('usage')) loadUsageTab(false); } catch (e) {} }, 2500);
       if (!window.__lvlOvT) window.__lvlOvT = setInterval(() => {
         const p = document.getElementById('admin-panel');
         if (p && p.style.display === 'block' && !document.hidden) { try { loadLevelsOverview(false); } catch (e) {} }
       }, 3 * 60 * 1000);
-    }
-
-    /* ===================== تاب الاستهلاك (أرقام Firebase من Google Cloud Monitoring) ===================== */
-    let __usageAt = 0, __usageData = null, __usageBusy = false;
-    const __GB = 1024 * 1024 * 1024;
-    const __fmtB = (b) => b == null ? '—' : (b >= __GB ? (b / __GB).toFixed(2) + 'GB' : (b >= 1024 * 1024 ? Math.round(b / 1024 / 1024) + 'MB' : Math.round(b / 1024) + 'KB'));
-    /* أيام فاضلة لحد ما الحد يتجدد (Firebase بيجدد أول الشهر بتوقيت أمريكا GMT-8) */
-    function __daysLeftInCycle() {
-      try {
-        const la = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }));
-        const next = new Date(la.getFullYear(), la.getMonth() + 1, 1);
-        return Math.max(0, (next - la) / 86400000);
-      } catch (e) { return 15; }
-    }
-    function __usageCard(u) {
-      const L = u.level, title = (L === 1 ? '🎓 ' : '🚀 ') + levelName(L);
-      const wrap = (inner, border) => '<div style="padding:16px; border-radius:14px; border:1px solid ' + (border || 'rgba(255,255,255,.12)') + '; background:rgba(0,0,0,.25);">' +
-        '<div style="display:flex; justify-content:space-between; gap:8px; align-items:baseline; margin-bottom:10px;"><b style="font-size:16px;">' + title + '</b><span style="font-size:11px; opacity:.55; direction:ltr;">' + escText(u.projectId || '') + '</span></div>' + inner + '</div>';
-      if (u.error) {
-        let fix = '';
-        if (u.kind === 'api_disabled') fix = '<div style="margin-top:8px;">لازم تفعّل خدمة المراقبة مرة واحدة: افتح <a href="' + escText(u.fixUrl) + '" target="_blank" rel="noopener" style="color:#60a5fa; text-decoration:underline;">الرابط ده</a> ودوس <b>Enable</b>، وبعد دقيقة دوس 🔄 تحديث.</div>';
-        else if (u.kind === 'no_permission') fix = '<div style="margin-top:8px;">لازم تدّي مفتاح السيرفر صلاحية قراءة الاستهلاك مرة واحدة: افتح <a href="' + escText(u.fixUrl) + '" target="_blank" rel="noopener" style="color:#60a5fa; text-decoration:underline;">IAM</a> ← <b>Grant access</b> ← اكتب<div style="direction:ltr; text-align:left; font-size:11.5px; background:rgba(0,0,0,.35); padding:6px 8px; border-radius:8px; margin:6px 0; word-break:break-all;">' + escText(u.serviceEmail || '') + '</div>واختار الدور <b>Monitoring Viewer</b> ← <b>Save</b>.</div>';
-        return wrap('<div style="color:#fbbf24; font-size:13px; line-height:1.8;">مقدرناش نجيب الأرقام.' + fix + '<div style="font-size:11px; opacity:.6; margin-top:6px; direction:ltr; text-align:left; word-break:break-word;">' + escText(u.error) + '</div></div>', 'rgba(245,158,11,.45)');
-      }
-      const used = u.monthlyBytes || 0, limit = u.limitBytes || 10 * __GB, pct = Math.min(100, Math.round(used / limit * 100));
-      const color = pct >= 90 ? '#ef4444' : (pct >= 70 ? '#f59e0b' : '#22c55e');
-      const days = (u.daily || []).map(d => d.bytes || 0), last7 = days.slice(-7), avg = last7.length ? last7.reduce((a, b) => a + b, 0) / last7.length : 0;
-      const left = __daysLeftInCycle(), projected = used + avg * left;
-      let proj;
-      if (u.disabled) proj = '<div style="color:#ef4444; font-weight:800;">⛔ قاعدة البيانات واقفة دلوقتي لأن الحد خلص. هترجع أول الشهر الجاي أو لو حوّلت لـ Blaze.</div>';
-      else if (!avg) proj = '<div style="opacity:.75;">لسه مفيش بيانات كفاية للتوقّع.</div>';
-      else if (projected > limit) {
-        const daysOut = Math.max(0, (limit - used) / avg), when = new Date(Date.now() + daysOut * 86400000);
-        proj = '<div style="color:' + (daysOut < 5 ? '#ef4444' : '#f59e0b') + '; font-weight:700;">⚠️ بالمعدل الحالي الحد هيخلص بعد حوالي <b>' + (daysOut < 1 ? 'أقل من يوم' : Math.round(daysOut) + ' يوم') + '</b> (' + when.toLocaleDateString('ar-EG', { day: 'numeric', month: 'long' }) + ')</div>';
-      } else proj = '<div style="color:#22c55e; font-weight:700;">✅ بالمعدل الحالي هيكفّي لآخر الشهر (متوقع حوالي ' + __fmtB(projected) + ')</div>';
-      const maxD = Math.max(1, ...days.slice(-14));
-      const bars = days.slice(-14).map((b, i, arr) => '<div title="' + __fmtB(b) + '" style="flex:1; display:flex; flex-direction:column; justify-content:flex-end; align-items:center; gap:3px;"><div style="width:100%; max-width:22px; height:' + Math.max(3, Math.round(b / maxD * 70)) + 'px; border-radius:4px 4px 0 0; background:' + (i === arr.length - 1 ? color : 'rgba(96,165,250,.55)') + ';"></div></div>').join('');
-      const stat = (label, val) => '<div style="flex:1; min-width:120px; padding:8px 10px; border-radius:10px; background:rgba(255,255,255,.05);"><div style="font-size:11.5px; opacity:.7;">' + label + '</div><div style="font-weight:800; font-size:15px; margin-top:2px;">' + val + '</div></div>';
-      return wrap(
-        '<div style="display:flex; align-items:baseline; gap:8px; flex-wrap:wrap;"><span style="font-size:26px; font-weight:900; color:' + color + ';">' + __fmtB(used) + '</span><span style="opacity:.75;">من ' + __fmtB(limit) + ' هذا الشهر</span><span style="margin-inline-start:auto; font-weight:900; color:' + color + ';">' + pct + '%</span></div>' +
-        '<div style="height:10px; border-radius:99px; background:rgba(255,255,255,.08); overflow:hidden; margin:8px 0 10px;"><div style="height:100%; width:' + pct + '%; background:' + color + ';"></div></div>' +
-        proj +
-        '<div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:12px;">' +
-          stat('آخر 24 ساعة', __fmtB(days.length ? days[days.length - 1] : null)) +
-          stat('متوسط اليوم (آخر 7 أيام)', __fmtB(avg)) +
-          stat('فاضل على تجديد الحد', Math.ceil(left) + ' يوم') +
-          stat('متصل دلوقتي', (u.connections == null ? '—' : u.connections) + ' / 100') +
-          (u.storageBytes != null ? stat('التخزين', __fmtB(u.storageBytes) + ' / ' + __fmtB(u.storageLimit || __GB)) : '') +
-        '</div>' +
-        (days.length ? '<div style="margin-top:14px; font-size:11.5px; opacity:.7;">التحميل يوم بيوم (آخر ' + Math.min(14, days.length) + ' يوم)</div><div style="display:flex; align-items:flex-end; gap:3px; height:76px; margin-top:4px;">' + bars + '</div>' : ''),
-        color === '#22c55e' ? null : color);
-    }
-    async function loadUsageTab(force) {
-      const box = document.getElementById('usage-body'); if (!box || !currentUser) return;
-      if (!hasTabAccess('usage')) return;
-      if (__usageBusy) return;
-      if (!force && __usageData && Date.now() - __usageAt < 10 * 60 * 1000) { __renderUsage(); return; }
-      __usageBusy = true; if (force || !__usageData) box.style.opacity = '.5';
-      try {
-        const r = await fetch('/api/usage', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + await currentUser.getIdToken() }, body: JSON.stringify({ level: PLATFORM_LEVEL }) });
-        const j = await r.json().catch(() => ({}));
-        if (!r.ok) throw new Error(j.error || ('HTTP ' + r.status));
-        __usageData = j; __usageAt = Date.now(); __renderUsage(); __usageWarn();
-      } catch (e) {
-        box.innerHTML = '<div style="color:#fbbf24; font-size:13px;">مقدرناش نجيب الاستهلاك: ' + escText(e.message || e) + '</div>';
-      } finally { __usageBusy = false; box.style.opacity = '1'; }
-    }
-    function __renderUsage() {
-      const box = document.getElementById('usage-body'), foot = document.getElementById('usage-foot'); if (!box || !__usageData) return;
-      const L = __usageData.levels || {};
-      box.innerHTML = [1, 2].filter(n => L[n]).map(n => __usageCard(L[n])).join('');
-      if (foot) foot.textContent = 'آخر تحديث: ' + new Date(__usageAt).toLocaleTimeString('ar-EG') + ' — الأرقام من Google بتتأخر شوية (لحد نص ساعة) عن الحقيقة.';
-    }
-    /* تنبيه في لوحة الإدارة لو مستوى قرّب يخلّص حده (70% و 90%) */
-    function __usageWarn() {
-      const L = (__usageData && __usageData.levels) || {}, msgs = [];
-      [1, 2].forEach(n => { const u = L[n]; if (!u || u.error) return; const pct = Math.round((u.monthlyBytes || 0) / (u.limitBytes || 10 * __GB) * 100);
-        if (u.disabled) msgs.push('⛔ ' + levelName(n) + ': الحد خلص وقاعدة البيانات واقفة');
-        else if (pct >= 70) msgs.push((pct >= 90 ? '🔴 ' : '🟠 ') + levelName(n) + ': استهلاك الشهر وصل ' + pct + '%'); });
-      let el = document.getElementById('usage-alert');
-      if (!msgs.length) { if (el) el.remove(); return; }
-      if (!el) {
-        const host = document.querySelector('#admin-panel .admin-header'); if (!host) return;
-        el = document.createElement('div'); el.id = 'usage-alert';
-        el.style.cssText = 'margin-top:12px; padding:10px 14px; border-radius:12px; border:1px solid rgba(239,68,68,.5); background:rgba(239,68,68,.12); font-size:13.5px; font-weight:700; cursor:pointer;';
-        el.onclick = () => { const b = [...document.querySelectorAll('.admin-tab')].find(t => /'usage'/.test(t.getAttribute('onclick') || '')); if (b) switchAdminTab('usage', b); };
-        host.appendChild(el);
-      }
-      el.innerHTML = msgs.join('<br>') + ' <span style="font-weight:400; opacity:.8;">— اضغط عشان تشوف التفاصيل</span>';
     }
 
     /* أرقام المنصتين: طلاب كل مستوى، الداخلين من المستوى التاني، والمتصلين (من السيرفر عشان يشوف المشروعين) */
@@ -15797,8 +15685,7 @@ function openThemePicker() {
     {id:'system', title:'⚙️ النظام', items:[
       ['system.tools','أدوات النظام (التنبيهات، الصيانة، الدعم، القيود)'],
       ['system.logs','سجل نشاط الإدارة'],
-      ['system.danger','منطقة الخطر داخل الأدوات (نسخة احتياطية، تصفير نقاط، مسح السجل)'],
-      ['usage.view','متابعة استهلاك Firebase 📈 (تاب الاستهلاك)']]}
+      ['system.danger','منطقة الخطر داخل الأدوات (نسخة احتياطية، تصفير نقاط، مسح السجل)']]}
   ];
   var ALL_KEYS = []; var LABELS = {};
   CATALOG.forEach(function(g){ g.items.forEach(function(it){ ALL_KEYS.push(it[0]); LABELS[it[0]] = it[1]; }); });
@@ -15819,9 +15706,7 @@ function openThemePicker() {
     if (u.isOwner) { ALL_KEYS.forEach(function(k){ m[k] = true; }); return m; }
     var pp = (window.__allPerms || {})[u.uid]; if (pp && typeof pp === 'object') { ALL_KEYS.forEach(function(k){ m[k] = pp[k.replace(/\./g, '_')] === true; }); return m; }
     ALL_KEYS.forEach(function(k){ m[k] = u.isAdmin ? true : (window.__LEADER_DENY || []).indexOf(k) < 0; });
-    m['students.live'] = false; /* صلاحية التحديث اللحظي: بتتمنح صراحةً من المالك فقط */
-    m['usage.view'] = false;    /* متابعة الاستهلاك: بتتمنح صراحةً من المالك فقط */
-    return m;
+    m['students.live'] = false; /* صلاحية التحديث اللحظي: بتتمنح صراحةً من المالك فقط */    return m;
   }
   function rankOf(u){
     if (u.isOwner) return {txt: u.rankLabel || '👑 مالك المنصة', cls: 'owner', order: 0};
