@@ -7496,7 +7496,7 @@ ${escText(alertBody)}
       return `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`;
     }
 
-    function openPdfViewer(title, url) {
+    function openPdfViewer(title, url, legacy) {
       // لو الرابط فيديو يوتيوب → يتشغل في مشغل المنصة (عارض الـPDF مبيشغّلش يوتيوب)
       if (typeof isYouTubeLink === 'function' && isYouTubeLink(url)) { openVideoPlayer(title, url); return; }
       const currSubj = db.find(s => s.id === currentSubjectId);
@@ -7504,6 +7504,8 @@ ${escText(alertBody)}
         showLevel2RestrictionAlert('معاينة الملفات والمحاضرات');
         return;
       }
+      // ملفات درايف بتفتح في العارض الكامل (صفحات + زووم)؛ القديم احتياطي لو فشل
+      if (!legacy && typeof window.openFullViewer === 'function' && window.openFullViewer(title, url)) return;
       const overlay = document.getElementById('pdf-viewer-overlay');
       const titleEl = document.getElementById('pdf-viewer-title');
       const frame = document.getElementById('pdf-viewer-frame');
@@ -9761,8 +9763,8 @@ function openThemePicker() {
           actionBtns = `<button class="pill" style="height:32px; font-size:12px; background:rgba(239,68,68,.12); border:1px solid rgba(239,68,68,.3); color:#fca5a5; cursor:pointer;" onclick="showLevel2RestrictionAlert('الملفات والمحاضرات')">🔒 متاح للمستوى 2 فقط</button>`;
         } else {
           actionBtns = `
-            ${f.noPreview ? '' : `<button class="pill" style="height:32px; font-size:12px; background:var(--primary);" onclick="openPdfViewer('${escapeHtml(f.title)}', '${escapeHtml(fileUrl)}')">معاينة 👁️</button>`}
-            <a href="${escText(fileUrl)}" target="_blank" rel="noopener noreferrer" class="pill" style="height:32px; font-size:12px; background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.2); color:var(--fg);">فتح ↗</a>
+            ${f.noPreview ? '' : `<button class="pill" style="height:32px; font-size:12px; background:var(--primary);" onclick="openPdfViewer('${escapeHtml(f.title)}', '${escapeHtml(fileUrl)}')">عرض 👁️</button>`}
+            <a href="${escText(fileUrl)}" target="_blank" rel="noopener noreferrer" class="pill" style="height:32px; font-size:12px; background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.2); color:var(--fg);">تحميل ⬇️</a>
           `;
         }
 
@@ -10993,7 +10995,7 @@ function openThemePicker() {
                    <div style="font-size:11px; color:var(--fg-faint); margin-top:2px;">🕒 ${dateStr}</div>
                 </div>
                 <div class="action-group">
-                   <button class="pill" style="height:32px; font-size:12px; background:var(--primary);" onclick="openPdfViewer('${escapeHtml(c.title)}', '${escapeHtml(c.link)}')">معاينة 👁️</button>
+                   <button class="pill" style="height:32px; font-size:12px; background:var(--primary);" onclick="openPdfViewer('${escapeHtml(c.title)}', '${escapeHtml(c.link)}')">عرض 👁️</button>
                    <a href="${escText(safeUrl(c.link))}" target="_blank" rel="noopener" class="pill" style="height:32px; font-size:12px; background:rgba(255,255,255,.1);">فتح ↗</a>
                    <button class="pill" style="height:32px; font-size:12px; background:#10b981;" onclick="approveContribution('${c.key}')">✅ اعتماد ونشر</button>
                    <button class="btn-sm btn-ban" style="height:32px;" onclick="rejectContribution('${c.key}')">❌ رفض</button>
@@ -12973,7 +12975,7 @@ function openThemePicker() {
               <div style="font-weight:bold; font-size:14px; margin-top:4px;">📄 ${escText(f.title)}</div>
            </div>
            <div style="display:flex; gap:6px;">
-              ${isPreviewOff(f.subjId, f.key) ? '' : `<button class="pill" style="height:30px; font-size:11px;" onclick="openPdfViewer('${escapeHtml(f.title)}','${escapeHtml(safeUrl(f.link))}')">معاينة 👁️</button>`}
+              ${isPreviewOff(f.subjId, f.key) ? '' : `<button class="pill" style="height:30px; font-size:11px;" onclick="openPdfViewer('${escapeHtml(f.title)}','${escapeHtml(safeUrl(f.link))}')">عرض 👁️</button>`}
               <a href="${escText(safeUrl(f.link))}" target="_blank" rel="noopener" class="pill" style="height:30px; font-size:11px; background:var(--primary);">تحميل ⬇️</a>
               <button class="btn-sm btn-ban" title="إزالة" onclick="toggleFileBookmark('${f.subjId}','${f.key}','${escapeHtml(f.title)}','${escapeHtml(f.link)}',''); openBookmarksModal();">✕</button>
            </div>
@@ -15185,8 +15187,8 @@ function openThemePicker() {
         actionBtns = '<button class="pill" style="height:32px; font-size:12px; background:rgba(239,68,68,.12); border:1px solid rgba(239,68,68,.3); color:#fca5a5; cursor:pointer;" onclick="showLevel2RestrictionAlert(\'الملفات والمحاضرات\')">🔒 متاح للمستوى 2 فقط</button>';
       } else {
         actionBtns =
-          (f.noPreview ? '' : '<button class="pill" style="height:34px; font-size:12px; background:var(--primary);" onclick="openPdfViewerAndTrack(\'' + subjId + '\', \'' + f.key + '\', \'' + escapeHtml(f.title) + '\', \'' + escapeHtml(fileUrl) + '\')">معاينة 👁️</button>') +
-          '<button class="pill" style="height:34px; font-size:12px; background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.2); color:var(--fg);" onclick="openExternalFileAndTrack(\'' + subjId + '\', \'' + f.key + '\', \'' + escapeHtml(f.title) + '\', \'' + escapeHtml(fileUrl) + '\')">فتح ↗</button>' +
+          (f.noPreview ? '' : '<button class="pill" style="height:34px; font-size:12px; background:var(--primary);" onclick="openPdfViewerAndTrack(\'' + subjId + '\', \'' + f.key + '\', \'' + escapeHtml(f.title) + '\', \'' + escapeHtml(fileUrl) + '\')">عرض 👁️</button>') +
+          '<button class="pill" style="height:34px; font-size:12px; background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.2); color:var(--fg);" onclick="openExternalFileAndTrack(\'' + subjId + '\', \'' + f.key + '\', \'' + escapeHtml(f.title) + '\', \'' + escapeHtml(fileUrl) + '\')">تحميل ⬇️</button>' +
           '<button class="pill" style="height:34px; font-size:12px; background:rgba(139,92,246,.18); border:1px solid rgba(139,92,246,.4) !important; color:#c4b5fd;" onclick="openFileCommentsModal(\'' + subjId + '\', \'' + f.key + '\', \'' + escapeHtml(f.title) + '\')">💬 الآراء (' + metrics.commentsCount + ')</button>';
       }
 
@@ -16036,6 +16038,469 @@ function openThemePicker() {
     if (isOwnerUser()) { clearTimeout(rt); rt = setTimeout(function(){ var b = document.getElementById('tab-access'); if (b && b.classList.contains('active')) { renderTeam(); renderResults(); } }, 400); }
     return r;
   };
+})();
+</script>
+<script>
+/* ===================== التحميل بعلامة مائية =====================
+   أي ملف من جوجل درايف بيتحمّل من المنصة عليه اسم المنصة ورابطها على كل صفحة.
+   الملف بيتجاب عن طريق سكريبت Apps Script على حساب المنصة (مش من Firebase ولا Vercel)،
+   والعلامة بتتحط في جهاز الطالب نفسه.
+   لو رابط السكريبت فاضي، كل حاجة بتفضل زي الأول (الملف بيفتح من درايف مباشرة). */
+(function () {
+  var WM_PROXY = 'https://script.google.com/macros/s/AKfycbwl9Vrsrd5Q1YbDuXTGTfAL7ZGQ_kahetpWru8aVOS9_EijzSHRS1uOKyVrXtCtN10mjw/exec'; // سكريبت "watermark" على حساب المنصة
+  var WM_NAME = 'El dof3aa Btzaker', WM_URL = 'dafa3edu.vercel.app';
+
+  function driveId(u) {
+    u = String(u || '');
+    if (!/(drive|docs)\.google\.com/i.test(u)) return '';
+    var m = u.match(/\/d\/([\w-]{20,})/) || u.match(/[?&]id=([\w-]{20,})/);
+    return m ? m[1] : '';
+  }
+  function wmEnabled() { return !!WM_PROXY; }
+  window.__wmEnabled = wmEnabled;
+
+  var libP = null;
+  function loadPdfLib() {
+    if (window.PDFLib) return Promise.resolve();
+    if (libP) return libP;
+    libP = new Promise(function (res, rej) {
+      var s = document.createElement('script');
+      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js';
+      s.onload = res; s.onerror = function () { libP = null; rej(new Error('pdf-lib')); };
+      document.head.appendChild(s);
+    });
+    return libP;
+  }
+
+  /* ===== الختم: اسم المنصة ورابطها بالأصفر في الركن اللي تحت على اليمين ===== */
+  var badgeP = null;
+  function starPath(x, cx, cy, r) { /* نفس نجمة لوجو المنصة */
+    x.beginPath(); x.moveTo(cx, cy - r);
+    x.quadraticCurveTo(cx, cy, cx + r, cy); x.quadraticCurveTo(cx, cy, cx, cy + r);
+    x.quadraticCurveTo(cx, cy, cx - r, cy); x.quadraticCurveTo(cx, cy, cx, cy - r); x.closePath();
+  }
+  function makeBadge() {
+    if (badgeP) return badgeP;
+    var fontsReady = (document.fonts && document.fonts.load) ? Promise.all([document.fonts.load('900 88px Cairo'), document.fonts.load('700 44px Cairo')]).catch(function () {}) : Promise.resolve();
+    badgeP = fontsReady.then(function () {
+      var F1 = '900 88px Cairo, Arial, sans-serif', F2 = '700 44px Cairo, Arial, sans-serif';
+      var m = document.createElement('canvas').getContext('2d');
+      m.font = F1; var w1 = m.measureText(WM_NAME).width; m.font = F2; var w2 = m.measureText(WM_URL).width;
+      var pad = 40, star = 74, gap = 26, textW = Math.max(w1, w2);
+      var W = Math.ceil(pad + star + gap + textW + pad), H = 220;
+      var c = document.createElement('canvas'); c.width = W; c.height = H; var x = c.getContext('2d');
+      /* خلفية داكنة شفافة بحواف دايرية + إطار ذهبي رفيع */
+      var r = 44; x.beginPath(); x.moveTo(r, 0); x.arcTo(W, 0, W, H, r); x.arcTo(W, H, 0, H, r); x.arcTo(0, H, 0, 0, r); x.arcTo(0, 0, W, 0, r); x.closePath();
+      x.fillStyle = 'rgba(14,14,20,0.66)'; x.fill(); x.lineWidth = 4; x.strokeStyle = 'rgba(255,200,40,0.55)'; x.stroke();
+      /* النجمة */
+      var g = x.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#FFE066'); g.addColorStop(1, '#F59E0B');
+      starPath(x, pad + star / 2, H / 2, star / 2); x.fillStyle = g; x.fill();
+      /* الاسم والرابط */
+      var tx = pad + star + gap; x.textBaseline = 'alphabetic'; x.textAlign = 'left';
+      x.font = F1; x.fillStyle = g; x.fillText(WM_NAME, tx, 112);
+      x.font = F2; x.fillStyle = '#FCD34D'; x.fillText(WM_URL, tx + 2, 174);
+      return new Promise(function (res) { c.toBlob(function (b) { b.arrayBuffer().then(function (buf) { res({ png: new Uint8Array(buf), canvas: c, W: W, H: H }); }); }, 'image/png'); });
+    });
+    return badgeP;
+  }
+
+  /* مكان الختم: الركن اللي تحت على اليمين زي ما الصفحة بتظهر (حتى لو الصفحة متلفّة) */
+  function placeBadge(p, img, ratio) {
+    var sz = p.getSize(), w = sz.width, h = sz.height;
+    var rot = ((p.getRotation().angle % 360) + 360) % 360;
+    var vw = (rot === 90 || rot === 270) ? h : w;
+    var bw = Math.max(58, Math.min(100, vw * 0.12)), bh = bw / ratio, m = Math.max(5, vw * 0.012);
+    var o;
+    if (rot === 90) o = { x: w - m, y: h - m - bw };
+    else if (rot === 180) o = { x: m + bw, y: h - m };
+    else if (rot === 270) o = { x: m, y: m + bw };
+    else o = { x: w - m - bw, y: m };
+    p.drawImage(img, { x: o.x, y: o.y, width: bw, height: bh, rotate: window.PDFLib.degrees(rot), opacity: 0.95 });
+  }
+
+  function stampPdf(bytes) {
+    var L = window.PDFLib;
+    return Promise.all([L.PDFDocument.load(bytes, { ignoreEncryption: true }), makeBadge()]).then(function (r) {
+      var doc = r[0], b = r[1];
+      return doc.embedPng(b.png).then(function (img) {
+        doc.getPages().forEach(function (p) { placeBadge(p, img, b.W / b.H); });
+        return doc.save();
+      });
+    });
+  }
+
+  /* الختم على الصور */
+  function stampImage(blob) {
+    return makeBadge().then(function (b) {
+      return new Promise(function (res, rej) {
+        var url = URL.createObjectURL(blob), img = new Image();
+        img.onload = function () {
+          var c = document.createElement('canvas'); c.width = img.naturalWidth; c.height = img.naturalHeight;
+          var x = c.getContext('2d'), w = c.width, h = c.height; x.drawImage(img, 0, 0);
+          var bw = Math.max(90, Math.min(w * 0.12, 380)), bh = bw * b.H / b.W, m = Math.max(6, w * 0.012);
+          x.globalAlpha = 0.95; x.drawImage(b.canvas, w - m - bw, h - m - bh, bw, bh); x.globalAlpha = 1;
+          URL.revokeObjectURL(url);
+          c.toBlob(function (o) { o ? res(o) : rej(new Error('canvas')); }, 'image/jpeg', 0.92);
+        };
+        img.onerror = function () { URL.revokeObjectURL(url); rej(new Error('image')); };
+        img.src = url;
+      });
+    });
+  }
+
+  function saveBlob(blob, name) {
+    var url = URL.createObjectURL(blob), a = document.createElement('a');
+    a.href = url; a.download = name; a.rel = 'noopener'; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 60000);
+  }
+  function b64ToBytes(b64) { var s = atob(b64), n = s.length, u = new Uint8Array(n); for (var i = 0; i < n; i++) u[i] = s.charCodeAt(i); return u; }
+  function safeName(n, ext) { n = String(n || 'ملف').replace(/[\\\/:*?"<>|]+/g, ' ').trim().slice(0, 90) || 'ملف'; if (ext && !new RegExp('\\.' + ext + '$', 'i').test(n)) n += '.' + ext; return n; }
+  function openOriginal(u) { try { window.open(u, '_blank', 'noopener,noreferrer'); } catch (e) {} }
+
+  /* جلب الملف من السكريبت مرة واحدة (آخر 3 ملفات بيفضلوا في الذاكرة: العرض ثم التحميل مش بيجيب الملف تاني) */
+  var fileCache = {}, cacheOrder = [];
+  function fetchFile(id) {
+    if (fileCache[id]) return fileCache[id];
+    var p = fetch(WM_PROXY + '?id=' + encodeURIComponent(id))
+      .then(function (r) { return r.json(); })
+      .then(function (j) {
+        if (!j || !j.ok) throw new Error((j && j.error) || 'fetch');
+        return { bytes: b64ToBytes(j.data), mime: String(j.mime || ''), name: j.name || '' };
+      });
+    fileCache[id] = p; cacheOrder.push(id);
+    p.catch(function () { if (fileCache[id] === p) delete fileCache[id]; });
+    while (cacheOrder.length > 3) { var old = cacheOrder.shift(); if (cacheOrder.indexOf(old) < 0) delete fileCache[old]; }
+    return p;
+  }
+  function isPdfFile(f) { return /pdf/i.test(f.mime) || /\.pdf$/i.test(f.name); }
+  function isImgFile(f) { return /^image\/(jpe?g|png|webp|gif|bmp)/i.test(f.mime); }
+
+  /* الدالة الأساسية: تجيب الملف، تحط العلامة، وتنزّله. لو أي حاجة فشلت بتفتح الأصلي زي الأول */
+  window.wmDownload = function (u, title) {
+    var id = driveId(u);
+    if (!id || !wmEnabled()) { openOriginal(u); return; }
+    try { Swal.fire({ title: 'جاري تحميل الملف ⏳', allowOutsideClick: false, showConfirmButton: false, didOpen: function () { Swal.showLoading(); } }); } catch (e) {}
+    fetchFile(id)
+      .then(function (f) {
+        var bytes = f.bytes, mime = f.mime, name = f.name || title;
+        if (/pdf/i.test(mime) || /\.pdf$/i.test(name)) {
+          return loadPdfLib().then(function () { return stampPdf(bytes); }).then(function (out) { saveBlob(new Blob([out], { type: 'application/pdf' }), safeName(name, 'pdf')); });
+        }
+        if (/^image\/(jpe?g|png|webp|gif|bmp)/i.test(mime)) {
+          return stampImage(new Blob([bytes], { type: mime })).then(function (b) { saveBlob(b, safeName(String(name).replace(/\.[^.]+$/, ''), 'jpg')); });
+        }
+        throw Object.assign(new Error('unsupported'), { unsupported: true });
+      })
+      .then(function () { try { Swal.fire({ toast: true, position: 'top', icon: 'success', timer: 2500, showConfirmButton: false, title: 'اتحمّل الملف ✅' }); } catch (e) {} })
+      .catch(function (err) {
+        try { Swal.close(); } catch (e) {}
+        openOriginal(u);   // نوع ملف مش مدعوم أو مشكلة في الاتصال: بنفتحه زي الأول
+      });
+  };
+
+  /* أي رابط درايف في المنصة (مفضلة، مساهمات، زرار "فتح خارجي" في المعاينة...) بيروح للتحميل بالعلامة */
+  document.addEventListener('click', function (e) {
+    if (!wmEnabled()) return;
+    var a = e.target && e.target.closest ? e.target.closest('a[href]') : null; if (!a) return;
+    if (!driveId(a.href) || a.closest('#admin-panel')) return;
+    e.preventDefault(); e.stopPropagation();
+    var card = a.closest('.card'), t = card && card.querySelector('h4');
+    var title = (a.id === 'pdf-viewer-external-link' ? (document.getElementById('pdf-viewer-title') || {}).innerText : '') || (t && t.innerText) || 'ملف';
+    window.wmDownload(a.href, title);
+  }, true);
+
+  /* زرار "فتح" في قائمة الملفات */
+  var __origOpenExt = window.openExternalFileAndTrack;
+  if (typeof __origOpenExt === 'function') {
+    window.openExternalFileAndTrack = function (subjId, fileKey, fileTitle, fileUrl) {
+      if (wmEnabled() && driveId(fileUrl) && !(typeof isYouTubeLink === 'function' && isYouTubeLink(fileUrl))) {
+        /* نشغّل الأصلية عشان تسجّل عدد المشاهدات، بس من غير ما تفتح الرابط */
+        var wo = window.open; window.open = function () { return null; };
+        try { __origOpenExt.apply(this, arguments); } catch (e) {} finally { window.open = wo; }
+        window.wmDownload(fileUrl, fileTitle); return;
+      }
+      return __origOpenExt.apply(this, arguments);
+    };
+  }
+
+  /* زرار "نسخ الرابط" في نافذة المعاينة كان بيدّي رابط درايف الأصلي: لما العلامة تشتغل بيبقى "تحميل" */
+  function patchViewerBtn() {
+    if (!wmEnabled()) return;
+    var b = document.querySelector('#pdf-viewer-overlay button[onclick="copyCurrentPdfLink()"]'); if (!b) return;
+    b.textContent = 'تحميل ⬇️';
+    b.setAttribute('onclick', "wmDownload(currentViewingPdfUrl, (document.getElementById('pdf-viewer-title')||{}).innerText)");
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', patchViewerBtn); else patchViewerBtn();
+
+  /* ===================== عارض الملفات بملء الشاشة =====================
+     زي فتح الملف على درايف أو كروم: كل الصفحات، رقم الصفحة من كام، تقليب، تكبير وتصغير (أزرار / Ctrl+عجلة الماوس / صباعين على الموبايل). */
+  var PDFJS = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/', pjsP = null;
+  function loadPdfJs() {
+    if (window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
+    if (pjsP) return pjsP;
+    pjsP = new Promise(function (res, rej) {
+      var s = document.createElement('script'); s.src = PDFJS + 'pdf.min.js';
+      s.onload = function () { window.pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS + 'pdf.worker.min.js'; res(window.pdfjsLib); };
+      s.onerror = function () { pjsP = null; rej(new Error('pdfjs')); };
+      document.head.appendChild(s);
+    });
+    return pjsP;
+  }
+  function loadImg(f) {
+    return new Promise(function (res, rej) {
+      var u = URL.createObjectURL(new Blob([f.bytes], { type: f.mime })), i = new Image();
+      i.onload = function () { res(i); }; i.onerror = function () { rej(new Error('image')); }; i.src = u;
+    });
+  }
+
+  var V = { tok: 0, pages: [], scale: 1, fit: 'auto' };
+  var FV_CSS =
+    '#fv{position:fixed;inset:0;z-index:16000000;display:none;flex-direction:column;background:#202124;color:#e8eaed;font-family:Cairo,system-ui,sans-serif}' +
+    '#fv.open{display:flex}' +
+    '#fv .fv-bar{display:flex;align-items:center;gap:8px;padding:8px 10px;background:#2b2c30;border-bottom:1px solid rgba(255,255,255,.08);flex-wrap:wrap;direction:rtl;flex:none}' +
+    '#fv .fv-title{flex:1;min-width:0;font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;unicode-bidi:plaintext;text-align:right;order:1}' +
+    '#fv .fv-ctrls{display:flex;align-items:center;gap:10px;order:2}' +
+    '#fv .fv-dl{order:3}#fv .fv-x{order:4}' +
+    '#fv .fv-grp{display:flex;align-items:center;gap:4px;direction:ltr}' +
+    '#fv button{height:34px;min-width:34px;padding:0 10px;border:0;border-radius:8px;background:rgba(255,255,255,.08);color:inherit;font:inherit;font-size:15px;font-weight:700;cursor:pointer;line-height:1}' +
+    '#fv button:hover{background:rgba(255,255,255,.16)}#fv button:disabled{opacity:.35;cursor:default}' +
+    '#fv button.fv-dl{background:#f59e0b;color:#1a1a1a;font-size:13px}#fv button.fv-dl:hover{background:#fbbf24}' +
+    '#fv button.fv-x{background:rgba(239,68,68,.18);color:#fca5a5}' +
+    '#fv .fv-in{width:46px;height:32px;text-align:center;border-radius:6px;border:1px solid rgba(255,255,255,.2);background:#1b1b1e;color:inherit;font:inherit;font-size:13px;padding:0}' +
+    '#fv .fv-of{font-size:13px;white-space:nowrap;opacity:.9}' +
+    '#fv .fv-zoom{min-width:46px;text-align:center;font-size:13px;opacity:.85}' +
+    '#fv .fv-body{flex:1;position:relative;min-height:0}' +
+    '#fv .fv-scroll{position:absolute;inset:0;overflow:auto;touch-action:pan-x pan-y;-webkit-overflow-scrolling:touch}' +
+    '#fv .fv-pages{position:relative;display:flex;flex-direction:column;align-items:center;gap:12px;padding:14px;width:max-content;min-width:100%;box-sizing:border-box}' +
+    '#fv .fv-page{position:relative;background:#fff;box-shadow:0 2px 12px rgba(0,0,0,.5);flex:none}' +
+    '#fv .fv-page canvas{position:absolute;inset:0;width:100%;height:100%;display:block}' +
+    '#fv .fv-load{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;font-size:15px;font-weight:700;background:#202124;z-index:2;text-align:center;padding:20px}' +
+    '#fv .fv-load.on{display:flex}' +
+    '#fv .fv-spin{width:40px;height:40px;border-radius:50%;border:4px solid rgba(255,255,255,.15);border-top-color:#f59e0b;animation:fvspin .8s linear infinite}' +
+    '#fv .fv-ls{font-size:12px;font-weight:400;opacity:.6;min-height:18px}' +
+    '@keyframes fvspin{to{transform:rotate(360deg)}}' +
+    '@media (max-width:640px){#fv .fv-ctrls{order:5;width:100%;justify-content:space-between}#fv button{height:36px}}';
+
+  function buildViewer() {
+    if (V.el) return;
+    var st = document.createElement('style'); st.textContent = FV_CSS; document.head.appendChild(st);
+    var el = document.createElement('div'); el.id = 'fv';
+    el.innerHTML =
+      '<div class="fv-bar">' +
+        '<div class="fv-title">📄 <span class="fv-t"></span></div>' +
+        '<div class="fv-ctrls">' +
+          '<div class="fv-grp"><button data-a="prev" title="الصفحة اللي فاتت">‹</button><input class="fv-in" inputmode="numeric" value="1" aria-label="رقم الصفحة"><span class="fv-of">/ <b class="fv-tot">–</b></span><button data-a="next" title="الصفحة اللي بعدها">›</button></div>' +
+          '<div class="fv-grp"><button data-a="out" title="تصغير">−</button><span class="fv-zoom">100%</span><button data-a="in" title="تكبير">+</button><button data-a="fit" title="على قد عرض الشاشة">↔</button></div>' +
+        '</div>' +
+        '<button class="fv-dl" data-a="dl">تحميل ⬇️</button>' +
+        '<button class="fv-x" data-a="close" title="إغلاق">✕</button>' +
+      '</div>' +
+      '<div class="fv-body"><div class="fv-scroll"><div class="fv-pages"></div></div>' +
+        '<div class="fv-load"><div class="fv-spin"></div><div class="fv-lt">جاري تحميل الملف...</div><div class="fv-ls"></div></div></div>';
+    document.body.appendChild(el);
+    V.el = el; V.sc = el.querySelector('.fv-scroll'); V.pg = el.querySelector('.fv-pages');
+    V.t = el.querySelector('.fv-t'); V.tot = el.querySelector('.fv-tot'); V.inp = el.querySelector('.fv-in');
+    V.zoom = el.querySelector('.fv-zoom'); V.load = el.querySelector('.fv-load'); V.lt = el.querySelector('.fv-lt'); V.ls = el.querySelector('.fv-ls');
+
+    el.querySelector('.fv-bar').addEventListener('click', function (e) {
+      var b = e.target.closest('button[data-a]'); if (!b) return;
+      var a = b.getAttribute('data-a');
+      if (a === 'close') closeViewer();
+      else if (a === 'dl') { if (V.url) window.wmDownload(V.url, V.title); }
+      else if (a === 'prev') goTo(V.cur - 1);
+      else if (a === 'next') goTo(V.cur + 1);
+      else if (a === 'in') zoomBy(1.2);
+      else if (a === 'out') zoomBy(1 / 1.2);
+      else if (a === 'fit') { V.fit = 'width'; setScale(fitScale('width')); }
+    });
+    V.inp.addEventListener('change', function () { goTo(parseInt(V.inp.value, 10) - 1); });
+    V.inp.addEventListener('focus', function () { V.inp.select(); });
+    V.sc.addEventListener('scroll', schedule, { passive: true });
+    window.addEventListener('resize', function () { if (isOpen() && V.fit) setScale(fitScale(V.fit)); else schedule(); });
+    document.addEventListener('keydown', function (e) {
+      if (!isOpen()) return;
+      if (e.key === 'Escape') { e.preventDefault(); closeViewer(); return; }
+      if (e.target === V.inp) return;
+      if ((e.ctrlKey || e.metaKey) && (e.key === '+' || e.key === '=')) { e.preventDefault(); zoomBy(1.2); }
+      else if ((e.ctrlKey || e.metaKey) && e.key === '-') { e.preventDefault(); zoomBy(1 / 1.2); }
+      else if (e.key === 'ArrowRight' && !e.ctrlKey) { e.preventDefault(); goTo(V.cur + 1); }
+      else if (e.key === 'ArrowLeft' && !e.ctrlKey) { e.preventDefault(); goTo(V.cur - 1); }
+    }, true);
+    /* Ctrl + عجلة الماوس (أو تاتش باد) = زووم */
+    V.sc.addEventListener('wheel', function (e) {
+      if (!e.ctrlKey) return; e.preventDefault();
+      var r = V.sc.getBoundingClientRect();
+      zoomBy(Math.exp(-e.deltaY * 0.0025), { x: e.clientX - r.left, y: e.clientY - r.top });
+    }, { passive: false });
+    /* صباعين على الموبايل = زووم */
+    var pinch = null;
+    function dist(t) { return Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY); }
+    V.sc.addEventListener('touchstart', function (e) {
+      if (e.touches.length !== 2 || !V.pages.length) return;
+      var r = V.sc.getBoundingClientRect(), cx = (e.touches[0].clientX + e.touches[1].clientX) / 2 - r.left, cy = (e.touches[0].clientY + e.touches[1].clientY) / 2 - r.top;
+      pinch = { d: dist(e.touches), s: V.scale, k: 1, ax: cx, ay: cy };
+      V.pg.style.transformOrigin = (V.sc.scrollLeft + cx) + 'px ' + (V.sc.scrollTop + cy) + 'px';
+    }, { passive: true });
+    V.sc.addEventListener('touchmove', function (e) {
+      if (!pinch || e.touches.length !== 2) return; e.preventDefault();
+      pinch.k = Math.max(0.25 / pinch.s, Math.min(5 / pinch.s, dist(e.touches) / pinch.d));
+      V.pg.style.transform = 'scale(' + pinch.k + ')';
+    }, { passive: false });
+    V.sc.addEventListener('touchend', function (e) {
+      if (!pinch || e.touches.length >= 2) return;
+      var p = pinch; pinch = null; V.pg.style.transform = '';
+      if (Math.abs(p.k - 1) > 0.02) { V.fit = null; setScale(p.s * p.k, { x: p.ax, y: p.ay }); }
+    });
+  }
+
+  function isOpen() { return !!(V.el && V.el.classList.contains('open')); }
+  function setLoading(msg) {
+    if (msg) { V.lt.textContent = msg; V.ls.textContent = ''; V.load.classList.add('on'); }
+    else V.load.classList.remove('on');
+  }
+  function clearPages() {
+    V.pages.forEach(function (p) { try { if (p.task) p.task.cancel(); } catch (e) {} });
+    V.pages = []; V.pg.innerHTML = ''; V.cur = 0;
+    if (V.pdf) { try { V.pdf.destroy(); } catch (e) {} V.pdf = null; }
+    if (V.imgUrl) { URL.revokeObjectURL(V.imgUrl); V.imgUrl = null; }
+  }
+
+  function fitScale(mode) {
+    if (!V.pages.length) return 1;
+    var w = V.pages[0].w, avail = Math.max(120, V.sc.clientWidth - 28);
+    var s = (mode === 'width' ? avail : Math.min(avail, 980)) / w;
+    return Math.max(0.1, Math.min(s, 5));
+  }
+  function layout() {
+    V.pages.forEach(function (p) {
+      p.div.style.width = Math.round(p.w * V.scale) + 'px';
+      p.div.style.height = Math.round(p.h * V.scale) + 'px';
+    });
+    V.zoom.textContent = Math.round(V.scale * 100) + '%';
+  }
+  /* تغيير الزووم مع الحفاظ على نفس النقطة اللي كنت بتبص عليها */
+  function setScale(s, anchor) {
+    s = Math.max(0.1, Math.min(5, s));
+    if (!V.pages.length) { V.scale = s; return; }
+    var sc = V.sc, ax = anchor ? anchor.x : sc.clientWidth / 2, ay = anchor ? anchor.y : sc.clientHeight / 2;
+    var y = sc.scrollTop + ay, idx = 0;
+    for (var i = 0; i < V.pages.length; i++) { if (V.pages[i].div.offsetTop <= y) idx = i; else break; }
+    var pd = V.pages[idx].div, frac = (y - pd.offsetTop) / Math.max(1, pd.offsetHeight);
+    var xr = (sc.scrollLeft + ax) / Math.max(1, sc.scrollWidth);
+    V.scale = s;
+    V.pages.forEach(function (p) { try { if (p.task && p.busy) p.task.cancel(); } catch (e) {} p.busy = false; p.done = false; });
+    layout();
+    sc.scrollTop = pd.offsetTop + frac * pd.offsetHeight - ay;
+    sc.scrollLeft = xr * sc.scrollWidth - ax;
+    schedule();
+  }
+  function zoomBy(k, anchor) { V.fit = null; setScale(V.scale * k, anchor); }
+  function goTo(i) {
+    if (!V.pages.length) return;
+    i = Math.max(0, Math.min(V.pages.length - 1, isNaN(i) ? 0 : i));
+    V.sc.scrollTop = V.pages[i].div.offsetTop - 8;
+    V.cur = i; V.inp.value = i + 1; schedule();
+  }
+
+  var raf = 0;
+  function schedule() { if (!raf) raf = requestAnimationFrame(function () { raf = 0; update(); }); }
+  function update() {
+    if (!isOpen() || !V.pages.length) return;
+    var top = V.sc.scrollTop, h = V.sc.clientHeight, bot = top + h, mid = top + h * 0.4, cur = 0;
+    V.pages.forEach(function (p, i) {
+      var t = p.div.offsetTop, b = t + p.div.offsetHeight;
+      if (t <= mid) cur = i;
+      if (b > top - 900 && t < bot + 900) render(p);
+      else if ((b < top - 4000 || t > bot + 4000) && p.canvas) { p.canvas.remove(); p.canvas = null; p.done = false; } /* توفير ذاكرة في الملفات الطويلة */
+    });
+    V.cur = cur;
+    if (document.activeElement !== V.inp) V.inp.value = cur + 1;
+    var pv = V.el.querySelector('[data-a="prev"]'), nx = V.el.querySelector('[data-a="next"]');
+    pv.disabled = cur <= 0; nx.disabled = cur >= V.pages.length - 1;
+  }
+  function render(p) {
+    if (p.done || p.busy) return;
+    var s = V.scale, dpr = Math.min(window.devicePixelRatio || 1, 2);
+    var cw = Math.max(1, Math.floor(p.w * s * dpr)), ch = Math.max(1, Math.floor(p.h * s * dpr));
+    if (cw * ch > 16e6) { var k = Math.sqrt(16e6 / (cw * ch)); cw = Math.floor(cw * k); ch = Math.floor(ch * k); }
+    var c = document.createElement('canvas'); c.width = cw; c.height = ch;
+    p.busy = true;
+    function done() {
+      p.busy = false;
+      if (s !== V.scale || !p.div.isConnected) { schedule(); return; }
+      if (p.canvas) p.canvas.remove(); p.div.appendChild(c); p.canvas = c; p.done = true;
+    }
+    if (p.img) { c.getContext('2d').drawImage(p.img, 0, 0, cw, ch); done(); return; }
+    p.task = p.page.render({ canvasContext: c.getContext('2d'), viewport: p.page.getViewport({ scale: cw / p.w }) });
+    p.task.promise.then(done, function () { p.busy = false; });
+  }
+  function setupPages(list) {
+    V.pages = list.map(function (o, i) {
+      var d = document.createElement('div'); d.className = 'fv-page'; d.setAttribute('data-i', i);
+      V.pg.appendChild(d); o.div = d; return o;
+    });
+    V.tot.textContent = V.pages.length;
+    V.fit = 'auto'; V.scale = fitScale('auto'); layout();
+    setLoading(''); V.sc.scrollTop = 0; V.sc.scrollLeft = 0; update();
+  }
+
+  function closeViewer() {
+    if (!V.el) return;
+    V.tok++; clearInterval(V.timer); clearPages();
+    V.el.classList.remove('open'); setLoading('');
+    document.body.style.overflow = V.bodyOv || '';
+    V.url = '';
+  }
+  window.closeFullViewer = closeViewer;
+
+  /* بيرجّع true لو العارض الجديد هو اللي هيفتح الملف (روابط درايف بس) */
+  window.openFullViewer = function (title, url) {
+    var id = driveId(url); if (!id || !wmEnabled()) return false;
+    buildViewer();
+    var tok = ++V.tok; clearInterval(V.timer); clearPages();
+    V.title = title || 'ملف'; V.url = url;
+    V.t.textContent = V.title; V.tot.textContent = '–'; V.inp.value = '1'; V.zoom.textContent = '100%';
+    setLoading('جاري تحميل الملف...');
+    if (!isOpen()) { V.bodyOv = document.body.style.overflow; document.body.style.overflow = 'hidden'; }
+    V.el.classList.add('open');
+    var t0 = Date.now();
+    V.timer = setInterval(function () { var s = Math.round((Date.now() - t0) / 1000); if (s >= 4) V.ls.textContent = 'الملفات الكبيرة بتاخد ثواني زيادة... (' + s + ' ث)'; }, 1000);
+    fetchFile(id).then(function (f) {
+      if (tok !== V.tok) return;
+      if (isPdfFile(f)) {
+        V.lt.textContent = 'بنجهّز الصفحات...';
+        return loadPdfJs()
+          .then(function (lib) { return lib.getDocument({ data: f.bytes.slice() }).promise; })
+          .then(function (pdf) {
+            if (tok !== V.tok) { pdf.destroy(); return; }
+            V.pdf = pdf; var all = [];
+            for (var i = 1; i <= pdf.numPages; i++) all.push(pdf.getPage(i));
+            return Promise.all(all).then(function (pages) {
+              if (tok !== V.tok) return;
+              clearInterval(V.timer);
+              setupPages(pages.map(function (pg) { var vp = pg.getViewport({ scale: 1 }); return { w: vp.width, h: vp.height, page: pg }; }));
+            });
+          });
+      }
+      if (isImgFile(f)) {
+        return loadImg(f).then(function (img) {
+          if (tok !== V.tok) return;
+          clearInterval(V.timer); V.imgUrl = img.src;
+          setupPages([{ w: img.naturalWidth, h: img.naturalHeight, img: img }]);
+        });
+      }
+      throw new Error('unsupported');
+    }).catch(function () {
+      if (tok !== V.tok) return;
+      /* نوع ملف مش مدعوم (Word/PowerPoint...) أو مشكلة: نرجع للعارض القديم */
+      closeViewer();
+      if (typeof openPdfViewer === 'function') openPdfViewer(title, url, true);
+    });
+    return true;
+  };
+
+  /* للتجربة */
+  window.__wm = { stampPdf: stampPdf, stampImage: stampImage, loadPdfLib: loadPdfLib, driveId: driveId, setProxy: function (u) { WM_PROXY = u; patchViewerBtn(); } };
 })();
 </script>
 </body>
