@@ -4915,7 +4915,7 @@ body[class*="theme-"] .mob-nav-item.active{color:var(--primary)!important}
                 <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
                   <button class="pill" id="students-collapse-btn" type="button" style="background: rgba(59,130,246,.18); border:1px solid rgba(59,130,246,.4); color:#60a5fa; font-size: 12px;" onclick="toggleStudentsList()">▼ عرض القائمة</button>
                   <button class="pill" style="background: #10b981; font-size: 12px;" onclick="exportStudentsCSV()">📥 تصدير Excel</button>
-                  <button class="pill" id="users-refresh-btn" type="button" style="background: rgba(59,130,246,.18); border:1px solid rgba(59,130,246,.4); color:#60a5fa; font-size: 12px;" onclick="refreshUsersNow()">🔄 تحديث الآن</button>
+                  <button class="pill" id="users-refresh-btn" type="button" style="background: rgba(59,130,246,.18); border:1px solid rgba(59,130,246,.4); color:#60a5fa; font-size: 12px;" onclick="refreshUsersNow(); try { if (window.refreshFileStatsNow) refreshFileStatsNow(); } catch (e) {}">🔄 تحديث الآن</button>
                   <button class="pill" id="users-live-btn" type="button" style="font-size: 12px;" onclick="toggleUsersLive()">⚪ تحديث لحظي: متوقف</button>
                 </div>
              </div>
@@ -6083,6 +6083,26 @@ body[class*="theme-"] .mob-nav-item.active{color:var(--primary)!important}
     if (FB_OK) { if (!FB.apps.length) FB.initializeApp(firebaseConfig); }
     const auth = FB_OK ? FB.auth() : makeStub();
     const database = FB_OK ? FB.database() : makeStub();
+    /* أي كتابة على users/<uid> (من لوحة الإدارة) بتعلّم الطالب ده عشان يتحدّث لوحده في القائمة المحفوظة */
+    (function hookUserWrites() {
+      if (!FB_OK) return;
+      try {
+        const P = FB.database.Reference.prototype; if (!P || P.__uwHooked) return; P.__uwHooked = true;
+        const pathOf = (r) => { try { return decodeURIComponent(new URL(r.toString()).pathname).replace(/^\/+|\/+$/g, ''); } catch (e) { return ''; } };
+        const note = (p) => { const m = /^users\/([^/]+)/.exec(p); if (m && window.__markUserDirty) window.__markUserDirty(m[1]); };
+        ['set', 'update', 'remove', 'transaction'].forEach(fn => {
+          const o = P[fn]; if (typeof o !== 'function') return;
+          P[fn] = function (a) {
+            try {
+              const base = pathOf(this);
+              if (fn === 'update' && a && typeof a === 'object') Object.keys(a).forEach(k => note((base ? base + '/' : '') + String(k).replace(/^\/+/, '')));
+              else note(base);
+            } catch (e) {}
+            return o.apply(this, arguments);
+          };
+        });
+      } catch (e) {}
+    })();
 
     /* ===== توفير اتصالات Firebase: فصل الاتصال تلقائيًا للطالب الخامل ===== */
     var __offline = false, __idleT = null, __lastWake = 0, IDLE_MS = 20000, HIDDEN_MS = 8000;
@@ -6710,17 +6730,57 @@ ${escText(alertBody)}
         b.style.border = window.__usersLive ? '1px solid rgba(16,185,129,.6)' : '1px solid rgba(255,255,255,.2)';
         b.style.color = window.__usersLive ? '#34d399' : 'inherit';
       };
+      /* توفير: القائمة (حوالي 2.5MB لأن فيها سجل حل كل طالب) بتتحفظ على جهاز الأدمن.
+         لما تفتح اللوحة بتظهر من الجهاز فوراً، وبتتحمّل من السيرفر بس لو عدّى عليها أكتر من نص ساعة أو لما تدوس "تحديث الآن".
+         وبعد أي إجراء على طالب بيتحدّث الطالب ده بس (كام كيلوبايت) مش القائمة كلها. */
+      const CK = 'admin_users_cache', MAXAGE = 30 * 60 * 1000;
+      let lastAt = 0, busy = false;
+      const ago = (t) => { const m = Math.round((Date.now() - t) / 60000); return m < 1 ? 'دلوقتي' : (m < 60 ? 'من ' + m + ' دقيقة' : 'من ' + Math.round(m / 60) + ' ساعة'); };
+      const paintAge = () => { const rb = document.getElementById('users-refresh-btn'); if (rb && !busy) rb.textContent = '🔄 تحديث الآن' + (lastAt ? ' (آخر تحديث ' + ago(lastAt) + ')' : ''); };
+      if (!window.__usersAgeT) window.__usersAgeT = setInterval(() => { try { paintAge(); } catch (e) {} }, 60000);
+      const cacheGet = () => (window.__cacheGet ? window.__cacheGet(CK) : Promise.resolve(null)).catch(() => null);
+      const cacheSet = (v) => { try { if (window.__cacheSet) window.__cacheSet(CK, v); } catch (e) {} };
       window.refreshUsersNow = () => {
-        const rb = document.getElementById('users-refresh-btn'); if (rb) rb.textContent = '⏳ جاري التحديث...';
-        return ref.once('value').then(handle).catch(e => console.error('users:', e))
-          .then(() => { if (rb) rb.textContent = '🔄 تحديث الآن'; });
+        const rb = document.getElementById('users-refresh-btn'); busy = true; if (rb) rb.textContent = '⏳ جاري التحديث...';
+        return ref.once('value').then(s => { handle(s); lastAt = Date.now(); cacheSet({ at: lastAt, data: s.val() || {} }); }).catch(e => console.error('users:', e))
+          .then(() => { busy = false; paintAge(); });
+      };
+      window.__loadUsersCachedOrFresh = () => cacheGet().then(c => {
+        if (c && c.data && c.at) {
+          handle({ val: () => c.data }); lastAt = c.at; paintAge();
+          if (Date.now() - c.at > MAXAGE) return window.refreshUsersNow();
+          return;
+        }
+        return window.refreshUsersNow();
+      });
+      /* تحديث طلبة معيّنين بس (بعد ما الأدمن يعدّل عليهم) */
+      const dirty = new Set(); let dirtyT = null;
+      window.__markUserDirty = (uid) => {
+        if (!uid || window.__usersLive || !allUsersList.length || (currentUser && uid === currentUser.uid)) return;
+        dirty.add(uid); clearTimeout(dirtyT); dirtyT = setTimeout(flushDirty, 1500);
+      };
+      const flushDirty = () => {
+        const ids = [...dirty]; dirty.clear(); if (!ids.length) return;
+        if (ids.length > 25) { window.refreshUsersNow(); return; }   // تعديل جماعي (زي تصفير النقاط): أرخص نحمّل القائمة مرة واحدة
+        Promise.all(ids.map(uid => database.ref('users/' + uid).once('value').then(s => [uid, s.val()]).catch(() => null))).then(rows => {
+          rows.forEach(r => {
+            if (!r) return; const [uid, v] = r; const i = allUsersList.findIndex(u => u.uid === uid);
+            if (!v) { if (i >= 0) allUsersList.splice(i, 1); return; }
+            const obj = { uid, ...v, ...(v.isOwner === true ? { isAdmin: true } : {}), level: (parseInt(v.homeLevel, 10) || PLATFORM_LEVEL) };
+            if (i >= 0) allUsersList[i] = obj; else allUsersList.push(obj);
+          });
+          allUsersList.sort((a, b) => (b.score || 0) - (a.score || 0));
+          clearTimeout(window.__usersRenderT);
+          window.__usersRenderT = setTimeout(() => { try { renderAdminResearchTable(); } catch (e) {} updateDashboardStats(); renderStudentsTable(); }, 200);
+          cacheGet().then(c => { if (!c || !c.data) return; rows.forEach(r => { if (!r) return; if (r[1]) c.data[r[0]] = r[1]; else delete c.data[r[0]]; }); cacheSet(c); });
+        });
       };
       window.setUsersLive = (on, save) => {
         if (on && !canLive()) on = false;
         window.__usersLive = !!on;
         if (save !== false) { try { localStorage.setItem(KEY, on ? '1' : '0'); } catch (e) {} }
         try { ref.off('value', handle); } catch (e) {}
-        if (on) ref.on('value', handle); else window.refreshUsersNow();
+        if (on) ref.on('value', handle); else window.__loadUsersCachedOrFresh();
         paint();
       };
       window.toggleUsersLive = () => {
@@ -6733,16 +6793,8 @@ ${escText(alertBody)}
         else if (!window.__usersLive && canLive() && wanted()) window.setUsersLive(true, false);
         else paint();
       };
-      /* في الوضع اليدوي: بعد أي إجراء أدمن (حظر/نقاط/تعديل...) نحدّث القائمة تلقائياً */
-      if (!window.__laWrapped && typeof window.logAdminAction === 'function') {
-        window.__laWrapped = true;
-        const orig = window.logAdminAction;
-        window.logAdminAction = function () {
-          const r = orig.apply(this, arguments);
-          if (!window.__usersLive) { clearTimeout(window.__usersAutoT); window.__usersAutoT = setTimeout(() => { try { window.refreshUsersNow(); } catch (e) {} }, 1500); }
-          return r;
-        };
-      }
+      /* قبل كده: بعد أي إجراء أدمن (حتى إضافة سؤال أو ملف) كانت القائمة كلها (2.5MB) بتتحمّل من الأول.
+         دلوقتي: أي كتابة على users/<uid> بتعلّم الطالب ده بس وبيتحدّث لوحده (شوف __markUserDirty و hookUserWrites). */
       window.setUsersLive(canLive() && wanted(), false);
       paint();
     }
@@ -7103,7 +7155,12 @@ ${escText(alertBody)}
     function logoutStudent() {
       if (heartbeatInterval) { clearInterval(heartbeatInterval); heartbeatInterval = null; }
       presenceInitialized = false;
-      const done = () => { try { localStorage.removeItem('last_user_name'); } catch (e) {} auth.signOut(); };
+      const done = () => {
+        try { localStorage.removeItem('last_user_name'); } catch (e) {}
+        /* بيانات الطلبة المحفوظة على جهاز الأدمن بتتمسح مع الخروج (لو جهاز مشترك) */
+        try { if (window.__cacheDel) { window.__cacheDel('admin_users_cache'); window.__cacheDel('admin_file_stats'); } } catch (e) {}
+        auth.signOut();
+      };
       if (currentUser) {
         ensureOnline();
         withTimeout(Promise.all([ database.ref('users/' + currentUser.uid + '/lastSeen').set(FB.database.ServerValue.TIMESTAMP), database.ref('online_users/' + currentUser.uid).remove() ]), 4000).then(done, done);
@@ -14828,6 +14885,12 @@ function openThemePicker() {
     }
   }).catch(function() {});
 
+  // تخزين عام على الجهاز (بيستخدمه الأدمن لحفظ قائمة الطلبة وإحصائيات الملفات) — منفصل لكل مستوى
+  window.__cacheGet = function(k) { return __IDB.get(k); };
+  window.__cacheSet = function(k, v) { return __IDB.set(k, v); };
+  window.__cacheDel = function(k) {
+    return __IDB.open().then(function(d) { return new Promise(function(res) { var t = d.transaction('kv', 'readwrite'); t.objectStore('kv').delete(k); t.oncomplete = function() { res(true); }; t.onerror = function() { res(false); }; }); }).catch(function() { return false; });
+  };
   // حفظ فوري (بيستخدمه listenToSubjects قبل ما يسجّل رقم النسخة)
   window.__saveSubjectsNow = function() {
     try { if (window.__subjectsRaw && Object.keys(window.__subjectsRaw).length > 0) return __IDB.set('subjects_raw', window.__subjectsRaw); } catch (e) {}
@@ -14889,11 +14952,20 @@ function openThemePicker() {
     __fileFullMode = true;
     Object.keys(__fileSubjRefs).forEach(function(k) { try { __fileSubjRefs[k].s.off(); __fileSubjRefs[k].c.off(); } catch (e) {} });
     __fileSubjRefs = {};
+    /* توفير: إحصائيات كل الملفات (مين فتح إيه، حوالي 0.6MB) بتتحفظ على جهاز الأدمن وبتتحدّث بس كل نص ساعة
+       أو مع زرار "تحديث الآن"، بدل اتصال حي بيتحمّل كامل مع كل فتحة للوحة */
     try {
-      database.ref('file_stats').on('value', function(snap) {
-        window.fileStatsMap = snap.val() || {};
-        refreshVisibleFilesUI();
-      }, function(err) { console.error('file_stats:', err); });
+      var FSK = 'admin_file_stats', applyFS = function(v) { window.fileStatsMap = v || {}; refreshVisibleFilesUI(); };
+      window.refreshFileStatsNow = function() {
+        return database.ref('file_stats').once('value').then(function(snap) {
+          var v = snap.val() || {}; applyFS(v);
+          try { if (window.__cacheSet) window.__cacheSet(FSK, { at: Date.now(), data: v }); } catch (e) {}
+        }).catch(function(err) { console.error('file_stats:', err); });
+      };
+      (window.__cacheGet ? window.__cacheGet(FSK) : Promise.resolve(null)).then(function(c) {
+        if (c && c.data) applyFS(c.data);
+        if (!c || !c.at || Date.now() - c.at > 30 * 60 * 1000) window.refreshFileStatsNow();
+      }).catch(function() { window.refreshFileStatsNow(); });
     } catch (e) {}
     try {
       database.ref('file_comments').on('value', function(snap) {
