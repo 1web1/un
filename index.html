@@ -6244,7 +6244,12 @@ body[class*="theme-"] .mob-nav-item.active{color:var(--primary)!important}
     }
     function _seenNow(e) { if (!currentUser) return; if (e && e.type === 'visibilitychange' && document.visibilityState !== 'hidden') return; database.ref('users/' + currentUser.uid + '/lastSeen').set(FB.database.ServerValue.TIMESTAMP); }
     function syncLeaderboard(uid, d) { if (!d || d.isBanned) return; const sig = d.name + '|' + (d.score || 0) + '|' + PLATFORM_LEVEL; if (sig === leaderboardSynced) return; leaderboardSynced = sig; database.ref('leaderboard/' + uid).update({ name: d.name, score: d.score || 0, level: PLATFORM_LEVEL }); }
-    function listenToLeaderboard() { lbQuery = database.ref('leaderboard').orderByChild('score').limitToLast(60); lbQuery.on('value', snap => { const a = []; snap.forEach(c => { if (c.val() && c.val().name) a.push({ uid: c.key, ...c.val(), level: PLATFORM_LEVEL }); }); a.sort((x, y) => (y.score || 0) - (x.score || 0)); window._lastLeaderboardRaw = a; renderLeaderboard(a); }); }
+    function listenToLeaderboard() {
+      /* لوحة الشرف بتظهر فوراً من آخر نسخة على الجهاز، وبعدين بتتحدّث من السيرفر */
+      try { const c = JSON.parse(localStorage.getItem('lb_cache') || 'null'); if (Array.isArray(c) && c.length && !window._lastLeaderboardRaw) { window._lastLeaderboardRaw = c; renderLeaderboard(c); try { if (window.refreshStudentHeroStats) window.refreshStudentHeroStats(); } catch (e) {} } } catch (e) {}
+      lbQuery = database.ref('leaderboard').orderByChild('score').limitToLast(60);
+      lbQuery.on('value', snap => { const a = []; snap.forEach(c => { if (c.val() && c.val().name) a.push({ uid: c.key, ...c.val(), level: PLATFORM_LEVEL }); }); a.sort((x, y) => (y.score || 0) - (x.score || 0)); window._lastLeaderboardRaw = a; renderLeaderboard(a); try { localStorage.setItem('lb_cache', JSON.stringify(a)); } catch (e) {} });
+    }
     function syncAllLeaderboard() {
       const up = {};
       allUsersList.forEach(u => {
@@ -6349,8 +6354,23 @@ body[class*="theme-"] .mob-nav-item.active{color:var(--primary)!important}
       try { r.on('value', f, () => {}); setTimeout(() => { try { r.off('value', f); } catch (e) {} }, 60000); } catch (e) {}
       return r;
     }
+    /* فتح فوري: آخر بيانات للطالب وللوحة الشرف بتتحفظ على جهازه، فلما يفتح المنصة بتظهر على طول
+       من غير ما يستنى الاتصال بالسيرفر (اللي بياخد ثانية أو اتنين)، وبعدها بتتحدّث لوحدها. */
+    const __SC = (uid) => 'stud_cache_' + uid;
+    function __saveStudentCache(uid, d) { try { if (uid && d && !d.isBanned) localStorage.setItem(__SC(uid), JSON.stringify(d)); } catch (e) {} }
+    function __clearStudentCache(uid) { try { if (uid) localStorage.removeItem(__SC(uid)); localStorage.removeItem('lb_cache'); } catch (e) {} }
+    function __instantFromCache(user) {
+      let d = null; try { d = JSON.parse(localStorage.getItem(__SC(user.uid)) || 'null'); } catch (e) {}
+      if (!d || typeof d !== 'object' || d.isBanned || currentStudentData) return;
+      currentUser = user; currentStudentData = d; d.level = PLATFORM_LEVEL; if (d.isOwner === true) d.isAdmin = true;
+      document.getElementById('auth-overlay').style.display = 'none';
+      document.getElementById('user-greeting').innerHTML = `👤 ${escText(d.name || '')}`;
+      try { document.getElementById('admin-toggle-btn').style.display = isStaffUser() ? 'inline-flex' : 'none'; } catch (e) {}
+      try { __applyLevelVisibilityUI(); } catch (e) {}
+      try { if (window.refreshStudentHeroStats) window.refreshStudentHeroStats(); } catch (e) {}
+    }
     function startSession(user) {
-      window._lastUid = user.uid; ensureOnline(); __startPublicListeners();
+      window._lastUid = user.uid; try { __instantFromCache(user); } catch (e) {} ensureOnline(); __startPublicListeners();
       withTimeout(__holdUserRef(user.uid).once('value'), 40000, 'السيرفر اتأخر في الرد وإنت داخل. اتأكد من الإنترنت وحاول تاني.').then((snap) => {
         const val = snap.val(); window._ssRetry = 0;
         if (!val) { Swal.fire('حسابك غير مكتمل', 'الحساب اتعمل بس بياناته ماكتملتش (غالبًا النت قطع وقت التسجيل). اضغط "إنشاء حساب جديد" واكتب نفس الإيميل والباسورد وبياناتك وهيتكمل.', 'warning'); auth.signOut(); return; }
@@ -6367,6 +6387,7 @@ body[class*="theme-"] .mob-nav-item.active{color:var(--primary)!important}
       if (isRegistering) return;
       if (user) startSession(user);
       else {
+        try { __clearStudentCache(window._lastUid); } catch (e) {}
         detachAll(window._lastUid);
         currentUser = null; currentStudentData = null; detachMyPerms(); checkMaintenanceUI(); renderResearchHome();
         document.getElementById('auth-overlay').style.display = isMaintenanceActive ? 'none' : 'flex'; document.getElementById('user-greeting').innerHTML = ''; try { localStorage.removeItem('last_user_name'); } catch (e) {}
@@ -7138,7 +7159,8 @@ ${escText(alertBody)}
         if (currentStudentData && isStaffUser()) { attachMyPerms(uid); try { if (window.__subjectsGoLive) window.__subjectsGoLive(); } catch (e) {} } else detachMyPerms();
         { const __a = !!(currentStudentData && isStaffUser()); if (window.__lastAdm !== __a && window.__subjectsRaw) { try { applySubjectsRaw(); } catch (err) { console.error(err); } } }
         if (currentStudentData) {
-          if (currentStudentData.isBanned) { Swal.fire('محظور!', `⚠️ تم حظرك!<br>السبب: ${escText(currentStudentData.banReason)}`, 'error'); logoutStudent(); return; }
+          if (currentStudentData.isBanned) { __clearStudentCache(uid); Swal.fire('محظور!', `⚠️ تم حظرك!<br>السبب: ${escText(currentStudentData.banReason)}`, 'error'); logoutStudent(); return; }
+          __saveStudentCache(uid, currentStudentData);
           document.getElementById('user-greeting').innerHTML = `👤 ${escText(currentStudentData.name)}`; try { localStorage.setItem('last_user_name', currentStudentData.name || ''); } catch (e) {} setupPresence(uid, currentStudentData); syncLeaderboard(uid, currentStudentData);
           const adminBtn = document.getElementById('admin-toggle-btn');
           try { listenToSupport(); renderSupportList(); } catch (e) {}
@@ -7158,6 +7180,7 @@ ${escText(alertBody)}
         try { localStorage.removeItem('last_user_name'); } catch (e) {}
         /* بيانات الطلبة المحفوظة على جهاز الأدمن بتتمسح مع الخروج (لو جهاز مشترك) */
         try { if (window.__cacheDel) { window.__cacheDel('admin_users_cache'); window.__cacheDel('admin_file_stats'); } } catch (e) {}
+        try { __clearStudentCache(currentUser && currentUser.uid); } catch (e) {}
         auth.signOut();
       };
       if (currentUser) {
