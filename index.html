@@ -4913,6 +4913,7 @@ body[class*="theme-"] .mob-nav-item.active{color:var(--primary)!important}
                 </h3>
                 <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
                   <button class="pill" id="students-collapse-btn" type="button" style="background: rgba(59,130,246,.18); border:1px solid rgba(59,130,246,.4); color:#60a5fa; font-size: 12px;" onclick="toggleStudentsList()">▼ عرض القائمة</button>
+                  <button class="pill" type="button" style="background: rgba(251,191,36,.15); border:1px solid rgba(251,191,36,.45); color:#fbbf24; font-size: 12px;" onclick="openDuplicateAccounts()">🔁 الحسابات المتكررة</button>
                   <button class="pill" style="background: #10b981; font-size: 12px;" onclick="exportStudentsCSV()">📥 تصدير Excel</button>
                   <button class="pill" id="users-refresh-btn" type="button" style="background: rgba(59,130,246,.18); border:1px solid rgba(59,130,246,.4); color:#60a5fa; font-size: 12px;" onclick="refreshUsersNow(); try { if (window.refreshFileStatsNow) refreshFileStatsNow(); } catch (e) {}">🔄 تحديث الآن</button>
                   <button class="pill" id="users-live-btn" type="button" style="font-size: 12px;" onclick="toggleUsersLive()">⚪ تحديث لحظي: متوقف</button>
@@ -15699,14 +15700,19 @@ function openThemePicker() {
     var q = norm(inp ? inp.value : ''), toks = q ? q.split(' ') : [];
     var lvlF = (typeof currentAdminLevelFilter !== 'undefined') ? currentAdminLevelFilter : 'all';
     var onlyOn = (typeof adminOnlineOnly !== 'undefined') ? adminOnlineOnly : false;
-    var out = [];
+    var out = [], dupF = window.__dupFilter;
     for (var i = 0; i < allUsersList.length; i++) {
       var u = allUsersList[i]; index(u);
-      if (lvlF !== 'all' && String(u.level == 2 ? 2 : 1) !== String(lvlF)) continue;
-      if (onlyOn && !onlineUsersMap.hasOwnProperty(u.uid)) continue;
+      if (dupF) { if (!dupF.uids.hasOwnProperty(u.uid)) continue; }
+      else {
+        if (lvlF !== 'all' && String(u.level == 2 ? 2 : 1) !== String(lvlF)) continue;
+        if (onlyOn && !onlineUsersMap.hasOwnProperty(u.uid)) continue;
+      }
       if (toks.length && !matchQuery(u, toks)) continue;
       out.push(u);
     }
+    /* في وضع المتكررين: كل مجموعة ورا بعض */
+    if (dupF) out.sort(function(a, b){ return dupF.uids[a.uid] - dupF.uids[b.uid]; });
     return out;
   }
   function paint(list){
@@ -15731,7 +15737,8 @@ function openThemePicker() {
       }
     }
     var c = document.getElementById('admin-students-filter-count');
-    if (c) c.innerText = '(المعروض: ' + matches.length + ' طالب' + ((typeof adminOnlineOnly !== 'undefined' && adminOnlineOnly) ? ' — المتصلين فقط 🟢، اضغط «متصل الآن» للرجوع' : '') + ')';
+    if (c && window.__dupFilter) c.innerHTML = '(🔁 ' + escText(window.__dupFilter.label) + ': ' + matches.length + ' حساب) <button type="button" class="btn-sm btn-track" style="margin-inline-start:6px;" onclick="__dupClear()">✖ رجوع لكل الطلاب</button>';
+    else if (c) c.innerText = '(المعروض: ' + matches.length + ' طالب' + ((typeof adminOnlineOnly !== 'undefined' && adminOnlineOnly) ? ' — المتصلين فقط 🟢، اضغط «متصل الآن» للرجوع' : '') + ')';
   }
   /* صفوف جديدة بس (من غير ما نرسم الجدول كله من الأول): بنرسمها في جدول مؤقت مخفي وننقلها */
   function renderRows(list, offset){
@@ -15772,7 +15779,100 @@ function openThemePicker() {
     if (inR) return;
     clearTimeout(tmr2); tmr2 = setTimeout(function(){ build(true); }, 220);
   };
-  window.__studentsTest = { norm: norm, ph: ph, matchQuery: matchQuery, index: index };
+  /* ===== الحسابات المتكررة: نفس الرقم / الإيميل / الاسم ===== */
+  var EM_TYPO = { 'gamil.com':1, 'gmial.com':1, 'gmal.com':1, 'gmai.com':1, 'gmaill.com':1, 'gmail.con':1, 'gmail.co':1, 'gmail.cm':1, 'gmail.om':1, 'gmail.comm':1, 'googlemail.com':1 };
+  function em(e){
+    e = String(e || '').trim().toLowerCase(); var i = e.lastIndexOf('@'); if (i < 1) return '';
+    var l = e.slice(0, i), d = e.slice(i + 1);
+    if (EM_TYPO[d]) d = 'gmail.com';
+    if (d === 'gmail.com') l = l.split('+')[0].replace(/\./g, ''); /* جيميل بيتجاهل النقط */
+    return l + '@' + d;
+  }
+  var KINDS = [
+    { k: 'phone', icon: '📱', title: 'نفس رقم الموبايل', key: function(u){ var p = ph(u.phone); return p.length >= 9 ? p : ''; } },
+    { k: 'email', icon: '📧', title: 'نفس الإيميل', key: function(u){ return em(u.email); } },
+    { k: 'name',  icon: '👤', title: 'نفس الاسم', key: function(u){ var n = norm(u.name); return n.replace(/\s/g, '').length >= 4 ? n : ''; } }
+  ];
+  var lastGroups = null;
+  function dupGroups(){
+    var res = {};
+    KINDS.forEach(function(K){
+      var m = {};
+      allUsersList.forEach(function(u){ var key = K.key(u); if (key) (m[key] = m[key] || []).push(u); });
+      res[K.k] = Object.keys(m).filter(function(x){ return m[x].length > 1; })
+        .map(function(x){ return m[x].slice().sort(function(a, b){ return (a.createdAt || 0) - (b.createdAt || 0); }); })
+        .sort(function(a, b){ return b.length - a.length; });
+    });
+    return res;
+  }
+  function fmtDate(t){ try { return t ? new Date(t).toLocaleDateString('ar-EG', { year: 'numeric', month: 'short', day: 'numeric' }) : '—'; } catch (e) { return '—'; } }
+  function accRow(u, K){
+    var hl = function(field, txt){ return '<span' + (K.k === field ? ' class="dup-hl"' : '') + '>' + txt + '</span>'; };
+    var seen = onlineUsersMap.hasOwnProperty(u.uid) ? '🟢 متصل' : ('آخر ظهور: ' + escText(formatLastSeen(u.lastSeen || u.createdAt)));
+    return '<div class="dup-acc">' +
+      '<div class="dup-n">' + hl('name', escText(u.name || 'بدون اسم')) + (u.isBanned ? ' <span class="dup-tag" style="color:#f87171">⛔ محظور</span>' : '') + (u.isAdmin || u.isLeader || u.isOwner ? ' <span class="dup-tag" style="color:#fbbf24">⭐ فريق</span>' : '') + ' <span class="dup-tag">' + (u.level == 2 ? '🚀 تانية' : '🎓 أولى') + '</span></div>' +
+      '<div class="dup-d" dir="ltr">' + hl('email', escText(u.email || '—')) + ' · ' + hl('phone', escText(u.phone || '—')) + '</div>' +
+      '<div class="dup-s">📅 اتسجل: ' + fmtDate(u.createdAt) + ' · ' + seen + ' · ⭐ ' + (u.score || 0) + ' نقطة</div>' +
+      '</div>';
+  }
+  window.openDuplicateAccounts = function(){
+    if (!allUsersList.length) { Swal.fire({ icon: 'info', title: 'استنى ثانية', text: 'لسه بيانات الطلاب بتتحمّل، جرّب تاني بعد شوية.', background: '#18181b', color: '#fff' }); return; }
+    var G = lastGroups = dupGroups();
+    var total = 0, chips = '', body = '';
+    KINDS.forEach(function(K){
+      var gs = G[K.k]; total += gs.length;
+      chips += '<button type="button" class="dup-chip" onclick="document.getElementById(\'dup-sec-' + K.k + '\').scrollIntoView({behavior:\'smooth\'})">' + K.icon + ' ' + K.title + ': <b>' + gs.length + '</b></button>';
+      body += '<div class="dup-sec" id="dup-sec-' + K.k + '"><div class="dup-sec-h">' + K.icon + ' ' + K.title + ' <span>(' + gs.length + ' مجموعة)</span></div>';
+      if (!gs.length) body += '<div class="dup-empty">مفيش ✅</div>';
+      gs.forEach(function(g, i){
+        var shown = K.k === 'email' ? g[0].email : (K.k === 'phone' ? g[0].phone : g[0].name);
+        body += '<div class="dup-g"><div class="dup-gh"><b>' + escText(shown || '') + '</b><span>' + g.length + ' حسابات</span>' +
+          '<button type="button" class="btn-sm btn-track" onclick="__dupShow(\'' + K.k + '\',' + i + ')">عرض في الجدول ↙</button></div>' +
+          g.map(function(u){ return accRow(u, K); }).join('') + '</div>';
+      });
+      body += '</div>';
+    });
+    var html = '<style>' +
+      '.dup-wrap{text-align:right;direction:rtl;max-height:65vh;overflow:auto;padding:2px 4px}' +
+      '.dup-top{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-bottom:10px}' +
+      '.dup-chip{border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.06);color:#fff;border-radius:999px;padding:6px 12px;font:inherit;font-size:13px;cursor:pointer}' +
+      '.dup-chip b{color:#fbbf24}' +
+      '.dup-note{font-size:12px;color:#a1a1aa;text-align:center;margin-bottom:12px;line-height:1.7}' +
+      '.dup-sec{margin-top:14px}.dup-sec-h{font-weight:900;color:#fbbf24;font-size:15px;margin-bottom:8px}.dup-sec-h span{color:#a1a1aa;font-size:12px;font-weight:600}' +
+      '.dup-empty{color:#4ade80;font-size:13px;padding:6px 2px}' +
+      '.dup-g{border:1px solid rgba(255,255,255,.1);border-radius:12px;background:rgba(255,255,255,.03);margin-bottom:10px;overflow:hidden}' +
+      '.dup-gh{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 10px;background:rgba(251,191,36,.08);border-bottom:1px solid rgba(255,255,255,.08)}' +
+      '.dup-gh b{flex:1;min-width:0;word-break:break-all;font-size:13.5px}.dup-gh span{font-size:12px;color:#fbbf24;font-weight:800}' +
+      '.dup-acc{padding:8px 10px;border-top:1px solid rgba(255,255,255,.05)}.dup-gh+.dup-acc{border-top:0}' +
+      '.dup-n{font-weight:800;font-size:13.5px}.dup-d{font-size:12px;color:#93c5fd;margin-top:3px;text-align:left;word-break:break-all}.dup-s{font-size:11.5px;color:#a1a1aa;margin-top:3px}' +
+      '.dup-tag{font-size:11px;font-weight:700;color:#a1a1aa}' +
+      '.dup-hl{background:rgba(251,191,36,.22);color:#fde68a;border-radius:4px;padding:0 3px}' +
+      '</style><div class="dup-wrap">' +
+      '<div class="dup-top">' + chips + '</div>' +
+      '<div class="dup-note">الحاجة المتكررة متعلّم عليها بالأصفر، والأقدم تسجيلاً فوق في كل مجموعة.<br>«نفس الاسم» ممكن يكون طالبين مختلفين فعلاً، فاتأكد من الرقم والإيميل قبل ما تحذف.</div>' +
+      (total ? (total > 1 ? '<div style="text-align:center;margin-bottom:6px;"><button type="button" class="btn-sm btn-track" onclick="__dupShow(\'all\')">📋 عرض كل الحسابات المتكررة في الجدول</button></div>' : '') : '<div class="dup-empty" style="text-align:center;font-size:15px;">مفيش أي حسابات متكررة 🎉</div>') +
+      body + '</div>';
+    Swal.fire({ title: '🔁 الحسابات المتكررة', html: html, width: 820, showConfirmButton: false, showCloseButton: true, background: '#18181b', color: '#fff',
+      didOpen: function(p){ try { p.style.setProperty('background', '#18181b', 'important'); p.style.setProperty('backdrop-filter', 'none', 'important'); } catch (e) {} } });
+  };
+  window.__dupShow = function(kind, i){
+    var G = lastGroups || dupGroups(), uids = {}, n = 0, label;
+    var add = function(g){ g.forEach(function(u){ if (!uids.hasOwnProperty(u.uid)) uids[u.uid] = n++; }); };
+    if (kind === 'all') { KINDS.forEach(function(K){ G[K.k].forEach(add); }); label = 'كل الحسابات المتكررة'; }
+    else {
+      var K = KINDS.filter(function(x){ return x.k === kind; })[0], g = (G[kind] || [])[i]; if (!g) return;
+      add(g); label = K.title + ' (' + (kind === 'email' ? g[0].email : kind === 'phone' ? g[0].phone : g[0].name) + ')';
+    }
+    window.__dupFilter = { uids: uids, label: label };
+    try { Swal.close(); } catch (e) {}
+    var inp = document.getElementById('admin-search-student'); if (inp) inp.value = '';
+    try { toggleStudentsList(true); } catch (e) {}
+    build(true);
+    var tb = document.getElementById('students-table-body'), w = tb && tb.closest && tb.closest('.table-responsive');
+    if (w) w.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+  window.__dupClear = function(){ window.__dupFilter = null; build(true); };
+  window.__studentsTest = { norm: norm, ph: ph, matchQuery: matchQuery, index: index, em: em, dupGroups: dupGroups };
 })();
 </script>
 <script>
