@@ -6107,7 +6107,7 @@ body[class*="theme-"] .mob-nav-item.active{color:var(--primary)!important}
     var __offline = false, __idleT = null, __lastWake = 0, IDLE_MS = 20000, HIDDEN_MS = 8000;
     function isAdminUser() { try { return !!(currentStudentData && currentStudentData.isAdmin === true); } catch (e) { return false; } }
     function isLeaderUser() { try { return !!(currentStudentData && currentStudentData.isLeader === true && currentStudentData.isAdmin !== true); } catch (e) { return false; } }
-    function isStaffUser() { try { return !!(currentStudentData && (currentStudentData.isAdmin === true || currentStudentData.isLeader === true)); } catch (e) { return false; } }
+    function isStaffUser() { try { return !!(currentStudentData && (currentStudentData.isAdmin === true || currentStudentData.isLeader === true || currentStudentData.isOwner === true)); } catch (e) { return false; } }
     /* ===== نظام الصلاحيات: المالك + صلاحيات مخصصة لكل شخص ===== */
     var __LEADER_DENY = ['students.edit', 'students.password', 'students.points', 'students.research', 'students.export', 'students.delete', 'system.tools', 'system.logs', 'system.danger'];
     function isOwnerUser() { try { return !!(currentStudentData && currentStudentData.isOwner === true); } catch (e) { return false; } }
@@ -15226,9 +15226,18 @@ function openThemePicker() {
   };
 
   // عرض قائمة الطلاب الذين دخلوا على الملف (للأدمن والليدر)
-  window.showFileViewersList = function(subjId, fileKey, fileTitle) {
+  window.showFileViewersList = function(subjId, fileKey, fileTitle, _loaded) {
     var metrics = getFileMetrics(subjId, fileKey);
     var viewers = Object.values(metrics.viewersMap || {}).sort(function(a, b) { return (b.at || 0) - (a.at || 0); });
+    /* لو الأسماء مش متحمّلة عندنا (الإحصائيات اتحملت كأرقام بس): نجيب أسماء الملف ده بس وقت ما تتطلب */
+    if (!viewers.length && metrics.views > 0 && !_loaded && typeof database !== 'undefined') {
+      try { Swal.fire({ title: 'جاري تحميل الأسماء...', allowOutsideClick: false, showConfirmButton: false, didOpen: function() { Swal.showLoading(); } }); } catch (e) {}
+      database.ref('file_stats/' + subjId + '/' + fileKey + '/viewers').once('value').then(function(sn) {
+        var m = window.fileStatsMap[subjId] = window.fileStatsMap[subjId] || {};
+        m[fileKey] = m[fileKey] || {}; m[fileKey].viewers = sn.val() || {};
+      }).catch(function(e) { console.error('viewers:', e); }).then(function() { window.showFileViewersList(subjId, fileKey, fileTitle, true); });
+      return;
+    }
     var listHtml = viewers.length === 0
       ? '<div class="empty-state">لم يتم تسجيل أسماء طلاب بعد.</div>'
       : '<div style="max-height:300px; overflow-y:auto; text-align:right; display:flex; flex-direction:column; gap:6px;">' +
