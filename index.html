@@ -9778,6 +9778,7 @@ function openThemePicker() {
             ${isAdmin ? `
             <button class="btn-sm btn-edit" onclick="editFile('${subjId}','${f.key}','${escapeHtml(f.title)}','${escapeHtml(fileUrl)}','${escapeHtml(f.category || 'محاضرات')}')">✏️</button>
             <button class="btn-sm btn-edit" title="${f.noPreview ? 'تفعيل زر المعاينة' : 'إلغاء زر المعاينة'}" onclick="toggleFilePreview('${subjId}','${f.key}',${f.noPreview ? 'false' : 'true'})">${f.noPreview ? '🚫👁️' : '👁️‍🗨️'}</button>
+            <button class="btn-sm btn-edit" title="${f.noWatermark ? 'الملف بينزل من غير علامة المنصة — دوس عشان ترجّع العلامة' : 'الملف بينزل بعلامة المنصة — دوس عشان تلغيها للملف ده'}" onclick="toggleFileWatermark('${subjId}','${f.key}',${f.noWatermark ? 'false' : 'true'})">${f.noWatermark ? '🚫💧 بدون علامة' : '💧 بعلامة'}</button>
             <button class="btn-sm btn-edit" title="${f.hidden ? 'إظهار للطلاب' : 'إخفاء عن الطلاب'}" onclick="toggleItemHidden('files','${subjId}','${f.key}',${f.hidden ? 'false' : 'true'})">${f.hidden ? '👁️ إظهار' : '🙈 إخفاء'}</button>
             <button class="btn-sm btn-edit" title="نقل لفصل" onclick="moveItemToChapter('files','${subjId}','${f.key}')">📂</button>
             <button class="btn-sm btn-ban" onclick="deleteFile('${subjId}','${f.key}','${escapeHtml(f.title)}')">🗑️</button>` : ''}
@@ -10071,6 +10072,17 @@ function openThemePicker() {
         if (window.Swal) Swal.fire({ toast: true, position: 'top', timer: 1800, showConfirmButton: false, icon: 'success', title: turnOff ? 'اتشال زر المعاينة من الملف' : 'رجع زر المعاينة للملف' });
       }).catch(err => Swal.fire('خطأ', err.message, 'error'));
     }
+
+    /* العلامة المائية لكل ملف: noWatermark = true يعني الملف بينزل زي ما هو من غير علامة المنصة */
+    function toggleFileWatermark(sId, key, turnOff) {
+      const s = db.find(x => x.id === sId);
+      const f = s && (s.files || []).find(x => x.key === key);
+      database.ref('subjects/' + sId + '/files/' + key + '/noWatermark').set(turnOff ? true : null).then(() => {
+        logAdminAction(turnOff ? 'إلغاء العلامة المائية لملف' : 'تفعيل العلامة المائية لملف', `الملف: ${f ? f.title : ''} | المادة: ${s ? s.name : ''}`);
+        if (window.Swal) Swal.fire({ toast: true, position: 'top', timer: 2000, showConfirmButton: false, icon: 'success', title: turnOff ? 'الملف هينزل من غير علامة المنصة' : 'الملف هينزل بعلامة المنصة' });
+      }).catch(err => Swal.fire('خطأ', err.message, 'error'));
+    }
+    window.toggleFileWatermark = toggleFileWatermark;
 
     function toggleVideoExt(sId, key, show) {
       const s = db.find(x => x.id === sId);
@@ -15215,6 +15227,7 @@ function openThemePicker() {
           (isAdmin ?
             '<button class="btn-sm btn-edit" onclick="editFile(\'' + subjId + '\',\'' + f.key + '\',\'' + escapeHtml(f.title) + '\',\'' + escapeHtml(fileUrl) + '\',\'' + escapeHtml(f.category || 'محاضرات') + '\')">✏️</button>' +
             '<button class="btn-sm btn-edit" title="' + (f.noPreview ? 'تفعيل زر المعاينة' : 'إلغاء زر المعاينة') + '" onclick="toggleFilePreview(\'' + subjId + '\',\'' + f.key + '\',' + (f.noPreview ? 'false' : 'true') + ')">' + (f.noPreview ? '🚫👁️' : '👁️‍🗨️') + '</button>' +
+            '<button class="btn-sm btn-edit" title="' + (f.noWatermark ? 'الملف بينزل من غير علامة المنصة — دوس عشان ترجّع العلامة' : 'الملف بينزل بعلامة المنصة — دوس عشان تلغيها للملف ده') + '" onclick="toggleFileWatermark(\'' + subjId + '\',\'' + f.key + '\',' + (f.noWatermark ? 'false' : 'true') + ')"' + (f.noWatermark ? ' style="opacity:.75"' : '') + '>' + (f.noWatermark ? '🚫💧 بدون علامة' : '💧 بعلامة') + '</button>' +
             '<button class="btn-sm btn-edit" title="' + (f.hidden ? 'إظهار للطلاب' : 'إخفاء عن الطلاب') + '" onclick="toggleItemHidden(\'files\',\'' + subjId + '\',\'' + f.key + '\',' + (f.hidden ? 'false' : 'true') + ')">' + (f.hidden ? '👁️ إظهار' : '🙈 إخفاء') + '</button>' +
             '<button class="btn-sm btn-edit" title="نقل لفصل" onclick="moveItemToChapter(\'files\',\'' + subjId + '\',\'' + f.key + '\')">📂</button>' +
             '<button class="btn-sm btn-ban" onclick="deleteFile(\'' + subjId + '\',\'' + f.key + '\',\'' + escapeHtml(f.title) + '\')">🗑️</button>'
@@ -16224,6 +16237,15 @@ function openThemePicker() {
   function isPdfFile(f) { return /pdf/i.test(f.mime) || /\.pdf$/i.test(f.name); }
   function isImgFile(f) { return /^image\/(jpe?g|png|webp|gif|bmp)/i.test(f.mime); }
 
+  /* هل الأدمن لاغي العلامة عن الملف ده؟ (زرار "💧 بعلامة / 🚫💧 بدون علامة" على الملف) */
+  function wmOffFor(id) {
+    try {
+      return (typeof db !== 'undefined' ? db : []).some(function (s) {
+        return (s.files || []).some(function (f) { return f.noWatermark === true && driveId(f.link || '') === id; });
+      });
+    } catch (e) { return false; }
+  }
+
   /* الدالة الأساسية: تجيب الملف، تحط العلامة، وتنزّله. لو أي حاجة فشلت بتفتح الأصلي زي الأول */
   window.wmDownload = function (u, title) {
     var id = driveId(u);
@@ -16232,6 +16254,8 @@ function openThemePicker() {
     fetchFile(id, function (pct) { try { if (Swal.isVisible()) Swal.update({ title: 'جاري تحميل الملف ⏳ ' + pct + '%' }); Swal.showLoading(); } catch (e) {} })
       .then(function (f) {
         var bytes = f.bytes, mime = f.mime, name = f.name || title;
+        /* الأدمن لاغي العلامة عن الملف ده: بينزل زي ما هو */
+        if (wmOffFor(id)) { saveBlob(new Blob([bytes], { type: mime || 'application/octet-stream' }), safeName(name)); return; }
         if (/pdf/i.test(mime) || /\.pdf$/i.test(name)) {
           return loadPdfLib().then(function () { return stampPdf(bytes); }).then(function (out) { saveBlob(new Blob([out], { type: 'application/pdf' }), safeName(name, 'pdf')); });
         }
