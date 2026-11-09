@@ -1,4 +1,4 @@
-const CACHE_NAME = 'monasa-cache-v4'; // v4: منصة واحدة للمستويين
+const CACHE_NAME = 'monasa-cache-v5'; // v5: المستوى التاني على مشروع Firebase جديد
 const STATIC_ASSETS = [
   './',
   './index.html',
