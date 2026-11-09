@@ -5443,39 +5443,52 @@ body[class*="theme-"] .mob-nav-item.active{color:var(--primary)!important}
         </div>
       </section>
 
-      <!-- فوتر المنصة وتوقيع المؤسس والمطور الرسمي -->
-      <footer class="liquid-glass z-content" style="margin-top: 50px; margin-bottom: 24px; padding: 28px 20px; text-align: center; border: 1px solid rgba(255,215,0,0.25); background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(0,0,0,0.65) 100%); border-radius: 20px;">
-        <div id="footer-leadership-box" style="display:flex; flex-direction:column; align-items:center; gap:8px; margin-bottom:14px;">
-           <!-- سطر Founder -->
-           <div style="display:flex; justify-content:center; align-items:center; gap:8px; flex-wrap:wrap;">
-              <span id="footer-founder-badge" style="background: linear-gradient(90deg, #ffd700, #f59e0b); color: #000; font-weight: 900; font-size: 11.5px; padding: 4px 14px; border-radius: 20px; box-shadow: 0 2px 10px rgba(245,158,11,0.4); display: inline-flex; align-items: center; gap: 5px; letter-spacing: 0.5px;">
-                 <span>👑</span>
-                 <span>Founder</span>
-              </span>
-              <span style="font-weight: 800; font-size: 16px; color: var(--fg);">
-                 <b id="footer-founder-name" style="color: #ffd700;">Ziad Sameh Leader (G3)</b>
-              </span>
-           </div>
-
-           <!-- سطر CEO / Co-CEOs -->
-           <div id="footer-ceos-row" style="display:flex; justify-content:center; align-items:center; gap:8px; flex-wrap:wrap; font-size: 13.5px;">
-              <span id="footer-ceos-badge" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.35); font-size: 11px; padding: 3px 10px; border-radius: 14px; font-weight: 900; display: inline-flex; align-items: center; gap: 4px; letter-spacing: 0.5px;">
-                 <span>🚀</span>
-                 <span id="footer-ceos-badge-txt">CEO</span>
-              </span>
-              <span id="footer-ceos-names" style="font-weight: 700; color: var(--fg); display:inline-flex; align-items:center; gap:6px; flex-wrap:wrap;"></span>
-           </div>
+      <!-- فوتر المنصة: اسم المنصة + فريقها + روابط صغيرة -->
+      <style>
+        .sf{margin:50px 0 24px;padding:22px 22px 14px;border-radius:20px;border:1px solid rgba(255,215,0,.18);background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(0,0,0,.55))}
+        .sf-top{display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap}
+        .sf-brand{display:flex;align-items:center;gap:12px;min-width:0}
+        .sf-logo{width:44px;height:44px;border-radius:13px;background:#f59e0b;display:grid;place-items:center;flex:none;box-shadow:0 4px 14px rgba(245,158,11,.3)}
+        .sf-name{font-weight:900;font-size:17px;color:var(--fg);line-height:1.2}
+        .sf-tag{font-size:12px;color:var(--fg-soft);margin-top:3px}
+        .sf-team{display:flex;gap:10px;flex-wrap:wrap}
+        .sf-person{display:flex;flex-direction:column;align-items:flex-start;gap:3px;padding:8px 14px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)}
+        .sf-role{font-size:10.5px;font-weight:800;letter-spacing:.4px;opacity:.85}
+        .sf-person b{font-size:14px}
+        .sf-bottom{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:16px;padding-top:12px;border-top:1px solid rgba(255,255,255,.08)}
+        .sf-links{display:flex;gap:6px;flex-wrap:wrap}
+        .sf-links button{height:32px;padding:0 12px;border-radius:9px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);color:var(--fg);font:inherit;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+        .sf-links button:hover{background:rgba(255,255,255,.1)}
+        .sf-copy{font-size:11px;color:var(--fg-faint)}
+        @media (max-width:640px){.sf-top,.sf-bottom{flex-direction:column;align-items:center;text-align:center}.sf-brand{flex-direction:column}.sf-team{justify-content:center}.sf-person{align-items:center}.sf-links{justify-content:center}}
+      </style>
+      <footer class="sf z-content">
+        <div class="sf-top">
+          <div class="sf-brand">
+            <div class="sf-logo"><svg viewBox="0 0 100 100" width="26" height="26" aria-hidden="true"><path d="M50 10 C50 32 32 50 10 50 C32 50 50 68 50 90 C50 68 68 50 90 50 C68 50 50 32 50 10 Z" fill="#0f172a"/></svg></div>
+            <div style="min-width:0;">
+              <div class="sf-name">El dof3aa Btzaker</div>
+              <div class="sf-tag">منصة طلاب قسم المساحة ونظم المعلومات الجغرافية</div>
+            </div>
+          </div>
+          <div class="sf-team">
+            <div class="sf-person">
+              <span class="sf-role" style="color:#fbbf24;">👑 Founder</span>
+              <b id="footer-founder-name" style="color:#ffd700;">Ziad Sameh Leader (G3)</b>
+            </div>
+            <div class="sf-person" id="footer-ceos-row">
+              <span class="sf-role" style="color:#38bdf8;">🚀 <span id="footer-ceos-badge-txt">CEO</span></span>
+              <span id="footer-ceos-names" style="font-size:14px; font-weight:700; display:inline-flex; align-items:center; gap:6px; flex-wrap:wrap;"></span>
+            </div>
+          </div>
         </div>
-        <p style="font-size: 13px; color: var(--fg-soft); margin: 0 auto 16px; max-width: 650px; line-height: 1.7;">
-           منصة تعليمية متكاملة لطلاب قسم المساحة ونظم المعلومات الجغرافية والجيوماتكس ✦ صُممت لخدمة الطلاب وتيسير المحاضرات وأبحاث التخرج ولائحة الساعات المعتمدة.
-        </p>
-        <div style="display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;">
-           <button class="pill" style="background: linear-gradient(135deg, #f59e0b, #d97706); color: #000; font-weight: 900; font-size: 12px; height: 36px; padding: 0 18px;" onclick="openFounderCardModal()">👥 Leadership (Founder & CEO)</button>
-           <button id="footer-linkedin-btn" class="pill" style="background: rgba(10,102,194,0.2); color: #38bdf8; border: 1px solid rgba(10,102,194,0.4); font-weight: bold; font-size: 12px; height: 36px; padding: 0 16px;" onclick="openFounderLinkedIn()">💼 بروفايل LinkedIn</button>
-           <button id="footer-whatsapp-btn" class="pill" style="background: rgba(34,197,94,0.2); color: #4ade80; border: 1px solid rgba(34,197,94,0.4); font-weight: bold; font-size: 12px; height: 36px; padding: 0 16px;" onclick="openFounderWhatsApp()">💬 تواصل واتساب</button>
-        </div>
-        <div style="margin-top: 18px; font-size: 11px; color: var(--fg-faint);">
-           جميع الحقوق محفوظة ✦ قسم المساحة ونظم المعلومات الجغرافية (GIS) ✦ 2025 - 2026
+        <div class="sf-bottom">
+          <div class="sf-links">
+            <button type="button" onclick="openFounderCardModal()">👥 فريق المنصة</button>
+            <button type="button" id="footer-linkedin-btn" onclick="openFounderLinkedIn()" style="color:#38bdf8;">💼 LinkedIn</button>
+            <button type="button" id="footer-whatsapp-btn" onclick="openFounderWhatsApp()" style="color:#4ade80;">💬 واتساب</button>
+          </div>
+          <div class="sf-copy">© 2025 - 2026 ✦ قسم المساحة ونظم المعلومات الجغرافية (GIS)</div>
         </div>
       </footer>
     </main>
@@ -8165,23 +8178,37 @@ ${escText(alertBody)}
         const j = await r.json().catch(() => ({}));
         if (!r.ok) throw new Error(j.error || ('HTTP ' + r.status));
         __lvlOvAt = Date.now();
-        const L = j.levels || {}, a = L[1], b = L[2];
-        const num = (x, k) => (x && !x.error && x[k] != null) ? x[k] : '—';
-        const col = (x, n) => '<td style="padding:6px 8px; text-align:center; font-weight:800; font-size:16px; color:' + (n === 1 ? '#60a5fa' : '#c084fc') + '">' + x + '</td>';
-        const row = (label, f1, f2) => '<tr><td style="padding:6px 8px; opacity:.85">' + label + '</td>' + col(f1, 1) + col(f2, 2) + '</tr>';
-        const onl = (x) => (x && !x.error) ? (x.online + (x.onlineGuest ? ' <span style="font-size:11px; opacity:.75">(' + x.onlineNative + ' + ' + x.onlineGuest + ' زائر)</span>' : '')) : '—';
-        const totalOn = ((a && a.online) || 0) + ((b && b.online) || 0);
+        const L = j.levels || {};
+        const ok = (x) => !!(x && !x.error);
+        const totalOn = [1, 2].reduce((s, l) => s + (ok(L[l]) ? (L[l].online || 0) : 0), 0);
+        const totalAcc = [1, 2].reduce((s, l) => s + (ok(L[l]) ? (L[l].total || 0) : 0), 0);
+        /* كارت لكل مستوى: الرقم الكبير = كل الحسابات، وتحته التفاصيل بكلام واضح */
+        const card = (l) => {
+          const x = L[l], c = l === 1 ? '#60a5fa' : '#c084fc', bg = l === 1 ? 'rgba(59,130,246,.10)' : 'rgba(168,85,247,.10)';
+          const here = l === PLATFORM_LEVEL;
+          const head = '<div style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:6px;">' +
+            '<b style="font-size:15px; color:' + c + ';">' + (l === 1 ? '🎓 المستوى الأول' : '🚀 المستوى الثاني') + '</b>' +
+            (here ? '<span style="font-size:11px; font-weight:700; padding:2px 8px; border-radius:999px; background:' + c + '; color:#0b0c14;">إنت هنا</span>' : '') + '</div>';
+          if (!ok(x)) return '<div style="padding:14px; border-radius:14px; background:' + bg + '; border:1px solid ' + c + '55;">' + head +
+            '<div style="font-size:13px; opacity:.75;">' + (x && x.error ? 'مقدرناش نجيب أرقامه' : 'مش متجهز على السيرفر') + '</div></div>';
+          const line = (icon, label, val, strong) => '<div style="display:flex; justify-content:space-between; align-items:center; gap:8px; padding:6px 0; border-top:1px solid rgba(255,255,255,.07); font-size:13px;">' +
+            '<span style="opacity:.85;">' + icon + ' ' + label + '</span><b style="font-size:15px;' + (strong ? ' color:' + strong + ';' : '') + '">' + val + '</b></div>';
+          return '<div style="padding:14px 16px; border-radius:14px; background:' + bg + '; border:1px solid ' + c + (here ? '' : '55') + ';' + (here ? ' box-shadow:0 0 0 1px ' + c + ' inset;' : '') + '">' + head +
+            '<div style="display:flex; align-items:baseline; gap:8px; margin:4px 0 10px;"><span style="font-size:34px; font-weight:900; color:' + c + '; line-height:1;">' + x.total + '</span><span style="font-size:13px; opacity:.75;">حساب على المنصة</span></div>' +
+            line('👤', 'طلاب ' + (l === 1 ? 'المستوى الأول' : 'المستوى الثاني') + ' نفسه', x.natives) +
+            line('↪️', 'داخلين بحسابهم من ' + (l === 1 ? 'المستوى الثاني' : 'المستوى الأول'), x.guests) +
+            line('🟢', 'متصلين دلوقتي', x.online + (x.onlineGuest ? ' <span style="font-size:11px; font-weight:600; opacity:.7;">(منهم ' + x.onlineGuest + ' من ' + (l === 1 ? 'المستوى الثاني' : 'المستوى الأول') + ')</span>' : ''), '#4ade80') +
+            '</div>';
+        };
         box.innerHTML =
-          '<div style="overflow-x:auto"><table style="width:100%; border-collapse:collapse; min-width:300px">' +
-          '<tr><th></th><th style="padding:6px 8px; color:#60a5fa">منصة الأول 🎓</th><th style="padding:6px 8px; color:#c084fc">منصة الثاني 🚀</th></tr>' +
-          row('طلاب المستوى نفسه', num(a, 'natives'), num(b, 'natives')) +
-          row('داخلين من المستوى التاني', num(a, 'guests'), num(b, 'guests')) +
-          row('إجمالي الحسابات', num(a, 'total'), num(b, 'total')) +
-          row('🟢 متصل دلوقتي', onl(a), onl(b)) +
-          '</table></div>' +
-          '<div style="margin-top:8px; font-size:12.5px">🟢 إجمالي المتصلين على المنصتين: <b>' + totalOn + '</b>' +
-          ' <span style="opacity:.6">— العدد تقريبي في وضع التوفير (الخامل بيتفصل)</span></div>' +
-          '<div style="margin-top:4px; font-size:11.5px; opacity:.6">"داخلين من المستوى التاني" = طلاب عملوا حساب في المنصة دي بحسابهم من المستوى التاني. آخر تحديث: ' + new Date(__lvlOvAt).toLocaleTimeString('ar-EG') + '</div>';
+          '<div style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:12px;">' +
+            '<div style="flex:1; min-width:150px; padding:10px 14px; border-radius:12px; background:rgba(34,197,94,.12); border:1px solid rgba(34,197,94,.35);">' +
+              '<div style="font-size:12px; opacity:.8;">🟢 متصلين دلوقتي على المنصتين</div><div style="font-size:26px; font-weight:900; color:#4ade80;">' + totalOn + '</div></div>' +
+            '<div style="flex:1; min-width:150px; padding:10px 14px; border-radius:12px; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.12);">' +
+              '<div style="font-size:12px; opacity:.8;">👥 كل الحسابات على المنصتين</div><div style="font-size:26px; font-weight:900;">' + totalAcc + '</div></div>' +
+          '</div>' +
+          '<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:12px;">' + card(1) + card(2) + '</div>' +
+          '<div style="margin-top:10px; font-size:11.5px; opacity:.6;">عدد المتصلين تقريبي (اللي سايب المنصة مفتوحة من غير ما يستخدمها بيتشال بعد شوية). آخر تحديث: ' + new Date(__lvlOvAt).toLocaleTimeString('ar-EG') + '</div>';
       } catch (e) {
         box.innerHTML = '<span style="color:#fbbf24">مقدرناش نجيب أرقام المنصتين: ' + escText(e.message || e) + '</span>';
       } finally { __lvlOvBusy = false; box.style.opacity = '1'; }
@@ -15706,11 +15733,40 @@ function openThemePicker() {
     var c = document.getElementById('admin-students-filter-count');
     if (c) c.innerText = '(المعروض: ' + matches.length + ' طالب' + ((typeof adminOnlineOnly !== 'undefined' && adminOnlineOnly) ? ' — المتصلين فقط 🟢، اضغط «متصل الآن» للرجوع' : '') + ')';
   }
-  window.__moreStudents = function(){ if (shown >= matches.length) return; shown += CHUNK; build(false); };
+  /* صفوف جديدة بس (من غير ما نرسم الجدول كله من الأول): بنرسمها في جدول مؤقت مخفي وننقلها */
+  function renderRows(list, offset){
+    var real = document.getElementById('students-table-body'); if (!real) return null;
+    real.id = 'students-table-body__real';
+    var tmp = document.createElement('tbody'); tmp.id = 'students-table-body'; tmp.style.display = 'none';
+    real.parentNode.appendChild(tmp);
+    try { paint(list); } finally { tmp.remove(); real.id = 'students-table-body'; }
+    for (var i = 0; i < tmp.children.length; i++) { var td = tmp.children[i].firstElementChild; if (td) td.textContent = offset + i + 1; }
+    return tmp;
+  }
+  window.__moreStudents = function(){
+    if (shown >= matches.length) return;
+    var tb = document.getElementById('students-table-body'), more = document.getElementById('students-more-row');
+    if (!tb) return;
+    var from = shown; shown = Math.min(matches.length, shown + CHUNK);
+    var tmp = renderRows(matches.slice(from, shown), from); if (!tmp) return;
+    var frag = document.createDocumentFragment(); while (tmp.firstChild) frag.appendChild(tmp.firstChild);
+    if (more) tb.insertBefore(frag, more); else tb.appendChild(frag);
+    if (shown >= matches.length) { if (more) more.remove(); try { io && io.disconnect(); } catch (e) {} }
+    else if (more) {
+      var b = more.querySelector('button'); if (b) b.textContent = '⬇ عرض المزيد (' + (matches.length - shown) + ')';
+      try { io.unobserve(more); io.observe(more); } catch (e) {} /* لو لسه ظاهر يكمّل يحمّل */
+    }
+  };
+  /* تحديثات البيانات (متصل/مش متصل...): منرسمش الجدول وإنت بتسكرول، بنستنى لما تقف */
+  var lastScroll = 0;
+  window.addEventListener('scroll', function(){ lastScroll = Date.now(); }, { passive: true, capture: true });
   window.renderStudentsTable = function(){
     if (!built && allUsersList.length) { built = true; build(true); return; }
     if (tmr) return;
-    tmr = setTimeout(function(){ tmr = null; build(false); }, 1500);
+    tmr = setTimeout(function run(){
+      if (Date.now() - lastScroll < 900) { tmr = setTimeout(run, 900); return; }
+      tmr = null; build(false);
+    }, 2500);
   };
   window.filterAdminStudents = function(){
     if (inR) return;
@@ -16030,9 +16086,16 @@ function openThemePicker() {
   };
   function permFor(fn, a0){ var r = RULES[fn]; return typeof r === 'function' ? r(a0) : r; }
   var CALL = /^\s*(?:event\.stopPropagation\(\);\s*)?(?:return\s+)?(?:window\.)?([A-Za-z_$][\w$]*)\s*\(\s*(?:\\?['"]([^'"\\]*))?/;
-  function scan(){
+  var SEL = '[onclick],form[onsubmit],[data-perm]';
+  function scan(roots){
     if (!isStaffUser()) return;
-    var els = document.querySelectorAll('[onclick],form[onsubmit],[data-perm]');
+    if (isOwnerUser()) { if (!scan.__ownerClean) { scan.__ownerClean = true; document.querySelectorAll('.perm-hidden').forEach(function(x){ x.classList.remove('perm-hidden'); }); } return; } /* المالك عنده كل الصلاحيات */
+    scan.__ownerClean = false;
+    var els;
+    if (roots && roots.length) {
+      els = [];
+      roots.forEach(function(r){ if (!r.isConnected) return; if (r.matches && r.matches(SEL)) els.push(r); r.querySelectorAll && Array.prototype.push.apply(els, r.querySelectorAll(SEL)); });
+    } else els = document.querySelectorAll(SEL);
     for (var i = 0; i < els.length; i++) {
       var el = els[i], dn = null, target = el;
       var dp = el.getAttribute('data-perm');
@@ -16073,8 +16136,13 @@ function openThemePicker() {
     };
   });
 
-  var mt = null;
-  try { new MutationObserver(function(){ if (mt) return; mt = setTimeout(function(){ mt = null; scan(); }, 90); }).observe(document.body, {childList: true, subtree: true}); } catch(e){}
+  /* بنفحص الأجزاء اللي اتضافت بس، مش الصفحة كلها مع كل تغيير */
+  var mt = null, pend = [];
+  try { new MutationObserver(function(list){
+    for (var i = 0; i < list.length; i++) { var a = list[i].addedNodes; for (var j = 0; j < a.length; j++) if (a[j].nodeType === 1) pend.push(a[j]); }
+    if (mt || !pend.length) return;
+    mt = setTimeout(function(){ mt = null; var r = pend; pend = []; scan(r.length > 400 ? null : r); }, 90);
+  }).observe(document.body, {childList: true, subtree: true}); } catch(e){}
 
   var __rst = window.renderStudentsTable, rt = null;
   window.renderStudentsTable = function(){
