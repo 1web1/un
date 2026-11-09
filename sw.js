@@ -1,4 +1,4 @@
-const CACHE_NAME = 'monasa-cache-v5'; // v5: المستوى التاني على مشروع Firebase جديد
+const CACHE_NAME = 'monasa-cache-v6'; // v6: الـ service worker مبقاش يلمس طلبات المواقع التانية (درايف)
 const STATIC_ASSETS = [
   './',
   './index.html',
@@ -35,6 +35,8 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   // Network first, fallback to cache for offline availability
   if (event.request.method !== 'GET') return;
+  // طلبات المواقع التانية (درايف، Firebase، المكتبات...) بتروح على طول من غير ما نلمسها
+  if (new URL(event.request.url).origin !== self.location.origin) return;
   const isPage = event.request.mode === 'navigate';
   event.respondWith(
     // الصفحة نفسها: نتجاوز كاش المتصفح ونسأل السيرفر دايماً عشان آخر نسخة تظهر على طول
