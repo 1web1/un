@@ -16158,15 +16158,55 @@ function openThemePicker() {
   function openOriginal(u) { try { window.open(u, '_blank', 'noopener,noreferrer'); } catch (e) {} }
 
   /* جلب الملف من السكريبت مرة واحدة (آخر 3 ملفات بيفضلوا في الذاكرة: العرض ثم التحميل مش بيجيب الملف تاني) */
-  var fileCache = {}, cacheOrder = [];
-  function fetchFile(id) {
-    if (fileCache[id]) return fileCache[id];
-    var p = fetch(WM_PROXY + '?id=' + encodeURIComponent(id))
+  /* الطريق السريع: Google Drive API مباشرة (مفتاح "Drive viewer" في مشروع Dof3aa Level 2، مقفول على درايف وعلى مواقع المنصة بس).
+     لو فشل لأي سبب بنرجع للسكريبت (Apps Script). */
+  var DRIVE_KEY = 'AIzaSyCQyIFa5NU9aAa99O8rDu3tOsCyv594SHg';
+  var DAPI = 'https://www.googleapis.com/drive/v3/files/';
+  var GDOC = /^application\/vnd\.google-apps\.(document|presentation|spreadsheet)$/;
+  var metaCache = {};
+  function driveMeta(id) {
+    if (!metaCache[id]) {
+      metaCache[id] = fetch(DAPI + id + '?fields=name,mimeType,size&supportsAllDrives=true&key=' + DRIVE_KEY)
+        .then(function (r) { if (!r.ok) throw new Error('meta ' + r.status); return r.json(); });
+      metaCache[id].catch(function () { delete metaCache[id]; });
+    }
+    return metaCache[id];
+  }
+  function mediaUrl(id) { return DAPI + id + '?alt=media&supportsAllDrives=true&key=' + DRIVE_KEY; }
+  /* قراءة الملف مع نسبة التحميل (total = حجم الملف من درايف) */
+  function readWithProgress(r, total, onProg) {
+    if (!onProg || !total || !r.body || !r.body.getReader) return r.arrayBuffer().then(function (b) { return new Uint8Array(b); });
+    var reader = r.body.getReader(), parts = [], got = 0;
+    function pump() {
+      return reader.read().then(function (x) {
+        if (x.done) { var out = new Uint8Array(got), o = 0; parts.forEach(function (p) { out.set(p, o); o += p.length; }); return out; }
+        parts.push(x.value); got += x.value.length; try { onProg(Math.min(99, Math.floor(got * 100 / total))); } catch (e) {}
+        return pump();
+      });
+    }
+    return pump();
+  }
+  function fetchDirect(id, onProg) {
+    return driveMeta(id).then(function (m) {
+      var gdoc = GDOC.test(m.mimeType), name = m.name || '';
+      if (gdoc && !/\.pdf$/i.test(name)) name += '.pdf';
+      var url = gdoc ? DAPI + id + '/export?mimeType=application%2Fpdf&key=' + DRIVE_KEY : mediaUrl(id);
+      return fetch(url).then(function (r) { if (!r.ok) throw new Error('media ' + r.status); return readWithProgress(r, gdoc ? 0 : +m.size, onProg); })
+        .then(function (bytes) { return { bytes: bytes, mime: gdoc ? 'application/pdf' : String(m.mimeType || ''), name: name }; });
+    });
+  }
+  function fetchViaProxy(id) {
+    return fetch(WM_PROXY + '?id=' + encodeURIComponent(id))
       .then(function (r) { return r.json(); })
       .then(function (j) {
         if (!j || !j.ok) throw new Error((j && j.error) || 'fetch');
         return { bytes: b64ToBytes(j.data), mime: String(j.mime || ''), name: j.name || '' };
       });
+  }
+  var fileCache = {}, cacheOrder = [];
+  function fetchFile(id, onProg) {
+    if (fileCache[id]) return fileCache[id];
+    var p = fetchDirect(id, onProg).catch(function () { return fetchViaProxy(id); });
     fileCache[id] = p; cacheOrder.push(id);
     p.catch(function () { if (fileCache[id] === p) delete fileCache[id]; });
     while (cacheOrder.length > 3) { var old = cacheOrder.shift(); if (cacheOrder.indexOf(old) < 0) delete fileCache[old]; }
@@ -16180,7 +16220,7 @@ function openThemePicker() {
     var id = driveId(u);
     if (!id || !wmEnabled()) { openOriginal(u); return; }
     try { Swal.fire({ title: 'جاري تحميل الملف ⏳', allowOutsideClick: false, showConfirmButton: false, didOpen: function () { Swal.showLoading(); } }); } catch (e) {}
-    fetchFile(id)
+    fetchFile(id, function (pct) { try { if (Swal.isVisible()) Swal.update({ title: 'جاري تحميل الملف ⏳ ' + pct + '%' }); Swal.showLoading(); } catch (e) {} })
       .then(function (f) {
         var bytes = f.bytes, mime = f.mime, name = f.name || title;
         if (/pdf/i.test(mime) || /\.pdf$/i.test(name)) {
@@ -16465,22 +16505,24 @@ function openThemePicker() {
     V.el.classList.add('open');
     var t0 = Date.now();
     V.timer = setInterval(function () { var s = Math.round((Date.now() - t0) / 1000); if (s >= 4) V.ls.textContent = 'الملفات الكبيرة بتاخد ثواني زيادة... (' + s + ' ث)'; }, 1000);
-    fetchFile(id).then(function (f) {
+    function showPdf(pdf) {
+      if (tok !== V.tok) { pdf.destroy(); return; }
+      V.pdf = pdf; var all = [];
+      for (var i = 1; i <= pdf.numPages; i++) all.push(pdf.getPage(i));
+      return Promise.all(all).then(function (pages) {
+        if (tok !== V.tok) return;
+        clearInterval(V.timer);
+        setupPages(pages.map(function (pg) { var vp = pg.getViewport({ scale: 1 }); return { w: vp.width, h: vp.height, page: pg }; }));
+      });
+    }
+    loadPdfJs().catch(function () {}); /* نحمّل العارض في نفس وقت الملف */
+    fetchFile(id, function (pct) { if (tok === V.tok) V.lt.textContent = 'جاري تحميل الملف... ' + pct + '%'; }).then(function (f) {
       if (tok !== V.tok) return;
       if (isPdfFile(f)) {
         V.lt.textContent = 'بنجهّز الصفحات...';
         return loadPdfJs()
           .then(function (lib) { return lib.getDocument({ data: f.bytes.slice() }).promise; })
-          .then(function (pdf) {
-            if (tok !== V.tok) { pdf.destroy(); return; }
-            V.pdf = pdf; var all = [];
-            for (var i = 1; i <= pdf.numPages; i++) all.push(pdf.getPage(i));
-            return Promise.all(all).then(function (pages) {
-              if (tok !== V.tok) return;
-              clearInterval(V.timer);
-              setupPages(pages.map(function (pg) { var vp = pg.getViewport({ scale: 1 }); return { w: vp.width, h: vp.height, page: pg }; }));
-            });
-          });
+          .then(showPdf);
       }
       if (isImgFile(f)) {
         return loadImg(f).then(function (img) {
