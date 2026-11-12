@@ -5282,10 +5282,17 @@ body[class*="theme-"] .mob-nav-item.active{color:var(--primary)!important}
                    <h3 style="color:#60a5fa; font-size:16px; margin-top:0;">🎨 شكل صفحة المواد</h3>
                    <div id="subjui-status" style="text-align:center; padding:10px; margin-bottom:10px; border-radius:8px; font-weight:bold; font-size:14px; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1);">...</div>
                    <p style="font-size:12.5px; color:var(--fg-faint); margin:0 0 10px; line-height:1.7;">الشكل الجديد: كروت الملفات بغلاف، فلتر (محاضرات / سكاشن / امتحانات)، بحث جوه المادة، وزرار شرح للطلاب. تقدر ترجع للقديم في أي وقت من هنا.</p>
-                   <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                      <button class="pill" type="button" onclick="setSubjectsUI('preview')" style="background:rgba(96,165,250,.18); border:1px solid rgba(96,165,250,.45); color:#93c5fd; flex:1;">👀 جرّبه ليّا بس</button>
-                      <button class="pill" type="button" onclick="setSubjectsUI('v2')" style="background:#2563eb; flex:1;">✅ فعّله لكل الطلاب</button>
-                      <button class="pill" type="button" onclick="setSubjectsUI('v1')" style="background:rgba(239,68,68,.15); border:1px solid rgba(239,68,68,.4); color:#fca5a5; flex:1;">↩️ رجّع الشكل القديم</button>
+                   <style>
+                     .subjui-opts{display:flex; flex-direction:column; gap:8px}
+                     .subjui-opt{display:flex; align-items:center; gap:10px; width:100%; min-height:44px; padding:8px 12px; border-radius:12px; border:1.5px solid rgba(255,255,255,.14); background:rgba(255,255,255,.04); color:var(--fg); font:inherit; font-size:13.5px; font-weight:700; cursor:pointer; text-align:right; opacity:.75}
+                     .subjui-opt .mk{margin-inline-start:auto; flex:none; white-space:nowrap; font-size:11.5px; font-weight:900; padding:2px 10px; border-radius:999px; display:none}
+                     .subjui-opt.on{opacity:1; border-color:#4ade80; background:rgba(74,222,128,.12); box-shadow:0 0 0 3px rgba(74,222,128,.15)}
+                     .subjui-opt.on .mk{display:inline-block; background:#4ade80; color:#052e16}
+                   </style>
+                   <div class="subjui-opts">
+                      <button class="subjui-opt" id="subjui-opt-v2" type="button" onclick="setSubjectsUI('v2')">✅ الجديد شغال لكل الطلاب <span class="mk">✓ شغال دلوقتي</span></button>
+                      <button class="subjui-opt" id="subjui-opt-preview" type="button" onclick="setSubjectsUI('preview')">👀 الجديد ليّا أنا بس (تجربة) <span class="mk">✓ شغال دلوقتي</span></button>
+                      <button class="subjui-opt" id="subjui-opt-v1" type="button" onclick="setSubjectsUI('v1')">↩️ القديم للكل <span class="mk">✓ شغال دلوقتي</span></button>
                    </div>
                 </div>
                 <div class="card liquid-glass" style="background:rgba(0,0,0,.4);">
@@ -17233,7 +17240,11 @@ body.subj-v2 .subject-hero-card .pill{height:36px;font-size:12.5px}
     var p = preview() === 'v2';
     if (remote === 'v2') { el.textContent = '✅ الشكل الجديد شغال لكل الطلاب'; el.style.color = '#4ade80'; }
     else { el.textContent = '⚪ الشكل القديم شغال للطلاب' + (p ? ' — وإنت شايف الجديد كتجربة 👀' : ''); el.style.color = p ? '#93c5fd' : ''; }
+    /* علامة "✓ شغال دلوقتي" على الاختيار الحالي */
+    var cur = remote === 'v2' ? 'v2' : (p ? 'preview' : 'v1');
+    ['v2', 'preview', 'v1'].forEach(function (m) { var b = document.getElementById('subjui-opt-' + m); if (b) b.classList.toggle('on', m === cur); });
   }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () { status(); }); else setTimeout(status, 0);
   function attach() {
     if (attach.done) return; attach.done = true;
     database.ref('settings/subjectsUI').on('value', function (s) {
@@ -17250,11 +17261,26 @@ body.subj-v2 .subject-hero-card .pill{height:36px;font-size:12.5px}
 
   window.setSubjectsUI = function (mode) {
     if (mode === 'preview') {
-      try { localStorage.setItem(LS_PREV, preview() === 'v2' ? '' : 'v2'); } catch (e) {}
-      rerender();
-      Swal.fire({ toast: true, position: 'top', timer: 3500, showConfirmButton: false, icon: 'info', title: preview() === 'v2' ? 'الشكل الجديد ظاهر ليك إنت بس 👀 افتح أي مادة وشوفه' : 'رجعت للشكل اللي الطلاب شايفينه' });
-      return;
+      if (remote !== 'v2') {
+        if (preview() === 'v2') { Swal.fire({ toast: true, position: 'top', timer: 2500, showConfirmButton: false, icon: 'info', title: 'ده الشغال دلوقتي بالفعل 👍' }); return; }
+        try { localStorage.setItem(LS_PREV, 'v2'); } catch (e) {}
+        rerender();
+        Swal.fire({ toast: true, position: 'top', timer: 3500, showConfirmButton: false, icon: 'info', title: 'الشكل الجديد ظاهر ليك إنت بس 👀 افتح أي مادة وشوفه' });
+        return;
+      }
+      /* الجديد شغال للكل: "ليّا بس" = نرجّع الطلاب للقديم وإنت تفضل شايف الجديد */
+      return Swal.fire({ title: 'ترجّع الطلاب للشكل القديم؟', text: 'إنت هتفضل شايف الشكل الجديد كتجربة، والطلاب يرجعولهم القديم.', icon: 'question', showCancelButton: true, confirmButtonText: 'أيوه', cancelButtonText: 'إلغاء' })
+        .then(function (r) {
+          if (!r.isConfirmed) return;
+          return database.ref('settings/subjectsUI').set('v1').then(function () {
+            try { localStorage.setItem(LS_PREV, 'v2'); } catch (e) {}
+            try { logAdminAction('شكل صفحة المواد', 'الرجوع للشكل القديم للطلاب (المالك بيجرب الجديد)'); } catch (e) {}
+            remote = 'v1'; rerender();
+            Swal.fire({ toast: true, position: 'top', timer: 3000, showConfirmButton: false, icon: 'success', title: 'الطلاب رجعوا للقديم، وإنت شايف الجديد 👀' });
+          });
+        }).catch(function (e) { Swal.fire('خطأ', (e && e.message) || 'مقدرتش أحفظ', 'error'); });
     }
+    if ((mode === 'v2' && remote === 'v2') || (mode === 'v1' && remote !== 'v2' && preview() !== 'v2')) { Swal.fire({ toast: true, position: 'top', timer: 2500, showConfirmButton: false, icon: 'info', title: 'ده الشغال دلوقتي بالفعل 👍' }); return; }
     var v2 = mode === 'v2';
     Swal.fire({ title: v2 ? 'تفعيل الشكل الجديد لكل الطلاب؟' : 'ترجع الشكل القديم لكل الطلاب؟', text: v2 ? 'تقدر ترجع للقديم في أي وقت من نفس المكان.' : 'كل حاجة هترجع زي ما كانت بالظبط (الأغلفة بتفضل محفوظة لو حبيت ترجع للجديد).', icon: 'question', showCancelButton: true, confirmButtonText: v2 ? 'أيوه فعّله ✅' : 'أيوه رجّعه ↩️', cancelButtonText: 'إلغاء', confirmButtonColor: v2 ? '#2563eb' : '#ef4444' })
       .then(function (r) {
