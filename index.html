@@ -5166,9 +5166,26 @@ body[class*="theme-"] .mob-nav-item.active{color:var(--primary)!important}
              </div>
              <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); margin-bottom: 24px;">
                 <div class="card liquid-glass" style="background:rgba(0,0,0,.4); grid-column: 1 / -1; border-color: #8b5cf6;">
-                   <h3 style="color:#8b5cf6; font-size:16px; margin-top:0;">📨 طلبات أبحاث جديدة من الطلاب <span id="research-req-count" class="status-badge status-offline" style="margin-right:8px;">0</span></h3>
+                   <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:8px;">
+                      <h3 style="color:#8b5cf6; font-size:16px; margin:0;">📨 طلبات أبحاث جديدة من الطلاب <span id="research-req-count" class="status-badge status-offline" style="margin-right:8px;">0</span></h3>
+                      <button class="pill" type="button" onclick="openSimilarResearch()" style="height:34px; font-size:12.5px; background:rgba(251,191,36,.15); border:1px solid rgba(251,191,36,.45); color:#fbbf24;">🔁 افحص الأبحاث المتكررة</button>
+                   </div>
                    <p style="font-size:12px; color:var(--fg-faint); margin-bottom:10px;">لما توافق، البحث بيتضاف للقائمة ويتحجز للطالب اللي طلبه مباشرة.</p>
                    <div id="research-requests-list"><div style="text-align:center; color:var(--fg-faint); font-size:13px;">مفيش طلبات</div></div>
+                </div>
+                <div class="card liquid-glass" style="background:rgba(0,0,0,.4); grid-column: 1 / -1; border-color: #64748b;">
+                   <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:10px;">
+                      <h3 style="font-size:16px; margin:0;">📋 الأبحاث الاستثنائية (اللي اتقبلت أو اترفضت)</h3>
+                      <div class="level-tabs" style="margin:0; padding:3px; background:rgba(0,0,0,.35);">
+                         <button type="button" class="level-tab-btn active" id="res-hist-tab-ok" style="padding:6px 14px; font-size:13px; display:inline-flex; flex-direction:row; align-items:center; gap:5px; white-space:nowrap;" onclick="setResearchHistoryTab('ok')">✅ اتقبلت <span id="res-hist-n-ok">0</span></button>
+                         <button type="button" class="level-tab-btn" id="res-hist-tab-no" style="padding:6px 14px; font-size:13px; display:inline-flex; flex-direction:row; align-items:center; gap:5px; white-space:nowrap;" onclick="setResearchHistoryTab('no')">❌ اترفضت <span id="res-hist-n-no">0</span></button>
+                      </div>
+                   </div>
+                   <div id="research-history-list" style="max-height:420px; overflow:auto;"><div style="text-align:center; color:var(--fg-faint); font-size:13px;">جاري التحميل...</div></div>
+                   <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-top:10px;">
+                      <button type="button" class="pill" id="res-hist-old-btn" onclick="loadResearchHistoryFromLogs()" style="height:32px; font-size:12px; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.18); color:var(--fg);">📜 هات الطلبات القديمة من سجل النشاط</button>
+                      <span style="font-size:11.5px; color:var(--fg-faint);">الطلبات الجديدة بتظهر هنا لوحدها. القديمة بتتجاب من سجل النشاط لما تدوس الزرار (مرة واحدة).</span>
+                   </div>
                 </div>
                 <div class="card liquid-glass" style="background:rgba(0,0,0,.4); grid-column: 1 / -1; border-color: #14b8a6;">
                    <h3 style="color: #14b8a6; font-size: 16px; margin-top:0;">إضافة أبحاث بالجملة (كل بحث في سطر)</h3>
@@ -5796,7 +5813,7 @@ body[class*="theme-"] .mob-nav-item.active{color:var(--primary)!important}
           <label>المستوى الدراسي</label>
           <select id="auth-level"><option value="2">المستوى الثاني</option></select>
         </div>
-        <div class="input-group"><label>البريد الإلكتروني</label><input type="email" id="auth-email" placeholder="student@example.com" required autocomplete="email" autocapitalize="none" autocorrect="off" spellcheck="false" inputmode="email" dir="ltr"></div>
+        <div class="input-group"><label>البريد الإلكتروني</label><input type="email" id="auth-email" placeholder="ahmed123@gmail.com" required autocomplete="email" autocapitalize="none" autocorrect="off" spellcheck="false" inputmode="email" dir="ltr" oninput="__emailHint(0)" onblur="__emailHint(1)"><div id="auth-email-hint" style="display:none; margin-top:6px; padding:8px 10px; border-radius:10px; background:rgba(245,158,11,.12); border:1px solid rgba(245,158,11,.4); color:#fbbf24; font-size:12.5px; line-height:1.7;"></div></div>
         <div class="input-group" id="pass-group"><label>كلمة المرور</label><input type="password" id="auth-pass" placeholder="••••••••" minlength="6" autocomplete="current-password" autocapitalize="none" autocorrect="off" spellcheck="false" dir="ltr"><a href="javascript:void(0)" onclick="togglePassVisibility()" id="pass-eye" style="font-size:12px; color:var(--fg-soft); margin-top:6px; text-decoration:underline;">👁️ إظهار كلمة المرور</a></div>
         <div id="forgot-pass-wrap" style="text-align: left; margin-top: 4px;"><a href="javascript:void(0)" onclick="handleForgotPassword()" style="color: var(--fg-soft); font-size: 12px; text-decoration: underline;">نسيت كلمة المرور؟</a> <span style="color:var(--fg-faint); font-size:12px;">•</span> <a href="javascript:void(0)" onclick="resetWithPastedLink()" style="color: var(--gold); font-size: 12px; text-decoration: underline;">معايا رابط الاستعادة</a></div>
         <button class="pill" type="submit" id="auth-submit-btn" style="width:100%; height:44px; margin-top:10px; font-size: 15px;">دخول</button>
@@ -5805,6 +5822,7 @@ body[class*="theme-"] .mob-nav-item.active{color:var(--primary)!important}
         <span id="auth-switch-text">ليس لديك حساب؟</span>
         <a href="javascript:void(0)" onclick="toggleAuthMode()" id="auth-switch-link" style="color:var(--primary); font-weight:bold; margin-right:4px;">إنشاء حساب جديد</a>
       </p>
+      <button type="button" class="z-content" onclick="openAuthSupport()" style="display:flex; align-items:center; justify-content:center; gap:8px; width:100%; margin-top:12px; padding:10px 12px; border-radius:12px; border:1px dashed rgba(56,189,248,.55); background:rgba(56,189,248,.08); color:#7dd3fc; font:inherit; font-size:13px; font-weight:700; cursor:pointer;">🎧 عندك مشكلة في الدخول أو التسجيل؟ كلّم الدعم الفني</button>
     </div>
   </div>
 
@@ -6999,8 +7017,52 @@ ${escText(alertBody)}
       document.getElementById('auth-switch-link').innerText = isRegisterMode ? 'تسجيل الدخول' : 'إنشاء حساب جديد';
     }
 
+    /* ===== تصحيح غلطات الإيميل (gamil.com / gmail.con / gmial.com ...) =====
+       بيرجّع الإيميل المتصلّح لو فيه غلطة في اسم موقع الإيميل، أو '' لو الإيميل سليم أو مش من المواقع المعروفة */
+    const __MAIL_BASES = ['gmail', 'yahoo', 'hotmail', 'outlook', 'icloud', 'live', 'ymail', 'aol', 'msn', 'googlemail', 'mail', 'gmx', 'yandex', 'protonmail', 'proton'];
+    const __MAIL_OK_TLD = { gmail: ['com'], googlemail: ['com'], yahoo: ['com', 'com.eg', 'co.uk', 'fr', 'de'], hotmail: ['com', 'co.uk', 'fr', 'de', 'it'], outlook: ['com', 'sa', 'fr', 'de'], icloud: ['com'], live: ['com', 'co.uk', 'fr'], ymail: ['com'], aol: ['com'], msn: ['com'], mail: ['com', 'ru'], gmx: ['com', 'de', 'net'], yandex: ['com', 'ru'], protonmail: ['com', 'ch'], proton: ['me'] };
+    /* إيميل مش حقيقي (منسوخ من المثال اللي في الخانة) */
+    function __emailFake(raw) { return /@(example|test|email|domain)\.(com|org|net)$/i.test(String(raw || '').trim()); }
+    function __lev(a, b) { const m = a.length, n = b.length, d = []; for (let i = 0; i <= m; i++) { d[i] = [i]; } for (let j = 1; j <= n; j++) d[0][j] = j;
+      for (let i = 1; i <= m; i++) for (let j = 1; j <= n; j++) d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)); return d[m][n]; }
+    function __emailFix(raw) {
+      const e = String(raw || '').trim().toLowerCase().replace(/\s+/g, '').replace(/,/g, '.');
+      const m = e.match(/^([^@]+)@([^@]+)$/); if (!m) return '';
+      let user = m[1], dom = m[2].replace(/\.+$/, '');
+      if (!dom.includes('.')) { const k = dom.match(/^([a-z]+?)(com|con|cm)$/); if (k) dom = k[1] + '.com'; }
+      const i = dom.indexOf('.'), base = i < 0 ? dom : dom.slice(0, i), tld = i < 0 ? '' : dom.slice(i + 1);
+      let best = '', bd = 99; __MAIL_BASES.forEach(b => { const x = __lev(base, b); if (x < bd) { bd = x; best = b; } });
+      if (!best || bd > (base.length >= 5 ? 2 : (base.length >= 3 ? 1 : 0))) return '';
+      const okT = __MAIL_OK_TLD[best] || ['com'], fixed = user + '@' + best + '.' + (okT.indexOf(tld) >= 0 ? tld : 'com');
+      return fixed !== String(raw || '').trim().toLowerCase() ? fixed : '';
+    }
+    function __emailHint(done) {
+      const inp = document.getElementById('auth-email'), box = document.getElementById('auth-email-hint'); if (!inp || !box) return;
+      const fix = __emailFix(inp.value);
+      const reg = typeof isRegisterMode !== 'undefined' && isRegisterMode;
+      if (reg && __emailFake(inp.value) && (done || /\.(com|org|net)$/i.test(inp.value))) { box.innerHTML = '⚠️ ده مش إيميل حقيقي (ده المثال بس). اكتب إيميلك اللي بتفتحه، زي <b dir="ltr">ahmed@gmail.com</b>'; box.style.display = 'block'; return; }
+      /* وهو لسه بيكتب: منظهرش غير لما يكتب النقطة بعد @ (gmail.) — ولما يخرج من الخانة بنظهر على طول */
+      if (!fix || (!done && !/@[^@]*\./.test(inp.value))) { box.style.display = 'none'; return; }
+      box.innerHTML = '🤔 تقصد <b dir="ltr">' + escText(fix) + '</b>؟ ' +
+        '<a href="javascript:void(0)" onclick="__applyEmailFix()" style="color:#fde047; font-weight:800; text-decoration:underline;">أيوه صلّحه</a>' +
+        (reg ? '' : '<div style="font-size:11.5px; opacity:.8;">لو حسابك متسجل بالإيميل ده بالظبط سيبه زي ما هو.</div>');
+      box.style.display = 'block';
+    }
+    function __applyEmailFix() { const inp = document.getElementById('auth-email'), fix = __emailFix(inp && inp.value); if (fix) { inp.value = fix; } __emailHint(1); }
+
     async function handleAuth(e) {
       e.preventDefault();
+      /* إنشاء حساب بإيميل فيه غلطة: نسأل الطالب الأول، عشان من غيرها إيميل "نسيت كلمة المرور" عمره ما هيوصله */
+      try {
+        const em = document.getElementById('auth-email'); if (em) em.value = em.value.trim().replace(/\s+/g, '');
+        if (isRegisterMode && __emailFake(em && em.value)) { __emailHint(1); return Swal.fire('اكتب إيميلك الحقيقي', 'الإيميل ده مش حقيقي (ده المثال اللي في الخانة). اكتب الإيميل اللي بتفتحه على موبايلك، عشان لو نسيت الباسورد يوصلك رابط الاستعادة.', 'warning'); }
+        const fix = isRegisterMode && __emailFix(em && em.value);
+        if (fix) {
+          const r = await Swal.fire({ title: 'الإيميل شكله فيه غلطة', html: 'إنت كاتب: <b dir="ltr">' + escText(em.value) + '</b><br>تقصد: <b dir="ltr" style="color:#4ade80;">' + escText(fix) + '</b>؟<div style="font-size:12.5px; opacity:.8; margin-top:8px;">لو الإيميل غلط، مش هيوصلك إيميل استعادة الباسورد لو نسيته.</div>', icon: 'warning', showDenyButton: true, showCancelButton: true, confirmButtonText: 'أيوه صلّحه ✅', denyButtonText: 'لأ إيميلي صح', cancelButtonText: 'رجوع', confirmButtonColor: '#16a34a', denyButtonColor: '#64748b' });
+          if (r.isConfirmed) { em.value = fix; __emailHint(1); }
+          else if (!r.isDenied) return;
+        }
+      } catch (err) {}
       const btn = document.getElementById('auth-submit-btn'); if (btn.disabled) return;
       if (!FB_OK) return Swal.fire('خطأ', 'مكتبة Firebase ماتحمّلتش (النت ضعيف أو محجوب). حدّث الصفحة وجرب تاني.', 'error');
       const email = document.getElementById('auth-email').value.trim().toLowerCase(); const pass = document.getElementById('auth-pass').value;
@@ -7019,6 +7081,9 @@ ${escText(alertBody)}
         if (__isBad(err) && pass !== pass.trim() && pass.trim()) {
           try { await auth.signInWithEmailAndPassword(email, pass.trim()); return; } catch (e2) { err = e2; }
         }
+        /* الطالب كتب الإيميل غلط وهو بيدخل (gamil بدل gmail): نجرّب بالإيميل الصح لوحده */
+        const __fx = __isBad(err) ? __emailFix(email) : '';
+        if (__fx) { try { await auth.signInWithEmailAndPassword(__fx, pass.trim() || pass); const ei = document.getElementById('auth-email'); if (ei) ei.value = __fx; return; } catch (e3) {} }
         if (__isBad(err) && await __accountInOtherLevel(email, pass)) return;
         const O = PLATFORM_LEVEL === 1 ? 2 : 1;
         const hint = (__isBad(err) && levelAvailable(O)) ? '<br><br>📍 انت دلوقتي في منصة <b>' + levelName(PLATFORM_LEVEL) + '</b>. لو حسابك في ' + levelName(O) + '، ادخل من الزرار اللي فوق في شاشة الدخول.' : '';
@@ -8625,7 +8690,7 @@ ${escText(alertBody)}
       if (adminResearchOn) return; adminResearchOn = true;
       database.ref('research_topics').on('value', snap => { __applyTopics(snap.val()); });
       database.ref('research_requests').on('value', snap => {
-        const v = snap.val() || {}; researchRequests = Object.keys(v).map(k => ({ uid: k, ...v[k] })); renderAdminRequests();
+        const v = snap.val() || {}; researchRequests = Object.keys(v).map(k => ({ uid: k, ...v[k] })); renderAdminRequests(); try { renderResearchHistory(); } catch (e) {}
       }, err => { console.error('research_requests:', err); const b = document.getElementById('research-requests-list'); if (b) b.innerHTML = '<div style="color:#f87171; font-size:13px;">مش قادر أقرأ الطلبات: ' + escText(err.message) + ' — راجع قواعد Firebase.</div>'; });
     }
 
@@ -8635,7 +8700,7 @@ ${escText(alertBody)}
       researchTopics = Object.keys(val).map(k => ({ key: k, ...val[k] }));
       researchTopics.sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ar'));
       clearTimeout(window.__topicsRenderT);
-      window.__topicsRenderT = setTimeout(() => { renderResearchHome(); renderAdminResearchTable(); renderMyRequest(); }, 250);
+      window.__topicsRenderT = setTimeout(() => { renderResearchHome(); renderAdminResearchTable(); renderMyRequest(); try { renderResearchHistory(); } catch (e) {} }, 250);
     }
     async function __fetchTopics() {
       if (!currentUser) return;
@@ -8729,6 +8794,16 @@ ${escText(alertBody)}
         const title = res.value.trim();
         const dup = researchTopics.find(r => normName(r.name) === normName(title));
         if (dup) return Swal.fire('البحث موجود', dup.claimedBy ? 'البحث ده موجود في القائمة لكنه محجوز لطالب تاني.' : 'البحث ده موجود في القائمة وفاضي، احجزه مباشرة.', 'info');
+        /* نفس البحث بس مكتوب بشكل تاني (مثلاً "النفط في المملكة" بدل "البترول في السعودية") */
+        const near = __resMatches(title, researchTopics);
+        const nearTaken = near.find(m => m.s >= 0.75 && m.item.claimedBy);
+        if (nearTaken) return Swal.fire('فيه بحث شبهه محجوز', 'البحث ده تقريباً هو هو بحث «' + escText(nearTaken.item.name) + '» وده محجوز لطالب تاني. اختار موضوع مختلف.', 'warning');
+        const nearFree = near.find(m => m.s >= 0.75 && !m.item.claimedBy);
+        if (nearFree) return Swal.fire('البحث موجود', 'فيه بحث في القائمة شبه ده وفاضي: «' + escText(nearFree.item.name) + '». احجزه من القائمة مباشرة.', 'info');
+        if (near.length) {
+          const go = await Swal.fire({ title: 'فيه أبحاث شبه ده', html: 'اتأكد إن بحثك مختلف عن:<br>' + near.slice(0, 3).map(m => '• «' + escText(m.item.name) + '»' + (m.item.claimedBy ? ' (محجوز)' : '')).join('<br>'), icon: 'question', showCancelButton: true, confirmButtonText: 'أيوه بحثي مختلف، ابعت', cancelButtonText: 'هغيّره' });
+          if (!go.isConfirmed) return;
+        }
         try {
           const t = await currentUser.getIdToken();
           const body = { uid: currentUser.uid, name: currentStudentData.name || '', title, status: 'pending', createdAt: Date.now() };
@@ -8755,27 +8830,112 @@ ${escText(alertBody)}
       const pending = researchRequests.filter(r => r.status === 'pending').sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
       const cnt = document.getElementById('research-req-count'); if (cnt) { cnt.textContent = pending.length; cnt.className = 'status-badge ' + (pending.length ? 'status-online' : 'status-offline'); }
       if (!pending.length) { box.innerHTML = '<div style="text-align:center; color:var(--fg-faint); font-size:13px;">مفيش طلبات جديدة</div>'; return; }
-      box.innerHTML = pending.map(r => `<div class="profile-row" style="display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px; padding:10px 12px; margin-bottom:8px; border-radius:10px; background:rgba(255,255,255,.04);">
-        <div style="min-width:200px; flex:1;"><div style="font-weight:bold; word-break:break-word;">${escText(r.title)}</div><div style="font-size:12px; color:var(--fg-faint);">الطالب: ${escText(r.name || 'غير معروف')}</div></div>
-        <div class="action-group"><button class="btn-sm btn-msg" onclick="approveResearchRequest('${r.uid}')">✅ موافقة وحجز</button><button class="btn-sm btn-ban" onclick="rejectResearchRequest('${r.uid}')">❌ رفض</button></div></div>`).join('');
+      const __taken = researchTopics.filter(t => t.claimedBy);
+      box.innerHTML = pending.map(r => {
+        const nt = __resMatches(r.title, __taken.filter(t => t.claimedBy !== r.uid))[0];
+        const nr = __resMatches(r.title, pending.filter(x => x.uid !== r.uid), x => x.title)[0];
+        const warn = nt ? `⚠️ شبه بحث محجوز: «${escText(nt.item.name)}» (${Math.round(nt.s * 100)}%)` : (nr ? `⚠️ شبه طلب تاني: «${escText(nr.item.title)}» من ${escText(nr.item.name || 'طالب')} (${Math.round(nr.s * 100)}%)` : '');
+        return `<div class="profile-row" style="display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px; padding:10px 12px; margin-bottom:8px; border-radius:10px; background:rgba(255,255,255,.04);${warn ? ' border:1px solid rgba(245,158,11,.45);' : ''}">
+        <div style="min-width:200px; flex:1;"><div style="font-weight:bold; word-break:break-word;">${escText(r.title)}</div><div style="font-size:12px; color:var(--fg-faint);">الطالب: ${escText(r.name || 'غير معروف')}</div>${warn ? `<div style="font-size:12px; color:#fbbf24; margin-top:4px;">${warn}</div>` : ''}</div>
+        <div class="action-group"><button class="btn-sm btn-msg" onclick="approveResearchRequest('${r.uid}')">✅ موافقة وحجز</button><button class="btn-sm btn-ban" onclick="rejectResearchRequest('${r.uid}')">❌ رفض</button></div></div>`; }).join('');
     }
 
     function approveResearchRequest(uid) {
       const req = researchRequests.find(r => r.uid === uid); if (!req) return;
       const u = allUsersList.find(x => x.uid === uid);
       if (u && u.researchTopic) return Swal.fire('مش ممكن', 'الطالب ده حاجز بحث تاني بالفعل. ارفض الطلب أو حرّر حجزه الأول.', 'warning');
-      Swal.fire({ title: 'الموافقة على الطلب؟', text: `"${req.title}" — هيتضاف للقائمة ويتحجز للطالب ${req.name || ''}.`, icon: 'question', showCancelButton: true, confirmButtonText: 'موافقة', cancelButtonText: 'إلغاء' }).then(res => {
+      /* تحذير لو فيه بحث محجوز أو طلب تاني شبهه (حتى لو مكتوب بشكل مختلف) */
+      const __nearT = __resMatches(req.title, researchTopics.filter(r => r.claimedBy && r.claimedBy !== uid));
+      const __nearR = __resMatches(req.title, researchRequests.filter(r => r.status === 'pending' && r.uid !== uid), r => r.title);
+      const __warn = __nearT.slice(0, 3).map(m => `• «${escText(m.item.name)}» محجوز لـ ${escText(m.item.claimedByName || 'طالب')} — تشابه ${Math.round(m.s * 100)}%`)
+        .concat(__nearR.slice(0, 3).map(m => `• «${escText(m.item.title)}» طلب من ${escText(m.item.name || 'طالب')} — تشابه ${Math.round(m.s * 100)}%`));
+      Swal.fire({ title: 'الموافقة على الطلب؟', html: `"${escText(req.title)}" — هيتضاف للقائمة ويتحجز للطالب ${escText(req.name || '')}.` + (__warn.length ? `<div style="text-align:right; margin-top:12px; padding:10px 12px; border-radius:10px; background:rgba(245,158,11,.12); border:1px solid rgba(245,158,11,.4); color:#fbbf24; font-size:13px; line-height:1.8;"><b>⚠️ انتبه، فيه أبحاث شبهه:</b><br>${__warn.join('<br>')}</div>` : ''), icon: __warn.length ? 'warning' : 'question', showCancelButton: true, confirmButtonText: __warn.length ? 'موافقة برضه' : 'موافقة', cancelButtonText: 'إلغاء' }).then(res => {
         if (!res.isConfirmed) return;
         const ex = researchTopics.find(r => normName(r.name) === normName(req.title));
         if (ex && ex.claimedBy) return Swal.fire('بحث مكرر', 'فيه بحث بنفس الاسم محجوز لطالب تاني. ارفض الطلب.', 'warning');
         const id = ex ? ex.key : database.ref('research_topics').push().key, up = {};
-        if (ex) { up['research_topics/' + id + '/claimedBy'] = uid; up['research_topics/' + id + '/claimedByName'] = req.name || ''; up['research_topics/' + id + '/claimedAt'] = { '.sv': 'timestamp' }; }
-        else up['research_topics/' + id] = { name: req.title, claimedBy: uid, claimedByName: req.name || '', claimedAt: { '.sv': 'timestamp' } };
+        /* fromRequest: علامة إن البحث اتقبل استثنائي (طلب من الطالب)، عشان يظهر في قايمة "اتقبلت استثنائي" */
+        const __by = (currentStudentData && currentStudentData.name) || '';
+        if (ex) { up['research_topics/' + id + '/claimedBy'] = uid; up['research_topics/' + id + '/claimedByName'] = req.name || ''; up['research_topics/' + id + '/claimedAt'] = { '.sv': 'timestamp' }; up['research_topics/' + id + '/fromRequest'] = true; up['research_topics/' + id + '/approvedBy'] = __by; up['research_topics/' + id + '/requestedByName'] = req.name || ''; }
+        else up['research_topics/' + id] = { name: req.title, claimedBy: uid, claimedByName: req.name || '', claimedAt: { '.sv': 'timestamp' }, fromRequest: true, approvedBy: __by, requestedByName: req.name || '' };
         up['users/' + uid + '/researchTopic'] = id; up['users/' + uid + '/researchTopicName'] = req.title; up['users/' + uid + '/researchTopicAt'] = { '.sv': 'timestamp' };
         up['research_requests/' + uid] = null;
         database.ref().update(up).then(() => { logAdminAction('موافقة على طلب بحث', `${req.title} — ${req.name || uid}`); Swal.fire('تمت الموافقة ✅', 'البحث اتضاف واتحجز للطالب.', 'success'); })
           .catch(err => Swal.fire('خطأ', escText(err.message), 'error'));
       });
+    }
+
+    /* ===== قايمة الأبحاث الاستثنائية: اللي اتقبلت (fromRequest) واللي اترفضت ===== */
+    const __resHist = { tab: 'ok', logs: null, loading: false, autoTried: false };
+    function setResearchHistoryTab(t) {
+      __resHist.tab = t;
+      ['ok', 'no'].forEach(x => { const b = document.getElementById('res-hist-tab-' + x); if (b) b.classList.toggle('active', x === t); });
+      renderResearchHistory();
+    }
+    function __splitLog(d) { d = String(d || ''); const i = d.lastIndexOf(' — '); return i < 0 ? { title: d.trim(), name: '' } : { title: d.slice(0, i).trim(), name: d.slice(i + 3).trim() }; }
+    function __resHistData() {
+      const ok = [], no = [], seenOk = new Set(), seenNo = new Set();
+      const holder = name => researchTopics.find(t => t.claimedBy && t.claimedByName && t.claimedByName === name);
+      /* مين اللي وافق/رفض: من الطلب نفسه لو متسجل، أو من سجل النشاط */
+      const logBy = (action, title, name) => { const l = (__resHist.logs || []).filter(x => x.action === action).reverse().find(x => { const p = __splitLog(x.details); return normName(p.title) === normName(title) && (!name || !p.name || p.name === name); }); return l ? (l.adminName || '') : ''; };
+      researchTopics.filter(t => t.fromRequest).forEach(t => {
+        seenOk.add(normName(t.name)); const st = t.requestedByName || t.claimedByName || '';
+        ok.push({ title: t.name, student: st, when: t.claimedAt || 0, by: t.approvedBy || logBy('موافقة على طلب بحث', t.name, st), active: !!t.claimedBy, topic: t });
+      });
+      researchRequests.filter(r => r.status === 'rejected').forEach(r => {
+        seenNo.add(normName(r.title) + '|' + (r.name || '')); const now = researchTopics.find(t => t.claimedBy === r.uid);
+        no.push({ title: r.title, student: r.name || '', when: r.createdAt || 0, by: logBy('رفض طلب بحث', r.title, r.name || ''), reason: r.reason || '', now: now ? now.name : '', uid: r.uid });
+      });
+      (__resHist.logs || []).forEach(l => {
+        const p = __splitLog(l.details);
+        if (l.action === 'موافقة على طلب بحث' && !seenOk.has(normName(p.title))) {
+          seenOk.add(normName(p.title)); const t = researchTopics.find(x => normName(x.name) === normName(p.title));
+          ok.push({ title: p.title, student: p.name, when: l.timestamp || 0, by: l.adminName || '', active: !!(t && t.claimedBy), topic: t, old: true });
+        } else if (l.action === 'رفض طلب بحث' && !seenNo.has(normName(p.title) + '|' + p.name)) {
+          seenNo.add(normName(p.title) + '|' + p.name); const now = holder(p.name);
+          no.push({ title: p.title, student: p.name, when: l.timestamp || 0, by: l.adminName || '', reason: '', now: now ? now.name : '', old: true });
+        }
+      });
+      ok.sort((a, b) => (b.when || 0) - (a.when || 0)); no.sort((a, b) => (b.when || 0) - (a.when || 0));
+      return { ok, no };
+    }
+    function renderResearchHistory() {
+      const box = document.getElementById('research-history-list'); if (!box) return;
+      try { if (!(currentStudentData && isStaffUser() && hasPerm('research.manage'))) return; } catch (e) { return; }
+      const d = __resHistData(), list = __resHist.tab === 'ok' ? d.ok : d.no;
+      const nOk = document.getElementById('res-hist-n-ok'), nNo = document.getElementById('res-hist-n-no');
+      if (nOk) nOk.textContent = '(' + d.ok.length + ')'; if (nNo) nNo.textContent = '(' + d.no.length + ')';
+      const fmt = t => { try { return t ? new Date(t).toLocaleDateString('ar-EG', { day: 'numeric', month: 'short', year: 'numeric' }) : ''; } catch (e) { return ''; } };
+      if (!list.length) { box.innerHTML = `<div style="text-align:center; color:var(--fg-faint); font-size:13px; padding:12px;">${__resHist.tab === 'ok' ? 'مفيش أبحاث اتقبلت استثنائي لسه' : 'مفيش طلبات اترفضت'}${__resHist.logs ? '' : ' (دوس الزرار تحت عشان تجيب القديم)'}</div>`; return; }
+      box.innerHTML = list.map((x, i) => {
+        const tag = __resHist.tab === 'ok'
+          ? (x.active ? '<span style="color:#4ade80;">✔ لسه حاجزه</span>' : '<span style="color:#f87171;">✖ الحجز اتلغى</span>')
+          : (x.now ? `<span style="color:#60a5fa;">↪ دلوقتي حاجز: «${escText(x.now)}»</span>` : '<span style="color:#94a3b8;">لسه ملوش بحث</span>');
+        const extra = __resHist.tab === 'no' && x.reason ? `<div style="font-size:12px; color:#fca5a5; margin-top:3px;">السبب: ${escText(x.reason)}</div>` : '';
+        return `<div style="display:flex; gap:10px; align-items:flex-start; padding:9px 10px; border-radius:10px; margin-bottom:6px; background:rgba(255,255,255,.04);">
+          <div style="font-size:12px; color:var(--fg-faint); min-width:22px; text-align:center; padding-top:2px;">${i + 1}</div>
+          <div style="flex:1; min-width:0;"><div style="font-weight:800; font-size:13.5px; word-break:break-word;">${escText(x.title)}</div>
+            <div style="font-size:12px; color:var(--fg-soft); margin-top:3px; display:flex; gap:10px; flex-wrap:wrap;"><span>👤 ${escText(x.student || 'غير معروف')}</span>${fmt(x.when) ? `<span>📅 ${fmt(x.when)}</span>` : ''}<span style="color:${__resHist.tab === 'ok' ? '#86efac' : '#fca5a5'}; font-weight:700;">${__resHist.tab === 'ok' ? '✍️ وافق عليه' : '✍️ رفضه'}: ${x.by ? escText(x.by) : '<span style="opacity:.6; font-weight:400;">مش معروف</span>'}</span>${tag}</div>${extra}</div></div>`;
+      }).join('');
+      /* لو فيه حد مش معروف مين وافق/رفض عليه: نجيب آخر 300 عملية من السجل مرة واحدة بس في الجلسة */
+      if (!__resHist.logs && !__resHist.autoTried && (d.ok.some(x => !x.by) || d.no.some(x => !x.by))) {
+        __resHist.autoTried = true;
+        database.ref('admin_logs').limitToLast(300).once('value').then(snap => {
+          if (__resHist.logs) return; const logs = []; snap.forEach(c => { const v = c.val(); if (v && (v.action === 'موافقة على طلب بحث' || v.action === 'رفض طلب بحث')) logs.push(v); });
+          __resHist.logs = logs; renderResearchHistory();
+        }).catch(() => {});
+      }
+    }
+    /* القديم: من سجل النشاط (آخر 800 عملية بس، ومرة واحدة لما تدوس الزرار) */
+    function loadResearchHistoryFromLogs() {
+      if (__resHist.loading) return; __resHist.loading = true;
+      const b = document.getElementById('res-hist-old-btn'); if (b) { b.disabled = true; b.textContent = '⏳ بجيب من السجل...'; }
+      database.ref('admin_logs').limitToLast(800).once('value').then(snap => {
+        const logs = []; snap.forEach(c => { const v = c.val(); if (v && (v.action === 'موافقة على طلب بحث' || v.action === 'رفض طلب بحث')) logs.push(v); });
+        __resHist.logs = logs; renderResearchHistory();
+        if (b) { b.textContent = '✅ اتجاب القديم من السجل (' + logs.length + ' عملية)'; }
+      }).catch(err => { if (b) { b.disabled = false; b.textContent = '📜 هات الطلبات القديمة من سجل النشاط'; } Swal.fire('خطأ', escText(err.message), 'error'); })
+        .then(() => { __resHist.loading = false; });
     }
 
     function rejectResearchRequest(uid) {
@@ -8925,6 +9085,84 @@ ${escText(alertBody)}
       });
     }
     function normName(x) { return String(x || '').toLowerCase().replace(/[\u064B-\u0652\u0640]/g, '').replace(/[أإآٱ]/g, 'ا').replace(/ى/g, 'ي').replace(/ة/g, 'ه').replace(/[^\u0621-\u064A0-9a-z]+/g, ''); }
+    /* ===== تشابه عناوين الأبحاث (حتى لو مش مكتوبين بالنص) =====
+       "البترول في السعوديه" = "البترول في السعودية" = "النفط في المملكة العربية السعودية"
+       بيشيل الحروف الزيادة (ال، و، ب...) وكلمات زي "دراسة / في / باستخدام"، وبيستحمل غلطة حرف،
+       والكلمات اللي متكررة في أبحاث كتير (زي "نظم المعلومات") وزنها أقل من أسماء الأماكن والمواضيع. */
+    const __RES_STOP = new Set(['في','من','علي','الي','عن','مع','بين','و','او','ثم','حتي','ما','هو','هي','التي','الذي','الذين','ذلك','هذه','هذا','دراسه','تحليل','تحليليه','باستخدام','استخدام','مدينه','محافظه','مركز','منطقه','حاله','دوله','جمهوريه','جغرافيه','جغرافي','gis','نظم','معلومات','استشعار','بعد','تطبيقات','تطبيق']);
+    const __RES_SYN = { 'نفط': 'بترول', 'ماء': 'مياه', 'ميا': 'مياه', 'سكاني': 'سكان', 'عمراني': 'عمران' };
+    function __resNorm(s) { return String(s || '').toLowerCase().replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/[ً-ٰٟـ]/g, '').replace(/[أإآٱ]/g, 'ا').replace(/ى/g, 'ي').replace(/ة/g, 'ه').replace(/ؤ/g, 'و').replace(/ئ/g, 'ي').replace(/[^ء-يa-z0-9]+/g, ' ').trim()
+        .replace(/(ال)?مملكه (ال)?عربيه (ال)?سعوديه/g, 'السعوديه').replace(/(ال)?مملكه (ال)?سعوديه/g, 'السعوديه').replace(/جمهوريه مصر (ال)?عربيه/g, 'مصر').replace(/(ال)?امارات (ال)?عربيه (ال)?متحده/g, 'الامارات').replace(/(ال)?ولايات (ال)?متحده (ال)?امريكيه/g, 'امريكا'); }
+    function __resStem(w) {
+      if (w.length > 5 && /^(وال|بال|فال|كال|لال)/.test(w)) w = w.slice(3);
+      else if (w.length > 4 && /^لل/.test(w)) w = w.slice(2);
+      else if (w.length > 4 && /^ال/.test(w)) w = w.slice(2);
+      else if (w.length > 4 && /^و/.test(w)) w = w.slice(1);
+      if (w.length > 5 && /(ات|ين|ون|يه)$/.test(w)) w = w.slice(0, -2);
+      else if (w.length > 4 && /[هي]$/.test(w)) w = w.slice(0, -1);
+      return __RES_SYN[w] || w;
+    }
+    function __resIsStop(w) { return __RES_STOP.has(w) || (/^(ال|لل|بال|وال)/.test(w) && __RES_STOP.has(w.replace(/^(ال|لل|بال|وال)/, ''))) || (/^[لبوك]/.test(w) && __RES_STOP.has(w.slice(1))); }
+    function __resTokens(s) { const out = []; __resNorm(s).split(' ').forEach(w => { if (!w || __resIsStop(w)) return; const st = __resStem(w); if (st.length < 2 || __resIsStop(st)) return; if (out.indexOf(st) < 0) out.push(st); }); return out; }
+    function __resNear(a, b) {
+      /* نفس الكلمة، أو حرف زيادة/ناقص بس (زي "لطنطا" و"طنطا").
+         تبديل حرف بحرف مش بيتحسب، لأنه بيغيّر المعنى: ألمانيا/ألبانيا، السياحة/السياسة، آيسلندا/أيرلندا */
+      if (a === b) return true; const la = a.length, lb = b.length; if (Math.abs(la - lb) !== 1 || Math.min(la, lb) < 4) return false;
+      const L = la > lb ? a : b, S = la > lb ? b : a; let i = 0, j = 0, skipped = false;
+      while (i < L.length && j < S.length) { if (L[i] === S[j]) { i++; j++; } else if (!skipped) { skipped = true; i++; } else return false; }
+      return true;
+    }
+    function __resIdf(titles) { const df = {}, n = Math.max(titles.length, 1); titles.forEach(t => __resTokens(t).forEach(w => { df[w] = (df[w] || 0) + 1; })); return w => Math.log(1 + n / (df[w] || 1)); }
+    /* بيرجّع رقم من 0 لـ 1: من 0.75 = غالباً نفس البحث، من 0.55 = متشابه ومحتاج يتراجع */
+    function __resSim(a, b, idf) {
+      idf = idf || (() => 1);
+      const A = Array.isArray(a) ? a : __resTokens(a), B = Array.isArray(b) ? b : __resTokens(b); if (!A.length || !B.length) return 0;
+      const used = new Set(); let inter = 0, matchedA = 0;
+      A.forEach(x => { for (let k = 0; k < B.length; k++) { if (!used.has(k) && __resNear(x, B[k])) { used.add(k); matchedA++; inter += Math.min(idf(x), idf(B[k])); return; } } });
+      const wA = A.reduce((s, x) => s + idf(x), 0), wB = B.reduce((s, x) => s + idf(x), 0), jac = inter / (wA + wB - inter);
+      /* لو كل عنوان فيه كلمة مميزة مش في التاني (زي اسم بلد مختلف) يبقوا بحثين مختلفين: التشابه = الكلمات المشتركة بس.
+         لو عنوان كله جوه التاني ("البترول في السعودية" جوه "إنتاج البترول في السعودية") يبقى غالباً نفس البحث */
+      const subset = matchedA === A.length || used.size === B.length;
+      return Math.round((subset ? 0.5 * jac + 0.5 * inter / Math.min(wA, wB) : jac) * 100) / 100;
+    }
+    /* أقرب أبحاث لعنوان معين من قايمة (بيرجّع اللي تشابههم 0.55 أو أكتر، الأقرب الأول) */
+    function __resMatches(title, list, getTitle) {
+      getTitle = getTitle || (x => x.name);
+      const idf = __resIdf(list.map(getTitle).concat([title])), T = __resTokens(title);
+      return list.map(x => ({ item: x, s: normName(getTitle(x)) === normName(title) ? 1 : __resSim(T, __resTokens(getTitle(x)), idf) })).filter(m => m.s >= 0.55).sort((p, q) => q.s - p.s);
+    }
+
+    /* فحص كل الأبحاث (المحجوزة والفاضية والطلبات) ولمّ المتشابه مع بعضه */
+    function openSimilarResearch() {
+      const items = researchTopics.map(t => ({ kind: 'topic', title: t.name || '', t }))
+        .concat(researchRequests.filter(r => r.status === 'pending').map(r => ({ kind: 'req', title: r.title || '', r })));
+      if (!items.length) return Swal.fire('مفيش أبحاث', 'لسه مفيش أبحاث ولا طلبات.', 'info');
+      const idf = __resIdf(items.map(x => x.title)), toks = items.map(x => __resTokens(x.title)), par = items.map((_, i) => i), best = items.map(() => 0);
+      const find = i => par[i] === i ? i : (par[i] = find(par[i]));
+      for (let i = 0; i < items.length; i++) for (let j = i + 1; j < items.length; j++) {
+        const s = normName(items[i].title) === normName(items[j].title) ? 1 : __resSim(toks[i], toks[j], idf);
+        if (s >= 0.55) { par[find(i)] = find(j); best[i] = Math.max(best[i], s); best[j] = Math.max(best[j], s); }
+      }
+      const groups = {}; items.forEach((x, i) => { if (best[i]) (groups[find(i)] = groups[find(i)] || []).push(i); });
+      const list = Object.values(groups).map(g => ({ g, s: Math.max.apply(null, g.map(i => best[i])) })).sort((a, b) => b.s - a.s);
+      /* طالب حاجز أكتر من بحث */
+      const byUid = {}; researchTopics.forEach(t => { if (t.claimedBy) (byUid[t.claimedBy] = byUid[t.claimedBy] || []).push(t); });
+      const multi = Object.keys(byUid).filter(u => byUid[u].length > 1);
+      const row = i => { const x = items[i];
+        const st = x.kind === 'req' ? `<span style="color:#c4b5fd;">📨 طلب من ${escText(x.r.name || 'طالب')} (مستني موافقة)</span>`
+          : (x.t.claimedBy ? `<span style="color:#4ade80;">✔ محجوز لـ ${escText(x.t.claimedByName || 'طالب')}</span>` : '<span style="color:#94a3b8;">⚪ فاضي في القائمة</span>');
+        const act = x.kind === 'req' ? `<button class="btn-sm btn-ban" onclick="rejectResearchRequest('${x.r.uid}')">❌ رفض الطلب</button>`
+          : (x.t.claimedBy ? '' : `<button class="btn-sm btn-ban" onclick="adminDeleteResearchTopic('${x.t.key}','${escapeHtml(x.t.name || '')}')">🗑️ حذف</button>`);
+        return `<div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; padding:8px 10px; border-top:1px solid rgba(255,255,255,.06);"><div style="flex:1; min-width:180px;"><div style="font-weight:800; font-size:13.5px;">${escText(x.title)}</div><div style="font-size:12px; margin-top:2px;">${st}</div></div>${act}</div>`; };
+      const html = '<div style="text-align:right; direction:rtl; max-height:62vh; overflow:auto;">' +
+        '<div style="font-size:12.5px; color:#a1a1aa; margin-bottom:10px; line-height:1.7;">بيقارن بالمعنى مش بالحروف بس: بيتجاهل (ال، و، في، دراسة، باستخدام...) والهمزات والتاء المربوطة وغلطات الحرف الواحد، وبيعرف إن النفط = البترول. <b>راجع بنفسك قبل ما تحذف أو ترفض</b>، لأن مكانين مختلفين في نفس الموضوع بيبانوا متشابهين.</div>' +
+        (multi.length ? '<div style="padding:10px 12px; border-radius:12px; background:rgba(239,68,68,.12); border:1px solid rgba(239,68,68,.4); margin-bottom:12px;"><b style="color:#f87171;">⛔ طلاب حاجزين أكتر من بحث</b>' + multi.map(u => `<div style="font-size:13px; margin-top:6px;">• ${escText(byUid[u][0].claimedByName || 'طالب')}: ${byUid[u].map(t => '«' + escText(t.name) + '»').join(' و ')}</div>`).join('') + '</div>' : '') +
+        (list.length ? list.map(x => `<div style="border:1px solid ${x.s >= 0.75 ? 'rgba(239,68,68,.45)' : 'rgba(245,158,11,.4)'}; border-radius:12px; margin-bottom:10px; overflow:hidden;"><div style="padding:7px 10px; font-size:12.5px; font-weight:900; background:${x.s >= 0.75 ? 'rgba(239,68,68,.12)' : 'rgba(245,158,11,.1)'}; color:${x.s >= 0.75 ? '#f87171' : '#fbbf24'};">${x.s >= 0.75 ? '🔴 غالباً نفس البحث' : '🟡 متشابهين، راجعهم'} — تشابه ${Math.round(x.s * 100)}%</div>${x.g.map(row).join('')}</div>`).join('')
+          : '<div style="text-align:center; padding:20px; color:#4ade80; font-size:15px;">مفيش أبحاث متكررة ولا متشابهة 🎉</div>') + '</div>';
+      Swal.fire({ title: '🔁 الأبحاث المتكررة والمتشابهة', html, width: 760, showConfirmButton: false, showCloseButton: true, background: '#18181b', color: '#fff',
+        didOpen: p => { try { p.style.setProperty('background', '#18181b', 'important'); p.style.setProperty('backdrop-filter', 'none', 'important'); } catch (e) {} } });
+    }
+
     function addResearchTopic(e) {
       e.preventDefault(); const name = document.getElementById('single-research-name').value.trim(); if (!name) return;
       if (researchTopics.some(r => normName(r.name) === normName(name))) return Swal.fire('بحث مكرر', 'فيه بحث بنفس الاسم موجود بالفعل.', 'warning');
@@ -14115,6 +14353,9 @@ function openThemePicker() {
       whatsapp: ''
     };
 
+    /* نجمة صغيرة جنب اسم زياد (المالك) في قايمة الدعم الفني بس */
+    const __ZIAD_STAR = '<span title="مالك المنصة" style="color:#fbbf24; margin-inline-start:6px;">⭐</span>';
+    function __isZiad(label) { return /زياد|ziad/i.test(String(label || '')); }
     /* ===== الدعم الفني (3 أرقام قابلة للتعديل من الأدمن) ===== */
     let supportContacts = [{ label: '', phone: '' }, { label: '', phone: '' }, { label: '', phone: '' }];
     let supportListening = false;
@@ -14124,6 +14365,7 @@ function openThemePicker() {
         const v = snap.val();
         const arr = Array.isArray(v) ? v : (v ? Object.values(v) : []);
         supportContacts = [0, 1, 2].map(i => ({ label: String((arr[i] && arr[i].label) || ''), phone: String((arr[i] && arr[i].phone) || '') }));
+        try { localStorage.setItem('support_contacts_cache', JSON.stringify(supportContacts.filter(c => c.phone.trim()))); } catch (e) {}
         renderSupportList();
       }, () => { supportListening = false; });
     }
@@ -14134,7 +14376,7 @@ function openThemePicker() {
       else box.innerHTML = items.map(c => {
         const digits = c.phone.replace(/\D/g, '');
         return `<div style="background:rgba(255,255,255,.05); border:1px solid rgba(14,165,233,.35); border-radius:12px; padding:10px 12px; text-align:right;">
-          <div style="font-weight:bold; margin-bottom:6px;">${escText(c.label || 'الدعم الفني')}</div>
+          <div style="font-weight:bold; margin-bottom:6px;">${escText(c.label || 'الدعم الفني')}${__isZiad(c.label) ? __ZIAD_STAR : ''}</div>
           <div style="direction:ltr; text-align:right; color:var(--primary); font-weight:bold; margin-bottom:8px;">${escText(c.phone)}</div>
           <div style="display:flex; gap:8px;">
             <a class="pill" style="background:#16a34a; color:#fff; flex:1; text-decoration:none; justify-content:center;" href="https://wa.me/${digits}" target="_blank" rel="noopener">💬 واتساب</a>
@@ -14144,6 +14386,37 @@ function openThemePicker() {
       const eb = document.getElementById('support-edit-btn'); if (eb) eb.style.display = hasPerm('system.tools') ? 'block' : 'none';
     }
     function openSupportModal() { listenToSupport(); renderSupportList(); document.getElementById('support-overlay').style.display = 'flex'; }
+
+    /* الدعم الفني من شاشة تسجيل الدخول / إنشاء حساب (الطالب لسه مش مسجّل، فمش قادر يقرا الداتابيز):
+       بنجيب الأرقام من /api/support-contacts (الاسم والرقم بس)، ولو الجهاز كان مسجّل قبل كده بنعرض المحفوظ على طول */
+    async function openAuthSupport() {
+      const reg = typeof isRegisterMode !== 'undefined' && isRegisterMode;
+      const msg = encodeURIComponent('السلام عليكم، عندي مشكلة في ' + (reg ? 'إنشاء حساب' : 'تسجيل الدخول') + ' على منصة El dof3aa Btzaker' + (PLATFORM_LEVEL ? ' (' + levelName(PLATFORM_LEVEL) + ')' : '') + '.');
+      const render = list => list.length ? list.map(c => { const d = String(c.phone).replace(/\D/g, '');
+        return `<div style="background:rgba(255,255,255,.05); border:1px solid rgba(14,165,233,.35); border-radius:12px; padding:10px 12px; text-align:right; margin-bottom:8px;">
+          <div style="font-weight:bold; margin-bottom:4px;">${escText(c.label || 'الدعم الفني')}${__isZiad(c.label) ? __ZIAD_STAR : ''}</div>
+          <div style="direction:ltr; text-align:right; color:#38bdf8; font-weight:bold; margin-bottom:8px;">${escText(c.phone)}</div>
+          <div style="display:flex; gap:8px;"><a class="pill" style="background:#16a34a; color:#fff; flex:1; text-decoration:none; justify-content:center;" href="https://wa.me/${d}?text=${msg}" target="_blank" rel="noopener">💬 واتساب</a>
+          <a class="pill" style="background:#0ea5e9; color:#fff; flex:1; text-decoration:none; justify-content:center;" href="tel:${d}">📞 اتصال</a></div></div>`; }).join('')
+        : '<div style="padding:14px; color:#a1a1aa;">مفيش أرقام دعم متضافة لسه.</div>';
+      let cached = []; try { cached = JSON.parse(localStorage.getItem('support_contacts_cache') || '[]') || []; } catch (e) {}
+      const tips = '<div style="text-align:right; font-size:12.5px; color:#a1a1aa; line-height:1.8; margin-bottom:10px;">قبل ما تكلمنا جرّب: اتأكد من الإيميل (من غير مسافات، و gmail.com مش gamil)، ولو نسيت الباسورد دوس «نسيت كلمة المرور».</div>';
+      const solid = p => { try { p.style.setProperty('background', '#18181b', 'important'); p.style.setProperty('backdrop-filter', 'none', 'important'); } catch (e) {} };
+      Swal.fire({ title: '🎧 الدعم الفني', width: 460, showConfirmButton: false, showCloseButton: true, background: '#18181b', color: '#fff',
+        html: tips + '<div id="auth-support-list">' + (cached.length ? render(cached) : '<div style="padding:14px;">⏳ بجيب الأرقام...</div>') + '</div>',
+        didOpen: async p => {
+          solid(p);
+          try {
+            const r = await fetch('/api/support-contacts?level=' + (PLATFORM_LEVEL || 2));
+            const j = await r.json(); const list = (j && j.contacts) || [];
+            if (list.length || !cached.length) { const box = document.getElementById('auth-support-list'); if (box) box.innerHTML = render(list); }
+            if (list.length) try { localStorage.setItem('support_contacts_cache', JSON.stringify(list)); } catch (e) {}
+          } catch (e) {
+            const box = document.getElementById('auth-support-list');
+            if (box && !cached.length) box.innerHTML = '<div style="padding:14px; color:#f87171;">مقدرتش أجيب الأرقام دلوقتي، جرّب تاني كمان شوية.</div>';
+          }
+        } });
+    }
     async function adminEditSupport() {
       if (!hasPerm('system.tools')) { Swal.fire('غير مصرح', 'تعديل أرقام الدعم الفني غير متاح لحسابك.', 'error'); return; }
       const row = (i) => `<div style="text-align:right; font-size:12px; margin:8px 0 2px;">الرقم ${i + 1}:</div>
@@ -16223,7 +16496,7 @@ function openThemePicker() {
     addSubjectVideo:'videos.add', editSubjectVideo:'videos.edit', toggleVideoExt:'videos.edit', deleteSubjectVideo:'videos.delete',
     addAIQuizzes:'quizzes.add', addQuiz:'quizzes.add', editQuiz:'quizzes.edit', deleteQuiz:'quizzes.delete', deleteAllQuizzesFromSubject:'quizzes.delete', resetSubjectQuizzes:'quizzes.delete', deleteChapterQuizzes:'quizzes.delete',
     addSubjectImage:'images.manage', deleteSubjectImage:'images.manage',
-    adminSaveResearchSettings:'research.manage', addBulkResearchTopics:'research.manage', addResearchTopic:'research.manage', adminDeleteResearchTopic:'research.manage', adminFreeResearch:'research.manage',
+    adminSaveResearchSettings:'research.manage', openSimilarResearch:'research.manage', loadResearchHistoryFromLogs:'research.manage', addBulkResearchTopics:'research.manage', addResearchTopic:'research.manage', adminDeleteResearchTopic:'research.manage', adminFreeResearch:'research.manage',
     adminResetAllResearchBookings:'system.danger',
     updateAlert:'system.tools', clearGlobalAlert:'system.tools', postTargetedAnnouncement:'system.tools', deleteAnnouncement:'system.tools', deletePoll:'system.tools', deleteGroupLink:'system.tools', setMaintenance:'system.tools', setLevel2Restrictions:'system.tools', adminEditSupport:'system.tools', adminEditFounderInfo:'system.tools',
     resetAllScores:'system.danger', clearAdminLogs:'system.danger', exportFullDatabaseJSON:'system.danger', syncAllLeaderboard:'system.danger'
@@ -16815,6 +17088,9 @@ function openThemePicker() {
 })();
 </script>
 <style>
+/* الفوتر (اسم المنصة + المؤسس + فريق المنصة/لينكدإن/واتساب) مستخبي بطلب المالك.
+   متشالش من الكود عشان أجزاء تانية بتكتب فيه، ولو حبيت ترجعه امسح السطر ده بس */
+footer.sf{display:none !important}
 /* ===== بطاقات الوصول السريع في الرئيسية: صف صغير بدل الكروت الكبيرة،
    وعلى الموبايل مستخبية خالص لأنها موجودة في البار اللي تحت وفي قائمة "أدوات" ===== */
 .quick-access-grid{display:flex !important;flex-wrap:wrap;gap:8px !important;margin-bottom:18px !important}
