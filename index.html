@@ -16846,7 +16846,7 @@ function openThemePicker() {
   var FV_CSS =
     '#fv{position:fixed;inset:0;z-index:16000000;display:none;flex-direction:column;background:#202124;color:#e8eaed;font-family:Cairo,system-ui,sans-serif}' +
     '#fv.open{display:flex}' +
-    '#fv .fv-bar{display:flex;align-items:center;gap:8px;padding:8px 10px;background:#2b2c30;border-bottom:1px solid rgba(255,255,255,.08);flex-wrap:wrap;direction:rtl;flex:none}' +
+    '#fv .fv-bar{display:flex;align-items:center;gap:8px;padding:calc(8px + env(safe-area-inset-top, 0px)) calc(10px + env(safe-area-inset-right, 0px)) 8px calc(10px + env(safe-area-inset-left, 0px));background:#2b2c30;border-bottom:1px solid rgba(255,255,255,.08);flex-wrap:wrap;direction:rtl;flex:none}' +
     '#fv .fv-title{flex:1;min-width:0;font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;unicode-bidi:plaintext;text-align:right;order:1}' +
     '#fv .fv-ctrls{display:flex;align-items:center;gap:10px;order:2}' +
     '#fv .fv-dl{order:3}#fv .fv-x{order:4}' +
@@ -16860,7 +16860,7 @@ function openThemePicker() {
     '#fv .fv-zoom{min-width:46px;text-align:center;font-size:13px;opacity:.85}' +
     '#fv .fv-body{flex:1;position:relative;min-height:0}' +
     '#fv .fv-scroll{position:absolute;inset:0;overflow:auto;touch-action:pan-x pan-y;-webkit-overflow-scrolling:touch}' +
-    '#fv .fv-pages{position:relative;display:flex;flex-direction:column;align-items:center;gap:12px;padding:14px;width:max-content;min-width:100%;box-sizing:border-box}' +
+    '#fv .fv-pages{position:relative;display:flex;flex-direction:column;align-items:center;gap:12px;padding:14px 14px calc(14px + env(safe-area-inset-bottom, 0px));width:max-content;min-width:100%;box-sizing:border-box}' +
     '#fv .fv-page{position:relative;background:#fff;box-shadow:0 2px 12px rgba(0,0,0,.5);flex:none}' +
     '#fv .fv-page canvas{position:absolute;inset:0;width:100%;height:100%;display:block}' +
     '#fv .fv-load{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;font-size:15px;font-weight:700;background:#202124;z-index:2;text-align:center;padding:20px}' +
