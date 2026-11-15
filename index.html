@@ -17831,13 +17831,32 @@ body.subj-v2 .subject-hero-card .pill{height:36px;font-size:12.5px}
   }
 
   function iosSteps() {
-    Swal.fire({ title: 'الإشعارات على الآيفون 📱', confirmButtonText: 'تمام',
+    Swal.fire({ title: 'الإشعارات على الآيفون 📱', confirmButtonText: 'تمام', showDenyButton: true, denyButtonText: '🎬 شوف فيديو الشرح', denyButtonColor: '#f59e0b',
+      preDeny: function () { setTimeout(function () { showTutorial('iphone'); }, 50); },
       html: '<div style="text-align:right; line-height:2.1; font-size:14px;">الآيفون بيبعت إشعارات للمواقع المثبّتة بس:<br>1️⃣ افتح المنصة من <b>Safari</b><br>2️⃣ دوس زرار <b>المشاركة</b> ⬆️ تحت<br>3️⃣ اختار <b>إضافة إلى الشاشة الرئيسية</b> ➕<br>4️⃣ افتح المنصة من الأيقونة الجديدة وسجّل دخول<br>5️⃣ من البروفايل دوس <b>فعّل الإشعارات 🔔</b><div style="font-size:12px; opacity:.75; margin-top:6px;">محتاج iOS 16.4 أو أحدث.</div></div>' });
   }
   function deniedHelp() {
     Swal.fire({ title: 'الإشعارات مقفولة 🔕', confirmButtonText: 'تمام',
       html: '<div style="text-align:right; line-height:2; font-size:14px;">إنت (أو المتصفح) قفلت الإشعارات للمنصة قبل كده. عشان ترجّعها:<br>• <b>أندرويد/كروم:</b> دوس القفل 🔒 جنب رابط المنصة ← الأذونات ← الإشعارات ← سماح<br>• <b>الآيفون:</b> الإعدادات ← الإشعارات ← El dof3aa Btzaker ← سماح<br>وبعدين ارجع دوس فعّل الإشعارات تاني.</div>' });
   }
+  /* فيديو الشرح (متخزّن على المنصة نفسها في /videos — مش بيتحمّل غير لما الطالب يفتحه) */
+  var TUT = { iphone: '/videos/notif-iphone.mp4', android: '/videos/notif-android.mp4' };
+  function showTutorial(kind) {
+    kind = kind === 'iphone' || kind === 'android' ? kind : (isIOS() ? 'iphone' : 'android');
+    var other = kind === 'iphone' ? 'android' : 'iphone';
+    Swal.fire({
+      title: kind === 'iphone' ? 'تفعيل الإشعارات على الآيفون 📱' : 'تفعيل الإشعارات على أندرويد 🤖',
+      width: 440, padding: '14px', confirmButtonText: 'تمام', confirmButtonColor: '#f59e0b',
+      html: '<video id="push-tut-video" src="' + TUT[kind] + '" poster="' + TUT[kind].replace('.mp4', '.jpg') + '" controls playsinline preload="none" style="width:100%; max-height:62vh; aspect-ratio:9/16; object-fit:contain; border-radius:14px; background:#000; display:block;"></video>' +
+        '<button type="button" id="push-tut-other" style="margin-top:10px; background:none; border:0; color:#fbbf24; font:inherit; font-size:13px; text-decoration:underline; cursor:pointer;">' + (other === 'iphone' ? 'عندك آيفون؟ شوف شرح الآيفون' : 'عندك أندرويد؟ شوف شرح أندرويد') + '</button>',
+      didOpen: function () {
+        var v = document.getElementById('push-tut-video'); if (v) { try { var p = v.play(); if (p && p.catch) p.catch(function () {}); } catch (e) {} }
+        var o = document.getElementById('push-tut-other'); if (o) o.onclick = function () { showTutorial(other); };
+      },
+      willClose: function () { var v = document.getElementById('push-tut-video'); if (v) { try { v.pause(); } catch (e) {} } }
+    });
+  }
+  var tutLink = function (id) { return '<button type="button" id="' + id + '" style="background:none; border:0; padding:0; color:#fbbf24; font:inherit; font-size:12.5px; font-weight:700; text-decoration:underline; cursor:pointer;">🎬 شوف فيديو الشرح</button>'; };
 
   async function runEnable(btn) {
     if (btn) { btn.disabled = true; btn.textContent = '⏳ لحظة...'; }
@@ -17856,11 +17875,12 @@ body.subj-v2 .subject-hero-card .pill{height:36px;font-size:12.5px}
     promptShown = true;
     var c = document.createElement('div'); c.id = 'push-prompt'; c.setAttribute('role', 'dialog'); c.setAttribute('aria-label', 'تفعيل الإشعارات');
     c.style.cssText = 'position:fixed; inset-inline:12px; bottom:calc(84px + env(safe-area-inset-bottom)); z-index:9990; max-width:440px; margin-inline:auto; padding:14px; border-radius:16px; background:#111827; color:#f8fafc; border:1.5px solid #f59e0b; box-shadow:0 12px 32px rgba(0,0,0,.45); direction:rtl; font-size:14px; line-height:1.7;';
-    c.innerHTML = '<div style="display:flex; gap:10px; align-items:flex-start;"><div style="font-size:26px; line-height:1;">🔔</div><div style="flex:1;"><b style="color:#fbbf24;">عايز يوصلك إشعار لما ينزل جديد؟</b><div style="opacity:.85; font-size:13px;">' + (st === 'ios-install' ? 'على الآيفون لازم تثبّت المنصة الأول، وهنقولك الخطوات.' : 'ملفات جديدة، مواعيد، وإعلانات مهمة من الإدارة — حتى والمنصة مقفولة.') + '</div></div></div>' +
+    c.innerHTML = '<div style="display:flex; gap:10px; align-items:flex-start;"><div style="font-size:26px; line-height:1;">🔔</div><div style="flex:1;"><b style="color:#fbbf24;">عايز يوصلك إشعار لما ينزل جديد؟</b><div style="opacity:.85; font-size:13px;">' + (st === 'ios-install' ? 'على الآيفون لازم تثبّت المنصة الأول، وهنقولك الخطوات.' : 'ملفات جديدة، مواعيد، وإعلانات مهمة من الإدارة — حتى والمنصة مقفولة.') + '</div><div style="margin-top:4px;">' + tutLink('push-prompt-tut') + '</div></div></div>' +
       '<div style="display:flex; gap:8px; margin-top:10px;"><button type="button" id="push-prompt-yes" style="flex:1; min-height:42px; border:0; border-radius:10px; background:#f59e0b; color:#111; font:inherit; font-weight:900; cursor:pointer;">' + (st === 'ios-install' ? 'وريني الخطوات' : 'فعّل الإشعارات') + '</button><button type="button" id="push-prompt-no" style="min-height:42px; padding:0 14px; border:1px solid rgba(255,255,255,.2); border-radius:10px; background:transparent; color:#f8fafc; font:inherit; cursor:pointer;">مش دلوقتي</button></div>';
     document.body.appendChild(c);
     document.getElementById('push-prompt-no').onclick = function () { ls(PROMPT_KEY, String(Date.now())); hidePrompt(); };
-    document.getElementById('push-prompt-yes').onclick = function () { ls(PROMPT_KEY, String(Date.now())); if (st === 'ios-install') { hidePrompt(); iosSteps(); } else runEnable(this); };
+    document.getElementById('push-prompt-yes').onclick = function () { ls(PROMPT_KEY, String(Date.now())); if (st === 'ios-install') { hidePrompt(); showTutorial('iphone'); } else runEnable(this); };
+    document.getElementById('push-prompt-tut').onclick = function () { showTutorial(); };
   }
 
   /* ---- صف في البروفايل ---- */
@@ -17870,11 +17890,13 @@ body.subj-v2 .subject-hero-card .pill{height:36px;font-size:12.5px}
     var btn = function (txt, bg, fg) { return '<button type="button" id="push-profile-btn" style="min-height:34px; padding:0 12px; border-radius:10px; border:0; background:' + bg + '; color:' + fg + '; font:inherit; font-size:13px; font-weight:800; cursor:pointer;">' + txt + '</button>'; };
     if (st === 'on') box.innerHTML = '<span style="color:#4ade80; font-size:13px; margin-inline-end:8px;">مفعّلة ✅</span>' + btn('اقفلها', 'rgba(255,255,255,.12)', 'inherit');
     else if (st === 'unsupported') box.innerHTML = '<span style="font-size:12.5px; opacity:.8;">المتصفح ده مش بيدعمها</span>';
-    else box.innerHTML = btn(st === 'ios-install' ? 'إزاي أفعّلها؟' : (st === 'denied' ? 'مقفولة — إزاي أرجّعها؟' : 'فعّل الإشعارات 🔔'), '#f59e0b', '#111');
+    else box.innerHTML = btn(st === 'ios-install' ? 'إزاي أفعّلها؟ 🎬' : (st === 'denied' ? 'مقفولة — إزاي أرجّعها؟' : 'فعّل الإشعارات 🔔'), '#f59e0b', '#111') +
+      (st === 'ios-install' ? '' : '<div style="margin-top:6px;">' + tutLink('push-profile-tut') + '</div>');
+    var tl = document.getElementById('push-profile-tut'); if (tl) tl.onclick = function () { showTutorial(); };
     var b = document.getElementById('push-profile-btn'); if (!b) return;
     b.onclick = function () {
       if (st === 'on') { b.disabled = true; disable().then(refreshProfileRow); }
-      else if (st === 'ios-install') iosSteps();
+      else if (st === 'ios-install') showTutorial('iphone');
       else if (st === 'denied') deniedHelp();
       else runEnable(b);
     };
@@ -17964,7 +17986,7 @@ body.subj-v2 .subject-hero-card .pill{height:36px;font-size:12.5px}
   if (typeof _switchAdminTab === 'function') window.switchAdminTab = function (tabId) { var r = _switchAdminTab.apply(this, arguments); if (tabId === 'notify') window.pushAdminOpen(); return r; };
   try { auth.onAuthStateChanged(function (u) { if (u) setTimeout(resync, 4000); else hidePrompt(); }); } catch (e) {}
 
-  window.PushUI = { state: state, enable: enable, disable: disable, resync: resync };
+  window.PushUI = { state: state, enable: enable, disable: disable, resync: resync, tutorial: showTutorial };
 })();
 </script>
 </body>
