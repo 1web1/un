@@ -44,6 +44,6 @@ module.exports = async (req, res) => {
     return res.status(200).json(out);
   } catch (err) {
     const status = err.status || (err.code && String(err.code).indexOf('auth/') === 0 ? 401 : 500);
-    return res.status(status).json({ error: err.message || 'خطأ بالسيرفر', waitMin: err.waitMin });
+    return res.status(status).json({ error: err.message || 'خطأ بالسيرفر', waitMs: err.waitMs });
   }
 };
