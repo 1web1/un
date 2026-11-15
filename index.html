@@ -5288,13 +5288,14 @@ body[class*="theme-"] .mob-nav-item.active{color:var(--primary)!important}
           <div id="tab-notify" class="admin-tab-content">
              <div class="card liquid-glass" style="background:rgba(0,0,0,.4); border-color:rgba(245,158,11,.5); max-width:640px; margin-inline:auto;">
                 <h3 style="color:#fbbf24; font-size:16px; margin-top:0;">🔔 ابعت إشعار على موبايلات الطلاب</h3>
-                <p style="font-size:12.5px; color:var(--fg-faint); margin:0 0 10px; line-height:1.8;">بيوصل للطلاب اللي فعّلوا الإشعارات في المستوى ده، حتى لو المنصة مقفولة. إشعار واحد كل 10 دقايق، فاكتب كل اللي عايز تقوله في مرة واحدة.</p>
+                <p style="font-size:12.5px; color:var(--fg-faint); margin:0 0 10px; line-height:1.8;">بيوصل للطلاب اللي فعّلوا الإشعارات في المستوى ده، حتى لو المنصة مقفولة. إشعار واحد كل دقيقتين، فاكتب كل اللي عايز تقوله في مرة واحدة.</p>
                 <div id="push-admin-count" style="text-align:center; padding:10px; margin-bottom:12px; border-radius:8px; font-weight:bold; font-size:14px; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1);">⏳ بعدّ الأجهزة المفعّلة...</div>
                 <form class="upload-form" onsubmit="pushAdminSend(event)">
                    <div class="input-group"><label>العنوان</label><input id="push-title" maxlength="60" required placeholder="مثال: 📄 ملف جديد في GIS1"></div>
                    <div class="input-group"><label>النص</label><textarea id="push-body" maxlength="180" required rows="3" placeholder="مثال: اترفع سكشن 3 وامتحان السنة اللي فاتت" style="resize:vertical;"></textarea><div id="push-body-left" style="font-size:11.5px; color:var(--fg-faint); text-align:left;">0 / 180</div></div>
                    <div class="input-group"><label>المادة (اسمها هيظهر عنوان الإشعار، ولما الطالب يدوس هيفتحها)</label><select id="push-subject"><option value="">من غير مادة — يفتح الصفحة الرئيسية</option></select></div>
                    <button class="pill" type="submit" id="push-send-btn" style="background:#f59e0b; color:#111; width:100%; font-weight:900;">🚀 ابعت الإشعار</button>
+                   <div id="push-cooldown" style="display:none; margin-top:8px; text-align:center; font-size:13px; font-weight:700; color:#fbbf24;" aria-live="polite"></div>
                 </form>
              </div>
           </div>
@@ -17781,7 +17782,7 @@ body.subj-v2 .subject-hero-card .pill{height:36px;font-size:12.5px}
     if (withAuth) { var u = me(); if (!u) throw new Error('سجّل دخول الأول'); h.Authorization = 'Bearer ' + await u.getIdToken(); }
     var r = await fetch('/api/push', { method: 'POST', headers: h, body: JSON.stringify(body) });
     var j = await r.json().catch(function () { return {}; });
-    if (!r.ok) throw Object.assign(new Error(j.error || ('HTTP ' + r.status)), { status: r.status });
+    if (!r.ok) throw Object.assign(new Error(j.error || ('HTTP ' + r.status)), { status: r.status, waitMs: j.waitMs });
     return j;
   }
   function b64u(s) { s = s.replace(/-/g, '+').replace(/_/g, '/'); while (s.length % 4) s += '='; var raw = atob(s), out = new Uint8Array(raw.length); for (var i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i); return out; }
@@ -17887,10 +17888,32 @@ body.subj-v2 .subject-hero-card .pill{height:36px;font-size:12.5px}
     sel.innerHTML = '<option value="">من غير مادة — يفتح الصفحة الرئيسية</option>' + list.map(function (s) { return '<option value="' + escText(s.id) + '">📚 ' + escText(s.name) + '</option>'; }).join('');
     sel.value = cur;
   }
+  /* عد تنازلي للدقيقتين بين كل إشعار والتاني (الوقت الباقي جاي من السيرفر) */
+  var cdUntil = 0, cdTimer = null;
+  function cooldownLeft() { return Math.max(0, cdUntil - Date.now()); }
+  function tickCooldown() {
+    var btn = document.getElementById('push-send-btn'), box = document.getElementById('push-cooldown');
+    var left = cooldownLeft();
+    if (!left) {
+      clearInterval(cdTimer); cdTimer = null;
+      if (btn) { btn.disabled = false; btn.style.opacity = ''; btn.textContent = '🚀 ابعت الإشعار'; }
+      if (box) { box.style.display = 'none'; box.textContent = ''; }
+      return;
+    }
+    var s = Math.ceil(left / 1000), mmss = Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+    if (btn) { btn.disabled = true; btn.style.opacity = '.55'; btn.textContent = '⏳ تقدر تبعت تاني بعد ' + mmss; }
+    if (box) { box.style.display = 'block'; box.textContent = 'آخر إشعار اتبعت من شوية — العداد بيخلص بعد ' + mmss; }
+  }
+  function startCooldown(ms) {
+    ms = +ms || 0;
+    cdUntil = Math.max(cdUntil, Date.now() + ms); tickCooldown(); /* رد قديم (عدّ الأجهزة) ما يلغيش عداد شغال */
+    if (!cooldownLeft()) return;
+    if (!cdTimer) cdTimer = setInterval(tickCooldown, 1000);
+  }
   var lastCount = null;
   async function loadCount() {
     var el = document.getElementById('push-admin-count'); if (!el) return;
-    try { lastCount = (await api({ action: 'count', level: LV() }, true)).count; el.innerHTML = '📱 ' + lastCount + ' جهاز مفعّل الإشعارات في ' + (LV() === 1 ? 'المستوى الأول' : 'المستوى الثاني'); }
+    try { var cj = await api({ action: 'count', level: LV() }, true); lastCount = cj.count; startCooldown(cj.waitMs); el.innerHTML = '📱 ' + lastCount + ' جهاز مفعّل الإشعارات في ' + (LV() === 1 ? 'المستوى الأول' : 'المستوى الثاني'); }
     catch (e) { el.textContent = '⚠️ مش قادر أعدّ الأجهزة دلوقتي: ' + e.message; }
   }
   window.pushAdminOpen = function () { subjOptions(); loadCount(); };
@@ -17898,19 +17921,21 @@ body.subj-v2 .subject-hero-card .pill{height:36px;font-size:12.5px}
     if (e) e.preventDefault();
     var title = document.getElementById('push-title').value.trim(), body = document.getElementById('push-body').value.trim(), sid = document.getElementById('push-subject').value;
     if (!title || !body) return;
+    if (cooldownLeft()) { tickCooldown(); return; }
     var target = lastCount == null ? 'كل الأجهزة المفعّلة' : lastCount + ' جهاز';
     /* نفس شكل السيرفر: لو فيه مادة، اسمها هو العنوان وعنوان الليدر ينزل جنب النص */
     var sname = ''; try { var so = (db || []).find(function (s) { return s.id === sid; }); sname = so ? String(so.name || '').trim() : ''; } catch (err) {}
     var pTitle = sname ? '📚 ' + sname : title, pBody = sname ? title + ' — ' + body : body;
     Swal.fire({ title: 'ابعت الإشعار؟', icon: 'question', showCancelButton: true, confirmButtonText: 'ابعت 🚀', cancelButtonText: 'إلغاء', confirmButtonColor: '#f59e0b',
-      html: '<div style="text-align:right; line-height:1.8;">هيوصل لـ <b>' + target + '</b> في ' + (LV() === 1 ? 'المستوى الأول' : 'المستوى الثاني') + ':<div style="margin-top:8px; padding:10px; border-radius:10px; background:rgba(0,0,0,.25);"><b>' + escText(pTitle) + '</b><br>' + escText(pBody) + '</div><div style="font-size:12px; opacity:.75; margin-top:6px;">مش هتقدر تبعت إشعار تاني قبل 10 دقايق.</div></div>',
+      html: '<div style="text-align:right; line-height:1.8;">هيوصل لـ <b>' + target + '</b> في ' + (LV() === 1 ? 'المستوى الأول' : 'المستوى الثاني') + ':<div style="margin-top:8px; padding:10px; border-radius:10px; background:rgba(0,0,0,.25);"><b>' + escText(pTitle) + '</b><br>' + escText(pBody) + '</div><div style="font-size:12px; opacity:.75; margin-top:6px;">مش هتقدر تبعت إشعار تاني قبل دقيقتين.</div></div>',
       showLoaderOnConfirm: true,
       preConfirm: function () {
-        return api({ action: 'send', level: LV(), title: title, body: body, subjectId: sid }, true).catch(function (err) { Swal.showValidationMessage(err.message); return false; });
+        return api({ action: 'send', level: LV(), title: title, body: body, subjectId: sid }, true).catch(function (err) { if (err.status === 429) startCooldown(err.waitMs); Swal.showValidationMessage(err.message); return false; });
       }
     }).then(function (r) {
       if (!r.isConfirmed || !r.value) return;
       var v = r.value;
+      startCooldown(v.waitMs);
       try { logAdminAction('إرسال إشعار موبايل', title + ' | ' + body + ' | وصل لـ ' + v.sent + ' جهاز'); } catch (err) {}
       Swal.fire('اتبعت ✅', 'وصل لـ ' + v.sent + ' جهاز' + (v.removed ? ' · واتشال ' + v.removed + ' جهاز قديم مبقاش شغال' : '') + (v.failed ? ' · وفشل ' + v.failed : ''), 'success');
       document.getElementById('push-title').value = ''; document.getElementById('push-body').value = ''; updateLeft();
