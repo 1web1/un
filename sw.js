@@ -1,4 +1,4 @@
-const CACHE_NAME = 'monasa-cache-v6'; // v6: الـ service worker مبقاش يلمس طلبات المواقع التانية (درايف)
+const CACHE_NAME = 'monasa-cache-v7'; // v7: إشعارات الموبايل (push) — v6: الـ service worker مبقاش يلمس طلبات المواقع التانية (درايف)
 const STATIC_ASSETS = [
   './',
   './index.html',
@@ -56,5 +56,36 @@ self.addEventListener('fetch', (event) => {
           }
         });
       })
+  );
+});
+
+/* ===== إشعارات الموبايل: الإدارة بتبعتها من لوحة الأدمن ← 🔔 الإشعارات (api/push.js) ===== */
+self.addEventListener('push', (event) => {
+  let d = {};
+  try { d = event.data ? event.data.json() : {}; } catch (e) { d = { body: event.data ? event.data.text() : '' }; }
+  const title = d.title || 'El dof3aa Btzaker';
+  event.waitUntil(self.registration.showNotification(title, {
+    body: d.body || '',
+    icon: '/icon-192.png',
+    badge: '/badge-96.png',
+    dir: 'rtl',
+    lang: 'ar',
+    tag: d.tag || 'dof3aa',
+    data: { url: d.url || '/' }
+  }));
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const url = new URL((event.notification.data && event.notification.data.url) || '/', self.location.origin).href;
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((list) => {
+      for (const c of list) {
+        if (new URL(c.url).origin === self.location.origin && 'focus' in c) {
+          return c.focus().then((w) => (w && 'navigate' in w ? w.navigate(url) : w)).catch(() => self.clients.openWindow(url));
+        }
+      }
+      return self.clients.openWindow(url);
+    })
   );
 });

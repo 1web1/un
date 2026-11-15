@@ -80,6 +80,7 @@
 <meta name="theme-color" content="#0a0908">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='28' fill='%23f59e0b'/%3E%3Cpath d='M50 10 C50 32 32 50 10 50 C32 50 50 68 50 90 C50 68 68 50 90 50 C68 50 50 32 50 10 Z' fill='%230f172a'/%3E%3C/svg%3E">
 <link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="/icon-192.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="El dof3aa Btzaker">
@@ -4927,6 +4928,7 @@ body[class*="theme-"] .mob-nav-item.active{color:var(--primary)!important}
             <div class="admin-tab active" onclick="switchAdminTab('students', this)">👥 إدارة الطلاب</div>
             <div class="admin-tab" onclick="switchAdminTab('content', this)">📚 إدارة المحتوى</div>
             <div class="admin-tab" onclick="switchAdminTab('analytics', this)">📊 الأسئلة الأصعب والمساهمات</div>
+            <div class="admin-tab" onclick="switchAdminTab('notify', this)">🔔 الإشعارات</div>
             <div class="admin-tab" onclick="switchAdminTab('tools', this)">⚙️ أدوات النظام</div>
             <div class="admin-tab" onclick="switchAdminTab('logs', this)">⏱️ سجل النشاط</div>          </div>
 
@@ -5280,6 +5282,20 @@ body[class*="theme-"] .mob-nav-item.active{color:var(--primary)!important}
                    <thead><tr><th>#</th><th>المادة</th><th>نص السؤال</th><th>إجمالي المحاولات</th><th>نسبة الخطأ %</th><th>حالة الصعوبة</th></tr></thead>
                    <tbody id="hardest-questions-body"><tr><td colspan="6" style="text-align:center;">جاري تحليل البيانات...</td></tr></tbody>
                 </table>
+             </div>
+          </div>
+
+          <div id="tab-notify" class="admin-tab-content">
+             <div class="card liquid-glass" style="background:rgba(0,0,0,.4); border-color:rgba(245,158,11,.5); max-width:640px; margin-inline:auto;">
+                <h3 style="color:#fbbf24; font-size:16px; margin-top:0;">🔔 ابعت إشعار على موبايلات الطلاب</h3>
+                <p style="font-size:12.5px; color:var(--fg-faint); margin:0 0 10px; line-height:1.8;">بيوصل للطلاب اللي فعّلوا الإشعارات في المستوى ده، حتى لو المنصة مقفولة. إشعار واحد كل 10 دقايق، فاكتب كل اللي عايز تقوله في مرة واحدة.</p>
+                <div id="push-admin-count" style="text-align:center; padding:10px; margin-bottom:12px; border-radius:8px; font-weight:bold; font-size:14px; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1);">⏳ بعدّ الأجهزة المفعّلة...</div>
+                <form class="upload-form" onsubmit="pushAdminSend(event)">
+                   <div class="input-group"><label>العنوان</label><input id="push-title" maxlength="60" required placeholder="مثال: 📄 ملف جديد في GIS1"></div>
+                   <div class="input-group"><label>النص</label><textarea id="push-body" maxlength="180" required rows="3" placeholder="مثال: اترفع سكشن 3 وامتحان السنة اللي فاتت" style="resize:vertical;"></textarea><div id="push-body-left" style="font-size:11.5px; color:var(--fg-faint); text-align:left;">0 / 180</div></div>
+                   <div class="input-group"><label>لما الطالب يدوس على الإشعار يفتح (اختياري)</label><select id="push-subject"><option value="">الصفحة الرئيسية</option></select></div>
+                   <button class="pill" type="submit" id="push-send-btn" style="background:#f59e0b; color:#111; width:100%; font-weight:900;">🚀 ابعت الإشعار</button>
+                </form>
              </div>
           </div>
 
@@ -6204,7 +6220,7 @@ body[class*="theme-"] .mob-nav-item.active{color:var(--primary)!important}
         if (d.isOwner === true) return true;
         if (!(d.isAdmin === true || d.isLeader === true)) return false;
         if (!__myPermsLoaded) return false;
-        if (__myPerms && typeof __myPerms === 'object') return __myPerms[String(k).replace(/\./g, '_')] === true;
+        if (__myPerms && typeof __myPerms === 'object') return k === 'notify.send' ? __myPerms.notify_send !== false : __myPerms[String(k).replace(/\./g, '_')] === true; /* الإشعارات مسموحة للفريق إلا لو المالك قفلها صراحةً */
         if (d.isAdmin === true) return true;
         return __LEADER_DENY.indexOf(k) < 0;
       } catch (e) { return false; }
@@ -6212,6 +6228,7 @@ body[class*="theme-"] .mob-nav-item.active{color:var(--primary)!important}
     function hasTabAccess(t) {
       if (t === 'access') return isOwnerUser();
       if (t === 'tools') return hasPerm('system.tools');
+      if (t === 'notify') return hasPerm('notify.send');
       if (t === 'logs') return hasPerm('system.logs');
       if (t === 'students') return hasPerm('students.view');
       if (t === 'analytics') return hasPerm('analytics.view');
@@ -16237,6 +16254,7 @@ function openThemePicker() {
       ['images.manage','صور المواد (جداول / إعلانات)']]},
     {id:'research', title:'🔬 الأبحاث', items:[['research.manage','إدارة الأبحاث والحجوزات وإعدادات الموسم']]},
     {id:'analytics', title:'📊 التحليلات', items:[['analytics.view','الأسئلة الأصعب والمساهمات والإحصائيات']]},
+    {id:'notify', title:'🔔 الإشعارات', items:[['notify.send','إرسال إشعارات الموبايل للطلاب']]},
     {id:'system', title:'⚙️ النظام', items:[
       ['system.tools','أدوات النظام (التنبيهات، الصيانة، الدعم، القيود)'],
       ['system.logs','سجل نشاط الإدارة'],
@@ -16259,7 +16277,7 @@ function openThemePicker() {
   function effective(u){
     var m = {};
     if (u.isOwner) { ALL_KEYS.forEach(function(k){ m[k] = true; }); return m; }
-    var pp = (window.__allPerms || {})[u.uid]; if (pp && typeof pp === 'object') { ALL_KEYS.forEach(function(k){ m[k] = pp[k.replace(/\./g, '_')] === true; }); return m; }
+    var pp = (window.__allPerms || {})[u.uid]; if (pp && typeof pp === 'object') { ALL_KEYS.forEach(function(k){ m[k] = k === 'notify.send' ? pp.notify_send !== false : pp[k.replace(/\./g, '_')] === true; }); return m; }
     ALL_KEYS.forEach(function(k){ m[k] = u.isAdmin ? true : (window.__LEADER_DENY || []).indexOf(k) < 0; });
     m['students.live'] = false; /* صلاحية التحديث اللحظي: بتتمنح صراحةً من المالك فقط */    return m;
   }
@@ -17742,6 +17760,183 @@ body.subj-v2 .subject-hero-card .pill{height:36px;font-size:12.5px}
   window.toggleMobileToolsMenu = function (e) { if (e && e.stopPropagation) e.stopPropagation(); document.body.classList.contains('tsheet-open') ? closeToolsSheet() : openToolsSheet(); };
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && document.body.classList.contains('tsheet-open')) closeToolsSheet(); });
   window.addEventListener('hashchange', function () { if (document.body.classList.contains('tsheet-open')) closeToolsSheet(); });
+})();
+</script>
+<script>
+/* ===== 🔔 إشعارات الموبايل (Web Push) =====
+   الطالب: كارت "فعّل الإشعارات" بعد ما يفتح أول مادة + زرار في البروفايل.
+   الإدارة: تبويب 🔔 الإشعارات في لوحة الأدمن. السيرفر: api/push.js
+   حالة الاشتراك بتتعرف من المتصفح نفسه، فمفيش أي قراءة زيادة من Firebase وقت فتح المنصة. */
+(function () {
+  var PROMPT_KEY = 'push_prompt_at', PROMPT_GAP = 7 * 24 * 3600 * 1000, SYNC_GAP = 24 * 3600 * 1000;
+  function LV() { return window.PLATFORM_LEVEL || 2; }
+  function me() { try { return currentUser; } catch (e) { return null; } }
+  function ls(k, v) { try { if (v === undefined) return localStorage.getItem(k); if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) { return null; } }
+  function supported() { return 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window; }
+  function isIOS() { return /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1); }
+  function standalone() { return (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true; }
+
+  async function api(body, withAuth) {
+    var h = { 'Content-Type': 'application/json' };
+    if (withAuth) { var u = me(); if (!u) throw new Error('سجّل دخول الأول'); h.Authorization = 'Bearer ' + await u.getIdToken(); }
+    var r = await fetch('/api/push', { method: 'POST', headers: h, body: JSON.stringify(body) });
+    var j = await r.json().catch(function () { return {}; });
+    if (!r.ok) throw Object.assign(new Error(j.error || ('HTTP ' + r.status)), { status: r.status });
+    return j;
+  }
+  function b64u(s) { s = s.replace(/-/g, '+').replace(/_/g, '/'); while (s.length % 4) s += '='; var raw = atob(s), out = new Uint8Array(raw.length); for (var i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i); return out; }
+  async function pubKey() { var k = ls('push_pubkey'); if (k) return k; k = (await api({ action: 'key' })).publicKey; ls('push_pubkey', k); return k; }
+  async function getReg() { if (!supported()) return null; try { return (await navigator.serviceWorker.getRegistration()) || null; } catch (e) { return null; } }
+  async function getSub() { var r = await getReg(); try { return r ? await r.pushManager.getSubscription() : null; } catch (e) { return null; } }
+  function sameKey(sub, key) { try { var a = new Uint8Array(sub.options.applicationServerKey), b = b64u(key); if (a.length !== b.length) return false; for (var i = 0; i < a.length; i++) if (a[i] !== b[i]) return false; return true; } catch (e) { return true; } }
+
+  /* 'ios-install' | 'unsupported' | 'denied' | 'on' | 'off' */
+  async function state() {
+    if (isIOS() && !standalone()) return 'ios-install';
+    if (!supported()) return 'unsupported';
+    if (Notification.permission === 'denied') return 'denied';
+    return (Notification.permission === 'granted' && await getSub()) ? 'on' : 'off';
+  }
+  function syncKey() { var u = me(); return 'push_sync_' + LV() + '_' + (u ? u.uid : ''); }
+  async function sendSub(sub) { await api({ action: 'subscribe', level: LV(), subscription: sub.toJSON() }, true); ls(syncKey(), String(Date.now())); }
+
+  async function enable() {
+    var st = await state();
+    if (st === 'ios-install') { iosSteps(); return false; }
+    if (st === 'unsupported') { Swal.fire('المتصفح ده مش بيدعم الإشعارات', 'افتح المنصة من Chrome على أندرويد، أو ثبّتها على الآيفون (iOS 16.4 أو أحدث).', 'info'); return false; }
+    if (st === 'denied') { deniedHelp(); return false; }
+    var perm = await Notification.requestPermission();
+    if (perm !== 'granted') { if (perm === 'denied') deniedHelp(); return false; }
+    var reg = await navigator.serviceWorker.ready, key = await pubKey();
+    var sub = await reg.pushManager.getSubscription();
+    if (sub && !sameKey(sub, key)) { try { await sub.unsubscribe(); } catch (e) {} sub = null; }
+    if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64u(key) });
+    await sendSub(sub);
+    return true;
+  }
+  async function disable() {
+    var sub = await getSub(); if (!sub) return;
+    try { await api({ action: 'unsubscribe', level: LV(), endpoint: sub.endpoint }, true); } catch (e) {}
+    try { await sub.unsubscribe(); } catch (e) {}
+    ls(syncKey(), null);
+  }
+  /* بعد تسجيل الدخول: لو الجهاز مشترك نأكد إنه متسجل للحساب ده (مرة في اليوم بالكتير) */
+  async function resync() {
+    try {
+      if (!me() || !supported() || Notification.permission !== 'granted') return;
+      var last = +(ls(syncKey()) || 0); if (Date.now() - last < SYNC_GAP) return;
+      var sub = await getSub(); if (sub) await sendSub(sub);
+    } catch (e) {}
+  }
+
+  function iosSteps() {
+    Swal.fire({ title: 'الإشعارات على الآيفون 📱', confirmButtonText: 'تمام',
+      html: '<div style="text-align:right; line-height:2.1; font-size:14px;">الآيفون بيبعت إشعارات للمواقع المثبّتة بس:<br>1️⃣ افتح المنصة من <b>Safari</b><br>2️⃣ دوس زرار <b>المشاركة</b> ⬆️ تحت<br>3️⃣ اختار <b>إضافة إلى الشاشة الرئيسية</b> ➕<br>4️⃣ افتح المنصة من الأيقونة الجديدة وسجّل دخول<br>5️⃣ من البروفايل دوس <b>فعّل الإشعارات 🔔</b><div style="font-size:12px; opacity:.75; margin-top:6px;">محتاج iOS 16.4 أو أحدث.</div></div>' });
+  }
+  function deniedHelp() {
+    Swal.fire({ title: 'الإشعارات مقفولة 🔕', confirmButtonText: 'تمام',
+      html: '<div style="text-align:right; line-height:2; font-size:14px;">إنت (أو المتصفح) قفلت الإشعارات للمنصة قبل كده. عشان ترجّعها:<br>• <b>أندرويد/كروم:</b> دوس القفل 🔒 جنب رابط المنصة ← الأذونات ← الإشعارات ← سماح<br>• <b>الآيفون:</b> الإعدادات ← الإشعارات ← El dof3aa Btzaker ← سماح<br>وبعدين ارجع دوس فعّل الإشعارات تاني.</div>' });
+  }
+
+  async function runEnable(btn) {
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ لحظة...'; }
+    try { if (await enable()) { Swal.fire({ toast: true, position: 'top', icon: 'success', title: 'اتفعّلت الإشعارات 🔔', showConfirmButton: false, timer: 2500 }); hidePrompt(); } }
+    catch (e) { Swal.fire('ما اتفعّلتش', (e && e.message) || 'جرّب تاني بعد شوية', 'error'); }
+    finally { refreshProfileRow(); }
+  }
+
+  /* ---- كارت الدعوة بعد فتح أول مادة ---- */
+  var promptShown = false;
+  function hidePrompt() { var c = document.getElementById('push-prompt'); if (c) c.remove(); }
+  async function maybePrompt() {
+    if (promptShown || !me()) return;
+    if (Date.now() - +(ls(PROMPT_KEY) || 0) < PROMPT_GAP) return;
+    var st = await state(); if (st !== 'off' && st !== 'ios-install') return;
+    promptShown = true;
+    var c = document.createElement('div'); c.id = 'push-prompt'; c.setAttribute('role', 'dialog'); c.setAttribute('aria-label', 'تفعيل الإشعارات');
+    c.style.cssText = 'position:fixed; inset-inline:12px; bottom:calc(84px + env(safe-area-inset-bottom)); z-index:9990; max-width:440px; margin-inline:auto; padding:14px; border-radius:16px; background:#111827; color:#f8fafc; border:1.5px solid #f59e0b; box-shadow:0 12px 32px rgba(0,0,0,.45); direction:rtl; font-size:14px; line-height:1.7;';
+    c.innerHTML = '<div style="display:flex; gap:10px; align-items:flex-start;"><div style="font-size:26px; line-height:1;">🔔</div><div style="flex:1;"><b style="color:#fbbf24;">عايز يوصلك إشعار لما ينزل جديد؟</b><div style="opacity:.85; font-size:13px;">' + (st === 'ios-install' ? 'على الآيفون لازم تثبّت المنصة الأول، وهنقولك الخطوات.' : 'ملفات جديدة، مواعيد، وإعلانات مهمة من الإدارة — حتى والمنصة مقفولة.') + '</div></div></div>' +
+      '<div style="display:flex; gap:8px; margin-top:10px;"><button type="button" id="push-prompt-yes" style="flex:1; min-height:42px; border:0; border-radius:10px; background:#f59e0b; color:#111; font:inherit; font-weight:900; cursor:pointer;">' + (st === 'ios-install' ? 'وريني الخطوات' : 'فعّل الإشعارات') + '</button><button type="button" id="push-prompt-no" style="min-height:42px; padding:0 14px; border:1px solid rgba(255,255,255,.2); border-radius:10px; background:transparent; color:#f8fafc; font:inherit; cursor:pointer;">مش دلوقتي</button></div>';
+    document.body.appendChild(c);
+    document.getElementById('push-prompt-no').onclick = function () { ls(PROMPT_KEY, String(Date.now())); hidePrompt(); };
+    document.getElementById('push-prompt-yes').onclick = function () { ls(PROMPT_KEY, String(Date.now())); if (st === 'ios-install') { hidePrompt(); iosSteps(); } else runEnable(this); };
+  }
+
+  /* ---- صف في البروفايل ---- */
+  async function refreshProfileRow() {
+    var box = document.getElementById('push-profile-val'); if (!box) return;
+    var st = await state();
+    var btn = function (txt, bg, fg) { return '<button type="button" id="push-profile-btn" style="min-height:34px; padding:0 12px; border-radius:10px; border:0; background:' + bg + '; color:' + fg + '; font:inherit; font-size:13px; font-weight:800; cursor:pointer;">' + txt + '</button>'; };
+    if (st === 'on') box.innerHTML = '<span style="color:#4ade80; font-size:13px; margin-inline-end:8px;">مفعّلة ✅</span>' + btn('اقفلها', 'rgba(255,255,255,.12)', 'inherit');
+    else if (st === 'unsupported') box.innerHTML = '<span style="font-size:12.5px; opacity:.8;">المتصفح ده مش بيدعمها</span>';
+    else box.innerHTML = btn(st === 'ios-install' ? 'إزاي أفعّلها؟' : (st === 'denied' ? 'مقفولة — إزاي أرجّعها؟' : 'فعّل الإشعارات 🔔'), '#f59e0b', '#111');
+    var b = document.getElementById('push-profile-btn'); if (!b) return;
+    b.onclick = function () {
+      if (st === 'on') { b.disabled = true; disable().then(refreshProfileRow); }
+      else if (st === 'ios-install') iosSteps();
+      else if (st === 'denied') deniedHelp();
+      else runEnable(b);
+    };
+  }
+
+  /* ---- تبويب الإدارة ---- */
+  function subjOptions() {
+    var sel = document.getElementById('push-subject'); if (!sel) return;
+    var cur = sel.value, list = [];
+    try { list = (db || []).filter(function (s) { return !s.level || s.level == LV(); }); if (!list.length) list = db || []; } catch (e) {}
+    sel.innerHTML = '<option value="">الصفحة الرئيسية</option>' + list.map(function (s) { return '<option value="' + escText(s.id) + '">📚 ' + escText(s.name) + '</option>'; }).join('');
+    sel.value = cur;
+  }
+  var lastCount = null;
+  async function loadCount() {
+    var el = document.getElementById('push-admin-count'); if (!el) return;
+    try { lastCount = (await api({ action: 'count', level: LV() }, true)).count; el.innerHTML = '📱 ' + lastCount + ' جهاز مفعّل الإشعارات في ' + (LV() === 1 ? 'المستوى الأول' : 'المستوى الثاني'); }
+    catch (e) { el.textContent = '⚠️ مش قادر أعدّ الأجهزة دلوقتي: ' + e.message; }
+  }
+  window.pushAdminOpen = function () { subjOptions(); loadCount(); };
+  window.pushAdminSend = function (e) {
+    if (e) e.preventDefault();
+    var title = document.getElementById('push-title').value.trim(), body = document.getElementById('push-body').value.trim(), sid = document.getElementById('push-subject').value;
+    if (!title || !body) return;
+    var target = lastCount == null ? 'كل الأجهزة المفعّلة' : lastCount + ' جهاز';
+    Swal.fire({ title: 'ابعت الإشعار؟', icon: 'question', showCancelButton: true, confirmButtonText: 'ابعت 🚀', cancelButtonText: 'إلغاء', confirmButtonColor: '#f59e0b',
+      html: '<div style="text-align:right; line-height:1.8;">هيوصل لـ <b>' + target + '</b> في ' + (LV() === 1 ? 'المستوى الأول' : 'المستوى الثاني') + ':<div style="margin-top:8px; padding:10px; border-radius:10px; background:rgba(0,0,0,.25);"><b>' + escText(title) + '</b><br>' + escText(body) + '</div><div style="font-size:12px; opacity:.75; margin-top:6px;">مش هتقدر تبعت إشعار تاني قبل 10 دقايق.</div></div>',
+      showLoaderOnConfirm: true,
+      preConfirm: function () {
+        return api({ action: 'send', level: LV(), title: title, body: body, subjectId: sid }, true).catch(function (err) { Swal.showValidationMessage(err.message); return false; });
+      }
+    }).then(function (r) {
+      if (!r.isConfirmed || !r.value) return;
+      var v = r.value;
+      try { logAdminAction('إرسال إشعار موبايل', title + ' | ' + body + ' | وصل لـ ' + v.sent + ' جهاز'); } catch (err) {}
+      Swal.fire('اتبعت ✅', 'وصل لـ ' + v.sent + ' جهاز' + (v.removed ? ' · واتشال ' + v.removed + ' جهاز قديم مبقاش شغال' : '') + (v.failed ? ' · وفشل ' + v.failed : ''), 'success');
+      document.getElementById('push-title').value = ''; document.getElementById('push-body').value = ''; updateLeft();
+      loadCount();
+    });
+  };
+  function updateLeft() { var b = document.getElementById('push-body'), l = document.getElementById('push-body-left'); if (b && l) l.textContent = b.value.length + ' / 180'; }
+  var pb = document.getElementById('push-body'); if (pb) pb.addEventListener('input', updateLeft);
+
+  /* ---- ربط بالدوال الموجودة ---- */
+  var _openSubject = window.openSubject;
+  if (typeof _openSubject === 'function') window.openSubject = function (id, silent) { var r = _openSubject.apply(this, arguments); if (!silent) setTimeout(function () { maybePrompt().catch(function () {}); }, 1500); return r; };
+  var _showProfile = window.showProfile;
+  if (typeof _showProfile === 'function') window.showProfile = function () {
+    var r = _showProfile.apply(this, arguments);
+    var pc = document.getElementById('profile-content');
+    if (pc && !document.getElementById('push-profile-row')) {
+      var row = document.createElement('div'); row.className = 'profile-row z-content'; row.id = 'push-profile-row';
+      row.innerHTML = '<div class="profile-row-label">🔔 إشعارات الموبايل</div><div class="profile-row-value" id="push-profile-val" style="font-size:13px;">...</div>';
+      var anchor = pc.querySelector('.profile-row:nth-of-type(7)'); if (anchor && anchor.nextSibling) pc.insertBefore(row, anchor.nextSibling); else pc.appendChild(row);
+      refreshProfileRow();
+    }
+    return r;
+  };
+  var _switchAdminTab = window.switchAdminTab;
+  if (typeof _switchAdminTab === 'function') window.switchAdminTab = function (tabId) { var r = _switchAdminTab.apply(this, arguments); if (tabId === 'notify') window.pushAdminOpen(); return r; };
+  try { auth.onAuthStateChanged(function (u) { if (u) setTimeout(resync, 4000); else hidePrompt(); }); } catch (e) {}
+
+  window.PushUI = { state: state, enable: enable, disable: disable, resync: resync };
 })();
 </script>
 </body>
