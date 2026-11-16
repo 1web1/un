@@ -18,18 +18,27 @@ module.exports = async (req, res) => {
     const auth = getAuth(app);
     const db = getDatabase(app);
 
-    // التوكن لازم يكون من نفس مشروع المستوى، واللي بيغيّر لازم يكون أدمن أو مالك في المستوى ده
+    // التوكن لازم يكون من نفس مشروع المستوى. المسموح: المالك، أو الأدمن (لو عنده صلاحيات مخصصة لازم students_password)،
+    // أو الليدر لو المالك اداله students_password صراحةً — نفس اللي لوحة الإدارة بتعرضه.
     const decoded = await auth.verifyIdToken(token);
-    const [adminCheck, ownerCheck] = await Promise.all([
-      db.ref(`users/${decoded.uid}/isAdmin`).once('value'),
-      db.ref(`users/${decoded.uid}/isOwner`).once('value')
+    const flag = (uid, k) => db.ref(`users/${uid}/${k}`).once('value').then(s => s.val() === true);
+    const [isAdmin, isOwner, isLeader, permsSnap] = await Promise.all([
+      flag(decoded.uid, 'isAdmin'), flag(decoded.uid, 'isOwner'), flag(decoded.uid, 'isLeader'),
+      db.ref(`staff_perms/${decoded.uid}`).once('value')
     ]);
-    if (adminCheck.val() !== true && ownerCheck.val() !== true) {
-      return res.status(403).json({ error: 'مخصص للمدير فقط' });
+    const perms = permsSnap.val();
+    const hasCustom = perms && typeof perms === 'object';
+    const allowed = isOwner || (isAdmin && (!hasCustom || perms.students_password === true)) || (isLeader && hasCustom && perms.students_password === true);
+    if (!allowed) return res.status(403).json({ error: 'مش معاك صلاحية تغيير الباسورد' });
+
+    if (typeof targetUid !== 'string' || !targetUid || targetUid.length > 128 || !newPassword || String(newPassword).length < 6) {
+      return res.status(400).json({ error: 'الباسورد يجب ألا يقل عن 6 أحرف' });
     }
 
-    if (!targetUid || !newPassword || newPassword.length < 6) {
-      return res.status(400).json({ error: 'الباسورد يجب ألا يقل عن 6 أحرف' });
+    // باسورد المالك أو أي حد من الإدارة: المالك بس اللي يغيّره (حماية من الاستيلاء على الحسابات)
+    if (!isOwner) {
+      const [tOwner, tAdmin, tLeader] = await Promise.all([flag(targetUid, 'isOwner'), flag(targetUid, 'isAdmin'), flag(targetUid, 'isLeader')]);
+      if (tOwner || tAdmin || tLeader) return res.status(403).json({ error: 'باسورد حد من فريق الإدارة بيتغير من المالك بس' });
     }
 
     await auth.updateUser(targetUid, { password: newPassword });
