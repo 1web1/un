@@ -7128,6 +7128,7 @@ ${escText(alertBody)}
     async function doRegister(email, pass, name, level, phone, opts) {
       const copied = !!(opts && opts.copied);
       if (name.split(' ').filter(Boolean).length < 4) return Swal.fire('تنبيه', 'لازم تكتب اسمك الرباعي كامل (4 أسماء على الأقل).', 'warning');
+      if (name.length > 100 || /[<>]/.test(name)) return Swal.fire('تنبيه', 'الاسم لازم يكون أقل من 100 حرف ومن غير علامات < أو >.', 'warning');
       if (!/^01[0125]\d{8}$/.test(phone)) return Swal.fire('تنبيه', 'رقم الهاتف غير صحيح (مثال: 01012345678).', 'warning');
       if (pass.length < 6) return Swal.fire('تنبيه', 'كلمة المرور 6 حروف على الأقل.', 'warning');
       /* طالب عنده حساب في المستوى التاني: نسأله يدخل هنا بنفس حسابه ولا يروح لمستواه */
@@ -7146,7 +7147,10 @@ ${escText(alertBody)}
           const ex = await withTimeout(database.ref('users/' + user.uid).once('value'), 15000);
           if (ex.exists()) { ok = true; return; }
         }
-        const tr = await withTimeout(database.ref('phones/' + phone).transaction(cur => cur === null ? user.uid : undefined), 15000);
+        /* لو الرقم محجوز لحساب تاني، قواعد Firebase مش بتسمح نقراه أصلاً (حماية الخصوصية) — ده معناه إنه محجوز */
+        let tr;
+        try { tr = await withTimeout(database.ref('phones/' + phone).transaction(cur => cur === null ? user.uid : undefined), 15000); }
+        catch (e) { if (/permission/i.test(String((e && (e.code || e.message)) || ''))) tr = { committed: false, snapshot: null }; else throw e; }
         if (tr.committed) phoneReserved = true;
         else if (tr.snapshot && tr.snapshot.val() === user.uid) phoneReserved = true;
         else {
@@ -7171,7 +7175,7 @@ ${escText(alertBody)}
 
     function adminSendPasswordReset(email, name) {
       if (!email) return Swal.fire('خطأ', 'الطالب ده مسجّل من غير إيميل واضح في بياناته.', 'error');
-      Swal.fire({ title: `إرسال رابط استعادة لـ ${name}؟`, text: email, showCancelButton: true, confirmButtonText: 'أيوه ابعت' }).then(result => {
+      Swal.fire({ title: `إرسال رابط استعادة لـ ${escText(name)}؟`, text: email, showCancelButton: true, confirmButtonText: 'أيوه ابعت' }).then(result => {
         if (!result.isConfirmed) return;
         auth.sendPasswordResetEmail(email)
           .then(() => { logAdminAction('إرسال رابط استعادة باسورد', `الطالب: ${name}`); Swal.fire('تم الإرسال! ✅', `اتبعت رابط استعادة الباسورد لإيميل ${email}. قوله يشوف Spam لو ملقاهوش. ولو الرابط ما اشتغلش يعمل نسخ للرابط ويستخدم "معايا رابط الاستعادة" في شاشة الدخول.`, 'success'); })
@@ -7182,7 +7186,7 @@ ${escText(alertBody)}
     async function adminChangeStudentPassword(uid, studentName, studentEmail) {
       window.__lastPwSync = null;
       const { value: newPassword } = await Swal.fire({
-        title: `تعيين كلمة مرور لـ: ${studentName}`,
+        title: `تعيين كلمة مرور لـ: ${escText(studentName)}`,
         html: `
           <div style="font-size:13px; color:var(--fg-soft); margin-bottom:10px;">
             سيتم تعيين كلمة المرور فوراً في السيرفر دون إرسال إيميل.
@@ -8018,7 +8022,7 @@ ${escText(alertBody)}
 
     async function sendPrivateAlert(uid, name) {
       const { value: formValues } = await Swal.fire({
-        title: `إرسال رسالة خاصة لـ: ${name}`,
+        title: `إرسال رسالة خاصة لـ: ${escText(name)}`,
         html: `
           <div style="text-align:right; font-size:13px; font-weight:bold; margin-bottom:6px; color:#ffffff;">نوع الرسالة (يحدد شكل وتصميم البطاقة لدى الطالب):</div>
           <select id="swal-msg-type" class="swal2-input" style="margin-top:0; font-size:14px;">
@@ -8097,7 +8101,7 @@ ${escText(alertBody)}
     }
 
     async function banStudent(uid, n) {
-      const { value: r } = await Swal.fire({title: `سبب الحظر لـ ${n}`, input: 'text', showCancelButton: true, confirmButtonText: 'حظر', confirmButtonColor: '#ef4444'});
+      const { value: r } = await Swal.fire({title: `سبب الحظر لـ ${escText(n)}`, input: 'text', showCancelButton: true, confirmButtonText: 'حظر', confirmButtonColor: '#ef4444'});
       if (r) { database.ref().update({['users/'+uid+'/isBanned']:true, ['users/'+uid+'/banReason']:r, ['users/'+uid+'/score']:0, ['leaderboard/'+uid]:null}).catch(e=>Swal.fire('خطأ',escText(e.message),'error')); logAdminAction('حظر طالب', `اسم الطالب: ${n} | السبب: ${r}`); }
     }
     function unbanStudent(uid, n) { Swal.fire({title: `فك الحظر عن ${n}؟`, showCancelButton: true}).then((r)=>{ if(r.isConfirmed){ database.ref().update({['users/'+uid+'/isBanned']:false, ['users/'+uid+'/banReason']:null}).catch(e=>Swal.fire('خطأ',escText(e.message),'error')); logAdminAction('فك حظر طالب', `اسم الطالب: ${n}`); }}); }
@@ -10055,7 +10059,7 @@ function openThemePicker() {
       }
 
       if (filtered.length === 0) {
-        grid.innerHTML = `<div class="empty-state z-content" style="grid-column:1/-1;">لا توجد مواد مطابقة للبحث حالياً.</div>`;
+        grid.innerHTML = `<div class="empty-state z-content" style="grid-column:1/-1;">${searchQuery ? 'لا توجد مواد مطابقة للبحث حالياً.' : 'لسه مفيش مواد نزلت للمستوى ده، وهتظهر هنا أول ما الإدارة تضيفها 📚'}</div>`;
         return;
       }
 
@@ -12546,7 +12550,7 @@ function openThemePicker() {
       const __t = allUsersList.find(x => x.uid === uid);
       if ((__t && (__t.isAdmin || __t.isLeader || __t.isOwner)) || (currentUser && uid === currentUser.uid)) { Swal.fire('غير مسموح', 'لا يمكن حذف حساب من فريق الإدارة أو حسابك الشخصي من هنا.', 'warning'); return; }
       Swal.fire({
-        title: `حذف حساب ${name} نهائياً؟`,
+        title: `حذف حساب ${escText(name)} نهائياً؟`,
         text: 'سيتم مسح بيانات الطالب من قاعدة البيانات ولوحة الشرف فوراً. ملحوظة: حساب تسجيل الدخول نفسه (Authentication) يفضل موجود ولا يتحذف من هنا.',
         icon: 'warning',
         showCancelButton: true,
@@ -13957,7 +13961,7 @@ function openThemePicker() {
 
         Swal.fire({
           title: 'تم اعتماد الشهادة بنجاح! 🎖️',
-          html: `تم حفظ الشهادة في حساب الطالب (${studentName}) وإرسال إشعار تهنئة له.<br>أصبح بإمكانه الآن استعراضها وتحميلها ومشاركتها على LinkedIn فوراً.`,
+          html: `تم حفظ الشهادة في حساب الطالب (${escText(studentName)}) وإرسال إشعار تهنئة له.<br>أصبح بإمكانه الآن استعراضها وتحميلها ومشاركتها على LinkedIn فوراً.`,
           icon: 'success',
           confirmButtonText: 'ممتاز',
           confirmButtonColor: '#10b981'
@@ -17430,7 +17434,7 @@ body.subj-v2 .sha{display:block;position:relative;border-radius:22px;overflow:hi
     if (searchQuery) list = list.filter(function (s) { return (s.name || '').toLowerCase().indexOf(searchQuery) >= 0; });
     var heading = document.getElementById('current-level-heading');
     if (heading) heading.innerHTML = (activeLevel === 1 ? 'مواد المستوى الأول' : 'مواد المستوى الثاني') + ' <span style="font-size:13px; color:var(--fg-soft); font-weight:normal;">(' + list.length + ' مواد متوفرة)</span>';
-    if (!list.length) { grid.innerHTML = '<div class="empty-state z-content" style="grid-column:1/-1;">لا توجد مواد مطابقة للبحث حالياً.</div>'; return; }
+    if (!list.length) { grid.innerHTML = '<div class="empty-state z-content" style="grid-column:1/-1;">' + (searchQuery ? 'لا توجد مواد مطابقة للبحث حالياً.' : 'لسه مفيش مواد نزلت للمستوى ده، وهتظهر هنا أول ما الإدارة تضيفها 📚') + '</div>'; return; }
     var isAdmin = currentStudentData && isStaffUser();
     grid.innerHTML = list.map(function (s) {
       var vis = getSubjectThematicVisual(s.name, s.level); var cv = subjCoverUrl(s.cover); if (cv) vis.image = cv;
