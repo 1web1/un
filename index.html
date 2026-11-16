@@ -17952,22 +17952,43 @@ body.subj-v2 .sha{display:block;position:relative;border-radius:22px;overflow:hi
     finally { refreshProfileRow(); }
   }
 
-  /* ---- كارت الدعوة بعد فتح أول مادة ---- */
+  /* ---- كارت الدعوة: بيظهر أول ما المنصة تفتح، كل مرة، لحد ما الطالب يفعّل الإشعارات (طلب المالك 2026-11-16).
+         "مش دلوقتي" بتخفيه لحد ما يفتح المنصة تاني بس. ---- */
   var promptShown = false;
   function hidePrompt() { var c = document.getElementById('push-prompt'); if (c) c.remove(); }
   async function maybePrompt() {
     if (promptShown || !me()) return;
-    if (Date.now() - +(ls(PROMPT_KEY) || 0) < PROMPT_GAP) return;
-    var st = await state(); if (st !== 'off' && st !== 'ios-install') return;
+    var st = await state(); if (st !== 'off' && st !== 'ios-install' && st !== 'denied') return;
+    if (promptShown || document.getElementById('push-prompt')) return;
     promptShown = true;
+    if (st === 'denied') return deniedCard();
     var c = document.createElement('div'); c.id = 'push-prompt'; c.setAttribute('role', 'dialog'); c.setAttribute('aria-label', 'تفعيل الإشعارات');
     c.style.cssText = 'position:fixed; inset-inline:12px; bottom:calc(84px + env(safe-area-inset-bottom)); z-index:9990; max-width:440px; margin-inline:auto; padding:14px; border-radius:16px; background:#111827; color:#f8fafc; border:1.5px solid #f59e0b; box-shadow:0 12px 32px rgba(0,0,0,.45); direction:rtl; font-size:14px; line-height:1.7;';
     c.innerHTML = '<div style="display:flex; gap:10px; align-items:flex-start;"><div style="font-size:26px; line-height:1;">🔔</div><div style="flex:1;"><b style="color:#fbbf24;">عايز يوصلك إشعار لما ينزل جديد؟</b><div style="opacity:.85; font-size:13px;">' + (st === 'ios-install' ? 'على الآيفون لازم تثبّت المنصة الأول، وهنقولك الخطوات.' : 'ملفات جديدة، مواعيد، وإعلانات مهمة من الإدارة — حتى والمنصة مقفولة.') + '</div><div style="margin-top:4px;">' + tutLink('push-prompt-tut') + '</div></div></div>' +
       '<div style="display:flex; gap:8px; margin-top:10px;"><button type="button" id="push-prompt-yes" style="flex:1; min-height:42px; border:0; border-radius:10px; background:#f59e0b; color:#111; font:inherit; font-weight:900; cursor:pointer;">' + (st === 'ios-install' ? 'وريني الخطوات' : 'فعّل الإشعارات') + '</button><button type="button" id="push-prompt-no" style="min-height:42px; padding:0 14px; border:1px solid rgba(255,255,255,.2); border-radius:10px; background:transparent; color:#f8fafc; font:inherit; cursor:pointer;">مش دلوقتي</button></div>';
     document.body.appendChild(c);
-    document.getElementById('push-prompt-no').onclick = function () { ls(PROMPT_KEY, String(Date.now())); hidePrompt(); };
-    document.getElementById('push-prompt-yes').onclick = function () { ls(PROMPT_KEY, String(Date.now())); if (st === 'ios-install') { hidePrompt(); showTutorial('iphone'); } else runEnable(this); };
+    document.getElementById('push-prompt-no').onclick = function () { hidePrompt(); };
+    document.getElementById('push-prompt-yes').onclick = function () { if (st === 'ios-install') { hidePrompt(); showTutorial('iphone'); } else runEnable(this); };
     document.getElementById('push-prompt-tut').onclick = function () { showTutorial(); };
+  }
+  /* لو الطالب قفل الإشعارات من المتصفح قبل كده: مينفعش نطلبها تاني، فبنوريه إزاي يرجّعها */
+  function deniedCard() {
+    var c = document.createElement('div'); c.id = 'push-prompt'; c.setAttribute('role', 'dialog'); c.setAttribute('aria-label', 'الإشعارات مقفولة');
+    c.style.cssText = 'position:fixed; inset-inline:12px; bottom:calc(84px + env(safe-area-inset-bottom)); z-index:9990; max-width:440px; margin-inline:auto; padding:14px; border-radius:16px; background:#111827; color:#f8fafc; border:1.5px solid #f59e0b; box-shadow:0 12px 32px rgba(0,0,0,.45); direction:rtl; font-size:14px; line-height:1.7;';
+    c.innerHTML = '<div style="display:flex; gap:10px; align-items:flex-start;"><div style="font-size:26px; line-height:1;">🔕</div><div style="flex:1;"><b style="color:#fbbf24;">الإشعارات مقفولة عندك</b><div style="opacity:.85; font-size:13px;">عشان يوصلك جديد المواد والإعلانات، رجّعها من إعدادات المتصفح، دي خطوتين بس.</div></div></div>' +
+      '<div style="display:flex; gap:8px; margin-top:10px;"><button type="button" id="push-prompt-yes" style="flex:1; min-height:42px; border:0; border-radius:10px; background:#f59e0b; color:#111; font:inherit; font-weight:900; cursor:pointer;">إزاي أرجّعها؟</button><button type="button" id="push-prompt-no" style="min-height:42px; padding:0 14px; border:1px solid rgba(255,255,255,.2); border-radius:10px; background:transparent; color:#f8fafc; font:inherit; cursor:pointer;">مش دلوقتي</button></div>';
+    document.body.appendChild(c);
+    document.getElementById('push-prompt-no').onclick = function () { hidePrompt(); };
+    document.getElementById('push-prompt-yes').onclick = function () { hidePrompt(); deniedHelp(); };
+  }
+  /* أول ما المنصة تفتح والطالب داخل: نستنى الرئيسية تبان (من غير شاشة دخول أو نافذة مفتوحة) وبعدين نظهر الكارت */
+  function promptOnOpen(tries) {
+    tries = tries || 0;
+    var blocked = ['auth-overlay', 'level-picker', 'maintenance-overlay'].some(function (id) { var e = document.getElementById(id); return e && getComputedStyle(e).display !== 'none'; });
+    var ready = false; try { ready = !!(me() && currentStudentData); } catch (e) {}
+    var busy = false; try { busy = Swal.isVisible(); } catch (e) {}
+    if (!ready || blocked || busy) { if (tries < 20) setTimeout(function () { promptOnOpen(tries + 1); }, 1500); return; }
+    maybePrompt().catch(function () {});
   }
 
   /* ---- صف في البروفايل ---- */
@@ -18071,9 +18092,9 @@ body.subj-v2 .sha{display:block;position:relative;border-radius:22px;overflow:hi
   };
   var _switchAdminTab = window.switchAdminTab;
   if (typeof _switchAdminTab === 'function') window.switchAdminTab = function (tabId) { var r = _switchAdminTab.apply(this, arguments); if (tabId === 'notify') window.pushAdminOpen(); return r; };
-  try { auth.onAuthStateChanged(function (u) { if (u) setTimeout(resync, 4000); else hidePrompt(); }); } catch (e) {}
+  try { auth.onAuthStateChanged(function (u) { if (u) { setTimeout(resync, 4000); setTimeout(promptOnOpen, 2500); } else hidePrompt(); }); } catch (e) {}
 
-  window.PushUI = { state: state, enable: enable, disable: disable, resync: resync, tutorial: showTutorial };
+  window.PushUI = { state: state, enable: enable, disable: disable, resync: resync, tutorial: showTutorial, promptOnOpen: promptOnOpen };
 })();
 </script>
 </body>
