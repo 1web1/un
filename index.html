@@ -17410,6 +17410,12 @@ body.subj-v2 .sha{display:block;position:relative;border-radius:22px;overflow:hi
     ['v2', 'preview', 'v1'].forEach(function (m) { var b = document.getElementById('subjui-opt-' + m); if (b) b.classList.toggle('on', m === cur); });
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () { status(); }); else setTimeout(status, 0);
+  /* الضيف (من غير حساب) مش بيقدر يقرا الإعداد ده من Firebase، فبيجيله من /api/guest-catalog */
+  window.__setSubjectsUI = function (v) {
+    v = v === 'v2' ? 'v2' : 'v1'; var changed = v !== remote; remote = v;
+    try { localStorage.setItem(LS_CACHE, v); } catch (e) {}
+    if (changed) rerender(); else bodyClass();
+  };
   function attach() {
     if (attach.done) return; attach.done = true;
     database.ref('settings/subjectsUI').on('value', function (s) {
@@ -17957,6 +17963,7 @@ body.subj-v2 .sha{display:block;position:relative;border-radius:22px;overflow:hi
           return;
         }
         window.__subjectsRaw = j.subjects || {};
+        if (j.ui && window.__setSubjectsUI) { try { window.__setSubjectsUI(j.ui); } catch (e) {} }
         applySubjectsRaw();
         if (LOCKED_HASH.test(location.hash)) navigateTo('#home');
         else { try { handleRouting(); } catch (e) {} }
