@@ -137,6 +137,19 @@
   .auth-lvl-btn { all:unset; box-sizing:border-box; flex:1; text-align:center; cursor:pointer; padding:11px 8px; border-radius:12px; border:1px solid rgba(255,255,255,.18); background:rgba(255,255,255,.05); font-weight:800; font-size:14px; }
   .auth-lvl-btn.active { background:rgba(245,158,11,.18); border-color:#f59e0b; color:#fbbf24; }
   .auth-lvl-btn[disabled] { opacity:.45; cursor:not-allowed; }
+  /* زرار الدخول بجوجل (الشكل الرسمي: أبيض + لوجو G) */
+  .g-btn { all:unset; box-sizing:border-box; width:100%; min-height:46px; display:flex; align-items:center; justify-content:center; gap:10px; padding:0 14px; border-radius:12px; background:#fff; color:#1f1f1f; border:1px solid #dadce0; font-family:inherit; font-size:15px; font-weight:800; cursor:pointer; transition:box-shadow .15s ease, background .15s ease; }
+  .g-btn:hover { background:#f8faff; box-shadow:0 1px 3px rgba(0,0,0,.25); }
+  .g-btn:focus-visible { outline:2px solid #4285f4; outline-offset:2px; }
+  .g-btn[disabled] { opacity:.6; cursor:progress; }
+  .g-btn svg { width:20px; height:20px; flex:none; }
+  .g-or { display:flex; align-items:center; gap:10px; margin:14px 0 4px; font-size:12.5px; color:var(--fg-faint, #94a3b8); }
+  .g-or::before, .g-or::after { content:''; flex:1; height:1px; background:rgba(127,127,127,.3); }
+  .gc-form { display:flex; flex-direction:column; gap:12px; text-align:right; direction:rtl; }
+  .gc-form label { display:flex; flex-direction:column; gap:5px; font-size:13px; font-weight:800; }
+  .gc-form input { box-sizing:border-box; width:100%; margin:0; height:44px; border-radius:11px; padding:0 12px; font-family:inherit; font-size:15px; border:1px solid rgba(127,127,127,.4); background:rgba(127,127,127,.08); color:inherit; }
+  .gc-mail { font-size:12.5px; opacity:.8; text-align:center; direction:rtl; }
+  .gc-form .auth-lvl-btn { border-color:rgba(127,127,127,.35); }
   .lvl-badge { padding:2px 7px; border-radius:6px; font-size:10.5px; margin-right:6px; font-weight:700; white-space:nowrap; }
   .lvl-badge.l1 { background:rgba(59,130,246,.15); color:#60a5fa; }
   .lvl-badge.l2 { background:rgba(168,85,247,.15); color:#c084fc; }
@@ -5839,6 +5852,10 @@ body[class*="theme-"] .mob-nav-item.active{color:var(--primary)!important}
     <div class="modal-box liquid-glass">
       <h2 id="auth-title" class="z-content" style="text-align: center; margin-top:0; color: var(--primary); font-size: 20px;">تسجيل دخول الطالب</h2>
       <div id="auth-level-note" class="z-content" style="display:none; text-align:center; margin:-4px 0 14px; padding:10px 12px; border-radius:12px; background:rgba(245,158,11,.12); border:1px solid rgba(245,158,11,.35); font-size:13.5px; line-height:1.8;"></div>
+      <div class="z-content">
+        <button type="button" class="g-btn" id="google-auth-btn" onclick="signInWithGoogle()"><svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg><span>الدخول بحساب جوجل</span></button>
+        <div class="g-or">أو بالإيميل</div>
+      </div>
       <form class="upload-form z-content" onsubmit="handleAuth(event)">
         <div class="input-group" id="name-group"><label>الاسم الكامل</label><input type="text" id="auth-name" placeholder="الاسم رباعي" autocomplete="name"></div>
         <div class="input-group" id="phone-group"><label>رقم الهاتف</label><input type="tel" id="auth-phone" placeholder="01xxxxxxxxx" autocomplete="tel"></div>
@@ -5936,6 +5953,14 @@ body[class*="theme-"] .mob-nav-item.active{color:var(--primary)!important}
           if (!isRegisterMode) toggleAuthMode();
           [['auth-name', d.name], ['auth-phone', d.phone], ['auth-email', d.email]].forEach(([id, v]) => { const e = document.getElementById(id); if (e && v) e.value = v; });
           setTimeout(() => { try { Swal.fire({ toast: true, position: 'top', icon: 'info', timer: 5000, showConfirmButton: false, title: 'انت دلوقتي بتعمل حساب في ' + levelName(L) }); } catch (e) {} }, 1000);
+        }
+      } catch (e) {}
+      /* جاي من شاشة "كمّل بياناتك" بتاعة جوجل بعد ما اختار المستوى ده */
+      try {
+        if (sessionStorage.getItem('xfer_google')) {
+          sessionStorage.removeItem('xfer_google');
+          if (!isRegisterMode) toggleAuthMode();
+          setTimeout(() => { try { Swal.fire({ toast: true, position: 'top', icon: 'info', timer: 6000, showConfirmButton: false, title: 'انت دلوقتي في ' + levelName(L) + '، دوس "الدخول بحساب جوجل" تاني' }); } catch (e) {} }, 1000);
         }
       } catch (e) {}
       /* جاي من المستوى التاني بعد ما اكتشفنا إن حسابه هنا: نكتب الإيميل بداله */
@@ -6467,6 +6492,7 @@ body[class*="theme-"] .mob-nav-item.active{color:var(--primary)!important}
       window._lastUid = user.uid; try { __instantFromCache(user); } catch (e) {} ensureOnline(); __startPublicListeners();
       withTimeout(__holdUserRef(user.uid).once('value'), 40000, 'السيرفر اتأخر في الرد وإنت داخل. اتأكد من الإنترنت وحاول تاني.').then((snap) => {
         const val = snap.val(); window._ssRetry = 0;
+        if (!val && typeof __googleComplete === 'function' && (user.providerData || []).some(p => p && p.providerId === 'google.com')) { __googleComplete(user, false); return; } /* داخل بجوجل ولسه مكمّلش بياناته */
         if (!val) { Swal.fire('حسابك غير مكتمل', 'الحساب اتعمل بس بياناته ماكتملتش (غالبًا النت قطع وقت التسجيل). اضغط "إنشاء حساب جديد" واكتب نفس الإيميل والباسورد وبياناتك وهيتكمل.', 'warning'); auth.signOut(); return; }
         if (val.isBanned) { Swal.fire('محظور!', `⚠️ تم حظرك!<br>السبب: ${escText(val.banReason)}`, 'error'); logoutStudent(); return; }
         currentUser = user; document.getElementById('auth-overlay').style.display = 'none';
@@ -17848,6 +17874,143 @@ body.subj-v2 .sha{display:block;position:relative;border-radius:22px;overflow:hi
   window.toggleMobileToolsMenu = function (e) { if (e && e.stopPropagation) e.stopPropagation(); document.body.classList.contains('tsheet-open') ? closeToolsSheet() : openToolsSheet(); };
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && document.body.classList.contains('tsheet-open')) closeToolsSheet(); });
   window.addEventListener('hashchange', function () { if (document.body.classList.contains('tsheet-open')) closeToolsSheet(); });
+})();
+</script>
+<script>
+/* ===== 🔑 الدخول بحساب جوجل =====
+   الزرار في شاشة الدخول/التسجيل. اللي ليه حساب بيدخل علطول، والجديد بيكمّل (الاسم الرباعي + الموبايل + المستوى)
+   بنفس شكل سجل التسجيل العادي (doRegister). الإيميل والباسورد شغالين زي ما هم.
+   جوجل بيمنع الدخول من المتصفح اللي جوه فيسبوك/إنستجرام… فبنقول للطالب يفتح في كروم. */
+(function () {
+  var IN_APP = /FBAN|FBAV|FB_IAB|FBIOS|FB4A|Instagram|Messenger|MessengerForiOS|Line\/|Snapchat|musical_ly|TikTok|; wv\)/i;
+  window.__isInAppBrowser = function (ua) { return IN_APP.test(String(ua || '')); };
+
+  function btnBusy(on) {
+    var b = document.getElementById('google-auth-btn'); if (!b) return;
+    b.disabled = !!on; var s = b.querySelector('span'); if (s) s.textContent = on ? 'جاري الدخول…' : 'الدخول بحساب جوجل';
+  }
+
+  window.__openInAppHelp = function () {
+    var url = location.href.split('#')[0], android = /Android/i.test(navigator.userAgent);
+    var intent = 'intent://' + location.host + location.pathname + location.search + '#Intent;scheme=https;package=com.android.chrome;end';
+    Swal.fire({
+      icon: 'info', title: 'افتح المنصة في ' + (android ? 'كروم' : 'Safari'),
+      html: '<div style="line-height:1.9; font-size:14px;">إنت فاتح المنصة من جوه تطبيق (زي فيسبوك أو إنستجرام)، وجوجل مش بيسمح بالدخول بحسابه من هنا.<br>' +
+        (android ? 'دوس على <b>⋮</b> فوق واختار <b>"فتح في كروم"</b>، أو دوس الزرار تحت.' : 'دوس على <b>⋯</b> واختار <b>"فتح في Safari"</b>، أو انسخ اللينك وافتحه في Safari.') +
+        '<div style="font-size:12.5px; opacity:.75; margin-top:6px;">أو ادخل بالإيميل والباسورد عادي من هنا.</div></div>',
+      showConfirmButton: android, confirmButtonText: 'افتح في كروم', confirmButtonColor: '#16a34a',
+      showDenyButton: true, denyButtonText: 'انسخ اللينك', denyButtonColor: '#475569',
+      showCancelButton: true, cancelButtonText: 'رجوع'
+    }).then(function (r) {
+      if (r.isConfirmed) location.href = intent;
+      else if (r.isDenied) {
+        var done = function () { Swal.fire({ toast: true, position: 'top', icon: 'success', timer: 2500, showConfirmButton: false, title: 'اتنسخ، افتحه في المتصفح' }); };
+        try { navigator.clipboard.writeText(url).then(done, function () { prompt('انسخ اللينك ده:', url); }); } catch (e) { prompt('انسخ اللينك ده:', url); }
+      }
+    });
+  };
+
+  function errMsg(err) {
+    var c = (err && err.code) || '';
+    if (c === 'auth/popup-blocked') return 'المتصفح منع نافذة جوجل. اسمح بالنوافذ المنبثقة (Pop-ups) للموقع ده وجرّب تاني.';
+    if (c === 'auth/operation-not-allowed') return 'الدخول بجوجل لسه مش متفعّل في المنصة. ادخل بالإيميل والباسورد دلوقتي.';
+    if (c === 'auth/unauthorized-domain') return 'الدخول بجوجل مش متاح من اللينك ده. افتح المنصة من dafa3edu.vercel.app.';
+    if (c === 'auth/account-exists-with-different-credential') return 'الإيميل ده متسجّل بطريقة تانية. ادخل بالإيميل والباسورد بتوعك.';
+    if (c === 'auth/network-request-failed') return 'النت فصل. اتأكد من الإنترنت وجرّب تاني.';
+    if (c === 'auth/user-disabled') return 'الحساب ده متوقف. كلّم الدعم الفني.';
+    if (c === 'auth/web-storage-unsupported') return 'المتصفح ده مانع حفظ البيانات. افتح المنصة في كروم أو Safari.';
+    return (typeof authErrMsg === 'function') ? authErrMsg(err) : String((err && err.message) || err);
+  }
+
+  window.signInWithGoogle = async function () {
+    if (__isInAppBrowser(navigator.userAgent)) { __openInAppHelp(); return; }
+    if (typeof FB_OK !== 'undefined' && !FB_OK) return Swal.fire('خطأ', 'مكتبة Firebase ماتحمّلتش (النت ضعيف أو محجوب). حدّث الصفحة وجرب تاني.', 'error');
+    var b = document.getElementById('google-auth-btn'); if (b && b.disabled) return;
+    btnBusy(true); isRegistering = true;
+    var keepFlag = false;
+    try {
+      try { ensureOnline(); } catch (e) {}
+      var provider = new FB.auth.GoogleAuthProvider();
+      provider.setCustomParameters({ prompt: 'select_account' });
+      var cred = await auth.signInWithPopup(provider);
+      var user = cred.user, isNew = !!(cred.additionalUserInfo && cred.additionalUserInfo.isNewUser);
+      var snap = await withTimeout(database.ref('users/' + user.uid).once('value'), 20000, 'السيرفر اتأخر في الرد. اتأكد من الإنترنت وجرّب تاني.');
+      if (snap.exists()) { isRegistering = false; startSession(user); return; }
+      keepFlag = true; __googleComplete(user, isNew);
+    } catch (err) {
+      var c = (err && err.code) || '';
+      if (c !== 'auth/popup-closed-by-user' && c !== 'auth/cancelled-popup-request') Swal.fire('تعذّر الدخول بجوجل', escText(errMsg(err)), 'error');
+      if (auth.currentUser && !keepFlag) { try { await auth.signOut(); } catch (e) {} }
+    } finally {
+      if (!keepFlag) isRegistering = false;
+      btnBusy(false);
+    }
+  };
+
+  /* شاشة "كمّل بياناتك" للطالب الجديد (بتتفتح كمان لو عمل refresh قبل ما يكمّل) */
+  window.__googleComplete = function (user, isNew, prev) {
+    isRegistering = true;
+    prev = prev || {};
+    var L = PLATFORM_LEVEL;
+    var lvlBtn = function (n) {
+      var can = n === L || (levelAvailable(n) && (levelVisible(n) || isOwnerUser()));
+      return '<button type="button" class="auth-lvl-btn' + (n === L ? ' active' : '') + '" data-gc-lvl="' + n + '"' + (can ? '' : ' disabled') + '>' +
+        (n === 1 ? '🎓 ' : '🚀 ') + levelName(n) + (can ? '' : ' (قريبًا)') + '</button>';
+    };
+    var cancel = async function () {
+      try { if (isNew) await user.delete(); else await auth.signOut(); } catch (e) { try { await auth.signOut(); } catch (x) {} }
+      isRegistering = false;
+    };
+    Swal.fire({
+      title: 'كمّل بياناتك عشان تخلّص',
+      html: '<div class="gc-form">' +
+        '<div class="gc-mail">داخل بـ: <b dir="ltr">' + escText(user.email || '') + '</b></div>' +
+        '<label>الاسم الرباعي<input id="gc-name" type="text" autocomplete="name" maxlength="100" placeholder="اكتب اسمك رباعي" value="' + escText(prev.name || '') + '"></label>' +
+        '<label>رقم الموبايل<input id="gc-phone" type="tel" autocomplete="tel" inputmode="tel" dir="ltr" placeholder="01xxxxxxxxx" value="' + escText(prev.phone || '') + '"></label>' +
+        '<label>هتعمل حساب في:<div class="auth-lvl-pick">' + lvlBtn(1) + lvlBtn(2) + '</div></label>' +
+        '</div>',
+      allowOutsideClick: false, allowEscapeKey: false, showCancelButton: true,
+      confirmButtonText: 'إنشاء الحساب', cancelButtonText: 'إلغاء', confirmButtonColor: '#f59e0b',
+      didOpen: function (pop) {
+        pop.querySelectorAll('[data-gc-lvl]').forEach(function (bt) {
+          bt.addEventListener('click', async function () {
+            var n = parseInt(bt.getAttribute('data-gc-lvl'), 10);
+            if (n === L || bt.disabled) return;
+            try { sessionStorage.setItem('xfer_google', '1'); } catch (e) {}
+            Swal.close(); await cancel(); goToLevel(n);
+          });
+        });
+      },
+      preConfirm: function () {
+        var name = document.getElementById('gc-name').value.trim().replace(/\s+/g, ' ');
+        var phone = normDigits(document.getElementById('gc-phone').value).replace(/[\s\-+()]/g, '').replace(/^002/, '').replace(/^20(?=1)/, '0');
+        if (name.split(' ').filter(Boolean).length < 4) { Swal.showValidationMessage('لازم تكتب اسمك الرباعي كامل (4 أسماء على الأقل).'); return false; }
+        if (name.length > 100 || /[<>]/.test(name)) { Swal.showValidationMessage('الاسم لازم يكون أقل من 100 حرف ومن غير علامات < أو >.'); return false; }
+        if (!/^01[0125]\d{8}$/.test(phone)) { Swal.showValidationMessage('رقم الموبايل غير صحيح (مثال: 01012345678).'); return false; }
+        return { name: name, phone: phone };
+      }
+    }).then(async function (r) {
+      if (!r.isConfirmed) { if (r.dismiss === Swal.DismissReason.cancel) await cancel(); return; }
+      var d = r.value, lvl = parseInt(L, 10) || 2, email = String(user.email || '').toLowerCase();
+      Swal.fire({ title: 'بنجهز حسابك…', allowOutsideClick: false, didOpen: function () { Swal.showLoading(); } });
+      var reserved = false;
+      try {
+        var tr;
+        try { tr = await withTimeout(database.ref('phones/' + d.phone).transaction(function (cur) { return cur === null ? user.uid : undefined; }), 15000); }
+        catch (e) { if (/permission/i.test(String((e && (e.code || e.message)) || ''))) tr = { committed: false, snapshot: null }; else throw e; }
+        if (tr.committed || (tr.snapshot && tr.snapshot.val() === user.uid)) reserved = true;
+        else { await Swal.fire('الرقم متسجّل قبل كده', 'رقم الموبايل ده مسجل به حساب تاني بالفعل! اكتب رقمك الصح، ولو ده رقمك فعلاً كلّم الدعم الفني.', 'error'); return __googleComplete(user, isNew, d); }
+        var rec = { name: d.name, phone: d.phone, email: email, level: lvl, score: 0, isBanned: false, createdAt: Date.now() }, up = {};
+        up['users/' + user.uid] = rec; up['leaderboard/' + user.uid] = { name: d.name, score: 0, level: lvl };
+        await withTimeout(database.ref().update(up), 15000);
+        Swal.close(); isRegistering = false; startSession(user);
+      } catch (err) {
+        if (reserved) { try { await database.ref('phones/' + d.phone).transaction(function (cur) { return cur === user.uid ? null : undefined; }); } catch (e) {} }
+        await Swal.fire('تعذّر إنشاء الحساب', escText(errMsg(err)), 'error');
+        __googleComplete(user, isNew, d);
+      }
+    });
+  };
 })();
 </script>
 <script>
