@@ -150,6 +150,27 @@
   .gc-form input { box-sizing:border-box; width:100%; margin:0; height:44px; border-radius:11px; padding:0 12px; font-family:inherit; font-size:15px; border:1px solid rgba(127,127,127,.4); background:rgba(127,127,127,.08); color:inherit; }
   .gc-mail { font-size:12.5px; opacity:.8; text-align:center; direction:rtl; }
   .gc-form .auth-lvl-btn { border-color:rgba(127,127,127,.35); }
+  /* تصفح كضيف */
+  .guest-enter-btn { all:unset; box-sizing:border-box; display:block; width:100%; margin-top:12px; padding:11px 12px; text-align:center; border-radius:12px; border:1px solid rgba(127,127,127,.35); background:rgba(127,127,127,.08); color:var(--fg-soft, #cbd5e1); font-family:inherit; font-size:14px; font-weight:800; cursor:pointer; }
+  .guest-enter-btn:hover { background:rgba(127,127,127,.16); }
+  .guest-enter-btn:focus-visible { outline:2px solid #f59e0b; outline-offset:2px; }
+  body.guest-mode #auth-overlay,
+  body.guest-mode #user-greeting,
+  body.guest-mode #sec-container-quizzes > .flex-between,
+  body.guest-mode #subject-quizzes,
+  body.guest-mode #btn-toggle-focus-quiz,
+  body.guest-mode #quiz-focus-pagination,
+  body.guest-mode #student-hero-stats-strip { display:none !important; }
+  #guest-bar { display:none; }
+  body.guest-mode #guest-bar { display:flex; position:sticky; top:0; z-index:60; align-items:center; gap:6px; justify-content:center; padding:7px 10px; white-space:nowrap; background:rgba(245,158,11,.14); border-bottom:1px solid rgba(245,158,11,.4); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); font-size:13.5px; font-weight:800; color:var(--fg, #fff); }
+  #guest-bar button { all:unset; cursor:pointer; padding:6px 11px; border-radius:10px; font-size:12.5px; font-weight:900; }
+  @media (max-width:380px) { body.guest-mode #guest-bar { font-size:12px; } #guest-bar .gb-reg-long { display:none; } }
+  #guest-bar .gb-reg { background:#f59e0b; color:#1a1205; }
+  #guest-bar .gb-log { border:1px solid rgba(127,127,127,.45); }
+  #guest-bar button:focus-visible { outline:2px solid #f59e0b; outline-offset:2px; }
+  .guest-quiz-lock { display:none; }
+  body.guest-mode .guest-quiz-lock { display:flex; flex-direction:column; align-items:center; gap:10px; text-align:center; padding:22px 16px; margin-bottom:24px; border-radius:16px; border:1px dashed rgba(245,158,11,.5); background:rgba(245,158,11,.06); font-size:14px; line-height:1.8; }
+  .guest-quiz-lock button { all:unset; cursor:pointer; padding:9px 18px; border-radius:11px; background:#f59e0b; color:#1a1205; font-weight:900; font-size:14px; }
   .lvl-badge { padding:2px 7px; border-radius:6px; font-size:10.5px; margin-right:6px; font-weight:700; white-space:nowrap; }
   .lvl-badge.l1 { background:rgba(59,130,246,.15); color:#60a5fa; }
   .lvl-badge.l2 { background:rgba(168,85,247,.15); color:#c084fc; }
@@ -4242,6 +4263,7 @@ body[class*="theme-"] .mob-nav-item.active{color:var(--primary)!important}
   
 
   <div id="main-site">
+    <div id="guest-bar" role="region" aria-label="وضع الضيف"><span>👀 إنت بتتصفح كضيف</span><button type="button" class="gb-reg" onclick="exitGuestMode('register')">اعمل حساب<span class="gb-reg-long"> في دقيقة</span></button><button type="button" class="gb-log" onclick="exitGuestMode('login')">دخول</button></div>
     <button id="theme-fab" class="theme-fab" onclick="openThemePicker()" aria-label="تغيير شكل الموقع" title="تغيير شكل الموقع">🎨</button>
     <button id="support-fab" class="support-fab" onclick="openSupportModal()" aria-label="الدعم الفني" title="الدعم الفني">
       <span class="support-fab-ico">🎧</span><span class="support-fab-txt">الدعم الفني</span>
@@ -4898,6 +4920,7 @@ body[class*="theme-"] .mob-nav-item.active{color:var(--primary)!important}
         </div>
 
         <div id="sec-container-quizzes" class="subject-content-sec">
+        <div class="guest-quiz-lock z-content"><div style="font-size:30px">🔒</div><div><b>حل الأسئلة متاح بعد ما تعمل حساب</b><br><span style="color:var(--fg-soft)">اعمل حساب في دقيقة وحل كل أسئلة المادة واجمع نقط.</span></div><button type="button" onclick="exitGuestMode('register')">اعمل حساب</button></div>
         <div class="z-content flex-between" style="border-bottom: 1px solid rgba(255,255,255,.1); padding-bottom: 8px; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
            <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
               <h3 style="color: var(--primary); font-size: 17px; margin: 0;">بنك الأسئلة (MCQ)</h3>
@@ -5872,6 +5895,7 @@ body[class*="theme-"] .mob-nav-item.active{color:var(--primary)!important}
         <span id="auth-switch-text">ليس لديك حساب؟</span>
         <a href="javascript:void(0)" onclick="toggleAuthMode()" id="auth-switch-link" style="color:var(--primary); font-weight:bold; margin-right:4px;">إنشاء حساب جديد</a>
       </p>
+      <button type="button" class="z-content guest-enter-btn" id="guest-enter-btn" onclick="enterGuestMode()">👀 تصفح المنصة من غير حساب</button>
       <button type="button" class="z-content" onclick="openAuthSupport()" style="display:flex; align-items:center; justify-content:center; gap:8px; width:100%; margin-top:12px; padding:10px 12px; border-radius:12px; border:1px dashed rgba(56,189,248,.55); background:rgba(56,189,248,.08); color:#7dd3fc; font:inherit; font-size:13px; font-weight:700; cursor:pointer;">🎧 عندك مشكلة في الدخول أو التسجيل؟ كلّم الدعم الفني</button>
     </div>
   </div>
@@ -15366,6 +15390,7 @@ function openThemePicker() {
     set: function(k, v) { return this.open().then(function(d) { return new Promise(function(res, rej) { var t = d.transaction('kv', 'readwrite'); t.objectStore('kv').put(v, k); t.oncomplete = function() { res(true); }; t.onerror = function() { rej(t.error); }; }); }).catch(function() { return false; }); }
   };
   window.__subjectsCacheReady = __IDB.get('subjects_raw').then(function(cached) {
+    try { if (sessionStorage.getItem('guest_mode') === '1') return; } catch (e) {} /* الضيف بياخد نسخة الأسامي بس من السيرفر */
     var fromOld = false;
     if (!cached) { try { var old = localStorage.getItem('fast_cache_subjects_v3'); if (old) { cached = JSON.parse(old); fromOld = true; } } catch (e) {} }
     if (cached && typeof cached === 'object' && Object.keys(cached).length) {
@@ -15394,6 +15419,7 @@ function openThemePicker() {
       origApplySubjectsRaw.apply(this, arguments);
       clearTimeout(__subjSaveT);
       __subjSaveT = setTimeout(function() {
+        if (window.__guestMode) return; /* نسخة الضيف (من غير لينكات) ما تتحفظش في الكاش */
         try { if (window.__subjectsRaw && Object.keys(window.__subjectsRaw).length > 0) __IDB.set('subjects_raw', window.__subjectsRaw); } catch (e) {}
       }, 1500);
     };
@@ -17874,6 +17900,106 @@ body.subj-v2 .sha{display:block;position:relative;border-radius:22px;overflow:hi
   window.toggleMobileToolsMenu = function (e) { if (e && e.stopPropagation) e.stopPropagation(); document.body.classList.contains('tsheet-open') ? closeToolsSheet() : openToolsSheet(); };
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && document.body.classList.contains('tsheet-open')) closeToolsSheet(); });
   window.addEventListener('hashchange', function () { if (document.body.classList.contains('tsheet-open')) closeToolsSheet(); });
+})();
+</script>
+<script>
+/* ===== 👀 تصفح المنصة كضيف (من غير حساب) =====
+   المواد بتيجي من /api/guest-catalog بالأسامي بس (من غير لينكات ولا أسئلة)، فالمنع حقيقي مش مجرد زرار مستخبي.
+   العلامة في sessionStorage (guest_mode)، ونسخة الضيف ما بتتحفظش في كاش المواد.
+   أي زرار بيفتح ملف/فيديو/سؤال/أبحاث/لوحة الشرف… بيتوقف ويظهر "اعمل حساب الأول". */
+(function () {
+  var KEY = 'guest_mode';
+  function flag() { try { return sessionStorage.getItem(KEY) === '1'; } catch (e) { return false; } }
+  var BLOCK = /(?:^|[^\w$])(openPdfViewer|openPdfViewerAndTrack|openExternalFileAndTrack|openFileCommentsModal|toggleFileBookmark|toggleQuizBookmark|openVideoAndTrack|checkAnswer|showFileViewersList|openBookmarksModal|showProfile|openMyReport|neoGoLeaderboard|openContributionModal|submitPollVote|claimResearch|requestNewResearch|cancelResearchRequest|cancelMyResearch|openAchievementCardModal|resetSubjectQuizzes|toggleQuizFocusMode|stepFocusQuiz|setQuizFilter|addCourse|openCourse|openExamTimetableModal|recordFileAccess|showLevel2RestrictionAlert|openFileAdminMenu)\s*\(|navigateTo\(\s*'#(research|courses)'|tsGo\(\s*'(showProfile|openMyReport|neoGoLeaderboard|openBookmarksModal)'/;
+  var LOCKED_HASH = /^#\/?(research|courses)\b/;
+
+  function whatFor(on) {
+    if (/Video/.test(on)) return 'تشوف الفيديوهات';
+    if (/checkAnswer|Quiz/.test(on)) return 'تحل الأسئلة';
+    if (/research|Research/.test(on)) return 'تدخل قسم الأبحاث';
+    if (/courses|Course/.test(on)) return 'تشوف الكورسات';
+    if (/Leaderboard/.test(on)) return 'تشوف لوحة الشرف';
+    if (/Bookmark/.test(on)) return 'تحفظ الملفات في المحفوظات';
+    if (/Profile|MyReport|Achievement/.test(on)) return 'يبقى ليك ملف شخصي وتقرير';
+    if (/Comment|Contribution/.test(on)) return 'تشارك وتعلّق';
+    return 'تفتح الملفات والملخصات';
+  }
+
+  window.guestPrompt = function (what) {
+    Swal.fire({
+      icon: 'info', title: 'اعمل حساب الأول 🔒',
+      html: 'عشان ' + (what || 'تفتح الملفات وتحل الأسئلة') + ' لازم يكون عندك حساب.<br><span style="opacity:.8; font-size:13px;">التسجيل بياخد دقيقة، وتقدر تدخل بحساب جوجل علطول.</span>',
+      showDenyButton: true, showCancelButton: true,
+      confirmButtonText: 'اعمل حساب', denyButtonText: 'عندي حساب', cancelButtonText: 'كمّل تصفح',
+      confirmButtonColor: '#f59e0b', denyButtonColor: '#475569'
+    }).then(function (r) { if (r.isConfirmed) exitGuestMode('register'); else if (r.isDenied) exitGuestMode('login'); });
+  };
+
+  window.exitGuestMode = function (mode) {
+    try { sessionStorage.removeItem(KEY); if (mode === 'register') sessionStorage.setItem('xfer_register', '{}'); } catch (e) {}
+    location.reload();
+  };
+
+  function stopGuest() {
+    window.__guestMode = false;
+    try { sessionStorage.removeItem(KEY); } catch (e) {}
+    document.body.classList.remove('guest-mode');
+  }
+
+  function loadCatalog() {
+    return fetch('/api/guest-catalog?level=' + encodeURIComponent(PLATFORM_LEVEL || 2))
+      .then(function (r) { return r.json().then(function (j) { if (!r.ok) throw new Error(j.error || ('HTTP ' + r.status)); return j; }); })
+      .then(function (j) {
+        if (!window.__guestMode) return;
+        if (j.closed || j.maintenance) {
+          stopGuest();
+          Swal.fire(j.closed ? 'المنصة دي لسه مقفولة ⏳' : 'المنصة في صيانة 🛠️', j.closed ? 'هتفتح قريب. تابع جروب الدفعة.' : 'ارجع بعد شوية، بنجهز حاجات جديدة.', 'info');
+          return;
+        }
+        window.__subjectsRaw = j.subjects || {};
+        applySubjectsRaw();
+        if (LOCKED_HASH.test(location.hash)) navigateTo('#home');
+        else { try { handleRouting(); } catch (e) {} }
+      })
+      .catch(function (err) {
+        console.warn('guest catalog', err);
+        stopGuest();
+        Swal.fire('تعذّر التصفح دلوقتي', 'جرّب تاني بعد شوية، أو ادخل بحسابك.', 'error');
+      });
+  }
+
+  window.enterGuestMode = function () {
+    try { sessionStorage.setItem(KEY, '1'); } catch (e) {}
+    start();
+  };
+  function start() {
+    if (window.__guestMode) return;
+    window.__guestMode = true;
+    document.body.classList.add('guest-mode');
+    try { window.scrollTo(0, 0); } catch (e) {}
+    loadCatalog();
+  }
+
+  /* قفل الأفعال اللي محتاجة حساب (قبل ما الـ onclick بتاع الزرار يشتغل) */
+  document.addEventListener('click', function (e) {
+    if (!window.__guestMode) return;
+    var el = e.target && e.target.closest ? e.target.closest('[onclick]') : null;
+    var on = el ? (el.getAttribute('onclick') || '') : '';
+    if (!on) return;
+    if (/logoutStudent\s*\(/.test(on)) { e.preventDefault(); e.stopImmediatePropagation(); exitGuestMode('login'); return; }
+    if (!BLOCK.test(on)) return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    guestPrompt(whatFor(on));
+  }, true);
+  window.addEventListener('hashchange', function () {
+    var h = location.hash;
+    if (window.__guestMode && LOCKED_HASH.test(h)) { navigateTo('#home'); guestPrompt(whatFor(h)); }
+  });
+
+  /* لو حد دخل بحسابه (من تابة تانية مثلاً) نطلع من وضع الضيف */
+  try { auth.onAuthStateChanged(function (u) { if (u && window.__guestMode) exitGuestMode('login'); }); } catch (e) {}
+
+  if (flag()) start();
 })();
 </script>
 <script>
